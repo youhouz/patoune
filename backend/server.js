@@ -61,5 +61,4 @@ io.on('connection', (socket) => {
 const PORT = process.env.PORT || 5000;
 server.listen(PORT, '0.0.0.0', () => {
   console.log(`Serveur Patoune demarre sur le port ${PORT}`);
-  console.log(`API accessible sur http://10.0.5.10:${PORT}/api`);
 });

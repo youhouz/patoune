@@ -25,17 +25,6 @@ export const AuthProvider = ({ children }) => {
         return;
       }
 
-      // Auto-login dev : se connecter directement avec Marie
-      try {
-        const response = await loginAPI('marie@test.com', 'password123');
-        const { token: newToken, user: userData } = response.data;
-        await AsyncStorage.setItem('token', newToken);
-        await AsyncStorage.setItem('user', JSON.stringify(userData));
-        setToken(newToken);
-        setUser(userData);
-      } catch (loginErr) {
-        console.log('Auto-login failed:', loginErr.message);
-      }
     } catch (error) {
       console.log('Erreur verification auth:', error);
     } finally {
