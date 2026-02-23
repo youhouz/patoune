@@ -9,6 +9,7 @@ import {
   ActivityIndicator,
   Alert,
   RefreshControl,
+  Image,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Feather } from '@expo/vector-icons';
@@ -211,7 +212,11 @@ const ProfileScreen = ({ navigation }) => {
               <View style={styles.avatarOuterRing}>
                 <View style={styles.avatarInnerRing}>
                   <View style={styles.avatar}>
-                    <Text style={styles.avatarInitials}>{getInitials()}</Text>
+                    {user?.avatar ? (
+                      <Image source={{ uri: user.avatar }} style={[styles.avatar, { overflow: 'hidden' }]} />
+                    ) : (
+                      <Text style={styles.avatarInitials}>{getInitials()}</Text>
+                    )}
                   </View>
                 </View>
               </View>

@@ -35,49 +35,73 @@ const seed = async () => {
     {
       name: 'Marie Dupont', email: 'marie@test.com', password: 'password123',
       phone: '06 12 34 56 78',
+      avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=400&h=400&fit=crop&crop=face',
+      role: 'user',
+      address: { street: '15 rue de Rivoli', city: 'Paris', postalCode: '75004', country: 'France' },
       location: { type: 'Point', coordinates: [2.3522, 48.8566] },
       isPetSitter: false,
     },
     {
       name: 'Thomas Martin', email: 'thomas@test.com', password: 'password123',
       phone: '06 98 76 54 32',
-      location: { type: 'Point', coordinates: [2.3488, 48.8534] },
+      avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=400&fit=crop&crop=face',
+      role: 'guardian',
+      address: { street: '8 avenue du Chateau', city: 'Vincennes', postalCode: '94300', country: 'France' },
+      location: { type: 'Point', coordinates: [2.4350, 48.8477] },
       isPetSitter: true,
     },
     {
       name: 'Sophie Bernard', email: 'sophie@test.com', password: 'password123',
       phone: '07 11 22 33 44',
-      location: { type: 'Point', coordinates: [2.3690, 48.8490] },
+      avatar: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=400&h=400&fit=crop&crop=face',
+      role: 'both',
+      address: { street: '42 rue de Sevres', city: 'Boulogne-Billancourt', postalCode: '92100', country: 'France' },
+      location: { type: 'Point', coordinates: [2.2400, 48.8396] },
       isPetSitter: true,
     },
     {
       name: 'Lucas Petit', email: 'lucas@test.com', password: 'password123',
       phone: '06 55 66 77 88',
-      location: { type: 'Point', coordinates: [2.3300, 48.8600] },
+      avatar: 'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=400&h=400&fit=crop&crop=face',
+      role: 'guardian',
+      address: { street: '3 rue Laferriere', city: 'Maisons-Alfort', postalCode: '94700', country: 'France' },
+      location: { type: 'Point', coordinates: [2.4380, 48.8080] },
       isPetSitter: true,
     },
     {
       name: 'Camille Leroy', email: 'camille@test.com', password: 'password123',
       phone: '06 23 45 67 89',
-      location: { type: 'Point', coordinates: [2.3600, 48.8650] },
+      avatar: 'https://images.unsplash.com/photo-1580489944761-15a19d654956?w=400&h=400&fit=crop&crop=face',
+      role: 'guardian',
+      address: { street: '17 rue Louis Blanc', city: 'Levallois-Perret', postalCode: '92300', country: 'France' },
+      location: { type: 'Point', coordinates: [2.2870, 48.8935] },
       isPetSitter: true,
     },
     {
       name: 'Julie Moreau', email: 'julie@test.com', password: 'password123',
       phone: '07 34 56 78 90',
-      location: { type: 'Point', coordinates: [2.3250, 48.8450] },
+      avatar: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=400&h=400&fit=crop&crop=face',
+      role: 'guardian',
+      address: { street: '56 avenue du Maine', city: 'Paris', postalCode: '75014', country: 'France' },
+      location: { type: 'Point', coordinates: [2.3167, 48.8322] },
       isPetSitter: true,
     },
     {
       name: 'Antoine Girard', email: 'antoine@test.com', password: 'password123',
       phone: '06 45 67 89 01',
-      location: { type: 'Point', coordinates: [2.3800, 48.8700] },
+      avatar: 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=400&h=400&fit=crop&crop=face',
+      role: 'guardian',
+      address: { street: '12 rue de Paris', city: 'Montreuil', postalCode: '93100', country: 'France' },
+      location: { type: 'Point', coordinates: [2.4430, 48.8640] },
       isPetSitter: true,
     },
     {
       name: 'Emma Rousseau', email: 'emma@test.com', password: 'password123',
       phone: '07 56 78 90 12',
-      location: { type: 'Point', coordinates: [2.3150, 48.8550] },
+      avatar: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=400&h=400&fit=crop&crop=face',
+      role: 'user',
+      address: { street: '29 rue de la Convention', city: 'Paris', postalCode: '75015', country: 'France' },
+      location: { type: 'Point', coordinates: [2.2920, 48.8420] },
       isPetSitter: false,
     },
   ]);
@@ -90,54 +114,90 @@ const seed = async () => {
     {
       owner: users[0]._id, name: 'Rex', species: 'chien', breed: 'Labrador Retriever',
       age: 4, weight: 30, gender: 'male', vaccinated: true,
+      photos: [
+        'https://images.unsplash.com/photo-1579213838058-4a30e2344bd8?w=600&h=600&fit=crop',
+        'https://images.unsplash.com/photo-1605897472198-242be42d1a71?w=600&h=600&fit=crop',
+      ],
       description: 'Chien tres joueur et affectueux. Adore les promenades au parc et jouer a la balle. Tres sociable avec les autres chiens.',
     },
     {
       owner: users[0]._id, name: 'Luna', species: 'chat', breed: 'British Shorthair',
       age: 2, weight: 4.5, gender: 'femelle', vaccinated: true,
       specialNeeds: 'Regime sans cereales',
+      photos: [
+        'https://images.unsplash.com/photo-1592194996308-7b43878e84a6?w=600&h=600&fit=crop',
+        'https://images.unsplash.com/photo-1526336024174-e58f5cdd8e13?w=600&h=600&fit=crop',
+      ],
       description: 'Chatte calme et caline. Adore se blottir sur le canape. Habituee aux enfants.',
     },
     {
       owner: users[0]._id, name: 'Coco', species: 'oiseau', breed: 'Perruche ondulee',
       age: 1, weight: 0.035, gender: 'male', vaccinated: false,
+      photos: [
+        'https://images.unsplash.com/photo-1552728089-57bdde30beb3?w=600&h=600&fit=crop',
+      ],
       description: 'Perruche vive et bavarde. Commence a repeter quelques mots.',
     },
     {
       owner: users[1]._id, name: 'Buddy', species: 'chien', breed: 'Golden Retriever',
       age: 6, weight: 35, gender: 'male', vaccinated: true,
+      photos: [
+        'https://images.unsplash.com/photo-1633722715463-d30f4f325e24?w=600&h=600&fit=crop',
+        'https://images.unsplash.com/photo-1625316708582-7c38734be31d?w=600&h=600&fit=crop',
+      ],
       description: 'Le meilleur ami de tout le monde. Tres doux avec les enfants et les personnes agees.',
     },
     {
       owner: users[2]._id, name: 'Noisette', species: 'rongeur', breed: 'Hamster dore',
       age: 1, weight: 0.15, gender: 'femelle', vaccinated: false,
+      photos: [
+        'https://images.unsplash.com/photo-1425082661507-d6d2f85d15be?w=600&h=600&fit=crop',
+      ],
       description: 'Petit hamster energique qui adore sa roue. Mange bien et est en pleine forme.',
     },
     {
       owner: users[4]._id, name: 'Oscar', species: 'chat', breed: 'Maine Coon',
       age: 3, weight: 7, gender: 'male', vaccinated: true,
+      photos: [
+        'https://images.unsplash.com/photo-1615497001839-b0a0eac3274c?w=600&h=600&fit=crop',
+        'https://images.unsplash.com/photo-1606214174585-fe31582dc6ee?w=600&h=600&fit=crop',
+      ],
       description: 'Grand chat majestueux et tres doux. Sociable mais independant.',
     },
     {
       owner: users[5]._id, name: 'Bella', species: 'chien', breed: 'Cavalier King Charles',
       age: 5, weight: 8, gender: 'femelle', vaccinated: true,
       specialNeeds: 'Traitement cardiaque quotidien',
+      photos: [
+        'https://images.unsplash.com/photo-1583337130417-13104dec14a3?w=600&h=600&fit=crop',
+        'https://images.unsplash.com/photo-1587300003388-59208cc962cb?w=600&h=600&fit=crop',
+      ],
       description: 'Petite chienne adorable et tres douce. Besoin de promenades calmes.',
     },
     {
       owner: users[7]._id, name: 'Simba', species: 'chat', breed: 'Abyssin',
       age: 4, weight: 5, gender: 'male', vaccinated: true,
+      photos: [
+        'https://images.unsplash.com/photo-1513360371669-4adf3dd7dff8?w=600&h=600&fit=crop',
+      ],
       description: 'Chat actif et curieux. Adore explorer et grimper partout.',
     },
     {
       owner: users[7]._id, name: 'Speedy', species: 'reptile', breed: 'Tortue Hermann',
       age: 12, weight: 1.2, gender: 'femelle', vaccinated: false,
       specialNeeds: 'Lampe UV obligatoire, temperature 25-30C',
+      photos: [
+        'https://images.unsplash.com/photo-1437622368342-7a3d73a34c8f?w=600&h=600&fit=crop',
+      ],
       description: 'Tortue en bonne sante, mange principalement des herbes et legumes frais.',
     },
     {
       owner: users[3]._id, name: 'Rocky', species: 'chien', breed: 'Berger Australien',
       age: 2, weight: 25, gender: 'male', vaccinated: true,
+      photos: [
+        'https://images.unsplash.com/photo-1588943211346-0908a1fb0b01?w=600&h=600&fit=crop',
+        'https://images.unsplash.com/photo-1503256207526-0d5d80fa2f47?w=600&h=600&fit=crop',
+      ],
       description: 'Chien tres energique et intelligent. A besoin de beaucoup d\'exercice et de stimulation mentale.',
     },
   ]);
@@ -151,6 +211,7 @@ const seed = async () => {
     {
       barcode: '3017620422003', name: 'Royal Canin Maxi Adult', brand: 'Royal Canin',
       category: 'alimentation', targetAnimal: ['chien'],
+      image: 'https://images.unsplash.com/photo-1589924691995-400dc9ecc119?w=400&h=400&fit=crop',
       ingredients: [
         { name: 'Viande de poulet deshydratee', isControversial: false, risk: 'safe' },
         { name: 'Riz', isControversial: false, risk: 'safe' },
@@ -170,6 +231,7 @@ const seed = async () => {
     {
       barcode: '4008429073860', name: 'Acana Wild Prairie', brand: 'Acana',
       category: 'alimentation', targetAnimal: ['chien'],
+      image: 'https://images.unsplash.com/photo-1568640347023-a616a30bc3bd?w=400&h=400&fit=crop',
       ingredients: [
         { name: 'Viande fraiche de poulet (16%)', isControversial: false, risk: 'safe' },
         { name: 'Viande fraiche de dinde (10%)', isControversial: false, risk: 'safe' },
@@ -186,6 +248,7 @@ const seed = async () => {
     {
       barcode: '8710255130002', name: 'Orijen Original Dog', brand: 'Orijen',
       category: 'alimentation', targetAnimal: ['chien'],
+      image: 'https://images.unsplash.com/photo-1623387641168-d9803ddd3f35?w=400&h=400&fit=crop',
       ingredients: [
         { name: 'Poulet frais desossee (25%)', isControversial: false, risk: 'safe' },
         { name: 'Dinde fraiche (8%)', isControversial: false, risk: 'safe' },
@@ -201,6 +264,7 @@ const seed = async () => {
     {
       barcode: '3564700266236', name: 'Pedigree Vital Protection Adult', brand: 'Pedigree',
       category: 'alimentation', targetAnimal: ['chien'],
+      image: 'https://images.unsplash.com/photo-1589924749163-2e2f7b490e2e?w=400&h=400&fit=crop',
       ingredients: [
         { name: 'Cereales', isControversial: true, risk: 'moderate' },
         { name: 'Viandes et sous-produits animaux (dont 4% poulet)', isControversial: true, risk: 'moderate' },
@@ -221,6 +285,7 @@ const seed = async () => {
     {
       barcode: '3182550702225', name: 'Pro Plan Adult Chat Poulet', brand: 'Purina Pro Plan',
       category: 'alimentation', targetAnimal: ['chat'],
+      image: 'https://images.unsplash.com/photo-1574158622682-e40e69881006?w=400&h=400&fit=crop',
       ingredients: [
         { name: 'Poulet frais (20%)', isControversial: false, risk: 'safe' },
         { name: 'Proteine de poulet deshydratee', isControversial: false, risk: 'safe' },
@@ -235,6 +300,7 @@ const seed = async () => {
     {
       barcode: '5410340620007', name: 'Whiskas Sachets fraicheur Poisson', brand: 'Whiskas',
       category: 'alimentation', targetAnimal: ['chat'],
+      image: 'https://images.unsplash.com/photo-1615497001839-b0a0eac3274c?w=400&h=400&fit=crop',
       ingredients: [
         { name: 'Sous-produits animaux', isControversial: true, risk: 'moderate' },
         { name: 'Poisson et sous-produits (4%)', isControversial: false, risk: 'safe' },
@@ -253,6 +319,7 @@ const seed = async () => {
     {
       barcode: '4260215761024', name: 'Applaws Chat Poulet & Saumon', brand: 'Applaws',
       category: 'alimentation', targetAnimal: ['chat'],
+      image: 'https://images.unsplash.com/photo-1606214174585-fe31582dc6ee?w=400&h=400&fit=crop',
       ingredients: [
         { name: 'Filet de poulet (55%)', isControversial: false, risk: 'safe' },
         { name: 'Saumon (25%)', isControversial: false, risk: 'safe' },
@@ -267,6 +334,7 @@ const seed = async () => {
     {
       barcode: '4007817602270', name: 'Dreamies Mix Poulet & Canard', brand: 'Dreamies',
       category: 'alimentation', targetAnimal: ['chat'],
+      image: 'https://images.unsplash.com/photo-1583337130417-13104dec14a3?w=400&h=400&fit=crop',
       ingredients: [
         { name: 'Cereales', isControversial: true, risk: 'moderate' },
         { name: 'Viande et sous-produits animaux (8%)', isControversial: true, risk: 'moderate' },
@@ -280,6 +348,7 @@ const seed = async () => {
     {
       barcode: '4011905836407', name: 'Trixie Os a macher boeuf', brand: 'Trixie',
       category: 'alimentation', targetAnimal: ['chien'],
+      image: 'https://images.unsplash.com/photo-1587300003388-59208cc962cb?w=400&h=400&fit=crop',
       ingredients: [
         { name: 'Cuir de boeuf (100%)', isControversial: false, risk: 'safe' },
       ],
@@ -291,6 +360,7 @@ const seed = async () => {
     {
       barcode: '3228857000166', name: 'Frontline Combo Chat', brand: 'Frontline',
       category: 'soin', targetAnimal: ['chat'],
+      image: 'https://images.unsplash.com/photo-1526336024174-e58f5cdd8e13?w=400&h=400&fit=crop',
       ingredients: [
         { name: 'Fipronil (9.8%)', isControversial: false, risk: 'safe' },
         { name: 'S-methoprene (11.8%)', isControversial: false, risk: 'safe' },
@@ -303,6 +373,7 @@ const seed = async () => {
     {
       barcode: '3661168002439', name: 'Advantix Chien Moyen', brand: 'Advantix',
       category: 'soin', targetAnimal: ['chien'],
+      image: 'https://images.unsplash.com/photo-1548199973-03cce0bbc87b?w=400&h=400&fit=crop',
       ingredients: [
         { name: 'Imidaclopride (100mg)', isControversial: false, risk: 'safe' },
         { name: 'Permethrine (500mg)', isControversial: false, risk: 'safe' },
@@ -315,6 +386,7 @@ const seed = async () => {
     {
       barcode: '8710255140001', name: 'Beaphar Shampooing Doux Universel', brand: 'Beaphar',
       category: 'hygiene', targetAnimal: ['chien', 'chat'],
+      image: 'https://images.unsplash.com/photo-1530281700549-e82e7bf110d6?w=400&h=400&fit=crop',
       ingredients: [
         { name: 'Eau purifiee', isControversial: false, risk: 'safe' },
         { name: 'Aloe vera bio', isControversial: false, risk: 'safe' },
@@ -328,6 +400,7 @@ const seed = async () => {
     {
       barcode: '3595471023456', name: 'Francodex Spray Anti-Stress', brand: 'Francodex',
       category: 'soin', targetAnimal: ['chat', 'chien'],
+      image: 'https://images.unsplash.com/photo-1513360371669-4adf3dd7dff8?w=400&h=400&fit=crop',
       ingredients: [
         { name: 'Valeriane', isControversial: false, risk: 'safe' },
         { name: 'Camomille', isControversial: false, risk: 'safe' },
@@ -341,6 +414,7 @@ const seed = async () => {
     {
       barcode: '4047059414422', name: 'Kong Classic Rouge Taille M', brand: 'Kong',
       category: 'jouet', targetAnimal: ['chien'],
+      image: 'https://images.unsplash.com/photo-1601758228041-f3b2795255f1?w=400&h=400&fit=crop',
       ingredients: [
         { name: 'Caoutchouc naturel non toxique', isControversial: false, risk: 'safe' },
       ],
@@ -351,6 +425,7 @@ const seed = async () => {
     {
       barcode: '3281011487500', name: 'Catit Fontaine a eau 3L', brand: 'Catit',
       category: 'accessoire', targetAnimal: ['chat'],
+      image: 'https://images.unsplash.com/photo-1592194996308-7b43878e84a6?w=400&h=400&fit=crop',
       ingredients: [
         { name: 'Plastique BPA-free', isControversial: false, risk: 'safe' },
         { name: 'Filtre charbon actif', isControversial: false, risk: 'safe' },
@@ -373,6 +448,10 @@ const seed = async () => {
       acceptedAnimals: ['chien', 'chat'],
       services: ['garde_domicile', 'promenade', 'visite', 'garde_chez_sitter'],
       pricePerDay: 25, pricePerHour: 12,
+      photos: [
+        'https://images.unsplash.com/photo-1558618666-fcd25c85f82e?w=600&h=400&fit=crop',
+        'https://images.unsplash.com/photo-1583511655857-d19b40a7a54e?w=600&h=400&fit=crop',
+      ],
       availability: [
         { day: 'lundi', startTime: '07:00', endTime: '20:00' },
         { day: 'mardi', startTime: '07:00', endTime: '20:00' },
@@ -381,7 +460,7 @@ const seed = async () => {
         { day: 'vendredi', startTime: '07:00', endTime: '20:00' },
         { day: 'samedi', startTime: '08:00', endTime: '18:00' },
       ],
-      location: { type: 'Point', coordinates: [2.3488, 48.8534] },
+      location: { type: 'Point', coordinates: [2.4350, 48.8477] },
       radius: 15, rating: 4.8, reviewCount: 47, verified: true,
     },
     {
@@ -391,6 +470,10 @@ const seed = async () => {
       acceptedAnimals: ['chien', 'chat', 'rongeur', 'oiseau', 'reptile'],
       services: ['garde_domicile', 'garde_chez_sitter', 'visite', 'toilettage'],
       pricePerDay: 38, pricePerHour: 20,
+      photos: [
+        'https://images.unsplash.com/photo-1586671267731-da2cf3ceeb80?w=600&h=400&fit=crop',
+        'https://images.unsplash.com/photo-1601758228041-f3b2795255f1?w=600&h=400&fit=crop',
+      ],
       availability: [
         { day: 'lundi', startTime: '07:00', endTime: '20:00' },
         { day: 'mercredi', startTime: '07:00', endTime: '20:00' },
@@ -398,7 +481,7 @@ const seed = async () => {
         { day: 'samedi', startTime: '08:00', endTime: '18:00' },
         { day: 'dimanche', startTime: '08:00', endTime: '18:00' },
       ],
-      location: { type: 'Point', coordinates: [2.3690, 48.8490] },
+      location: { type: 'Point', coordinates: [2.2400, 48.8396] },
       radius: 10, rating: 4.9, reviewCount: 82, verified: true,
     },
     {
@@ -408,6 +491,10 @@ const seed = async () => {
       acceptedAnimals: ['chien'],
       services: ['promenade', 'visite'],
       pricePerDay: 18, pricePerHour: 10,
+      photos: [
+        'https://images.unsplash.com/photo-1548199973-03cce0bbc87b?w=600&h=400&fit=crop',
+        'https://images.unsplash.com/photo-1530281700549-e82e7bf110d6?w=600&h=400&fit=crop',
+      ],
       availability: [
         { day: 'lundi', startTime: '14:00', endTime: '20:00' },
         { day: 'mardi', startTime: '14:00', endTime: '20:00' },
@@ -415,7 +502,7 @@ const seed = async () => {
         { day: 'samedi', startTime: '08:00', endTime: '20:00' },
         { day: 'dimanche', startTime: '08:00', endTime: '20:00' },
       ],
-      location: { type: 'Point', coordinates: [2.3300, 48.8600] },
+      location: { type: 'Point', coordinates: [2.4380, 48.8080] },
       radius: 20, rating: 4.5, reviewCount: 15, verified: false,
     },
     {
@@ -425,6 +512,10 @@ const seed = async () => {
       acceptedAnimals: ['chien', 'chat'],
       services: ['garde_domicile', 'promenade', 'garde_chez_sitter', 'toilettage'],
       pricePerDay: 32, pricePerHour: 15,
+      photos: [
+        'https://images.unsplash.com/photo-1601758174114-e711c0cbaa69?w=600&h=400&fit=crop',
+        'https://images.unsplash.com/photo-1587764379990-bcc0c1e15c46?w=600&h=400&fit=crop',
+      ],
       availability: [
         { day: 'lundi', startTime: '08:00', endTime: '19:00' },
         { day: 'mardi', startTime: '08:00', endTime: '19:00' },
@@ -432,7 +523,7 @@ const seed = async () => {
         { day: 'jeudi', startTime: '08:00', endTime: '19:00' },
         { day: 'vendredi', startTime: '08:00', endTime: '19:00' },
       ],
-      location: { type: 'Point', coordinates: [2.3600, 48.8650] },
+      location: { type: 'Point', coordinates: [2.2870, 48.8935] },
       radius: 12, rating: 4.7, reviewCount: 34, verified: true,
     },
     {
@@ -442,6 +533,10 @@ const seed = async () => {
       acceptedAnimals: ['chat', 'rongeur', 'oiseau'],
       services: ['garde_domicile', 'garde_chez_sitter', 'visite'],
       pricePerDay: 20, pricePerHour: 8,
+      photos: [
+        'https://images.unsplash.com/photo-1545529468-42764ef8c85f?w=600&h=400&fit=crop',
+        'https://images.unsplash.com/photo-1606567595334-d39972c85dbe?w=600&h=400&fit=crop',
+      ],
       availability: [
         { day: 'lundi', startTime: '06:00', endTime: '22:00' },
         { day: 'mardi', startTime: '06:00', endTime: '22:00' },
@@ -451,7 +546,7 @@ const seed = async () => {
         { day: 'samedi', startTime: '06:00', endTime: '22:00' },
         { day: 'dimanche', startTime: '06:00', endTime: '22:00' },
       ],
-      location: { type: 'Point', coordinates: [2.3250, 48.8450] },
+      location: { type: 'Point', coordinates: [2.3167, 48.8322] },
       radius: 8, rating: 4.6, reviewCount: 56, verified: true,
     },
     {
@@ -461,13 +556,17 @@ const seed = async () => {
       acceptedAnimals: ['chien', 'chat'],
       services: ['promenade', 'visite', 'garde_domicile'],
       pricePerDay: 28, pricePerHour: 14,
+      photos: [
+        'https://images.unsplash.com/photo-1477884213360-7e9d7dcc8f9a?w=600&h=400&fit=crop',
+        'https://images.unsplash.com/photo-1534361960057-19889db9621e?w=600&h=400&fit=crop',
+      ],
       availability: [
         { day: 'mardi', startTime: '09:00', endTime: '18:00' },
         { day: 'jeudi', startTime: '09:00', endTime: '18:00' },
         { day: 'samedi', startTime: '08:00', endTime: '20:00' },
         { day: 'dimanche', startTime: '08:00', endTime: '20:00' },
       ],
-      location: { type: 'Point', coordinates: [2.3800, 48.8700] },
+      location: { type: 'Point', coordinates: [2.4430, 48.8640] },
       radius: 15, rating: 4.4, reviewCount: 12, verified: false,
     },
   ]);

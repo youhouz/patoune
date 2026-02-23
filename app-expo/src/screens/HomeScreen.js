@@ -44,7 +44,7 @@ import SectionHeader from '../components/SectionHeader';
 // ---------------------------------------------------------------------------
 const PetMiniCard = ({ pet, onPress }) => (
   <TouchableOpacity style={styles.petMini} onPress={onPress} activeOpacity={0.7}>
-    <Avatar name={pet.name} size="md" />
+    <Avatar name={pet.name} size="md" imageUri={pet.photos?.[0]} />
     <Text style={styles.petMiniName} numberOfLines={1}>{pet.name}</Text>
   </TouchableOpacity>
 );
@@ -277,7 +277,7 @@ const HomeScreen = () => {
             onPress={() => navigation.navigate('Profil')}
             activeOpacity={0.8}
           >
-            <Avatar name={user?.name || '?'} size="lg" />
+            <Avatar name={user?.name || '?'} size="lg" imageUri={user?.avatar} />
           </TouchableOpacity>
         </View>
 

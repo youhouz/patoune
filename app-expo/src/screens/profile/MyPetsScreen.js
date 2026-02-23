@@ -9,6 +9,7 @@ import {
   Alert,
   Animated,
   RefreshControl,
+  Image,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Feather } from '@expo/vector-icons';
@@ -135,14 +136,18 @@ const MyPetsScreen = ({ navigation }) => {
         {/* Pet Header Row */}
         <View style={styles.petHeader}>
           <View style={styles.speciesIconContainer}>
-            <LinearGradient
-              colors={config.gradient}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 1 }}
-              style={styles.speciesIconGradient}
-            >
-              <Feather name={config.icon} size={26} color={COLORS.white} />
-            </LinearGradient>
+            {item.photos?.[0] ? (
+              <Image source={{ uri: item.photos[0] }} style={[styles.speciesIconGradient, { overflow: 'hidden' }]} />
+            ) : (
+              <LinearGradient
+                colors={config.gradient}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+                style={styles.speciesIconGradient}
+              >
+                <Feather name={config.icon} size={26} color={COLORS.white} />
+              </LinearGradient>
+            )}
           </View>
 
           <View style={styles.petInfo}>

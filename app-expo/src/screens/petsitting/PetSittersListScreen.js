@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import {
   View, Text, FlatList, StyleSheet, ActivityIndicator,
   TouchableOpacity, TextInput, Platform, Animated, RefreshControl,
-  StatusBar, Dimensions,
+  StatusBar, Dimensions, Image,
 } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -153,14 +153,18 @@ const PetSitterCard = ({ petsitter, onPress, index }) => {
         <View style={styles.cardContent}>
           {/* Avatar */}
           <View style={styles.avatarContainer}>
-            <LinearGradient
-              colors={[colors.primary, colors.primaryLight]}
-              style={styles.avatar}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 1 }}
-            >
-              <Text style={styles.avatarLetter}>{initial}</Text>
-            </LinearGradient>
+            {petsitter.user?.avatar ? (
+              <Image source={{ uri: petsitter.user.avatar }} style={styles.avatar} />
+            ) : (
+              <LinearGradient
+                colors={[colors.primary, colors.primaryLight]}
+                style={styles.avatar}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+              >
+                <Text style={styles.avatarLetter}>{initial}</Text>
+              </LinearGradient>
+            )}
             {petsitter.verified && (
               <View style={styles.verifiedDot}>
                 <Feather name="check" size={10} color={colors.white} />

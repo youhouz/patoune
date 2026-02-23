@@ -11,6 +11,7 @@ import {
   Dimensions,
   Share,
   ActivityIndicator,
+  Image,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Feather } from '@expo/vector-icons';
@@ -195,6 +196,11 @@ const ProductResultScreen = ({ route, navigation }) => {
               <Feather name="share-2" size={18} color={COLORS.white} />
             </TouchableOpacity>
           </View>
+
+          {/* Product image */}
+          {product.image && (
+            <Image source={{ uri: product.image }} style={styles.productImage} />
+          )}
 
           {/* Score ring */}
           <Animated.View
@@ -578,6 +584,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
+
+  // Product image
+  productImage: { width: 80, height: 80, borderRadius: 16, borderWidth: 3, borderColor: 'rgba(255,255,255,0.4)', marginBottom: 12, alignSelf: 'center' },
 
   // Score badge
   scoreBadgeContainer: {

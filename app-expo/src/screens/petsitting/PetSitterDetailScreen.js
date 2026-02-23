@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import {
   View, Text, ScrollView, StyleSheet, TouchableOpacity,
-  Platform, Animated, ActivityIndicator, StatusBar, Dimensions,
+  Platform, Animated, ActivityIndicator, StatusBar, Dimensions, Image,
 } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -202,9 +202,13 @@ const PetSitterDetailScreen = ({ route, navigation }) => {
           <View style={styles.heroContent}>
             {/* Avatar */}
             <View style={styles.heroAvatarContainer}>
-              <View style={styles.heroAvatar}>
-                <Text style={styles.heroAvatarLetter}>{initial}</Text>
-              </View>
+              {petsitter.user?.avatar ? (
+                <Image source={{ uri: petsitter.user.avatar }} style={styles.heroAvatar} />
+              ) : (
+                <View style={styles.heroAvatar}>
+                  <Text style={styles.heroAvatarLetter}>{initial}</Text>
+                </View>
+              )}
               {petsitter.verified && (
                 <View style={styles.heroVerifiedDot}>
                   <Feather name="check" size={14} color={colors.white} />
@@ -252,6 +256,18 @@ const PetSitterDetailScreen = ({ route, navigation }) => {
             </View>
           </View>
         </LinearGradient>
+
+        {/* Photos Gallery */}
+        {petsitter.photos?.length > 0 && (
+          <View style={styles.photosSection}>
+            <Text style={styles.photosSectionTitle}>Photos</Text>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.photosScroll}>
+              {petsitter.photos.map((photo, idx) => (
+                <Image key={idx} source={{ uri: photo }} style={styles.galleryPhoto} />
+              ))}
+            </ScrollView>
+          </View>
+        )}
 
         {/* Body */}
         <Animated.View style={{
@@ -659,6 +675,12 @@ const styles = StyleSheet.create({
     height: 30,
     backgroundColor: 'rgba(255,255,255,0.15)',
   },
+
+  // Photos Gallery
+  photosSection: { marginTop: 16, paddingHorizontal: 20 },
+  photosSectionTitle: { fontFamily: FONTS.heading, fontSize: 18, color: colors.text, marginBottom: 12 },
+  photosScroll: { gap: 12 },
+  galleryPhoto: { width: 200, height: 150, borderRadius: 16, backgroundColor: colors.background },
 
   // Section Card
   sectionCard: {
