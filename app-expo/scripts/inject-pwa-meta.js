@@ -29,19 +29,38 @@ if (!fs.existsSync(distHtml)) {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Step 1: Rename dist/assets/node_modules/ → dist/assets/vendor/
+// Step 1: Recursively rename ALL node_modules/ → vendor/ in dist/assets/
+// Vercel filters ANY path containing "node_modules" — including nested ones
+// e.g. dist/assets/node_modules/expo/node_modules/@expo/vector-icons/...
 // ─────────────────────────────────────────────────────────────────────────────
-if (fs.existsSync(nodeModulesDir)) {
-  // Remove old vendor/ if it exists from a previous run
-  if (fs.existsSync(vendorDir)) {
-    fs.rmSync(vendorDir, { recursive: true });
+function renameNodeModulesRecursive(dir) {
+  if (!fs.existsSync(dir)) return 0;
+  let count = 0;
+  const entries = fs.readdirSync(dir, { withFileTypes: true });
+  for (const entry of entries) {
+    if (!entry.isDirectory()) continue;
+    const fullPath = path.join(dir, entry.name);
+    if (entry.name === 'node_modules') {
+      const vendorPath = path.join(dir, 'vendor');
+      if (fs.existsSync(vendorPath)) {
+        fs.rmSync(vendorPath, { recursive: true });
+      }
+      fs.renameSync(fullPath, vendorPath);
+      count++;
+      // Continue recursing into the renamed directory
+      count += renameNodeModulesRecursive(vendorPath);
+    } else {
+      count += renameNodeModulesRecursive(fullPath);
+    }
   }
-  fs.renameSync(nodeModulesDir, vendorDir);
-  console.log('✓ Renamed dist/assets/node_modules/ → dist/assets/vendor/');
-} else if (fs.existsSync(vendorDir)) {
-  console.log('✓ dist/assets/vendor/ already exists (skip rename)');
+  return count;
+}
+
+const renamedCount = renameNodeModulesRecursive(assetsDir);
+if (renamedCount > 0) {
+  console.log(`✓ Renamed ${renamedCount} "node_modules" directories → "vendor" in dist/assets/`);
 } else {
-  console.warn('⚠ No dist/assets/node_modules/ or dist/assets/vendor/ found');
+  console.log('✓ No node_modules directories found (already renamed or clean)');
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
