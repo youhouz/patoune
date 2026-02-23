@@ -48,10 +48,10 @@ exports.searchPetSitters = async (req, res, next) => {
         select: 'name avatar'
       });
 
-      // Arrondir la distance en mètres
+      // Convertir la distance de metres en km (le frontend attend des km)
       petsitters = petsitters.map(sitter => ({
         ...sitter,
-        distance: Math.round(sitter.distance)
+        distance: parseFloat((sitter.distance / 1000).toFixed(2))
       }));
 
       return res.json({ success: true, count: petsitters.length, petsitters });
