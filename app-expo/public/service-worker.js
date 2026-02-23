@@ -3,8 +3,8 @@
 // Strategy: Cache Shell (app shell) + Network First (API calls)
 // ---------------------------------------------------------------------------
 
-const CACHE_NAME = 'patoune-v2.0.0';
-const SHELL_CACHE = 'patoune-shell-v2.0.0';
+const CACHE_NAME = 'patoune-v2.1.0';
+const SHELL_CACHE = 'patoune-shell-v2.1.0';
 
 // App shell files to pre-cache
 const SHELL_FILES = [
@@ -47,6 +47,12 @@ self.addEventListener('activate', (event) => {
           })
       );
     }).then(() => self.clients.claim())
+      .then(() => {
+        // Notify all clients to reload when new SW activates
+        self.clients.matchAll({ type: 'window' }).then((clients) => {
+          clients.forEach((client) => client.navigate(client.url));
+        });
+      })
   );
 });
 
