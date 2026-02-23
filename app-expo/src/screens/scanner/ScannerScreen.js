@@ -12,6 +12,7 @@ import {
   Dimensions,
   ActivityIndicator,
   KeyboardAvoidingView,
+  ScrollView,
   Vibration,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -26,6 +27,15 @@ const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const SCAN_FRAME_SIZE = SCREEN_WIDTH * 0.62;
 const CORNER_SIZE = 28;
 const CORNER_WIDTH = 3.5;
+
+const DEMO_PRODUCTS = [
+  { barcode: '8710255130002', name: 'Orijen Original', brand: 'Orijen', icon: 'heart', score: 95 },
+  { barcode: '3017620422003', name: 'Royal Canin Maxi', brand: 'Royal Canin', icon: 'heart', score: 62 },
+  { barcode: '3564700266236', name: 'Pedigree Vital', brand: 'Pedigree', icon: 'heart', score: 31 },
+  { barcode: '4260215761024', name: 'Applaws Chat', brand: 'Applaws', icon: 'gitlab', score: 93 },
+  { barcode: '5410340620007', name: 'Whiskas Poisson', brand: 'Whiskas', icon: 'gitlab', score: 22 },
+  { barcode: '4047059414422', name: 'Kong Classic M', brand: 'Kong', icon: 'gift', score: 92 },
+];
 
 const ScannerScreen = ({ navigation }) => {
   const insets = useSafeAreaInsets();
@@ -359,7 +369,7 @@ const ScannerScreen = ({ navigation }) => {
         </View>
       </LinearGradient>
 
-      <Animated.View
+      <Animated.ScrollView
         style={[
           styles.body,
           {
@@ -367,6 +377,9 @@ const ScannerScreen = ({ navigation }) => {
             transform: [{ translateY: slideUp }],
           },
         ]}
+        showsVerticalScrollIndicator={false}
+        bounces={true}
+        contentContainerStyle={{ paddingBottom: SPACING['3xl'] }}
       >
         {/* Error toast */}
         {errorMessage !== '' && (
@@ -521,7 +534,48 @@ const ScannerScreen = ({ navigation }) => {
             </View>
           </View>
         )}
-      </Animated.View>
+
+        {/* Demo products for quick testing */}
+        <View style={styles.demoSection}>
+          <Text style={styles.demoTitle}>Produits demo</Text>
+          <Text style={styles.demoSubtitle}>Appuyez pour tester le scanner</Text>
+          <View style={styles.demoGrid}>
+            {DEMO_PRODUCTS.map((item) => (
+              <TouchableOpacity
+                key={item.barcode}
+                style={styles.demoCard}
+                onPress={() => handleBarcodeScan(item.barcode)}
+                disabled={scanning}
+                activeOpacity={0.7}
+              >
+                <View style={[
+                  styles.demoIconCircle,
+                  { backgroundColor: item.score >= 70 ? COLORS.successSoft : item.score >= 40 ? COLORS.warningSoft : COLORS.errorSoft }
+                ]}>
+                  <Feather
+                    name={item.icon}
+                    size={18}
+                    color={item.score >= 70 ? COLORS.success : item.score >= 40 ? COLORS.warning : COLORS.error}
+                  />
+                </View>
+                <Text style={styles.demoName} numberOfLines={1}>{item.name}</Text>
+                <Text style={styles.demoBrand}>{item.brand}</Text>
+                <View style={[
+                  styles.demoScoreBadge,
+                  { backgroundColor: item.score >= 70 ? COLORS.successSoft : item.score >= 40 ? COLORS.warningSoft : COLORS.errorSoft }
+                ]}>
+                  <Text style={[
+                    styles.demoScoreText,
+                    { color: item.score >= 70 ? COLORS.success : item.score >= 40 ? COLORS.warning : COLORS.error }
+                  ]}>
+                    {item.score}/100
+                  </Text>
+                </View>
+              </TouchableOpacity>
+            ))}
+          </View>
+        </View>
+      </Animated.ScrollView>
     </KeyboardAvoidingView>
   );
 };
@@ -972,6 +1026,67 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     lineHeight: 15,
     fontFamily: FONTS.bodyMedium,
+  },
+
+  // Demo products section
+  demoSection: {
+    paddingHorizontal: SPACING.xl,
+    marginTop: SPACING.xl,
+  },
+  demoTitle: {
+    fontSize: FONT_SIZE.lg,
+    fontFamily: FONTS.heading,
+    color: COLORS.charcoal,
+    marginBottom: SPACING.xs,
+  },
+  demoSubtitle: {
+    fontSize: FONT_SIZE.sm,
+    fontFamily: FONTS.bodyMedium,
+    color: COLORS.stone,
+    marginBottom: SPACING.base,
+  },
+  demoGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: SPACING.md,
+  },
+  demoCard: {
+    width: (SCREEN_WIDTH - SPACING.xl * 2 - SPACING.md * 2) / 3,
+    backgroundColor: COLORS.white,
+    borderRadius: RADIUS.lg,
+    padding: SPACING.md,
+    alignItems: 'center',
+    ...SHADOWS.sm,
+  },
+  demoIconCircle: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: SPACING.sm,
+  },
+  demoName: {
+    fontSize: FONT_SIZE.xs,
+    fontFamily: FONTS.bodySemiBold,
+    color: COLORS.charcoal,
+    textAlign: 'center',
+    marginBottom: 2,
+  },
+  demoBrand: {
+    fontSize: FONT_SIZE.xs,
+    fontFamily: FONTS.bodyMedium,
+    color: COLORS.pebble,
+    marginBottom: SPACING.sm,
+  },
+  demoScoreBadge: {
+    paddingHorizontal: SPACING.sm,
+    paddingVertical: SPACING.xs,
+    borderRadius: RADIUS.sm,
+  },
+  demoScoreText: {
+    fontSize: FONT_SIZE.xs,
+    fontFamily: FONTS.heading,
   },
 });
 
