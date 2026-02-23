@@ -13,12 +13,14 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
+import { Feather } from '@expo/vector-icons';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { FONTS } from '../../utils/typography';
 const { COLORS, SHADOWS, RADIUS, SPACING, FONT_SIZE, getScoreColor, getScoreBg, getScoreLabel } = require('../../utils/colors');
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const SCORE_RING_SIZE = 110;
 const SCORE_RING_BORDER = 5;
-const TOP_PADDING = Platform.OS === 'ios' ? 58 : 48;
 
 const getRiskColor = (risk) => {
   switch (risk) {
@@ -44,11 +46,11 @@ const getRiskLabel = (risk) => {
   }
 };
 
-const getRiskIcon = (risk) => {
+const getRiskIconName = (risk) => {
   switch (risk) {
-    case 'dangerous': return '⚠️';
-    case 'moderate': return '⚡';
-    default: return '✓';
+    case 'dangerous': return 'alert-triangle';
+    case 'moderate': return 'zap';
+    default: return 'check';
   }
 };
 
@@ -60,14 +62,23 @@ const getScoreGradient = (score) => {
   return [COLORS.scoreVeryBad, '#FCA5A5'];
 };
 
+const DETAIL_ICONS = {
+  protein: 'trending-up',
+  fat: 'disc',
+  fiber: 'layers',
+  additivesPenalty: 'activity',
+  qualityBonus: 'star',
+};
+
 const ProductResultScreen = ({ route, navigation }) => {
+  const insets = useSafeAreaInsets();
   const { product } = route.params;
   const score = product.nutritionScore ?? null;
   const hasScore = score !== null && score !== undefined;
   const displayScore = hasScore ? score : '--';
-  const scoreColor = hasScore ? getScoreColor(score) : COLORS.textTertiary;
+  const scoreColor = hasScore ? getScoreColor(score) : COLORS.pebble;
   const scoreLabel = hasScore ? getScoreLabel(score) : 'Non evalue';
-  const scoreGradient = hasScore ? getScoreGradient(score) : [COLORS.textTertiary, COLORS.textLight];
+  const scoreGradient = hasScore ? getScoreGradient(score) : [COLORS.pebble, COLORS.sand];
 
   // Animations
   const fadeIn = useRef(new Animated.Value(0)).current;
@@ -164,7 +175,7 @@ const ProductResultScreen = ({ route, navigation }) => {
           colors={scoreGradient}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
-          style={styles.headerGradient}
+          style={[styles.headerGradient, { paddingTop: insets.top + SPACING.md }]}
         >
           {/* Nav bar */}
           <View style={styles.headerNav}>
@@ -173,7 +184,7 @@ const ProductResultScreen = ({ route, navigation }) => {
               onPress={() => navigation.goBack()}
               activeOpacity={0.7}
             >
-              <Text style={styles.backArrow}>{'‹'}</Text>
+              <Feather name="chevron-left" size={22} color={COLORS.white} />
               <Text style={styles.backText}>Retour</Text>
             </TouchableOpacity>
             <TouchableOpacity
@@ -181,7 +192,7 @@ const ProductResultScreen = ({ route, navigation }) => {
               onPress={handleShare}
               activeOpacity={0.7}
             >
-              <Text style={styles.shareIcon}>📤</Text>
+              <Feather name="share-2" size={18} color={COLORS.white} />
             </TouchableOpacity>
           </View>
 
@@ -271,7 +282,7 @@ const ProductResultScreen = ({ route, navigation }) => {
           {hasBreakdown && (
             <View style={styles.card}>
               <View style={styles.cardHeader}>
-                <Text style={styles.cardIcon}>📊</Text>
+                <Feather name="bar-chart-2" size={20} color={COLORS.primary} style={{ marginRight: SPACING.sm }} />
                 <Text style={styles.cardTitle}>Repartition du score</Text>
               </View>
 
@@ -343,7 +354,7 @@ const ProductResultScreen = ({ route, navigation }) => {
           {hasIngredients && (
             <View style={styles.card}>
               <View style={styles.cardHeader}>
-                <Text style={styles.cardIcon}>🧪</Text>
+                <Feather name="droplet" size={20} color={COLORS.primary} style={{ marginRight: SPACING.sm }} />
                 <Text style={styles.cardTitle}>Ingredients</Text>
                 <View style={styles.countBadge}>
                   <Text style={styles.countText}>{ingredients.length}</Text>
@@ -359,7 +370,11 @@ const ProductResultScreen = ({ route, navigation }) => {
                   ]}
                 >
                   <View style={[styles.riskDot, { backgroundColor: getRiskBg(ingredient.risk) }]}>
-                    <Text style={styles.riskDotIcon}>{getRiskIcon(ingredient.risk)}</Text>
+                    <Feather
+                      name={getRiskIconName(ingredient.risk)}
+                      size={13}
+                      color={getRiskColor(ingredient.risk)}
+                    />
                   </View>
                   <View style={styles.ingredientInfo}>
                     <Text style={styles.ingredientName}>
@@ -371,7 +386,7 @@ const ProductResultScreen = ({ route, navigation }) => {
                   </View>
                   {ingredient.isControversial && (
                     <View style={styles.controversialBadge}>
-                      <Text style={styles.controversialIcon}>⚠️</Text>
+                      <Feather name="alert-triangle" size={10} color={COLORS.warning} />
                       <Text style={styles.controversialText}>Controverse</Text>
                     </View>
                   )}
@@ -384,7 +399,7 @@ const ProductResultScreen = ({ route, navigation }) => {
           {hasAdditives && (
             <View style={styles.card}>
               <View style={styles.cardHeader}>
-                <Text style={styles.cardIcon}>🔬</Text>
+                <Feather name="search" size={20} color={COLORS.primary} style={{ marginRight: SPACING.sm }} />
                 <Text style={styles.cardTitle}>Additifs</Text>
                 <View style={[styles.countBadge, { backgroundColor: COLORS.warningSoft }]}>
                   <Text style={[styles.countText, { color: COLORS.warning }]}>{additives.length}</Text>
@@ -426,16 +441,16 @@ const ProductResultScreen = ({ route, navigation }) => {
           {hasScoreDetails && (
             <View style={styles.card}>
               <View style={styles.cardHeader}>
-                <Text style={styles.cardIcon}>📋</Text>
+                <Feather name="clipboard" size={20} color={COLORS.primary} style={{ marginRight: SPACING.sm }} />
                 <Text style={styles.cardTitle}>Details du score</Text>
               </View>
 
               {[
-                { label: 'Proteines', value: product.scoreDetails.protein, icon: '💪' },
-                { label: 'Matieres grasses', value: product.scoreDetails.fat, icon: '🧈' },
-                { label: 'Fibres', value: product.scoreDetails.fiber, icon: '🌾' },
-                { label: 'Penalite additifs', value: product.scoreDetails.additivesPenalty != null ? -product.scoreDetails.additivesPenalty : null, icon: '⚗️' },
-                { label: 'Bonus qualite', value: product.scoreDetails.qualityBonus, icon: '⭐' },
+                { label: 'Proteines', value: product.scoreDetails.protein, icon: 'trending-up' },
+                { label: 'Matieres grasses', value: product.scoreDetails.fat, icon: 'disc' },
+                { label: 'Fibres', value: product.scoreDetails.fiber, icon: 'layers' },
+                { label: 'Penalite additifs', value: product.scoreDetails.additivesPenalty != null ? -product.scoreDetails.additivesPenalty : null, icon: 'activity' },
+                { label: 'Bonus qualite', value: product.scoreDetails.qualityBonus, icon: 'star' },
               ].filter(d => d.value != null).map((detail, idx, arr) => (
                 <View
                   key={idx}
@@ -445,7 +460,11 @@ const ProductResultScreen = ({ route, navigation }) => {
                   ]}
                 >
                   <View style={styles.detailLeft}>
-                    <Text style={styles.detailIcon}>{detail.icon}</Text>
+                    <Feather
+                      name={detail.icon}
+                      size={16}
+                      color={COLORS.stone}
+                    />
                     <Text style={styles.detailLabel}>{detail.label}</Text>
                   </View>
                   <View
@@ -456,7 +475,7 @@ const ProductResultScreen = ({ route, navigation }) => {
                           ? COLORS.successSoft
                           : detail.value < 0
                             ? COLORS.errorSoft
-                            : COLORS.background,
+                            : COLORS.linen,
                       },
                     ]}
                   >
@@ -468,7 +487,7 @@ const ProductResultScreen = ({ route, navigation }) => {
                             ? COLORS.success
                             : detail.value < 0
                               ? COLORS.error
-                              : COLORS.textSecondary,
+                              : COLORS.stone,
                         },
                       ]}
                     >
@@ -483,7 +502,9 @@ const ProductResultScreen = ({ route, navigation }) => {
           {/* No data fallback */}
           {!hasIngredients && !hasAdditives && !hasBreakdown && !hasScoreDetails && (
             <View style={styles.noDataCard}>
-              <Text style={styles.noDataIcon}>📭</Text>
+              <View style={styles.noDataIconCircle}>
+                <Feather name="inbox" size={36} color={COLORS.sand} />
+              </View>
               <Text style={styles.noDataTitle}>Informations limitees</Text>
               <Text style={styles.noDataText}>
                 Les details de ce produit ne sont pas encore disponibles dans notre base de donnees.
@@ -509,7 +530,7 @@ const ProductResultScreen = ({ route, navigation }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: COLORS.background,
+    backgroundColor: COLORS.cream,
   },
   scrollView: {
     flex: 1,
@@ -520,7 +541,6 @@ const styles = StyleSheet.create({
 
   // Header gradient
   headerGradient: {
-    paddingTop: TOP_PADDING,
     paddingBottom: SPACING['3xl'],
     paddingHorizontal: SPACING.xl,
     alignItems: 'center',
@@ -545,17 +565,10 @@ const styles = StyleSheet.create({
     borderRadius: RADIUS.full,
     gap: 2,
   },
-  backArrow: {
-    fontSize: 24,
-    color: COLORS.white,
-    fontWeight: '400',
-    marginTop: -2,
-    lineHeight: 26,
-  },
   backText: {
     fontSize: FONT_SIZE.sm,
     color: COLORS.white,
-    fontWeight: '600',
+    fontFamily: FONTS.bodySemiBold,
   },
   shareButton: {
     width: 40,
@@ -564,9 +577,6 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255,255,255,0.2)',
     alignItems: 'center',
     justifyContent: 'center',
-  },
-  shareIcon: {
-    fontSize: 18,
   },
 
   // Score badge
@@ -610,19 +620,19 @@ const styles = StyleSheet.create({
   },
   scoreNumber: {
     fontSize: FONT_SIZE['4xl'],
-    fontWeight: '900',
-    color: COLORS.textPrimary,
+    fontFamily: FONTS.heading,
+    color: COLORS.charcoal,
     letterSpacing: -1,
     lineHeight: FONT_SIZE['4xl'] + 2,
   },
   scoreNumberMuted: {
-    color: COLORS.textTertiary,
+    color: COLORS.pebble,
     fontSize: FONT_SIZE['2xl'],
   },
   scoreMax: {
     fontSize: FONT_SIZE.xs,
-    fontWeight: '600',
-    color: COLORS.textTertiary,
+    fontFamily: FONTS.bodySemiBold,
+    color: COLORS.pebble,
     marginTop: -2,
   },
 
@@ -636,7 +646,7 @@ const styles = StyleSheet.create({
   },
   scoreLabelText: {
     fontSize: FONT_SIZE.sm,
-    fontWeight: '700',
+    fontFamily: FONTS.heading,
     color: COLORS.white,
     letterSpacing: 0.5,
     textTransform: 'uppercase',
@@ -645,7 +655,7 @@ const styles = StyleSheet.create({
   // Product info
   productName: {
     fontSize: FONT_SIZE['2xl'],
-    fontWeight: '800',
+    fontFamily: FONTS.heading,
     color: COLORS.white,
     textAlign: 'center',
     letterSpacing: -0.3,
@@ -654,7 +664,7 @@ const styles = StyleSheet.create({
   productBrand: {
     fontSize: FONT_SIZE.base,
     color: 'rgba(255,255,255,0.75)',
-    fontWeight: '500',
+    fontFamily: FONTS.bodyMedium,
     marginBottom: SPACING.sm,
   },
   categoryBadge: {
@@ -667,7 +677,7 @@ const styles = StyleSheet.create({
   categoryText: {
     fontSize: FONT_SIZE.xs,
     color: 'rgba(255,255,255,0.85)',
-    fontWeight: '600',
+    fontFamily: FONTS.bodySemiBold,
   },
 
   // Quick stats
@@ -685,12 +695,12 @@ const styles = StyleSheet.create({
   },
   quickStatValue: {
     fontSize: FONT_SIZE.lg,
-    fontWeight: '800',
+    fontFamily: FONTS.heading,
     color: COLORS.white,
   },
   quickStatLabel: {
     fontSize: FONT_SIZE.xs,
-    fontWeight: '500',
+    fontFamily: FONTS.bodyMedium,
     color: 'rgba(255,255,255,0.7)',
     marginTop: 1,
   },
@@ -714,15 +724,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: SPACING.lg,
   },
-  cardIcon: {
-    fontSize: 20,
-    marginRight: SPACING.sm,
-  },
   cardTitle: {
     flex: 1,
     fontSize: FONT_SIZE.lg,
-    fontWeight: '700',
-    color: COLORS.textPrimary,
+    fontFamily: FONTS.heading,
+    color: COLORS.charcoal,
   },
   countBadge: {
     backgroundColor: COLORS.primarySoft,
@@ -732,7 +738,7 @@ const styles = StyleSheet.create({
   },
   countText: {
     fontSize: FONT_SIZE.xs,
-    fontWeight: '700',
+    fontFamily: FONTS.heading,
     color: COLORS.primary,
   },
 
@@ -764,7 +770,7 @@ const styles = StyleSheet.create({
   },
   riskSummaryText: {
     fontSize: FONT_SIZE.xs,
-    fontWeight: '700',
+    fontFamily: FONTS.heading,
   },
 
   // Score breakdown
@@ -781,19 +787,19 @@ const styles = StyleSheet.create({
   },
   breakdownLabel: {
     fontSize: FONT_SIZE.sm,
-    fontWeight: '600',
-    color: COLORS.textPrimary,
+    fontFamily: FONTS.bodySemiBold,
+    color: COLORS.charcoal,
   },
   breakdownWeight: {
     fontSize: FONT_SIZE.xs,
-    fontWeight: '500',
-    color: COLORS.textTertiary,
+    fontFamily: FONTS.bodyMedium,
+    color: COLORS.pebble,
     marginTop: 2,
   },
   progressBarBg: {
     height: 8,
     borderRadius: 4,
-    backgroundColor: COLORS.background,
+    backgroundColor: COLORS.linen,
     overflow: 'hidden',
   },
   progressBarFill: {
@@ -802,7 +808,7 @@ const styles = StyleSheet.create({
   },
   breakdownValue: {
     fontSize: FONT_SIZE.sm,
-    fontWeight: '800',
+    fontFamily: FONTS.heading,
   },
 
   // Ingredients
@@ -824,22 +830,19 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     marginRight: SPACING.md,
   },
-  riskDotIcon: {
-    fontSize: 13,
-  },
   ingredientInfo: {
     flex: 1,
   },
   ingredientName: {
     fontSize: FONT_SIZE.base,
-    fontWeight: '600',
-    color: COLORS.textPrimary,
+    fontFamily: FONTS.bodySemiBold,
+    color: COLORS.charcoal,
     textTransform: 'capitalize',
     marginBottom: 2,
   },
   ingredientRiskText: {
     fontSize: FONT_SIZE.xs,
-    fontWeight: '500',
+    fontFamily: FONTS.bodyMedium,
   },
   controversialBadge: {
     flexDirection: 'row',
@@ -850,13 +853,10 @@ const styles = StyleSheet.create({
     borderRadius: RADIUS.sm,
     gap: 3,
   },
-  controversialIcon: {
-    fontSize: 10,
-  },
   controversialText: {
     fontSize: FONT_SIZE.xs,
     color: COLORS.warning,
-    fontWeight: '700',
+    fontFamily: FONTS.heading,
   },
 
   // Additives
@@ -882,14 +882,14 @@ const styles = StyleSheet.create({
   },
   additiveCode: {
     fontSize: FONT_SIZE.xs,
-    fontWeight: '800',
+    fontFamily: FONTS.heading,
     letterSpacing: 0.3,
   },
   additiveName: {
     flex: 1,
     fontSize: FONT_SIZE.sm,
-    color: COLORS.textSecondary,
-    fontWeight: '500',
+    color: COLORS.stone,
+    fontFamily: FONTS.bodyMedium,
   },
   riskBadge: {
     flexDirection: 'row',
@@ -906,7 +906,7 @@ const styles = StyleSheet.create({
   },
   riskBadgeText: {
     fontSize: FONT_SIZE.xs,
-    fontWeight: '700',
+    fontFamily: FONTS.heading,
   },
 
   // Details
@@ -923,13 +923,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: SPACING.sm,
   },
-  detailIcon: {
-    fontSize: 16,
-  },
   detailLabel: {
     fontSize: FONT_SIZE.base,
-    fontWeight: '500',
-    color: COLORS.textSecondary,
+    fontFamily: FONTS.bodyMedium,
+    color: COLORS.stone,
   },
   detailValueBadge: {
     paddingHorizontal: SPACING.md,
@@ -940,7 +937,7 @@ const styles = StyleSheet.create({
   },
   detailValue: {
     fontSize: FONT_SIZE.sm,
-    fontWeight: '800',
+    fontFamily: FONTS.heading,
   },
 
   // No data
@@ -952,20 +949,25 @@ const styles = StyleSheet.create({
     marginBottom: SPACING.base,
     ...SHADOWS.sm,
   },
-  noDataIcon: {
-    fontSize: 40,
+  noDataIconCircle: {
+    width: 72,
+    height: 72,
+    borderRadius: 36,
+    backgroundColor: COLORS.linen,
+    alignItems: 'center',
+    justifyContent: 'center',
     marginBottom: SPACING.base,
   },
   noDataTitle: {
     fontSize: FONT_SIZE.lg,
-    fontWeight: '700',
-    color: COLORS.textPrimary,
+    fontFamily: FONTS.heading,
+    color: COLORS.charcoal,
     marginBottom: SPACING.sm,
   },
   noDataText: {
     fontSize: FONT_SIZE.sm,
-    fontWeight: '500',
-    color: COLORS.textSecondary,
+    fontFamily: FONTS.bodyMedium,
+    color: COLORS.stone,
     textAlign: 'center',
     lineHeight: 20,
   },
@@ -978,16 +980,16 @@ const styles = StyleSheet.create({
   },
   barcodeLabel: {
     fontSize: FONT_SIZE.xs,
-    fontWeight: '500',
-    color: COLORS.textTertiary,
+    fontFamily: FONTS.bodyMedium,
+    color: COLORS.pebble,
     marginBottom: 4,
     textTransform: 'uppercase',
     letterSpacing: 0.5,
   },
   barcodeValue: {
     fontSize: FONT_SIZE.sm,
-    fontWeight: '600',
-    color: COLORS.textSecondary,
+    fontFamily: FONTS.bodySemiBold,
+    color: COLORS.stone,
     letterSpacing: 2,
   },
 });

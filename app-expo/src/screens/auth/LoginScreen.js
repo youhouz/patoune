@@ -1,282 +1,302 @@
-import React, { useState, useRef } from 'react';
-import {
-  View, Text, TextInput, TouchableOpacity,
-  StyleSheet, KeyboardAvoidingView, Platform, ScrollView, Alert,
-  Animated, StatusBar, Dimensions
-} from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
-import { useAuth } from '../../context/AuthContext';
-import Button from '../../components/Button';
-const colors = require('../../utils/colors');
-const { SHADOWS, RADIUS, SPACING } = require('../../utils/colors');
+// ---------------------------------------------------------------------------
+// Patoune v2.0 - Login Screen
+// Premium "Terracotta Studio" aesthetic - cream background, organic warmth
+// ---------------------------------------------------------------------------
 
-const { width } = Dimensions.get('window');
+import React, { useState, useRef, useEffect } from 'react';
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  StyleSheet,
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
+  StatusBar,
+  Animated,
+} from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
+import { useAuth } from '../../context/AuthContext';
+import { COLORS, SPACING, RADIUS, SHADOWS } from '../../utils/colors';
+import { FONTS, TEXT_STYLES } from '../../utils/typography';
+import Button from '../../components/Button';
+import Input from '../../components/Input';
+
 
 const LoginScreen = ({ navigation }) => {
   const { login } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
-  const [showPassword, setShowPassword] = useState(false);
-  const [focusedField, setFocusedField] = useState(null);
+  const [errorMessage, setErrorMessage] = useState('');
+
+  // Subtle fade-in animation for the form
+  const fadeAnim = useRef(new Animated.Value(0)).current;
+  const slideAnim = useRef(new Animated.Value(30)).current;
+
+  useEffect(() => {
+    Animated.parallel([
+      Animated.timing(fadeAnim, {
+        toValue: 1,
+        duration: 600,
+        useNativeDriver: true,
+      }),
+      Animated.timing(slideAnim, {
+        toValue: 0,
+        duration: 600,
+        useNativeDriver: true,
+      }),
+    ]).start();
+  }, []);
 
   const handleLogin = async () => {
-    if (!email || !password) {
-      Alert.alert('Oups !', 'Remplis tous les champs pour continuer');
+    setErrorMessage('');
+
+    if (!email.trim()) {
+      setErrorMessage('Veuillez entrer votre adresse email');
       return;
     }
+    if (!password) {
+      setErrorMessage('Veuillez entrer votre mot de passe');
+      return;
+    }
+
     setLoading(true);
     const result = await login(email.trim().toLowerCase(), password);
     setLoading(false);
+
     if (!result.success) {
-      Alert.alert('Connexion impossible', result.error);
+      setErrorMessage(result.error);
     }
   };
 
   return (
     <View style={styles.container}>
-      <StatusBar barStyle="light-content" />
-
-      {/* Header gradient with brand */}
-      <LinearGradient
-        colors={['#FF6B35', '#FF8F65', '#FFB088']}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1 }}
-        style={styles.headerGradient}
-      >
-        <View style={styles.headerContent}>
-          <Text style={styles.pawEmoji}>🐾</Text>
-          <Text style={styles.logo}>patoune</Text>
-          <Text style={styles.tagline}>Le meilleur pour vos animaux</Text>
-        </View>
-        <View style={styles.headerCurve} />
-      </LinearGradient>
+      <StatusBar barStyle="dark-content" backgroundColor={COLORS.cream} />
 
       <KeyboardAvoidingView
-        style={styles.formWrapper}
+        style={styles.flex}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       >
         <ScrollView
-          contentContainerStyle={styles.scroll}
+          contentContainerStyle={styles.scrollContent}
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
         >
-          <Text style={styles.welcomeBack}>Content de te revoir !</Text>
-          <Text style={styles.subtitle}>Connecte-toi pour continuer</Text>
-
-          {/* Email field */}
-          <View style={styles.fieldGroup}>
-            <Text style={styles.label}>Email</Text>
-            <View style={[
-              styles.inputWrapper,
-              focusedField === 'email' && styles.inputFocused,
-            ]}>
-              <Text style={styles.inputIcon}>{'📧'}</Text>
-              <TextInput
-                style={styles.input}
-                value={email}
-                onChangeText={setEmail}
-                placeholder="ton@email.com"
-                placeholderTextColor={colors.textLight}
-                keyboardType="email-address"
-                autoCapitalize="none"
-                autoCorrect={false}
-                onFocus={() => setFocusedField('email')}
-                onBlur={() => setFocusedField(null)}
-              />
+          {/* Brand header */}
+          <View style={styles.brandSection}>
+            <View style={styles.pawContainer}>
+              <Ionicons name="paw" size={44} color={COLORS.primary} />
             </View>
+            <Text style={styles.brandName}>patoune</Text>
           </View>
 
-          {/* Password field */}
-          <View style={styles.fieldGroup}>
-            <Text style={styles.label}>Mot de passe</Text>
-            <View style={[
-              styles.inputWrapper,
-              focusedField === 'password' && styles.inputFocused,
-            ]}>
-              <Text style={styles.inputIcon}>{'🔒'}</Text>
-              <TextInput
-                style={[styles.input, { flex: 1 }]}
-                value={password}
-                onChangeText={setPassword}
-                placeholder="Ton mot de passe"
-                placeholderTextColor={colors.textLight}
-                secureTextEntry={!showPassword}
-                onFocus={() => setFocusedField('password')}
-                onBlur={() => setFocusedField(null)}
-              />
-              <TouchableOpacity
-                style={styles.eyeBtn}
-                onPress={() => setShowPassword(!showPassword)}
-                hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-              >
-                <Text style={styles.eyeIcon}>{showPassword ? '🙈' : '👁️'}</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-
-          <Button
-            title="Se connecter"
-            onPress={handleLogin}
-            loading={loading}
-            style={{ marginTop: 8 }}
-            size="lg"
-          />
-
-          {/* Separator */}
-          <View style={styles.separator}>
-            <View style={styles.separatorLine} />
-            <Text style={styles.separatorText}>ou</Text>
-            <View style={styles.separatorLine} />
-          </View>
-
-          {/* Register CTA */}
-          <TouchableOpacity
-            style={styles.registerBtn}
-            onPress={() => navigation.navigate('Register')}
-            activeOpacity={0.7}
+          {/* Welcome text */}
+          <Animated.View
+            style={[
+              styles.formSection,
+              {
+                opacity: fadeAnim,
+                transform: [{ translateY: slideAnim }],
+              },
+            ]}
           >
-            <Text style={styles.registerText}>
-              Pas encore de compte ?{' '}
-              <Text style={styles.registerBold}>Creer un compte</Text>
+            <Text style={styles.welcomeTitle}>Bon retour</Text>
+            <Text style={styles.welcomeSubtitle}>
+              Connectez-vous pour retrouver vos compagnons
             </Text>
-          </TouchableOpacity>
+
+            {/* Error message */}
+            {errorMessage ? (
+              <View style={styles.errorContainer}>
+                <Ionicons
+                  name="alert-circle-outline"
+                  size={18}
+                  color={COLORS.error}
+                />
+                <Text style={styles.errorText}>{errorMessage}</Text>
+              </View>
+            ) : null}
+
+            {/* Email input */}
+            <Input
+              label="Email"
+              placeholder="votre@email.com"
+              value={email}
+              onChangeText={(text) => {
+                setEmail(text);
+                if (errorMessage) setErrorMessage('');
+              }}
+              icon="mail"
+              keyboardType="email-address"
+              autoCapitalize="none"
+              autoCorrect={false}
+            />
+
+            {/* Password input */}
+            <Input
+              label="Mot de passe"
+              placeholder="Votre mot de passe"
+              value={password}
+              onChangeText={(text) => {
+                setPassword(text);
+                if (errorMessage) setErrorMessage('');
+              }}
+              icon="lock"
+              secureTextEntry
+            />
+
+            {/* Login button */}
+            <Button
+              title="Se connecter"
+              onPress={handleLogin}
+              loading={loading}
+              variant="primary"
+              size="lg"
+              style={styles.loginButton}
+            />
+
+            {/* Divider */}
+            <View style={styles.divider}>
+              <View style={styles.dividerLine} />
+              <Text style={styles.dividerText}>ou</Text>
+              <View style={styles.dividerLine} />
+            </View>
+
+            {/* Register link */}
+            <TouchableOpacity
+              style={styles.registerLink}
+              onPress={() => navigation.navigate('Register')}
+              activeOpacity={0.7}
+            >
+              <Text style={styles.registerText}>
+                Pas encore de compte ?{' '}
+                <Text style={styles.registerBold}>Creer un compte</Text>
+              </Text>
+            </TouchableOpacity>
+          </Animated.View>
         </ScrollView>
       </KeyboardAvoidingView>
     </View>
   );
 };
 
+
+// ---------------------------------------------------------------------------
+// Styles
+// ---------------------------------------------------------------------------
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.white,
+    backgroundColor: COLORS.cream,
   },
-  headerGradient: {
-    paddingTop: Platform.OS === 'ios' ? 60 : 50,
-    paddingBottom: 50,
+  flex: {
+    flex: 1,
+  },
+  scrollContent: {
+    flexGrow: 1,
+    paddingHorizontal: SPACING.xl,
+    paddingBottom: SPACING['3xl'],
+  },
+
+  // ---- Brand ----
+  brandSection: {
     alignItems: 'center',
+    paddingTop: Platform.OS === 'ios' ? 80 : 64,
+    paddingBottom: SPACING['3xl'],
   },
-  headerContent: {
+  pawContainer: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    backgroundColor: COLORS.primarySoft,
     alignItems: 'center',
-    zIndex: 1,
+    justifyContent: 'center',
+    marginBottom: SPACING.base,
   },
-  headerCurve: {
-    position: 'absolute',
-    bottom: -1,
-    left: 0,
-    right: 0,
-    height: 30,
-    backgroundColor: colors.white,
-    borderTopLeftRadius: 30,
-    borderTopRightRadius: 30,
-  },
-  pawEmoji: {
-    fontSize: 48,
-    marginBottom: 8,
-  },
-  logo: {
-    fontSize: 42,
-    fontWeight: '900',
-    color: '#FFF',
-    letterSpacing: 3,
+  brandName: {
+    fontFamily: FONTS.brand,
+    fontSize: 36,
+    color: COLORS.charcoal,
+    letterSpacing: -0.5,
     textTransform: 'lowercase',
   },
-  tagline: {
-    fontSize: 14,
-    color: 'rgba(255,255,255,0.85)',
-    marginTop: 6,
-    fontWeight: '500',
-  },
-  formWrapper: {
+
+  // ---- Form section ----
+  formSection: {
     flex: 1,
   },
-  scroll: {
-    flexGrow: 1,
-    paddingHorizontal: 24,
-    paddingTop: 8,
-    paddingBottom: 40,
+  welcomeTitle: {
+    fontFamily: FONTS.heading,
+    fontSize: 28,
+    color: COLORS.charcoal,
+    marginBottom: SPACING.xs,
+    letterSpacing: -0.3,
   },
-  welcomeBack: {
-    fontSize: 26,
-    fontWeight: '800',
-    color: colors.text,
-    marginBottom: 4,
-  },
-  subtitle: {
+  welcomeSubtitle: {
+    fontFamily: FONTS.body,
     fontSize: 15,
-    color: colors.textSecondary,
-    marginBottom: 28,
+    color: COLORS.textSecondary,
+    marginBottom: SPACING['2xl'],
+    lineHeight: 22,
   },
-  fieldGroup: {
-    marginBottom: 18,
+
+  // ---- Error ----
+  errorContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: COLORS.errorSoft,
+    paddingVertical: SPACING.md,
+    paddingHorizontal: SPACING.base,
+    borderRadius: RADIUS.md,
+    marginBottom: SPACING.lg,
+    gap: SPACING.sm,
   },
-  label: {
+  errorText: {
+    fontFamily: FONTS.bodyMedium,
     fontSize: 14,
-    fontWeight: '600',
-    color: colors.text,
-    marginBottom: 8,
-    marginLeft: 2,
-  },
-  inputWrapper: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: colors.background,
-    borderRadius: RADIUS.lg,
-    borderWidth: 1.5,
-    borderColor: colors.border,
-    paddingHorizontal: 14,
-    height: 54,
-  },
-  inputFocused: {
-    borderColor: colors.primary,
-    backgroundColor: colors.primarySoft,
-  },
-  inputIcon: {
-    fontSize: 18,
-    marginRight: 10,
-  },
-  input: {
+    color: COLORS.error,
     flex: 1,
-    fontSize: 15,
-    color: colors.text,
-    paddingVertical: 0,
   },
-  eyeBtn: {
-    padding: 4,
+
+  // ---- Button ----
+  loginButton: {
+    marginTop: SPACING.sm,
   },
-  eyeIcon: {
-    fontSize: 18,
-  },
-  separator: {
+
+  // ---- Divider ----
+  divider: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginVertical: 24,
+    marginVertical: SPACING['2xl'],
   },
-  separatorLine: {
+  dividerLine: {
     flex: 1,
     height: 1,
-    backgroundColor: colors.border,
+    backgroundColor: COLORS.border,
   },
-  separatorText: {
-    marginHorizontal: 16,
+  dividerText: {
+    fontFamily: FONTS.bodyMedium,
     fontSize: 13,
-    color: colors.textTertiary,
-    fontWeight: '500',
+    color: COLORS.textTertiary,
+    marginHorizontal: SPACING.base,
   },
-  registerBtn: {
+
+  // ---- Register link ----
+  registerLink: {
     alignItems: 'center',
-    paddingVertical: 14,
-    backgroundColor: colors.primarySoft,
+    paddingVertical: SPACING.base,
+    backgroundColor: COLORS.primarySoft,
     borderRadius: RADIUS.lg,
   },
   registerText: {
+    fontFamily: FONTS.body,
     fontSize: 15,
-    color: colors.textSecondary,
+    color: COLORS.textSecondary,
   },
   registerBold: {
-    color: colors.primary,
-    fontWeight: '700',
+    fontFamily: FONTS.heading,
+    color: COLORS.primary,
   },
 });
 

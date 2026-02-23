@@ -1,131 +1,278 @@
-import React from 'react';
-import { TouchableOpacity, Text, StyleSheet, ActivityIndicator, View } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
-const colors = require('../utils/colors');
-const { SHADOWS, RADIUS } = require('../utils/colors');
+// ---------------------------------------------------------------------------
+// Patoune v2.0 - Button Component
+// Premium button with 6 variants and 3 sizes.
+// Uses terracotta gradient for primary CTA, DM Sans typography,
+// and haptic feedback for a tactile native feel.
+// ---------------------------------------------------------------------------
 
+import React, { useCallback } from 'react';
+import {
+  TouchableOpacity,
+  Text,
+  StyleSheet,
+  ActivityIndicator,
+  View,
+  Platform,
+} from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
+import * as Haptics from 'expo-haptics';
+import { Feather } from '@expo/vector-icons';
+import { COLORS, SHADOWS, RADIUS } from '../utils/colors';
+import { FONTS, TEXT_STYLES } from '../utils/typography';
+
+
+// ---------------------------------------------------------------------------
+// Size presets
+// ---------------------------------------------------------------------------
+const SIZE_STYLES = {
+  sm: {
+    paddingVertical: 10,
+    paddingHorizontal: 18,
+    minHeight: 40,
+    iconSize: 16,
+    fontSize: 14,
+    iconGap: 6,
+  },
+  md: {
+    paddingVertical: 14,
+    paddingHorizontal: 24,
+    minHeight: 52,
+    iconSize: 18,
+    fontSize: 16,
+    iconGap: 8,
+  },
+  lg: {
+    paddingVertical: 18,
+    paddingHorizontal: 32,
+    minHeight: 58,
+    iconSize: 20,
+    fontSize: 18,
+    iconGap: 10,
+  },
+};
+
+
+// ---------------------------------------------------------------------------
+// Variant configurations
+// ---------------------------------------------------------------------------
+const VARIANTS = {
+  secondary: {
+    bg: COLORS.secondary,
+    textColor: COLORS.textInverse,
+    borderWidth: 0,
+    borderColor: 'transparent',
+  },
+  outline: {
+    bg: 'transparent',
+    textColor: COLORS.primary,
+    borderWidth: 1.5,
+    borderColor: COLORS.primary,
+  },
+  soft: {
+    bg: COLORS.primarySoft,
+    textColor: COLORS.primaryDark,
+    borderWidth: 0,
+    borderColor: 'transparent',
+  },
+  ghost: {
+    bg: 'transparent',
+    textColor: COLORS.primary,
+    borderWidth: 0,
+    borderColor: 'transparent',
+  },
+  danger: {
+    bg: COLORS.errorSoft,
+    textColor: COLORS.error,
+    borderWidth: 0,
+    borderColor: 'transparent',
+  },
+};
+
+
+/**
+ * Premium button component.
+ *
+ * @param {object} props
+ * @param {string}  props.title                     - Button label text
+ * @param {function} props.onPress                  - Press handler
+ * @param {boolean} [props.loading=false]           - Show loading spinner
+ * @param {boolean} [props.disabled=false]          - Disable interactions
+ * @param {string}  [props.icon]                    - Feather icon name (left side)
+ * @param {'primary'|'secondary'|'outline'|'soft'|'ghost'|'danger'} [props.variant='primary']
+ * @param {'sm'|'md'|'lg'} [props.size='md']
+ * @param {boolean} [props.fullWidth=true]          - Stretch to container width
+ * @param {object}  [props.style]                   - Container style override
+ * @param {object}  [props.textStyle]               - Text style override
+ */
 const Button = ({
-  title, onPress, loading, style, textStyle,
-  variant = 'primary', disabled, icon, size = 'md',
-  fullWidth = true
+  title,
+  onPress,
+  loading = false,
+  disabled = false,
+  icon,
+  variant = 'primary',
+  size = 'md',
+  fullWidth = true,
+  style,
+  textStyle,
 }) => {
-  const sizeStyles = {
-    sm: { paddingVertical: 10, paddingHorizontal: 16, minHeight: 40 },
-    md: { paddingVertical: 14, paddingHorizontal: 24, minHeight: 52 },
-    lg: { paddingVertical: 18, paddingHorizontal: 32, minHeight: 58 },
+  const sizeConfig = SIZE_STYLES[size] || SIZE_STYLES.md;
+
+  // Trigger light haptic feedback on press (native only)
+  const handlePress = useCallback((...args) => {
+    if (Platform.OS !== 'web') {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    }
+    onPress?.(...args);
+  }, [onPress]);
+
+  // Shared inner content (icon + label or spinner)
+  const renderContent = (textColor) => {
+    if (loading) {
+      return <ActivityIndicator color={textColor} size="small" />;
+    }
+
+    return (
+      <View style={[styles.content, { gap: sizeConfig.iconGap }]}>
+        {icon ? (
+          <Feather name={icon} size={sizeConfig.iconSize} color={textColor} />
+        ) : null}
+        <Text
+          style={[
+            styles.label,
+            {
+              fontFamily: FONTS.bodySemiBold,
+              fontSize: sizeConfig.fontSize,
+              color: textColor,
+            },
+            textStyle,
+          ]}
+          numberOfLines={1}
+        >
+          {title}
+        </Text>
+      </View>
+    );
   };
 
-  const fontSizes = { sm: 14, md: 16, lg: 18 };
 
+  // ---- Primary variant: terracotta gradient ----
   if (variant === 'primary') {
     return (
       <TouchableOpacity
-        onPress={onPress}
+        onPress={handlePress}
         disabled={loading || disabled}
         activeOpacity={0.85}
-        style={[fullWidth && { width: '100%' }, style]}
+        style={[fullWidth && styles.fullWidth, style]}
+        accessibilityRole="button"
+        accessibilityLabel={title}
+        accessibilityState={{ disabled: loading || disabled }}
       >
         <LinearGradient
-          colors={disabled ? ['#CCC', '#BBB'] : ['#FF6B35', '#FF8F65']}
+          colors={disabled ? [COLORS.sand, COLORS.sand] : COLORS.gradientPrimary}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 0 }}
           style={[
-            styles.button, sizeStyles[size],
-            { borderRadius: RADIUS.lg },
-            !disabled && SHADOWS.glow('#FF6B35'),
+            styles.base,
+            {
+              paddingVertical: sizeConfig.paddingVertical,
+              paddingHorizontal: sizeConfig.paddingHorizontal,
+              minHeight: sizeConfig.minHeight,
+              borderRadius: RADIUS.lg,
+            },
+            !disabled && SHADOWS.glow(COLORS.primary),
           ]}
         >
-          {loading ? (
-            <ActivityIndicator color="#FFF" size="small" />
-          ) : (
-            <View style={styles.content}>
-              {icon && <Text style={styles.icon}>{icon}</Text>}
-              <Text style={[styles.text, styles.primaryText, { fontSize: fontSizes[size] }, textStyle]}>
-                {title}
-              </Text>
-            </View>
-          )}
+          {renderContent(COLORS.textInverse)}
         </LinearGradient>
       </TouchableOpacity>
     );
   }
 
-  const variantStyles = {
-    outline: {
-      bg: 'transparent',
-      border: colors.primary,
-      textColor: colors.primary,
-    },
-    secondary: {
-      bg: colors.primarySoft,
-      border: 'transparent',
-      textColor: colors.primary,
-    },
-    ghost: {
-      bg: 'transparent',
-      border: 'transparent',
-      textColor: colors.primary,
-    },
-    danger: {
-      bg: colors.errorSoft,
-      border: 'transparent',
-      textColor: colors.error,
-    },
-  };
 
-  const v = variantStyles[variant] || variantStyles.outline;
+  // ---- Secondary variant: solid forest sage with subtle shadow ----
+  if (variant === 'secondary') {
+    const v = VARIANTS.secondary;
+    return (
+      <TouchableOpacity
+        onPress={handlePress}
+        disabled={loading || disabled}
+        activeOpacity={0.85}
+        accessibilityRole="button"
+        accessibilityLabel={title}
+        accessibilityState={{ disabled: loading || disabled }}
+        style={[
+          styles.base,
+          {
+            backgroundColor: disabled ? COLORS.sand : v.bg,
+            paddingVertical: sizeConfig.paddingVertical,
+            paddingHorizontal: sizeConfig.paddingHorizontal,
+            minHeight: sizeConfig.minHeight,
+            borderRadius: RADIUS.lg,
+          },
+          !disabled && SHADOWS.glow(COLORS.secondary),
+          disabled && styles.disabled,
+          fullWidth && styles.fullWidth,
+          style,
+        ]}
+      >
+        {renderContent(disabled ? COLORS.textLight : v.textColor)}
+      </TouchableOpacity>
+    );
+  }
+
+
+  // ---- All other variants (outline, soft, ghost, danger) ----
+  const v = VARIANTS[variant] || VARIANTS.outline;
 
   return (
     <TouchableOpacity
+      onPress={handlePress}
+      disabled={loading || disabled}
+      activeOpacity={0.7}
+      accessibilityRole="button"
+      accessibilityLabel={title}
+      accessibilityState={{ disabled: loading || disabled }}
       style={[
-        styles.button, sizeStyles[size],
+        styles.base,
         {
           backgroundColor: v.bg,
-          borderWidth: variant === 'outline' ? 1.5 : 0,
-          borderColor: v.border,
+          borderWidth: v.borderWidth,
+          borderColor: disabled ? COLORS.sand : v.borderColor,
+          paddingVertical: sizeConfig.paddingVertical,
+          paddingHorizontal: sizeConfig.paddingHorizontal,
+          minHeight: sizeConfig.minHeight,
           borderRadius: RADIUS.lg,
         },
         disabled && styles.disabled,
-        fullWidth && { width: '100%' },
+        fullWidth && styles.fullWidth,
         style,
       ]}
-      onPress={onPress}
-      disabled={loading || disabled}
-      activeOpacity={0.7}
     >
-      {loading ? (
-        <ActivityIndicator color={v.textColor} size="small" />
-      ) : (
-        <View style={styles.content}>
-          {icon && <Text style={styles.icon}>{icon}</Text>}
-          <Text style={[styles.text, { color: v.textColor, fontSize: fontSizes[size] }, textStyle]}>
-            {title}
-          </Text>
-        </View>
-      )}
+      {renderContent(disabled ? COLORS.textLight : v.textColor)}
     </TouchableOpacity>
   );
 };
 
+
+// ---------------------------------------------------------------------------
+// Styles
+// ---------------------------------------------------------------------------
 const styles = StyleSheet.create({
-  button: {
+  base: {
     alignItems: 'center',
     justifyContent: 'center',
+    flexDirection: 'row',
   },
   content: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
   },
-  icon: {
-    fontSize: 18,
+  label: {
+    letterSpacing: 0.2,
   },
-  text: {
-    fontWeight: '700',
-    letterSpacing: 0.3,
-  },
-  primaryText: {
-    color: '#FFF',
+  fullWidth: {
+    width: '100%',
   },
   disabled: {
     opacity: 0.5,

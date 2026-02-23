@@ -1,28 +1,69 @@
 const PetSitter = require('../models/PetSitter');
 const User = require('../models/User');
 
-// @desc    Rechercher des gardiens (géolocalisé)
-// @route   GET /api/petsitters?lat=&lng=&radius=&animal=
+// @desc    Rechercher des gardiens (géolocalisé avec distance)
+// @route   GET /api/petsitters?lat=&lng=&radius=&animal=&service=&search=
 exports.searchPetSitters = async (req, res, next) => {
   try {
-    const { lat, lng, radius = 10, animal, service } = req.query;
-    const filter = {};
+    const { lat, lng, radius = 10, animal, service, search } = req.query;
 
-    // Recherche géolocalisée
+    // Si coordonnées fournies, utiliser $geoNear pour obtenir la distance
     if (lat && lng) {
-      filter.location = {
-        $near: {
-          $geometry: {
+      const maxDistanceMeters = parseInt(radius) * 1000;
+      const pipeline = [];
+
+      // Étape $geoNear (doit être la première étape du pipeline)
+      pipeline.push({
+        $geoNear: {
+          near: {
             type: 'Point',
             coordinates: [parseFloat(lng), parseFloat(lat)]
           },
-          $maxDistance: parseInt(radius) * 1000 // km → mètres
+          distanceField: 'distance',
+          maxDistance: maxDistanceMeters,
+          spherical: true
         }
-      };
+      });
+
+      // Filtres supplémentaires via $match
+      const matchStage = {};
+      if (animal) matchStage.acceptedAnimals = animal;
+      if (service) matchStage.services = service;
+      if (search) {
+        matchStage.bio = { $regex: search, $options: 'i' };
+      }
+
+      if (Object.keys(matchStage).length > 0) {
+        pipeline.push({ $match: matchStage });
+      }
+
+      // Limiter les résultats
+      pipeline.push({ $limit: 20 });
+
+      let petsitters = await PetSitter.aggregate(pipeline);
+
+      // Populate le champ user après l'agrégation
+      petsitters = await PetSitter.populate(petsitters, {
+        path: 'user',
+        select: 'name avatar'
+      });
+
+      // Arrondir la distance en mètres
+      petsitters = petsitters.map(sitter => ({
+        ...sitter,
+        distance: Math.round(sitter.distance)
+      }));
+
+      return res.json({ success: true, count: petsitters.length, petsitters });
     }
 
+    // Sans coordonnées : recherche classique sans distance
+    const filter = {};
     if (animal) filter.acceptedAnimals = animal;
     if (service) filter.services = service;
+    if (search) {
+      filter.bio = { $regex: search, $options: 'i' };
+    }
 
     const petsitters = await PetSitter.find(filter)
       .populate('user', 'name avatar')

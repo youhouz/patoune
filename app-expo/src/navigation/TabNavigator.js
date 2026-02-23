@@ -1,9 +1,24 @@
+// ---------------------------------------------------------------------------
+// Patoune v2.0 - Tab Navigator
+// 5 tabs with custom tab bar: Accueil, Scanner, Assistant (center), Garde, Profil
+// Terracotta active state with filled background circle behind icon.
+// ---------------------------------------------------------------------------
+
 import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createStackNavigator } from '@react-navigation/stack';
-import { View, Text, StyleSheet, Platform } from 'react-native';
+import {
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  Platform,
+} from 'react-native';
+
+// Screens
 import HomeScreen from '../screens/HomeScreen';
 import ScannerNavigator from './ScannerNavigator';
+import AIAssistantScreen from '../screens/ai/AIAssistantScreen';
 import PetSittersListScreen from '../screens/petsitting/PetSittersListScreen';
 import PetSitterDetailScreen from '../screens/petsitting/PetSitterDetailScreen';
 import BookingScreen from '../screens/petsitting/BookingScreen';
@@ -12,30 +27,42 @@ import ProfileScreen from '../screens/profile/ProfileScreen';
 import MyPetsScreen from '../screens/profile/MyPetsScreen';
 import AddPetScreen from '../screens/profile/AddPetScreen';
 import SettingsScreen from '../screens/profile/SettingsScreen';
-const colors = require('../utils/colors');
-const { SHADOWS } = require('../utils/colors');
+
+// Design system
+import Icon from '../components/Icon';
+import { COLORS, RADIUS, SHADOWS, SPACING } from '../utils/colors';
+import { FONTS } from '../utils/typography';
+
 
 const Tab = createBottomTabNavigator();
 const PetSittingStack = createStackNavigator();
 const ProfileStack = createStackNavigator();
 
+
+// ---------------------------------------------------------------------------
+// Stack screen options (shared)
+// ---------------------------------------------------------------------------
 const stackScreenOptions = {
   headerStyle: {
-    backgroundColor: colors.white,
+    backgroundColor: COLORS.white,
     elevation: 0,
     shadowOpacity: 0,
     borderBottomWidth: 0,
   },
-  headerTintColor: colors.primary,
+  headerTintColor: COLORS.primary,
   headerTitleStyle: {
-    fontWeight: '700',
+    fontFamily: FONTS.heading,
     fontSize: 17,
-    color: colors.text,
+    color: COLORS.text,
   },
   headerBackTitleVisible: false,
-  cardStyle: { backgroundColor: colors.background },
+  cardStyle: { backgroundColor: COLORS.background },
 };
 
+
+// ---------------------------------------------------------------------------
+// Sub-navigators
+// ---------------------------------------------------------------------------
 const PetSittingNavigator = () => (
   <PetSittingStack.Navigator screenOptions={stackScreenOptions}>
     <PetSittingStack.Screen name="PetSittersList" component={PetSittersListScreen} options={{ headerShown: false }} />
@@ -54,76 +81,144 @@ const ProfileNavigator = () => (
   </ProfileStack.Navigator>
 );
 
-const TAB_ICONS = {
-  Accueil: { default: '🏠', active: '🏠' },
-  Scanner: { default: '📷', active: '📷' },
-  Garde: { default: '🐾', active: '🐾' },
-  Profil: { default: '👤', active: '👤' },
+
+// ---------------------------------------------------------------------------
+// Tab configuration
+// ---------------------------------------------------------------------------
+const TAB_CONFIG = [
+  { name: 'Accueil', icon: 'home', label: 'Accueil' },
+  { name: 'Scanner', icon: 'camera', label: 'Scanner' },
+  { name: 'Assistant', icon: 'message-circle', label: 'Assistant' },
+  { name: 'Garde', icon: 'heart', label: 'Garde' },
+  { name: 'Profil', icon: 'user', label: 'Profil' },
+];
+
+
+// ---------------------------------------------------------------------------
+// Custom Tab Bar
+// ---------------------------------------------------------------------------
+const CustomTabBar = ({ state, descriptors, navigation }) => {
+  return (
+    <View style={tabStyles.container}>
+      {state.routes.map((route, index) => {
+        const { options } = descriptors[route.key];
+        const config = TAB_CONFIG[index];
+        const isFocused = state.index === index;
+
+        const onPress = () => {
+          const event = navigation.emit({
+            type: 'tabPress',
+            target: route.key,
+            canPreventDefault: true,
+          });
+
+          if (!isFocused && !event.defaultPrevented) {
+            navigation.navigate(route.name, route.params);
+          }
+        };
+
+        const onLongPress = () => {
+          navigation.emit({
+            type: 'tabLongPress',
+            target: route.key,
+          });
+        };
+
+        return (
+          <TouchableOpacity
+            key={route.key}
+            accessibilityRole="button"
+            accessibilityState={isFocused ? { selected: true } : {}}
+            accessibilityLabel={options.tabBarAccessibilityLabel || config.label}
+            onPress={onPress}
+            onLongPress={onLongPress}
+            style={tabStyles.tab}
+            activeOpacity={0.7}
+          >
+            {/* Icon with active circle background */}
+            <View style={[tabStyles.iconWrap, isFocused && tabStyles.iconWrapActive]}>
+              <Icon
+                name={config.icon}
+                size={20}
+                color={isFocused ? COLORS.primary : COLORS.pebble}
+              />
+            </View>
+
+            {/* Label */}
+            <Text
+              style={[
+                tabStyles.label,
+                isFocused ? tabStyles.labelActive : tabStyles.labelInactive,
+              ]}
+              numberOfLines={1}
+            >
+              {config.label}
+            </Text>
+          </TouchableOpacity>
+        );
+      })}
+    </View>
+  );
 };
 
-const TabIcon = ({ route, focused }) => (
-  <View style={[styles.tabIconWrap, focused && styles.tabIconActive]}>
-    <Text style={[styles.tabEmoji, focused && styles.tabEmojiActive]}>
-      {TAB_ICONS[route]?.default || '•'}
-    </Text>
-    {focused && <View style={styles.activeDot} />}
-  </View>
-);
 
+// ---------------------------------------------------------------------------
+// Tab bar styles
+// ---------------------------------------------------------------------------
+const tabStyles = StyleSheet.create({
+  container: {
+    flexDirection: 'row',
+    backgroundColor: COLORS.white,
+    borderTopWidth: 1,
+    borderTopColor: COLORS.border,
+    paddingBottom: Platform.OS === 'ios' ? 28 : 10,
+    paddingTop: 8,
+    height: Platform.OS === 'ios' ? 84 : 64,
+  },
+  tab: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 3,
+  },
+  iconWrap: {
+    width: 40,
+    height: 32,
+    borderRadius: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  iconWrapActive: {
+    backgroundColor: COLORS.primarySoft,
+  },
+  label: {
+    fontFamily: FONTS.bodyMedium,
+    fontSize: 11,
+    textAlign: 'center',
+  },
+  labelActive: {
+    color: COLORS.primary,
+  },
+  labelInactive: {
+    color: COLORS.pebble,
+  },
+});
+
+
+// ---------------------------------------------------------------------------
+// Main Tab Navigator
+// ---------------------------------------------------------------------------
 const TabNavigator = () => (
   <Tab.Navigator
-    screenOptions={({ route }) => ({
-      headerShown: false,
-      tabBarIcon: ({ focused }) => <TabIcon route={route.name} focused={focused} />,
-      tabBarActiveTintColor: colors.primary,
-      tabBarInactiveTintColor: colors.textLight,
-      tabBarStyle: {
-        height: Platform.OS === 'ios' ? 88 : 68,
-        paddingBottom: Platform.OS === 'ios' ? 28 : 10,
-        paddingTop: 10,
-        backgroundColor: colors.white,
-        borderTopWidth: 0,
-        ...SHADOWS.lg,
-      },
-      tabBarLabelStyle: {
-        fontSize: 11,
-        fontWeight: '600',
-        marginTop: -2,
-      },
-    })}
+    tabBar={(props) => <CustomTabBar {...props} />}
+    screenOptions={{ headerShown: false }}
   >
     <Tab.Screen name="Accueil" component={HomeScreen} />
     <Tab.Screen name="Scanner" component={ScannerNavigator} />
+    <Tab.Screen name="Assistant" component={AIAssistantScreen} />
     <Tab.Screen name="Garde" component={PetSittingNavigator} />
     <Tab.Screen name="Profil" component={ProfileNavigator} />
   </Tab.Navigator>
 );
-
-const styles = StyleSheet.create({
-  tabIconWrap: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    width: 44,
-    height: 32,
-  },
-  tabIconActive: {
-    // no transform needed
-  },
-  tabEmoji: {
-    fontSize: 22,
-    opacity: 0.4,
-  },
-  tabEmojiActive: {
-    opacity: 1,
-    fontSize: 24,
-  },
-  activeDot: {
-    width: 5,
-    height: 5,
-    borderRadius: 2.5,
-    backgroundColor: colors.primary,
-    marginTop: 3,
-  },
-});
 
 export default TabNavigator;

@@ -7,30 +7,29 @@ import {
   StyleSheet,
   ActivityIndicator,
   Alert,
-  Platform,
-  StatusBar,
   Animated,
   RefreshControl,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
+import { Feather } from '@expo/vector-icons';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useFocusEffect } from '@react-navigation/native';
 import { getMyPetsAPI, deletePetAPI } from '../../api/pets';
-const colors = require('../../utils/colors');
-const { SHADOWS, RADIUS, SPACING, FONT_SIZE } = require('../../utils/colors');
-
-const HEADER_PADDING_TOP = Platform.OS === 'ios' ? 56 : (StatusBar.currentHeight || 24) + 12;
+import { FONTS } from '../../utils/typography';
+const { COLORS, SHADOWS, RADIUS, SPACING, FONT_SIZE } = require('../../utils/colors');
 
 const SPECIES_CONFIG = {
-  chien: { icon: '🐕', label: 'Chien', gradient: ['#FF6B35', '#FF8F65'] },
-  chat: { icon: '🐱', label: 'Chat', gradient: ['#6C5CE7', '#A29BFE'] },
-  rongeur: { icon: '🐹', label: 'Rongeur', gradient: ['#F59E0B', '#FBBF24'] },
-  oiseau: { icon: '🐦', label: 'Oiseau', gradient: ['#3B82F6', '#60A5FA'] },
-  reptile: { icon: '🦎', label: 'Reptile', gradient: ['#10B981', '#34D399'] },
-  poisson: { icon: '🐟', label: 'Poisson', gradient: ['#0EA5E9', '#38BDF8'] },
-  autre: { icon: '🐾', label: 'Autre', gradient: ['#6B7280', '#9CA3AF'] },
+  chien: { icon: 'gitlab', label: 'Chien', gradient: COLORS.gradientPrimary },
+  chat: { icon: 'github', label: 'Chat', gradient: [COLORS.accent, COLORS.accentLight] },
+  rongeur: { icon: 'mouse-pointer', label: 'Rongeur', gradient: [COLORS.warning, '#E0B85C'] },
+  oiseau: { icon: 'feather', label: 'Oiseau', gradient: [COLORS.secondary, COLORS.secondaryLight] },
+  reptile: { icon: 'zap', label: 'Reptile', gradient: [COLORS.success, '#7AB88A'] },
+  poisson: { icon: 'droplet', label: 'Poisson', gradient: [COLORS.info, '#7A9EBB'] },
+  autre: { icon: 'heart', label: 'Autre', gradient: [COLORS.pebble, COLORS.sand] },
 };
 
 const MyPetsScreen = ({ navigation }) => {
+  const insets = useSafeAreaInsets();
   const [pets, setPets] = useState([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -142,7 +141,7 @@ const MyPetsScreen = ({ navigation }) => {
               end={{ x: 1, y: 1 }}
               style={styles.speciesIconGradient}
             >
-              <Text style={styles.speciesIcon}>{config.icon}</Text>
+              <Feather name={config.icon} size={26} color={COLORS.white} />
             </LinearGradient>
           </View>
 
@@ -169,7 +168,7 @@ const MyPetsScreen = ({ navigation }) => {
                       },
                     ]}
                   >
-                    {item.gender === 'male' ? '♂' : '♀'}
+                    {item.gender === 'male' ? '\u2642' : '\u2640'}
                   </Text>
                 </View>
               )}
@@ -188,9 +187,9 @@ const MyPetsScreen = ({ navigation }) => {
             disabled={isDeleting}
           >
             {isDeleting ? (
-              <ActivityIndicator size="small" color={colors.error} />
+              <ActivityIndicator size="small" color={COLORS.error} />
             ) : (
-              <Text style={styles.deleteIcon}>✕</Text>
+              <Feather name="x" size={14} color={COLORS.error} />
             )}
           </TouchableOpacity>
         </View>
@@ -199,19 +198,19 @@ const MyPetsScreen = ({ navigation }) => {
         <View style={styles.detailsRow}>
           {getAge(item.age) && (
             <View style={styles.detailChip}>
-              <Text style={styles.detailChipIcon}>🎂</Text>
+              <Feather name="gift" size={12} color={COLORS.pebble} />
               <Text style={styles.detailChipText}>{getAge(item.age)}</Text>
             </View>
           )}
           {item.weight != null && (
             <View style={styles.detailChip}>
-              <Text style={styles.detailChipIcon}>⚖️</Text>
+              <Feather name="bar-chart" size={12} color={COLORS.pebble} />
               <Text style={styles.detailChipText}>{item.weight} kg</Text>
             </View>
           )}
           {item.vaccinated && (
             <View style={[styles.detailChip, styles.vaccinatedChip]}>
-              <Text style={styles.detailChipIcon}>💉</Text>
+              <Feather name="shield" size={12} color={COLORS.success} />
               <Text style={[styles.detailChipText, styles.vaccinatedText]}>
                 Vaccine
               </Text>
@@ -219,7 +218,7 @@ const MyPetsScreen = ({ navigation }) => {
           )}
           {!item.vaccinated && (
             <View style={[styles.detailChip, styles.notVaccinatedChip]}>
-              <Text style={styles.detailChipIcon}>⚠️</Text>
+              <Feather name="alert-triangle" size={12} color={COLORS.warning} />
               <Text style={[styles.detailChipText, styles.notVaccinatedText]}>
                 Non vaccine
               </Text>
@@ -244,12 +243,12 @@ const MyPetsScreen = ({ navigation }) => {
     <View style={styles.emptyContainer}>
       <View style={styles.emptyIconContainer}>
         <LinearGradient
-          colors={['#FF6B35', '#FF8F65']}
+          colors={COLORS.gradientPrimary}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
           style={styles.emptyIconGradient}
         >
-          <Text style={styles.emptyIcon}>🐾</Text>
+          <Feather name="heart" size={44} color={COLORS.white} />
         </LinearGradient>
       </View>
       <Text style={styles.emptyTitle}>Aucun animal</Text>
@@ -262,12 +261,12 @@ const MyPetsScreen = ({ navigation }) => {
         activeOpacity={0.8}
       >
         <LinearGradient
-          colors={['#FF6B35', '#FF8F65']}
+          colors={COLORS.gradientPrimary}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 0 }}
           style={styles.emptyButtonGradient}
         >
-          <Text style={styles.emptyButtonIcon}>➕</Text>
+          <Feather name="plus" size={16} color={COLORS.white} />
           <Text style={styles.emptyButtonText}>Ajouter mon premier animal</Text>
         </LinearGradient>
       </TouchableOpacity>
@@ -277,7 +276,7 @@ const MyPetsScreen = ({ navigation }) => {
   const renderErrorState = () => (
     <View style={styles.emptyContainer}>
       <View style={styles.errorIconContainer}>
-        <Text style={styles.errorIcon}>😿</Text>
+        <Feather name="frown" size={44} color={COLORS.warning} />
       </View>
       <Text style={styles.emptyTitle}>Oups !</Text>
       <Text style={styles.emptySubtitle}>{error}</Text>
@@ -297,8 +296,7 @@ const MyPetsScreen = ({ navigation }) => {
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
-        <StatusBar barStyle="dark-content" backgroundColor={colors.background} />
-        <ActivityIndicator size="large" color={colors.primary} />
+        <ActivityIndicator size="large" color={COLORS.primary} />
         <Text style={styles.loadingText}>Chargement de vos animaux...</Text>
       </View>
     );
@@ -306,16 +304,14 @@ const MyPetsScreen = ({ navigation }) => {
 
   return (
     <View style={styles.container}>
-      <StatusBar barStyle="dark-content" backgroundColor={colors.background} />
-
       {/* Header */}
-      <View style={styles.header}>
+      <View style={[styles.header, { paddingTop: insets.top + 12 }]}>
         <TouchableOpacity
           style={styles.backButton}
           onPress={() => navigation.goBack()}
           activeOpacity={0.7}
         >
-          <Text style={styles.backArrow}>‹</Text>
+          <Feather name="arrow-left" size={20} color={COLORS.charcoal} />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Mes animaux</Text>
         <View style={styles.headerBadge}>
@@ -339,8 +335,8 @@ const MyPetsScreen = ({ navigation }) => {
               <RefreshControl
                 refreshing={refreshing}
                 onRefresh={onRefresh}
-                colors={[colors.primary]}
-                tintColor={colors.primary}
+                colors={[COLORS.primary]}
+                tintColor={COLORS.primary}
               />
             }
             ItemSeparatorComponent={() => <View style={styles.separator} />}
@@ -369,12 +365,12 @@ const MyPetsScreen = ({ navigation }) => {
               style={styles.fabTouchable}
             >
               <LinearGradient
-                colors={['#FF6B35', '#FF8F65']}
+                colors={COLORS.gradientPrimary}
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 1 }}
                 style={styles.fabGradient}
               >
-                <Text style={styles.fabIcon}>+</Text>
+                <Feather name="plus" size={28} color={COLORS.white} />
               </LinearGradient>
             </TouchableOpacity>
           </Animated.View>
@@ -387,57 +383,50 @@ const MyPetsScreen = ({ navigation }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.background,
+    backgroundColor: COLORS.cream,
   },
   loadingContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: colors.background,
+    backgroundColor: COLORS.cream,
   },
   loadingText: {
     marginTop: SPACING.base,
     fontSize: FONT_SIZE.base,
-    color: colors.textSecondary,
-    fontWeight: '500',
+    fontFamily: FONTS.bodyMedium,
+    color: COLORS.stone,
   },
 
   // Header
   header: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingTop: HEADER_PADDING_TOP,
     paddingBottom: SPACING.base,
     paddingHorizontal: SPACING.lg,
-    backgroundColor: colors.background,
+    backgroundColor: COLORS.cream,
     borderBottomWidth: 1,
-    borderBottomColor: colors.border,
+    borderBottomColor: COLORS.border,
   },
   backButton: {
     width: 36,
     height: 36,
     borderRadius: RADIUS.md,
-    backgroundColor: colors.white,
+    backgroundColor: COLORS.white,
     alignItems: 'center',
     justifyContent: 'center',
     ...SHADOWS.sm,
   },
-  backArrow: {
-    fontSize: 26,
-    color: colors.text,
-    fontWeight: '600',
-    marginTop: -2,
-  },
   headerTitle: {
     flex: 1,
     fontSize: FONT_SIZE.xl,
-    fontWeight: '800',
-    color: colors.text,
+    fontFamily: FONTS.heading,
+    color: COLORS.charcoal,
     marginLeft: SPACING.base,
     letterSpacing: 0.2,
   },
   headerBadge: {
-    backgroundColor: colors.primarySoft,
+    backgroundColor: COLORS.primarySoft,
     minWidth: 32,
     paddingHorizontal: SPACING.md,
     paddingVertical: SPACING.xs,
@@ -446,8 +435,8 @@ const styles = StyleSheet.create({
   },
   headerBadgeText: {
     fontSize: FONT_SIZE.sm,
-    fontWeight: '700',
-    color: colors.primary,
+    fontFamily: FONTS.heading,
+    color: COLORS.primary,
   },
 
   // List
@@ -461,7 +450,7 @@ const styles = StyleSheet.create({
 
   // Pet Card
   petCard: {
-    backgroundColor: colors.white,
+    backgroundColor: COLORS.white,
     borderRadius: RADIUS.xl,
     overflow: 'hidden',
     ...SHADOWS.md,
@@ -486,9 +475,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  speciesIcon: {
-    fontSize: 26,
-  },
   petInfo: {
     flex: 1,
     marginLeft: SPACING.md,
@@ -500,8 +486,8 @@ const styles = StyleSheet.create({
   },
   petName: {
     fontSize: FONT_SIZE.lg,
-    fontWeight: '700',
-    color: colors.text,
+    fontFamily: FONTS.heading,
+    color: COLORS.charcoal,
   },
   genderBadge: {
     width: 26,
@@ -512,26 +498,21 @@ const styles = StyleSheet.create({
   },
   genderText: {
     fontSize: 14,
-    fontWeight: '700',
+    fontFamily: FONTS.heading,
   },
   petBreed: {
     fontSize: FONT_SIZE.sm,
-    color: colors.textSecondary,
+    fontFamily: FONTS.bodyMedium,
+    color: COLORS.stone,
     marginTop: 2,
-    fontWeight: '500',
   },
   deleteButton: {
     width: 34,
     height: 34,
     borderRadius: RADIUS.full,
-    backgroundColor: colors.errorSoft,
+    backgroundColor: COLORS.errorSoft,
     alignItems: 'center',
     justifyContent: 'center',
-  },
-  deleteIcon: {
-    fontSize: 13,
-    color: colors.error,
-    fontWeight: '700',
   },
 
   // Details
@@ -545,31 +526,28 @@ const styles = StyleSheet.create({
   detailChip: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: colors.background,
+    backgroundColor: COLORS.linen,
     paddingHorizontal: SPACING.md,
     paddingVertical: SPACING.xs + 2,
     borderRadius: RADIUS.full,
     gap: SPACING.xs,
   },
-  detailChipIcon: {
-    fontSize: 12,
-  },
   detailChipText: {
     fontSize: FONT_SIZE.xs,
-    fontWeight: '600',
-    color: colors.textSecondary,
+    fontFamily: FONTS.bodySemiBold,
+    color: COLORS.stone,
   },
   vaccinatedChip: {
-    backgroundColor: colors.successSoft,
+    backgroundColor: COLORS.successSoft,
   },
   vaccinatedText: {
-    color: colors.success,
+    color: COLORS.success,
   },
   notVaccinatedChip: {
-    backgroundColor: colors.warningSoft,
+    backgroundColor: COLORS.warningSoft,
   },
   notVaccinatedText: {
-    color: colors.warning,
+    color: COLORS.warning,
   },
 
   // Special Needs
@@ -577,23 +555,23 @@ const styles = StyleSheet.create({
     marginHorizontal: SPACING.base,
     marginBottom: SPACING.base,
     padding: SPACING.md,
-    backgroundColor: colors.background,
+    backgroundColor: COLORS.linen,
     borderRadius: RADIUS.md,
     borderLeftWidth: 3,
-    borderLeftColor: colors.warning,
+    borderLeftColor: COLORS.warning,
   },
   specialNeedsLabel: {
     fontSize: FONT_SIZE.xs,
-    fontWeight: '700',
-    color: colors.textSecondary,
+    fontFamily: FONTS.bodySemiBold,
+    color: COLORS.stone,
     textTransform: 'uppercase',
     letterSpacing: 0.5,
     marginBottom: SPACING.xs,
   },
   specialNeedsText: {
     fontSize: FONT_SIZE.sm,
-    color: colors.text,
-    fontWeight: '400',
+    fontFamily: FONTS.body,
+    color: COLORS.charcoal,
     lineHeight: 20,
   },
 
@@ -608,7 +586,7 @@ const styles = StyleSheet.create({
     marginBottom: SPACING.xl,
     borderRadius: 50,
     overflow: 'hidden',
-    ...SHADOWS.glow('#FF6B35'),
+    ...SHADOWS.lg,
   },
   emptyIconGradient: {
     width: 100,
@@ -617,18 +595,16 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  emptyIcon: {
-    fontSize: 44,
-  },
   emptyTitle: {
     fontSize: FONT_SIZE['2xl'],
-    fontWeight: '800',
-    color: colors.text,
+    fontFamily: FONTS.heading,
+    color: COLORS.charcoal,
     marginBottom: SPACING.sm,
   },
   emptySubtitle: {
     fontSize: FONT_SIZE.base,
-    color: colors.textSecondary,
+    fontFamily: FONTS.body,
+    color: COLORS.stone,
     textAlign: 'center',
     lineHeight: 22,
     marginBottom: SPACING['2xl'],
@@ -636,7 +612,7 @@ const styles = StyleSheet.create({
   emptyButton: {
     borderRadius: RADIUS.xl,
     overflow: 'hidden',
-    ...SHADOWS.glow('#FF6B35'),
+    ...SHADOWS.glow(COLORS.primary),
   },
   emptyButtonGradient: {
     flexDirection: 'row',
@@ -646,13 +622,10 @@ const styles = StyleSheet.create({
     borderRadius: RADIUS.xl,
     gap: SPACING.sm,
   },
-  emptyButtonIcon: {
-    fontSize: 16,
-  },
   emptyButtonText: {
     fontSize: FONT_SIZE.base,
-    fontWeight: '700',
-    color: colors.white,
+    fontFamily: FONTS.heading,
+    color: COLORS.white,
   },
 
   // Error State
@@ -660,32 +633,29 @@ const styles = StyleSheet.create({
     width: 100,
     height: 100,
     borderRadius: 50,
-    backgroundColor: colors.warningSoft,
+    backgroundColor: COLORS.warningSoft,
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: SPACING.xl,
   },
-  errorIcon: {
-    fontSize: 44,
-  },
   retryButton: {
-    backgroundColor: colors.primary,
+    backgroundColor: COLORS.primary,
     paddingVertical: SPACING.md,
     paddingHorizontal: SPACING['2xl'],
     borderRadius: RADIUS.xl,
   },
   retryButtonText: {
     fontSize: FONT_SIZE.base,
-    fontWeight: '700',
-    color: colors.white,
+    fontFamily: FONTS.heading,
+    color: COLORS.white,
   },
 
   // FAB
   fab: {
     position: 'absolute',
-    bottom: Platform.OS === 'ios' ? 32 : 24,
+    bottom: 32,
     right: SPACING.lg,
-    ...SHADOWS.glow('#FF6B35'),
+    ...SHADOWS.glow(COLORS.primary),
   },
   fabTouchable: {
     borderRadius: 30,
@@ -697,12 +667,6 @@ const styles = StyleSheet.create({
     borderRadius: 30,
     alignItems: 'center',
     justifyContent: 'center',
-  },
-  fabIcon: {
-    fontSize: 30,
-    color: colors.white,
-    fontWeight: '300',
-    lineHeight: 32,
   },
 });
 

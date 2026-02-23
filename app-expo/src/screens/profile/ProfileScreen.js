@@ -5,26 +5,25 @@ import {
   TouchableOpacity,
   ScrollView,
   StyleSheet,
-  Platform,
-  StatusBar,
   Animated,
   ActivityIndicator,
   Alert,
   RefreshControl,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
+import { Feather } from '@expo/vector-icons';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useFocusEffect } from '@react-navigation/native';
 import { useAuth } from '../../context/AuthContext';
 import { getMyPetsAPI } from '../../api/pets';
 import { getScanHistoryAPI } from '../../api/products';
 import { getMyBookingsAPI } from '../../api/petsitters';
-const colors = require('../../utils/colors');
-const { SHADOWS, RADIUS, SPACING, FONT_SIZE } = require('../../utils/colors');
-
-const HEADER_PADDING_TOP = Platform.OS === 'ios' ? 60 : (StatusBar.currentHeight || 24) + 20;
+import { FONTS } from '../../utils/typography';
+const { COLORS, SHADOWS, RADIUS, SPACING, FONT_SIZE } = require('../../utils/colors');
 
 const ProfileScreen = ({ navigation }) => {
   const { user, logout } = useAuth();
+  const insets = useSafeAreaInsets();
 
   // Animations
   const fadeAnim = useRef(new Animated.Value(0)).current;
@@ -120,10 +119,18 @@ const ProfileScreen = ({ navigation }) => {
     );
   };
 
+  // Role badge helper
+  const getRoleBadge = () => {
+    const role = user?.role;
+    if (role === 'guardian') return { label: 'Gardien', color: COLORS.secondary };
+    if (role === 'both') return { label: 'Gardien & Proprio', color: COLORS.accent };
+    return null;
+  };
+
   const stats = [
-    { label: 'Animaux', value: petsCount, icon: '🐾', color: '#FF6B35' },
-    { label: 'Scans', value: scansCount, icon: '📷', color: '#3B82F6' },
-    { label: 'Gardes', value: bookingsCount, icon: '📅', color: '#10B981' },
+    { label: 'Animaux', value: petsCount, icon: 'heart', color: COLORS.primary },
+    { label: 'Scans', value: scansCount, icon: 'camera', color: COLORS.secondary },
+    { label: 'Gardes', value: bookingsCount, icon: 'calendar', color: COLORS.accent },
   ];
 
   const menuSections = [
@@ -131,20 +138,20 @@ const ProfileScreen = ({ navigation }) => {
       title: 'Mes compagnons',
       items: [
         {
-          icon: '🐾',
+          icon: 'heart',
           label: 'Mes animaux',
           subtitle: `${petsCount} compagnon${petsCount !== 1 ? 's' : ''} enregistre${petsCount !== 1 ? 's' : ''}`,
           screen: 'MyPets',
-          accentColor: '#FF6B35',
-          bgColor: colors.primarySoft,
+          accentColor: COLORS.primary,
+          bgColor: COLORS.primarySoft,
         },
         {
-          icon: '➕',
+          icon: 'plus',
           label: 'Ajouter un animal',
           subtitle: 'Enregistrez un nouveau compagnon',
           screen: 'AddPet',
-          accentColor: '#10B981',
-          bgColor: colors.secondarySoft,
+          accentColor: COLORS.success,
+          bgColor: COLORS.secondarySoft,
         },
       ],
     },
@@ -152,20 +159,21 @@ const ProfileScreen = ({ navigation }) => {
       title: 'Parametres',
       items: [
         {
-          icon: '⚙️',
+          icon: 'settings',
           label: 'Reglages',
           subtitle: 'Compte, preferences, a propos',
           screen: 'Settings',
-          accentColor: '#6C5CE7',
-          bgColor: colors.accentSoft,
+          accentColor: COLORS.accent,
+          bgColor: COLORS.accentSoft,
         },
       ],
     },
   ];
 
+  const roleBadge = getRoleBadge();
+
   return (
     <View style={styles.container}>
-      <StatusBar barStyle="light-content" translucent backgroundColor="transparent" />
       <ScrollView
         style={styles.scrollView}
         contentContainerStyle={styles.scrollContent}
@@ -175,18 +183,18 @@ const ProfileScreen = ({ navigation }) => {
           <RefreshControl
             refreshing={refreshing}
             onRefresh={onRefresh}
-            colors={[colors.primary]}
-            tintColor={colors.white}
-            progressBackgroundColor={colors.primary}
+            colors={[COLORS.primary]}
+            tintColor={COLORS.white}
+            progressBackgroundColor={COLORS.primary}
           />
         }
       >
         {/* Hero Header with Gradient */}
         <LinearGradient
-          colors={['#FF6B35', '#FF8F65', '#FFB088']}
+          colors={[COLORS.primary, COLORS.primaryLight, '#E8A98D']}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
-          style={styles.heroGradient}
+          style={[styles.heroGradient, { paddingTop: insets.top + 20 }]}
         >
           {/* Decorative circles */}
           <View style={styles.decorCircle1} />
@@ -207,12 +215,19 @@ const ProfileScreen = ({ navigation }) => {
                   </View>
                 </View>
               </View>
-              {user?.isPetSitter && (
-                <View style={styles.sitterBadge}>
-                  <Text style={styles.sitterBadgeIcon}>✓</Text>
-                  <Text style={styles.sitterBadgeText}>Gardien</Text>
-                </View>
-              )}
+              <View style={styles.badgeRow}>
+                {user?.isPetSitter && (
+                  <View style={styles.sitterBadge}>
+                    <Feather name="check" size={10} color={COLORS.white} />
+                    <Text style={styles.sitterBadgeText}>Gardien</Text>
+                  </View>
+                )}
+                {roleBadge && (
+                  <View style={[styles.roleBadge, { backgroundColor: roleBadge.color }]}>
+                    <Text style={styles.roleBadgeText}>{roleBadge.label}</Text>
+                  </View>
+                )}
+              </View>
             </View>
 
             {/* User Info */}
@@ -220,7 +235,7 @@ const ProfileScreen = ({ navigation }) => {
             <Text style={styles.userEmail}>{user?.email || ''}</Text>
             {user?.phone ? (
               <View style={styles.phoneBadge}>
-                <Text style={styles.phoneIcon}>📱</Text>
+                <Feather name="smartphone" size={12} color="rgba(255, 255, 255, 0.9)" />
                 <Text style={styles.phoneText}>{user.phone}</Text>
               </View>
             ) : null}
@@ -230,7 +245,7 @@ const ProfileScreen = ({ navigation }) => {
           <View style={styles.statsContainer}>
             {stats.map((stat, index) => (
               <View key={index} style={styles.statCard}>
-                <Text style={styles.statIcon}>{stat.icon}</Text>
+                <Feather name={stat.icon} size={20} color={COLORS.white} style={{ marginBottom: SPACING.xs }} />
                 {statsLoading ? (
                   <ActivityIndicator
                     size="small"
@@ -269,14 +284,14 @@ const ProfileScreen = ({ navigation }) => {
                 activeOpacity={0.6}
               >
                 <View style={[styles.menuIconContainer, { backgroundColor: item.bgColor }]}>
-                  <Text style={styles.menuIcon}>{item.icon}</Text>
+                  <Feather name={item.icon} size={22} color={item.accentColor} />
                 </View>
                 <View style={styles.menuTextContainer}>
                   <Text style={styles.menuLabel}>{item.label}</Text>
                   <Text style={styles.menuSubtitle}>{item.subtitle}</Text>
                 </View>
                 <View style={styles.menuArrowContainer}>
-                  <Text style={styles.menuArrow}>›</Text>
+                  <Feather name="chevron-right" size={18} color={COLORS.pebble} />
                 </View>
               </TouchableOpacity>
             ))}
@@ -295,14 +310,14 @@ const ProfileScreen = ({ navigation }) => {
             onPress={handleLogout}
             activeOpacity={0.6}
           >
-            <Text style={styles.logoutIcon}>🚪</Text>
+            <Feather name="log-out" size={18} color={COLORS.error} style={{ marginRight: SPACING.sm }} />
             <Text style={styles.logoutText}>Se deconnecter</Text>
           </TouchableOpacity>
         </Animated.View>
 
         {/* App footer */}
         <View style={styles.footer}>
-          <Text style={styles.footerText}>Patoune v1.0.0</Text>
+          <Text style={styles.footerText}>Patoune v2.0.0</Text>
         </View>
 
         <View style={styles.bottomSpacer} />
@@ -314,7 +329,7 @@ const ProfileScreen = ({ navigation }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.background,
+    backgroundColor: COLORS.cream,
   },
   scrollView: {
     flex: 1,
@@ -325,7 +340,6 @@ const styles = StyleSheet.create({
 
   // Hero Gradient
   heroGradient: {
-    paddingTop: HEADER_PADDING_TOP,
     paddingBottom: SPACING['3xl'],
     borderBottomLeftRadius: RADIUS['3xl'],
     borderBottomRightRadius: RADIUS['3xl'],
@@ -386,46 +400,59 @@ const styles = StyleSheet.create({
   },
   avatarInitials: {
     fontSize: FONT_SIZE['3xl'],
-    fontWeight: '800',
-    color: '#FF6B35',
+    fontFamily: FONTS.heading,
+    color: COLORS.primary,
     letterSpacing: 1,
   },
-  sitterBadge: {
+  badgeRow: {
     position: 'absolute',
     bottom: -6,
     flexDirection: 'row',
+    gap: 6,
+  },
+  sitterBadge: {
+    flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#10B981',
+    backgroundColor: COLORS.success,
     paddingHorizontal: SPACING.md,
     paddingVertical: SPACING.xs + 1,
     borderRadius: RADIUS.full,
     gap: 4,
     ...SHADOWS.md,
   },
-  sitterBadgeIcon: {
-    fontSize: 10,
-    color: colors.white,
-    fontWeight: '800',
-  },
   sitterBadgeText: {
     fontSize: FONT_SIZE.xs,
-    fontWeight: '700',
-    color: colors.white,
+    fontFamily: FONTS.bodySemiBold,
+    color: COLORS.white,
+    letterSpacing: 0.5,
+  },
+  roleBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: SPACING.md,
+    paddingVertical: SPACING.xs + 1,
+    borderRadius: RADIUS.full,
+    ...SHADOWS.md,
+  },
+  roleBadgeText: {
+    fontSize: FONT_SIZE.xs,
+    fontFamily: FONTS.bodySemiBold,
+    color: COLORS.white,
     letterSpacing: 0.5,
   },
 
   // User Info
   userName: {
     fontSize: FONT_SIZE['2xl'],
-    fontWeight: '800',
-    color: colors.white,
+    fontFamily: FONTS.heading,
+    color: COLORS.white,
     marginBottom: SPACING.xs,
     letterSpacing: 0.3,
   },
   userEmail: {
     fontSize: FONT_SIZE.base,
+    fontFamily: FONTS.body,
     color: 'rgba(255, 255, 255, 0.8)',
-    fontWeight: '400',
   },
   phoneBadge: {
     flexDirection: 'row',
@@ -435,15 +462,12 @@ const styles = StyleSheet.create({
     paddingHorizontal: SPACING.md,
     paddingVertical: SPACING.xs,
     borderRadius: RADIUS.full,
-    gap: 4,
-  },
-  phoneIcon: {
-    fontSize: 12,
+    gap: 6,
   },
   phoneText: {
     fontSize: FONT_SIZE.sm,
+    fontFamily: FONTS.bodyMedium,
     color: 'rgba(255, 255, 255, 0.9)',
-    fontWeight: '500',
   },
 
   // Stats
@@ -462,19 +486,15 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: 'rgba(255, 255, 255, 0.12)',
   },
-  statIcon: {
-    fontSize: 20,
-    marginBottom: SPACING.xs,
-  },
   statValue: {
     fontSize: FONT_SIZE.xl,
-    fontWeight: '800',
-    color: colors.white,
+    fontFamily: FONTS.heading,
+    color: COLORS.white,
   },
   statLabel: {
     fontSize: FONT_SIZE.xs,
+    fontFamily: FONTS.bodySemiBold,
     color: 'rgba(255, 255, 255, 0.8)',
-    fontWeight: '600',
     marginTop: 2,
     letterSpacing: 0.3,
   },
@@ -486,8 +506,8 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     fontSize: FONT_SIZE.sm,
-    fontWeight: '700',
-    color: colors.textSecondary,
+    fontFamily: FONTS.bodySemiBold,
+    color: COLORS.stone,
     textTransform: 'uppercase',
     letterSpacing: 0.8,
     marginBottom: SPACING.md,
@@ -496,7 +516,7 @@ const styles = StyleSheet.create({
   menuCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: colors.white,
+    backgroundColor: COLORS.white,
     borderRadius: RADIUS.xl,
     padding: SPACING.base,
     marginBottom: SPACING.md,
@@ -509,36 +529,28 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  menuIcon: {
-    fontSize: 22,
-  },
   menuTextContainer: {
     flex: 1,
     marginLeft: SPACING.base,
   },
   menuLabel: {
     fontSize: FONT_SIZE.base,
-    fontWeight: '700',
-    color: colors.text,
+    fontFamily: FONTS.heading,
+    color: COLORS.charcoal,
     marginBottom: 2,
   },
   menuSubtitle: {
     fontSize: FONT_SIZE.sm,
-    color: colors.textSecondary,
-    fontWeight: '400',
+    fontFamily: FONTS.body,
+    color: COLORS.stone,
   },
   menuArrowContainer: {
     width: 32,
     height: 32,
     borderRadius: RADIUS.full,
-    backgroundColor: colors.background,
+    backgroundColor: COLORS.linen,
     alignItems: 'center',
     justifyContent: 'center',
-  },
-  menuArrow: {
-    fontSize: 20,
-    color: colors.textTertiary,
-    fontWeight: '600',
   },
 
   // Logout
@@ -550,20 +562,16 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: colors.errorSoft,
+    backgroundColor: COLORS.errorSoft,
     borderRadius: RADIUS.xl,
     paddingVertical: SPACING.base,
     borderWidth: 1,
-    borderColor: 'rgba(239, 68, 68, 0.12)',
-  },
-  logoutIcon: {
-    fontSize: 18,
-    marginRight: SPACING.sm,
+    borderColor: 'rgba(199, 80, 80, 0.12)',
   },
   logoutText: {
     fontSize: FONT_SIZE.base,
-    fontWeight: '700',
-    color: colors.error,
+    fontFamily: FONTS.heading,
+    color: COLORS.error,
   },
 
   // Footer
@@ -573,8 +581,8 @@ const styles = StyleSheet.create({
   },
   footerText: {
     fontSize: FONT_SIZE.xs,
-    color: colors.textLight,
-    fontWeight: '500',
+    fontFamily: FONTS.bodyMedium,
+    color: COLORS.sand,
   },
 
   bottomSpacer: {

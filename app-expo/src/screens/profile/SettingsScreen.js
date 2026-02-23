@@ -9,22 +9,23 @@ import {
   Alert,
   Switch,
   Platform,
-  StatusBar,
   KeyboardAvoidingView,
   ActivityIndicator,
   Animated,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
+import { Feather } from '@expo/vector-icons';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAuth } from '../../context/AuthContext';
 import api from '../../api/client';
-const colors = require('../../utils/colors');
-const { SHADOWS, RADIUS, SPACING, FONT_SIZE } = require('../../utils/colors');
+import { FONTS } from '../../utils/typography';
+const { COLORS, SHADOWS, RADIUS, SPACING, FONT_SIZE } = require('../../utils/colors');
 
-const HEADER_PADDING_TOP = Platform.OS === 'ios' ? 56 : (StatusBar.currentHeight || 24) + 12;
-const APP_VERSION = '1.0.0';
+const APP_VERSION = '2.0.0';
 
 const SettingsScreen = ({ navigation }) => {
   const { user, updateUser, logout } = useAuth();
+  const insets = useSafeAreaInsets();
 
   // Personal info
   const [name, setName] = useState(user?.name || '');
@@ -104,9 +105,17 @@ const SettingsScreen = ({ navigation }) => {
     return n.substring(0, 2).toUpperCase() || '?';
   };
 
+  // Role display helper
+  const getRoleLabel = () => {
+    const role = user?.role;
+    if (role === 'guardian') return 'Gardien';
+    if (role === 'both') return 'Gardien & Proprietaire';
+    return 'Proprietaire';
+  };
+
   // Grouped setting row renderer
   const renderSettingRow = ({
-    icon,
+    iconName,
     label,
     description,
     value,
@@ -123,10 +132,10 @@ const SettingsScreen = ({ navigation }) => {
       <View
         style={[
           styles.settingIconContainer,
-          { backgroundColor: (accentColor || '#FF6B35') + '15' },
+          { backgroundColor: (accentColor || COLORS.primary) + '15' },
         ]}
       >
-        <Text style={styles.settingIcon}>{icon}</Text>
+        <Feather name={iconName} size={18} color={accentColor || COLORS.primary} />
       </View>
       <View style={styles.settingInfo}>
         <Text style={styles.settingLabel}>{label}</Text>
@@ -138,24 +147,26 @@ const SettingsScreen = ({ navigation }) => {
         value={value}
         onValueChange={onValueChange}
         trackColor={{
-          false: colors.border,
-          true: (accentColor || '#FF6B35') + '70',
+          false: COLORS.border,
+          true: (accentColor || COLORS.primary) + '70',
         }}
-        thumbColor={value ? accentColor || '#FF6B35' : '#f4f3f4'}
-        ios_backgroundColor={colors.border}
+        thumbColor={value ? accentColor || COLORS.primary : '#f4f3f4'}
+        ios_backgroundColor={COLORS.border}
       />
     </View>
   );
 
   // Info row renderer (non-interactive)
-  const renderInfoRow = ({ icon, label, value, isLast }) => (
+  const renderInfoRow = ({ iconName, label, value, isLast }) => (
     <View
       style={[
         styles.infoRow,
         !isLast && styles.settingRowBorder,
       ]}
     >
-      <Text style={styles.infoIcon}>{icon}</Text>
+      <View style={styles.infoIconContainer}>
+        <Feather name={iconName} size={16} color={COLORS.pebble} />
+      </View>
       <Text style={styles.infoLabel}>{label}</Text>
       <Text style={styles.infoValue}>{value}</Text>
     </View>
@@ -163,16 +174,14 @@ const SettingsScreen = ({ navigation }) => {
 
   return (
     <View style={styles.container}>
-      <StatusBar barStyle="dark-content" backgroundColor={colors.background} />
-
       {/* Header */}
-      <View style={styles.header}>
+      <View style={[styles.header, { paddingTop: insets.top + 12 }]}>
         <TouchableOpacity
           style={styles.backButton}
           onPress={() => navigation.goBack()}
           activeOpacity={0.7}
         >
-          <Text style={styles.backArrow}>‹</Text>
+          <Feather name="arrow-left" size={20} color={COLORS.charcoal} />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Reglages</Text>
         <View style={styles.headerSpacer} />
@@ -202,7 +211,7 @@ const SettingsScreen = ({ navigation }) => {
                 <View style={styles.accountHeader}>
                   <View style={styles.accountAvatar}>
                     <LinearGradient
-                      colors={['#FF6B35', '#FF8F65']}
+                      colors={COLORS.gradientPrimary}
                       start={{ x: 0, y: 0 }}
                       end={{ x: 1, y: 1 }}
                       style={styles.accountAvatarGradient}
@@ -220,11 +229,16 @@ const SettingsScreen = ({ navigation }) => {
                       {user?.email || ''}
                     </Text>
                   </View>
-                  {user?.isPetSitter && (
-                    <View style={styles.sitterTag}>
-                      <Text style={styles.sitterTagText}>Gardien</Text>
+                  <View style={styles.tagRow}>
+                    {user?.isPetSitter && (
+                      <View style={styles.sitterTag}>
+                        <Text style={styles.sitterTagText}>Gardien</Text>
+                      </View>
+                    )}
+                    <View style={styles.roleTag}>
+                      <Text style={styles.roleTagText}>{getRoleLabel()}</Text>
                     </View>
-                  )}
+                  </View>
                 </View>
 
                 <View style={styles.accountDivider} />
@@ -237,7 +251,7 @@ const SettingsScreen = ({ navigation }) => {
                     value={name}
                     onChangeText={setName}
                     placeholder="Votre nom"
-                    placeholderTextColor={colors.placeholder}
+                    placeholderTextColor={COLORS.placeholder}
                     autoCapitalize="words"
                   />
                 </View>
@@ -246,12 +260,12 @@ const SettingsScreen = ({ navigation }) => {
                 <View style={styles.field}>
                   <Text style={styles.label}>Adresse email</Text>
                   <View style={styles.readOnlyField}>
-                    <Text style={styles.readOnlyIcon}>✉️</Text>
+                    <Feather name="mail" size={14} color={COLORS.pebble} style={{ marginRight: SPACING.sm }} />
                     <Text style={styles.readOnlyText} numberOfLines={1}>
                       {user?.email || ''}
                     </Text>
                     <View style={styles.verifiedBadge}>
-                      <Text style={styles.verifiedIcon}>✓</Text>
+                      <Feather name="check" size={11} color={COLORS.white} />
                     </View>
                   </View>
                 </View>
@@ -264,7 +278,7 @@ const SettingsScreen = ({ navigation }) => {
                     value={phone}
                     onChangeText={setPhone}
                     placeholder="06 12 34 56 78"
-                    placeholderTextColor={colors.placeholder}
+                    placeholderTextColor={COLORS.placeholder}
                     keyboardType="phone-pad"
                   />
                 </View>
@@ -281,18 +295,18 @@ const SettingsScreen = ({ navigation }) => {
                   <LinearGradient
                     colors={
                       loading
-                        ? [colors.textLight, colors.textTertiary]
-                        : ['#FF6B35', '#FF8F65']
+                        ? [COLORS.sand, COLORS.pebble]
+                        : COLORS.gradientPrimary
                     }
                     start={{ x: 0, y: 0 }}
                     end={{ x: 1, y: 0 }}
                     style={styles.saveGradient}
                   >
                     {loading ? (
-                      <ActivityIndicator size="small" color={colors.white} />
+                      <ActivityIndicator size="small" color={COLORS.white} />
                     ) : (
                       <>
-                        <Text style={styles.saveIcon}>💾</Text>
+                        <Feather name="save" size={16} color={COLORS.white} />
                         <Text style={styles.saveText}>Sauvegarder</Text>
                       </>
                     )}
@@ -306,36 +320,36 @@ const SettingsScreen = ({ navigation }) => {
               <Text style={styles.sectionTitle}>Notifications</Text>
               <View style={styles.sectionCard}>
                 {renderSettingRow({
-                  icon: '🔔',
+                  iconName: 'bell',
                   label: 'Notifications push',
                   description: 'Recevoir les notifications sur votre appareil',
                   value: notifPush,
                   onValueChange: setNotifPush,
-                  accentColor: '#FF6B35',
+                  accentColor: COLORS.primary,
                 })}
                 {renderSettingRow({
-                  icon: '📷',
+                  iconName: 'camera',
                   label: 'Alertes de scans',
                   description: 'Resultats de vos scans de produits',
                   value: notifScans,
                   onValueChange: setNotifScans,
-                  accentColor: '#3B82F6',
+                  accentColor: COLORS.secondary,
                 })}
                 {renderSettingRow({
-                  icon: '📅',
+                  iconName: 'calendar',
                   label: 'Rappels de gardes',
                   description: 'Rappels pour vos reservations',
                   value: notifBookings,
                   onValueChange: setNotifBookings,
-                  accentColor: '#10B981',
+                  accentColor: COLORS.success,
                 })}
                 {renderSettingRow({
-                  icon: '💬',
+                  iconName: 'message-circle',
                   label: 'Messages',
                   description: 'Nouveaux messages de gardiens',
                   value: notifMessages,
                   onValueChange: setNotifMessages,
-                  accentColor: '#6C5CE7',
+                  accentColor: COLORS.accent,
                   isLast: true,
                 })}
               </View>
@@ -349,12 +363,12 @@ const SettingsScreen = ({ navigation }) => {
                 <View style={styles.aboutBranding}>
                   <View style={styles.aboutLogoContainer}>
                     <LinearGradient
-                      colors={['#FF6B35', '#FF8F65']}
+                      colors={COLORS.gradientPrimary}
                       start={{ x: 0, y: 0 }}
                       end={{ x: 1, y: 1 }}
                       style={styles.aboutLogoGradient}
                     >
-                      <Text style={styles.aboutLogoIcon}>🐾</Text>
+                      <Feather name="heart" size={24} color={COLORS.white} />
                     </LinearGradient>
                   </View>
                   <View style={styles.aboutBrandInfo}>
@@ -368,17 +382,17 @@ const SettingsScreen = ({ navigation }) => {
                 <View style={styles.aboutDivider} />
 
                 {renderInfoRow({
-                  icon: '📱',
+                  iconName: 'smartphone',
                   label: 'Version',
                   value: `v${APP_VERSION}`,
                 })}
                 {renderInfoRow({
-                  icon: '🏷️',
+                  iconName: 'tag',
                   label: 'Build',
                   value: 'Expo',
                 })}
                 {renderInfoRow({
-                  icon: '📲',
+                  iconName: 'monitor',
                   label: 'Plateforme',
                   value: `${Platform.OS === 'ios' ? 'iOS' : 'Android'} ${Platform.Version}`,
                   isLast: true,
@@ -395,7 +409,7 @@ const SettingsScreen = ({ navigation }) => {
                 activeOpacity={0.6}
               >
                 <View style={styles.logoutIconContainer}>
-                  <Text style={styles.logoutIcon}>🚪</Text>
+                  <Feather name="log-out" size={20} color={COLORS.error} />
                 </View>
                 <View style={styles.logoutInfo}>
                   <Text style={styles.logoutTitle}>Se deconnecter</Text>
@@ -403,7 +417,7 @@ const SettingsScreen = ({ navigation }) => {
                     Deconnectez-vous de votre compte
                   </Text>
                 </View>
-                <Text style={styles.logoutArrow}>›</Text>
+                <Feather name="chevron-right" size={18} color={COLORS.error} style={{ opacity: 0.5 }} />
               </TouchableOpacity>
             </View>
 
@@ -428,7 +442,7 @@ const SettingsScreen = ({ navigation }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.background,
+    backgroundColor: COLORS.cream,
   },
   keyboardView: {
     flex: 1,
@@ -446,33 +460,26 @@ const styles = StyleSheet.create({
   header: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingTop: HEADER_PADDING_TOP,
     paddingBottom: SPACING.base,
     paddingHorizontal: SPACING.lg,
-    backgroundColor: colors.background,
+    backgroundColor: COLORS.cream,
     borderBottomWidth: 1,
-    borderBottomColor: colors.border,
+    borderBottomColor: COLORS.border,
   },
   backButton: {
     width: 36,
     height: 36,
     borderRadius: RADIUS.md,
-    backgroundColor: colors.white,
+    backgroundColor: COLORS.white,
     alignItems: 'center',
     justifyContent: 'center',
     ...SHADOWS.sm,
   },
-  backArrow: {
-    fontSize: 26,
-    color: colors.text,
-    fontWeight: '600',
-    marginTop: -2,
-  },
   headerTitle: {
     flex: 1,
     fontSize: FONT_SIZE.xl,
-    fontWeight: '800',
-    color: colors.text,
+    fontFamily: FONTS.heading,
+    color: COLORS.charcoal,
     textAlign: 'center',
     letterSpacing: 0.2,
   },
@@ -486,15 +493,15 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     fontSize: FONT_SIZE.sm,
-    fontWeight: '700',
-    color: colors.textSecondary,
+    fontFamily: FONTS.bodySemiBold,
+    color: COLORS.stone,
     textTransform: 'uppercase',
     letterSpacing: 0.8,
     marginBottom: SPACING.md,
     marginLeft: SPACING.xs,
   },
   sectionCard: {
-    backgroundColor: colors.white,
+    backgroundColor: COLORS.white,
     borderRadius: RADIUS.xl,
     padding: SPACING.base,
     ...SHADOWS.md,
@@ -505,6 +512,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     marginBottom: SPACING.base,
+    flexWrap: 'wrap',
   },
   accountAvatar: {
     borderRadius: 22,
@@ -519,8 +527,8 @@ const styles = StyleSheet.create({
   },
   accountAvatarText: {
     fontSize: FONT_SIZE.md,
-    fontWeight: '800',
-    color: colors.white,
+    fontFamily: FONTS.heading,
+    color: COLORS.white,
     letterSpacing: 0.5,
   },
   accountInfo: {
@@ -529,29 +537,44 @@ const styles = StyleSheet.create({
   },
   accountName: {
     fontSize: FONT_SIZE.base,
-    fontWeight: '700',
-    color: colors.text,
+    fontFamily: FONTS.heading,
+    color: COLORS.charcoal,
     marginBottom: 1,
   },
   accountEmail: {
     fontSize: FONT_SIZE.sm,
-    color: colors.textSecondary,
-    fontWeight: '400',
+    fontFamily: FONTS.body,
+    color: COLORS.stone,
+  },
+  tagRow: {
+    flexDirection: 'row',
+    gap: 6,
   },
   sitterTag: {
-    backgroundColor: '#10B98115',
+    backgroundColor: COLORS.success + '15',
     paddingHorizontal: SPACING.md,
     paddingVertical: SPACING.xs,
     borderRadius: RADIUS.full,
   },
   sitterTagText: {
     fontSize: FONT_SIZE.xs,
-    fontWeight: '700',
-    color: '#10B981',
+    fontFamily: FONTS.bodySemiBold,
+    color: COLORS.success,
+  },
+  roleTag: {
+    backgroundColor: COLORS.primary + '15',
+    paddingHorizontal: SPACING.md,
+    paddingVertical: SPACING.xs,
+    borderRadius: RADIUS.full,
+  },
+  roleTagText: {
+    fontSize: FONT_SIZE.xs,
+    fontFamily: FONTS.bodySemiBold,
+    color: COLORS.primary,
   },
   accountDivider: {
     height: 1,
-    backgroundColor: colors.border,
+    backgroundColor: COLORS.border,
     marginBottom: SPACING.base,
   },
 
@@ -564,55 +587,47 @@ const styles = StyleSheet.create({
   },
   label: {
     fontSize: FONT_SIZE.sm,
-    fontWeight: '600',
-    color: colors.text,
+    fontFamily: FONTS.bodySemiBold,
+    color: COLORS.charcoal,
     marginBottom: SPACING.sm,
   },
   input: {
-    backgroundColor: colors.background,
+    backgroundColor: COLORS.linen,
     borderRadius: RADIUS.lg,
     paddingHorizontal: SPACING.base,
     paddingVertical: SPACING.md + 2,
     fontSize: FONT_SIZE.base,
-    color: colors.text,
+    fontFamily: FONTS.body,
+    color: COLORS.charcoal,
     borderWidth: 1.5,
-    borderColor: colors.border,
+    borderColor: COLORS.border,
   },
 
   // Read-only email field
   readOnlyField: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: colors.background,
+    backgroundColor: COLORS.linen,
     borderRadius: RADIUS.lg,
     paddingHorizontal: SPACING.base,
     paddingVertical: SPACING.md + 2,
     borderWidth: 1.5,
-    borderColor: colors.border,
+    borderColor: COLORS.border,
     opacity: 0.7,
-  },
-  readOnlyIcon: {
-    fontSize: 14,
-    marginRight: SPACING.sm,
   },
   readOnlyText: {
     flex: 1,
     fontSize: FONT_SIZE.base,
-    color: colors.textSecondary,
-    fontWeight: '400',
+    fontFamily: FONTS.body,
+    color: COLORS.stone,
   },
   verifiedBadge: {
     width: 22,
     height: 22,
     borderRadius: 11,
-    backgroundColor: '#10B981',
+    backgroundColor: COLORS.success,
     alignItems: 'center',
     justifyContent: 'center',
-  },
-  verifiedIcon: {
-    fontSize: 11,
-    color: colors.white,
-    fontWeight: '800',
   },
 
   // Save Button
@@ -620,7 +635,7 @@ const styles = StyleSheet.create({
     borderRadius: RADIUS.xl,
     overflow: 'hidden',
     marginTop: SPACING.base,
-    ...SHADOWS.glow('#FF6B35'),
+    ...SHADOWS.glow(COLORS.primary),
   },
   saveGradient: {
     flexDirection: 'row',
@@ -630,13 +645,10 @@ const styles = StyleSheet.create({
     borderRadius: RADIUS.xl,
     gap: SPACING.sm,
   },
-  saveIcon: {
-    fontSize: 16,
-  },
   saveText: {
     fontSize: FONT_SIZE.md,
-    fontWeight: '700',
-    color: colors.white,
+    fontFamily: FONTS.heading,
+    color: COLORS.white,
     letterSpacing: 0.3,
   },
 
@@ -648,7 +660,7 @@ const styles = StyleSheet.create({
   },
   settingRowBorder: {
     borderBottomWidth: 1,
-    borderBottomColor: colors.borderLight,
+    borderBottomColor: COLORS.borderLight,
   },
   settingIconContainer: {
     width: 40,
@@ -658,23 +670,20 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     marginRight: SPACING.md,
   },
-  settingIcon: {
-    fontSize: 18,
-  },
   settingInfo: {
     flex: 1,
     marginRight: SPACING.sm,
   },
   settingLabel: {
     fontSize: FONT_SIZE.base,
-    fontWeight: '600',
-    color: colors.text,
+    fontFamily: FONTS.bodySemiBold,
+    color: COLORS.charcoal,
     marginBottom: 1,
   },
   settingDescription: {
     fontSize: FONT_SIZE.xs,
-    color: colors.textTertiary,
-    fontWeight: '400',
+    fontFamily: FONTS.body,
+    color: COLORS.pebble,
   },
 
   // Info Rows (non-interactive)
@@ -683,22 +692,21 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: SPACING.md,
   },
-  infoIcon: {
-    fontSize: 16,
-    marginRight: SPACING.md,
+  infoIconContainer: {
     width: 24,
-    textAlign: 'center',
+    marginRight: SPACING.md,
+    alignItems: 'center',
   },
   infoLabel: {
     flex: 1,
     fontSize: FONT_SIZE.sm,
-    fontWeight: '500',
-    color: colors.textSecondary,
+    fontFamily: FONTS.bodyMedium,
+    color: COLORS.stone,
   },
   infoValue: {
     fontSize: FONT_SIZE.sm,
-    fontWeight: '600',
-    color: colors.text,
+    fontFamily: FONTS.bodySemiBold,
+    color: COLORS.charcoal,
   },
 
   // About Section
@@ -718,27 +726,24 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  aboutLogoIcon: {
-    fontSize: 24,
-  },
   aboutBrandInfo: {
     marginLeft: SPACING.md,
   },
   aboutAppName: {
     fontSize: FONT_SIZE.lg,
-    fontWeight: '800',
-    color: colors.text,
+    fontFamily: FONTS.brand,
+    color: COLORS.charcoal,
     letterSpacing: 0.3,
   },
   aboutTagline: {
     fontSize: FONT_SIZE.xs,
-    color: colors.textSecondary,
-    fontWeight: '500',
+    fontFamily: FONTS.bodyMedium,
+    color: COLORS.stone,
     marginTop: 1,
   },
   aboutDivider: {
     height: 1,
-    backgroundColor: colors.border,
+    backgroundColor: COLORS.border,
     marginBottom: SPACING.sm,
   },
 
@@ -746,23 +751,20 @@ const styles = StyleSheet.create({
   logoutCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: colors.white,
+    backgroundColor: COLORS.white,
     borderRadius: RADIUS.xl,
     padding: SPACING.base,
     borderWidth: 1,
-    borderColor: 'rgba(239, 68, 68, 0.12)',
+    borderColor: 'rgba(199, 80, 80, 0.12)',
     ...SHADOWS.sm,
   },
   logoutIconContainer: {
     width: 44,
     height: 44,
     borderRadius: RADIUS.lg,
-    backgroundColor: colors.errorSoft,
+    backgroundColor: COLORS.errorSoft,
     alignItems: 'center',
     justifyContent: 'center',
-  },
-  logoutIcon: {
-    fontSize: 20,
   },
   logoutInfo: {
     flex: 1,
@@ -770,20 +772,14 @@ const styles = StyleSheet.create({
   },
   logoutTitle: {
     fontSize: FONT_SIZE.base,
-    fontWeight: '700',
-    color: colors.error,
+    fontFamily: FONTS.heading,
+    color: COLORS.error,
     marginBottom: 1,
   },
   logoutSubtitle: {
     fontSize: FONT_SIZE.xs,
-    color: colors.textTertiary,
-    fontWeight: '400',
-  },
-  logoutArrow: {
-    fontSize: 20,
-    color: colors.error,
-    fontWeight: '600',
-    opacity: 0.5,
+    fontFamily: FONTS.body,
+    color: COLORS.pebble,
   },
 
   // Footer
@@ -793,14 +789,14 @@ const styles = StyleSheet.create({
   },
   footerHeart: {
     fontSize: FONT_SIZE.sm,
-    color: colors.textTertiary,
-    fontWeight: '400',
+    fontFamily: FONTS.body,
+    color: COLORS.pebble,
     marginBottom: SPACING.xs,
   },
   footerCopy: {
     fontSize: FONT_SIZE.xs,
-    color: colors.textLight,
-    fontWeight: '500',
+    fontFamily: FONTS.bodyMedium,
+    color: COLORS.sand,
   },
 
   bottomSpacer: {

@@ -1,44 +1,141 @@
+// ---------------------------------------------------------------------------
+// Patoune v2.0 - HomeScreen
+// Complete redesign with Terracotta Studio aesthetic.
+// Cream background, organic warm palette, Playfair + DM Sans typography.
+// ---------------------------------------------------------------------------
+
 import React, { useState, useCallback } from 'react';
 import {
-  View, Text, ScrollView, TouchableOpacity, StyleSheet,
-  Platform, StatusBar, Dimensions, RefreshControl
+  View,
+  Text,
+  ScrollView,
+  TouchableOpacity,
+  StyleSheet,
+  Platform,
+  StatusBar,
+  FlatList,
+  RefreshControl,
 } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
-import { useFocusEffect } from '@react-navigation/native';
+import { useFocusEffect, useNavigation } from '@react-navigation/native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+
+// Auth & API
 import { useAuth } from '../context/AuthContext';
 import { getMyPetsAPI } from '../api/pets';
 import { getScanHistoryAPI } from '../api/products';
 import { getMyBookingsAPI } from '../api/petsitters';
-const { COLORS, SPACING, RADIUS, SHADOWS, getScoreColor, getScoreLabel } = require('../utils/colors');
 
-const { width } = Dimensions.get('window');
+// Design system
+import { COLORS, SPACING, RADIUS, SHADOWS, getScoreColor, getScoreLabel } from '../utils/colors';
+import { FONTS, TEXT_STYLES } from '../utils/typography';
+import Icon from '../components/Icon';
+import Avatar from '../components/Avatar';
+import Card from '../components/Card';
+import Badge from '../components/Badge';
+import SectionHeader from '../components/SectionHeader';
 
-// ─── Recent Scan Card ────────────────────────────────
-const RecentScanCard = ({ scan, onPress }) => {
+
+// =========================================================================
+// Sub-components
+// =========================================================================
+
+// ---------------------------------------------------------------------------
+// Pet mini card for the companions ribbon
+// ---------------------------------------------------------------------------
+const PetMiniCard = ({ pet, onPress }) => (
+  <TouchableOpacity style={styles.petMini} onPress={onPress} activeOpacity={0.7}>
+    <Avatar name={pet.name} size="md" />
+    <Text style={styles.petMiniName} numberOfLines={1}>{pet.name}</Text>
+  </TouchableOpacity>
+);
+
+
+// ---------------------------------------------------------------------------
+// Add pet card (dashed border)
+// ---------------------------------------------------------------------------
+const AddPetCard = ({ onPress }) => (
+  <TouchableOpacity style={styles.addPetCard} onPress={onPress} activeOpacity={0.7}>
+    <View style={styles.addPetCircle}>
+      <Icon name="plus" size={22} color={COLORS.primary} />
+    </View>
+    <Text style={styles.addPetLabel}>Ajouter</Text>
+  </TouchableOpacity>
+);
+
+
+// ---------------------------------------------------------------------------
+// Feature card (Scanner, Garde, Animaux)
+// ---------------------------------------------------------------------------
+const FeatureCard = ({ icon, iconFamily, iconColor, title, subtitle, onPress }) => (
+  <Card variant="elevated" onPress={onPress} style={styles.featureCard}>
+    <View style={[styles.featureIconCircle, { backgroundColor: iconColor + '15' }]}>
+      <Icon name={icon} family={iconFamily} size={22} color={iconColor} />
+    </View>
+    <Text style={styles.featureTitle}>{title}</Text>
+    <Text style={styles.featureSubtitle}>{subtitle}</Text>
+  </Card>
+);
+
+
+// ---------------------------------------------------------------------------
+// Stat column
+// ---------------------------------------------------------------------------
+const StatColumn = ({ icon, iconFamily, iconColor, value, label, loading }) => (
+  <View style={styles.statCol}>
+    <View style={[styles.statIconWrap, { backgroundColor: iconColor + '12' }]}>
+      <Icon name={icon} family={iconFamily} size={20} color={iconColor} />
+    </View>
+    <Text style={[styles.statValue, { color: iconColor }]}>{loading ? '-' : value}</Text>
+    <Text style={styles.statLabel}>{label}</Text>
+  </View>
+);
+
+
+// ---------------------------------------------------------------------------
+// Recent scan item
+// ---------------------------------------------------------------------------
+const RecentScanItem = ({ scan, onPress }) => {
   const score = scan.product?.nutritionScore || 0;
   const color = getScoreColor(score);
+  const label = getScoreLabel(score);
+
   return (
-    <TouchableOpacity style={s.scanCard} onPress={onPress} activeOpacity={0.8}>
-      <View style={[s.scanScoreBadge, { backgroundColor: color + '18' }]}>
-        <Text style={[s.scanScoreText, { color }]}>{score}</Text>
+    <Card variant="elevated" onPress={onPress} style={styles.scanCard}>
+      <View style={styles.scanRow}>
+        {/* Score badge */}
+        <View style={[styles.scanScoreBadge, { backgroundColor: color + '18' }]}>
+          <Text style={[styles.scanScoreText, { color }]}>{score}</Text>
+        </View>
+
+        {/* Product info */}
+        <View style={styles.scanInfo}>
+          <Text style={styles.scanName} numberOfLines={1}>
+            {scan.product?.name || 'Produit'}
+          </Text>
+          <Text style={styles.scanBrand} numberOfLines={1}>
+            {scan.product?.brand || ''}
+          </Text>
+        </View>
+
+        {/* Score label badge */}
+        <Badge label={label} color={{ bg: color + '15', text: color, icon: color }} size="sm" />
       </View>
-      <View style={s.scanInfo}>
-        <Text style={s.scanName} numberOfLines={1}>{scan.product?.name || 'Produit'}</Text>
-        <Text style={s.scanBrand} numberOfLines={1}>{scan.product?.brand || ''}</Text>
-      </View>
-      <View style={[s.scanLabel, { backgroundColor: color + '15' }]}>
-        <Text style={[s.scanLabelText, { color }]}>{getScoreLabel(score)}</Text>
-      </View>
-    </TouchableOpacity>
+    </Card>
   );
 };
 
-// ─── Next Booking Card ───────────────────────────────
+
+// ---------------------------------------------------------------------------
+// Next booking card
+// ---------------------------------------------------------------------------
 const NextBookingCard = ({ booking }) => {
   if (!booking) return null;
+
   const start = new Date(booking.startDate);
   const daysUntil = Math.ceil((start - new Date()) / (1000 * 60 * 60 * 24));
-  const dayLabel = daysUntil <= 0 ? "Aujourd'hui" : daysUntil === 1 ? 'Demain' : `Dans ${daysUntil}j`;
+  const dayLabel =
+    daysUntil <= 0 ? "Aujourd'hui" : daysUntil === 1 ? 'Demain' : `Dans ${daysUntil}j`;
+
   const serviceLabels = {
     garde_domicile: 'Garde a domicile',
     garde_chez_sitter: 'Garde chez le gardien',
@@ -46,55 +143,54 @@ const NextBookingCard = ({ booking }) => {
     visite: 'Visite',
     toilettage: 'Toilettage',
   };
-  return (
-    <View style={s.bookingCard}>
-      <LinearGradient
-        colors={['#10B981', '#34D399']}
-        start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}
-        style={s.bookingGradient}
-      >
-        <View style={s.bookingTop}>
-          <View style={s.bookingBadge}>
-            <Text style={s.bookingBadgeText}>{dayLabel}</Text>
-          </View>
-          <Text style={s.bookingPrice}>{booking.totalPrice}E</Text>
-        </View>
-        <Text style={s.bookingService}>{serviceLabels[booking.service] || booking.service}</Text>
-        <View style={s.bookingMeta}>
-          <Text style={s.bookingMetaText}>
-            {start.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}
-          </Text>
-          <Text style={s.bookingMetaText}>
-            {booking.status === 'confirmed' ? 'Confirmee' : 'En attente'}
-          </Text>
-        </View>
-      </LinearGradient>
-    </View>
-  );
-};
 
-// ─── Pet Mini Card ───────────────────────────────────
-const PetMiniCard = ({ pet }) => {
-  const speciesEmojis = { chien: '🐕', chat: '🐈', oiseau: '🦜', rongeur: '🐹', reptile: '🦎', poisson: '🐟' };
+  const statusConfig =
+    booking.status === 'confirmed'
+      ? { label: 'Confirmee', color: 'success' }
+      : { label: 'En attente', color: 'warning' };
+
   return (
-    <View style={s.petMini}>
-      <View style={s.petMiniAvatar}>
-        <Text style={s.petMiniEmoji}>{speciesEmojis[pet.species] || '🐾'}</Text>
+    <Card variant="elevated" style={styles.bookingCard}>
+      <View style={styles.bookingRow}>
+        <View style={styles.bookingIconWrap}>
+          <Icon name="calendar" size={20} color={COLORS.secondary} />
+        </View>
+        <View style={styles.bookingInfo}>
+          <Text style={styles.bookingService}>
+            {serviceLabels[booking.service] || booking.service}
+          </Text>
+          <Text style={styles.bookingDate}>
+            {dayLabel} - {start.toLocaleDateString('fr-FR', { day: 'numeric', month: 'long' })}
+          </Text>
+          {booking.petSitter?.name ? (
+            <Text style={styles.bookingSitter}>
+              Avec {booking.petSitter.name}
+            </Text>
+          ) : null}
+        </View>
+        <Badge label={statusConfig.label} color={statusConfig.color} size="sm" />
       </View>
-      <Text style={s.petMiniName} numberOfLines={1}>{pet.name}</Text>
-    </View>
+    </Card>
   );
 };
 
-// ═══════════════════════════════════════════════════════
-const HomeScreen = ({ navigation }) => {
+
+// =========================================================================
+// Main HomeScreen
+// =========================================================================
+const HomeScreen = () => {
+  const navigation = useNavigation();
   const { user } = useAuth();
+  const insets = useSafeAreaInsets();
+
+  // Data state
   const [pets, setPets] = useState([]);
   const [recentScans, setRecentScans] = useState([]);
   const [bookings, setBookings] = useState([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
 
+  // Fetch data
   const fetchData = async () => {
     try {
       const [petsRes, scansRes, bookingsRes] = await Promise.allSettled([
@@ -102,12 +198,19 @@ const HomeScreen = ({ navigation }) => {
         getScanHistoryAPI(),
         getMyBookingsAPI(),
       ]);
-      if (petsRes.status === 'fulfilled') setPets(petsRes.value.data?.pets || petsRes.value.data || []);
-      if (scansRes.status === 'fulfilled') setRecentScans((scansRes.value.data?.history || scansRes.value.data || []).slice(0, 5));
+
+      if (petsRes.status === 'fulfilled') {
+        setPets(petsRes.value.data?.pets || petsRes.value.data || []);
+      }
+      if (scansRes.status === 'fulfilled') {
+        setRecentScans(
+          (scansRes.value.data?.history || scansRes.value.data || []).slice(0, 5)
+        );
+      }
       if (bookingsRes.status === 'fulfilled') {
         const all = bookingsRes.value.data?.bookings || bookingsRes.value.data || [];
         const upcoming = all
-          .filter(b => b.status === 'confirmed' || b.status === 'pending')
+          .filter((b) => b.status === 'confirmed' || b.status === 'pending')
           .sort((a, b) => new Date(a.startDate) - new Date(b.startDate));
         setBookings(upcoming);
       }
@@ -119,256 +222,556 @@ const HomeScreen = ({ navigation }) => {
     }
   };
 
-  useFocusEffect(useCallback(() => { fetchData(); }, []));
-  const onRefresh = () => { setRefreshing(true); fetchData(); };
+  useFocusEffect(
+    useCallback(() => {
+      fetchData();
+    }, [])
+  );
 
+  const onRefresh = () => {
+    setRefreshing(true);
+    fetchData();
+  };
+
+  // User name
   const firstName = user?.name?.split(' ')[0] || 'ami';
-  const hour = new Date().getHours();
-  const greetText = hour < 12 ? 'Bonjour' : hour < 18 ? 'Bon apres-midi' : 'Bonsoir';
 
-  const features = [
-    { icon: '📷', title: 'Scanner', subtitle: 'Analyser un produit', gradient: ['#FF6B35', '#FF8F65'], onPress: () => navigation.navigate('Scanner') },
-    { icon: '🏠', title: 'Garde', subtitle: 'Trouver un gardien', gradient: ['#10B981', '#34D399'], onPress: () => navigation.navigate('Garde') },
-    { icon: '🐾', title: 'Animaux', subtitle: 'Mes compagnons', gradient: ['#3B82F6', '#60A5FA'], onPress: () => navigation.navigate('Profil', { screen: 'MyPets' }) },
+  // Format today's date in French
+  const today = new Date();
+  const dayNames = ['Dimanche', 'Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi'];
+  const monthNames = [
+    'janvier', 'fevrier', 'mars', 'avril', 'mai', 'juin',
+    'juillet', 'aout', 'septembre', 'octobre', 'novembre', 'decembre',
   ];
+  const dateString = `${dayNames[today.getDay()]} ${today.getDate()} ${monthNames[today.getMonth()]}`;
+
+  // Top safe area padding
+  const topPadding = Math.max(insets.top, Platform.OS === 'android' ? StatusBar.currentHeight || 0 : 0);
 
   return (
-    <View style={s.container}>
-      <StatusBar barStyle="light-content" />
+    <View style={styles.container}>
+      <StatusBar barStyle="dark-content" />
+
       <ScrollView
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={s.scrollContent}
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={COLORS.primary} />}
+        contentContainerStyle={[styles.scrollContent, { paddingTop: topPadding + 16 }]}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            tintColor={COLORS.primary}
+            colors={[COLORS.primary]}
+          />
+        }
       >
-        {/* Hero */}
-        <LinearGradient colors={['#FF6B35', '#FF8F65', '#FFB088']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={s.hero}>
-          <View style={s.heroTop}>
-            <View>
-              <Text style={s.greeting}>{greetText}</Text>
-              <Text style={s.userName}>{firstName} 👋</Text>
-            </View>
-            <TouchableOpacity style={s.avatarBtn} onPress={() => navigation.navigate('Profil')} activeOpacity={0.8}>
-              <Text style={s.avatarText}>{user?.name?.charAt(0)?.toUpperCase() || '?'}</Text>
-            </TouchableOpacity>
+        {/* ============================================================= */}
+        {/* 1. HEADER AREA                                                */}
+        {/* ============================================================= */}
+        <View style={styles.header}>
+          <View style={styles.headerLeft}>
+            <Text style={styles.greeting}>Bonjour,</Text>
+            <Text style={styles.userName}>{firstName}</Text>
+            <Text style={styles.dateText}>{dateString}</Text>
           </View>
-          <TouchableOpacity style={s.searchBar} onPress={() => navigation.navigate('Scanner')} activeOpacity={0.8}>
-            <Text style={s.searchIcon}>🔍</Text>
-            <Text style={s.searchPlaceholder}>Rechercher un produit, un gardien...</Text>
+          <TouchableOpacity
+            onPress={() => navigation.navigate('Profil')}
+            activeOpacity={0.8}
+          >
+            <Avatar name={user?.name || '?'} size="lg" />
           </TouchableOpacity>
-        </LinearGradient>
-
-        {/* Pets */}
-        {pets.length > 0 && (
-          <View style={s.petsSection}>
-            <View style={s.sectionHeader}>
-              <Text style={s.sectionTitle}>Mes compagnons</Text>
-              <TouchableOpacity onPress={() => navigation.navigate('Profil', { screen: 'MyPets' })}>
-                <Text style={s.seeAll}>Voir tout</Text>
-              </TouchableOpacity>
-            </View>
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={s.petsScroll}>
-              {pets.map((pet, idx) => <PetMiniCard key={pet._id || idx} pet={pet} />)}
-              <TouchableOpacity style={s.petMiniAdd} onPress={() => navigation.navigate('Profil', { screen: 'AddPet' })}>
-                <View style={s.petMiniAddCircle}><Text style={s.petMiniAddIcon}>+</Text></View>
-                <Text style={s.petMiniAddLabel}>Ajouter</Text>
-              </TouchableOpacity>
-            </ScrollView>
-          </View>
-        )}
-
-        {/* Features */}
-        <View style={s.featuresSection}>
-          <Text style={s.sectionTitle}>Que veux-tu faire ?</Text>
-          <View style={s.featuresGrid}>
-            {features.map((f, idx) => (
-              <TouchableOpacity key={idx} onPress={f.onPress} activeOpacity={0.85} style={s.featureCardWrapper}>
-                <LinearGradient colors={f.gradient} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={s.featureCard}>
-                  <Text style={s.featureIcon}>{f.icon}</Text>
-                  <View>
-                    <Text style={s.featureTitle}>{f.title}</Text>
-                    <Text style={s.featureSubtitle}>{f.subtitle}</Text>
-                  </View>
-                  <View style={s.featureArrow}><Text style={s.featureArrowText}>→</Text></View>
-                </LinearGradient>
-              </TouchableOpacity>
-            ))}
-          </View>
         </View>
 
-        {/* Stats */}
-        <View style={s.statsSection}>
-          <Text style={s.sectionTitle}>Mon tableau de bord</Text>
-          <View style={s.statsCard}>
-            <View style={s.statsRow}>
-              {[
-                { value: recentScans.length, label: 'Scans', icon: '📷', color: '#FF6B35' },
-                { value: pets.length, label: 'Animaux', icon: '🐾', color: '#10B981' },
-                { value: bookings.length, label: 'Gardes', icon: '📅', color: '#3B82F6' },
-              ].map((stat, idx) => (
-                <View key={idx} style={s.stat}>
-                  <View style={[s.statIconWrap, { backgroundColor: stat.color + '12' }]}>
-                    <Text style={s.statIcon}>{stat.icon}</Text>
-                  </View>
-                  <Text style={[s.statValue, { color: stat.color }]}>{loading ? '-' : stat.value}</Text>
-                  <Text style={s.statLabel}>{stat.label}</Text>
+
+        {/* ============================================================= */}
+        {/* 2. PET COMPANIONS RIBBON                                      */}
+        {/* ============================================================= */}
+        <View style={styles.section}>
+          <SectionHeader
+            title="Mes compagnons"
+            count={pets.length}
+            onSeeAll={
+              pets.length > 0
+                ? () => navigation.navigate('Profil', { screen: 'MyPets' })
+                : undefined
+            }
+          />
+
+          {pets.length > 0 ? (
+            <FlatList
+              horizontal
+              data={pets}
+              keyExtractor={(item) => item._id || item.name}
+              renderItem={({ item }) => (
+                <PetMiniCard
+                  pet={item}
+                  onPress={() =>
+                    navigation.navigate('Profil', {
+                      screen: 'MyPets',
+                    })
+                  }
+                />
+              )}
+              ListFooterComponent={
+                <AddPetCard
+                  onPress={() =>
+                    navigation.navigate('Profil', { screen: 'AddPet' })
+                  }
+                />
+              }
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={styles.petsScroll}
+            />
+          ) : (
+            <Card
+              variant="outlined"
+              onPress={() => navigation.navigate('Profil', { screen: 'AddPet' })}
+              style={styles.emptyPetsCard}
+            >
+              <View style={styles.emptyPetsRow}>
+                <View style={styles.emptyPetsIconWrap}>
+                  <Icon name="plus" size={20} color={COLORS.primary} />
                 </View>
-              ))}
+                <Text style={styles.emptyPetsText}>Ajoutez votre premier compagnon</Text>
+                <Icon name="chevron-right" size={18} color={COLORS.pebble} />
+              </View>
+            </Card>
+          )}
+        </View>
+
+
+        {/* ============================================================= */}
+        {/* 3. AI ASSISTANT PROMPT CARD                                   */}
+        {/* ============================================================= */}
+        <View style={styles.section}>
+          <Card
+            variant="elevated"
+            onPress={() => navigation.navigate('Assistant')}
+            style={styles.aiCard}
+          >
+            <View style={styles.aiRow}>
+              <View style={styles.aiIconWrap}>
+                <Icon name="message-circle" size={22} color={COLORS.accent} />
+              </View>
+              <View style={styles.aiTextBlock}>
+                <Text style={styles.aiTitle}>Posez une question a Patoune Assistant</Text>
+                <Text style={styles.aiSubtitle}>Alimentation, sante, comportement...</Text>
+              </View>
+              <Icon name="chevron-right" size={20} color={COLORS.pebble} />
             </View>
+          </Card>
+        </View>
+
+
+        {/* ============================================================= */}
+        {/* 4. FEATURE CARDS                                              */}
+        {/* ============================================================= */}
+        <View style={styles.section}>
+          <SectionHeader title="Que souhaitez-vous faire ?" />
+          <View style={styles.featuresRow}>
+            <FeatureCard
+              icon="camera"
+              iconColor={COLORS.primary}
+              title="Scanner"
+              subtitle="Analyser un produit"
+              onPress={() => navigation.navigate('Scanner')}
+            />
+            <FeatureCard
+              icon="heart"
+              iconColor={COLORS.secondary}
+              title="Garde"
+              subtitle="Trouver un gardien"
+              onPress={() => navigation.navigate('Garde')}
+            />
+            <FeatureCard
+              icon="paw"
+              iconFamily="ionicons"
+              iconColor={COLORS.accent}
+              title="Animaux"
+              subtitle="Gerer mes compagnons"
+              onPress={() => navigation.navigate('Profil', { screen: 'MyPets' })}
+            />
           </View>
         </View>
 
-        {/* Next Booking */}
-        {bookings.length > 0 && (
-          <View style={s.bookingSection}>
-            <View style={s.sectionHeader}>
-              <Text style={s.sectionTitle}>Prochaine garde</Text>
-              <TouchableOpacity onPress={() => navigation.navigate('Garde')}>
-                <Text style={s.seeAll}>Historique</Text>
-              </TouchableOpacity>
+
+        {/* ============================================================= */}
+        {/* 5. STATS DASHBOARD                                            */}
+        {/* ============================================================= */}
+        <View style={styles.section}>
+          <Card variant="elevated" style={styles.statsCard}>
+            <View style={styles.statsRow}>
+              <StatColumn
+                icon="camera"
+                iconColor={COLORS.primary}
+                value={recentScans.length}
+                label="Scans"
+                loading={loading}
+              />
+              <View style={styles.statsDivider} />
+              <StatColumn
+                icon="paw"
+                iconFamily="ionicons"
+                iconColor={COLORS.secondary}
+                value={pets.length}
+                label="Animaux"
+                loading={loading}
+              />
+              <View style={styles.statsDivider} />
+              <StatColumn
+                icon="calendar"
+                iconColor={COLORS.accent}
+                value={bookings.length}
+                label="Gardes"
+                loading={loading}
+              />
             </View>
+          </Card>
+        </View>
+
+
+        {/* ============================================================= */}
+        {/* 6. NEXT BOOKING                                               */}
+        {/* ============================================================= */}
+        {bookings.length > 0 ? (
+          <View style={styles.section}>
+            <SectionHeader
+              title="Prochaine garde"
+              onSeeAll={() => navigation.navigate('Garde')}
+            />
             <NextBookingCard booking={bookings[0]} />
           </View>
-        )}
+        ) : null}
 
-        {/* Recent Scans */}
-        {recentScans.length > 0 && (
-          <View style={s.scansSection}>
-            <View style={s.sectionHeader}>
-              <Text style={s.sectionTitle}>Derniers scans</Text>
-              <TouchableOpacity onPress={() => navigation.navigate('Scanner', { screen: 'ScanHistory' })}>
-                <Text style={s.seeAll}>Voir tout</Text>
-              </TouchableOpacity>
-            </View>
+
+        {/* ============================================================= */}
+        {/* 7. RECENT SCANS                                               */}
+        {/* ============================================================= */}
+        {recentScans.length > 0 ? (
+          <View style={styles.section}>
+            <SectionHeader
+              title="Derniers scans"
+              count={recentScans.length}
+              onSeeAll={() =>
+                navigation.navigate('Scanner', { screen: 'ScanHistory' })
+              }
+            />
             {recentScans.slice(0, 3).map((scan, idx) => (
-              <RecentScanCard
+              <RecentScanItem
                 key={scan._id || idx}
                 scan={scan}
-                onPress={() => navigation.navigate('Scanner', { screen: 'ProductResult', params: { product: scan.product } })}
+                onPress={() =>
+                  navigation.navigate('Scanner', {
+                    screen: 'ProductResult',
+                    params: { product: scan.product },
+                  })
+                }
               />
             ))}
           </View>
-        )}
+        ) : null}
 
-        {/* Quick Actions */}
-        <View style={s.quickSection}>
-          <Text style={s.sectionTitle}>Acces rapide</Text>
-          <View style={s.quickGrid}>
-            {[
-              { icon: '🔍', label: 'Historique', onPress: () => navigation.navigate('Scanner', { screen: 'ScanHistory' }) },
-              { icon: '📋', label: 'Reservations', onPress: () => navigation.navigate('Garde') },
-              { icon: '💬', label: 'Messages', onPress: () => navigation.navigate('Garde', { screen: 'Messages' }) },
-              { icon: '⚙️', label: 'Reglages', onPress: () => navigation.navigate('Profil', { screen: 'Settings' }) },
-            ].map((qa, idx) => (
-              <TouchableOpacity key={idx} style={s.quickAction} onPress={qa.onPress} activeOpacity={0.7}>
-                <View style={s.quickIconWrap}><Text style={s.quickIcon}>{qa.icon}</Text></View>
-                <Text style={s.quickLabel}>{qa.label}</Text>
-              </TouchableOpacity>
-            ))}
-          </View>
-        </View>
-
-        {/* Tip */}
-        <View style={s.tipSection}>
-          <TouchableOpacity activeOpacity={0.9} onPress={() => navigation.navigate('Scanner')}>
-            <LinearGradient colors={['#6C5CE7', '#A29BFE']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={s.tipGradient}>
-              <Text style={s.tipEmoji}>💡</Text>
-              <View style={s.tipContent}>
-                <Text style={s.tipTitle}>Le saviez-vous ?</Text>
-                <Text style={s.tipText}>Scannez les produits de vos animaux pour verifier leur qualite et decouvrir des alternatives plus saines.</Text>
-              </View>
-              <Text style={s.tipArrow}>→</Text>
-            </LinearGradient>
-          </TouchableOpacity>
-        </View>
-
+        {/* Bottom spacing */}
         <View style={{ height: 30 }} />
       </ScrollView>
     </View>
   );
 };
 
-const s = StyleSheet.create({
-  container: { flex: 1, backgroundColor: COLORS.background },
-  scrollContent: { paddingBottom: 20 },
-  hero: { paddingTop: Platform.OS === 'ios' ? 58 : 48, paddingHorizontal: 20, paddingBottom: 28, borderBottomLeftRadius: 28, borderBottomRightRadius: 28 },
-  heroTop: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 },
-  greeting: { fontSize: 14, color: 'rgba(255,255,255,0.8)', fontWeight: '500', letterSpacing: 0.3 },
-  userName: { fontSize: 26, fontWeight: '800', color: '#FFF', marginTop: 2, letterSpacing: -0.5 },
-  avatarBtn: { width: 50, height: 50, borderRadius: 25, backgroundColor: 'rgba(255,255,255,0.25)', alignItems: 'center', justifyContent: 'center', borderWidth: 2.5, borderColor: 'rgba(255,255,255,0.45)' },
-  avatarText: { fontSize: 21, fontWeight: '700', color: '#FFF' },
-  searchBar: { flexDirection: 'row', alignItems: 'center', backgroundColor: 'rgba(255,255,255,0.2)', borderRadius: RADIUS.lg, paddingHorizontal: 16, height: 48, borderWidth: 1, borderColor: 'rgba(255,255,255,0.15)' },
-  searchIcon: { fontSize: 16, marginRight: 10 },
-  searchPlaceholder: { fontSize: 14, color: 'rgba(255,255,255,0.75)', fontWeight: '500' },
 
-  sectionHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 },
-  sectionTitle: { fontSize: 18, fontWeight: '700', color: COLORS.text, marginBottom: 2 },
-  seeAll: { fontSize: 14, fontWeight: '600', color: COLORS.primary },
+// =========================================================================
+// Styles
+// =========================================================================
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: COLORS.cream,
+  },
+  scrollContent: {
+    paddingBottom: 20,
+  },
 
-  petsSection: { paddingLeft: 20, marginTop: 22 },
-  petsScroll: { gap: 12, paddingRight: 20 },
-  petMini: { alignItems: 'center', width: 68 },
-  petMiniAvatar: { width: 56, height: 56, borderRadius: 28, backgroundColor: COLORS.primarySoft, alignItems: 'center', justifyContent: 'center', borderWidth: 2.5, borderColor: COLORS.primary + '30', marginBottom: 6 },
-  petMiniEmoji: { fontSize: 26 },
-  petMiniName: { fontSize: 12, fontWeight: '600', color: COLORS.text, textAlign: 'center' },
-  petMiniAdd: { alignItems: 'center', width: 68, justifyContent: 'center' },
-  petMiniAddCircle: { width: 56, height: 56, borderRadius: 28, borderWidth: 2, borderColor: COLORS.border, borderStyle: 'dashed', alignItems: 'center', justifyContent: 'center', marginBottom: 6 },
-  petMiniAddIcon: { fontSize: 24, color: COLORS.textTertiary },
-  petMiniAddLabel: { fontSize: 12, fontWeight: '500', color: COLORS.textTertiary },
+  // ---- Header ----
+  header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: SPACING.lg,
+    marginBottom: SPACING.xl,
+  },
+  headerLeft: {
+    flex: 1,
+    marginRight: SPACING.base,
+  },
+  greeting: {
+    fontFamily: FONTS.body,
+    fontSize: 16,
+    color: COLORS.textSecondary,
+    marginBottom: 2,
+  },
+  userName: {
+    fontFamily: FONTS.brand,
+    fontSize: 28,
+    color: COLORS.charcoal,
+    letterSpacing: -0.3,
+  },
+  dateText: {
+    fontFamily: FONTS.body,
+    fontSize: 13,
+    color: COLORS.textTertiary,
+    marginTop: 4,
+  },
 
-  featuresSection: { paddingHorizontal: 20, marginTop: 24 },
-  featuresGrid: { flexDirection: 'row', gap: 10, marginTop: 12 },
-  featureCardWrapper: { flex: 1 },
-  featureCard: { borderRadius: RADIUS.xl, padding: 16, height: 140, justifyContent: 'space-between', ...SHADOWS.lg },
-  featureIcon: { fontSize: 30 },
-  featureTitle: { fontSize: 17, fontWeight: '800', color: '#FFF' },
-  featureSubtitle: { fontSize: 11, color: 'rgba(255,255,255,0.8)', fontWeight: '500', marginTop: 2 },
-  featureArrow: { width: 30, height: 30, borderRadius: 15, backgroundColor: 'rgba(255,255,255,0.25)', alignItems: 'center', justifyContent: 'center', alignSelf: 'flex-end' },
-  featureArrowText: { color: '#FFF', fontSize: 15, fontWeight: '700' },
+  // ---- Section ----
+  section: {
+    paddingHorizontal: SPACING.lg,
+    marginBottom: SPACING.xl,
+  },
 
-  statsSection: { paddingHorizontal: 20, marginTop: 28 },
-  statsCard: { backgroundColor: COLORS.white, borderRadius: RADIUS.xl, padding: 20, ...SHADOWS.md, marginTop: 12 },
-  statsRow: { flexDirection: 'row', justifyContent: 'space-around' },
-  stat: { alignItems: 'center' },
-  statIconWrap: { width: 50, height: 50, borderRadius: RADIUS.lg, alignItems: 'center', justifyContent: 'center', marginBottom: 8 },
-  statIcon: { fontSize: 24 },
-  statValue: { fontSize: 26, fontWeight: '800' },
-  statLabel: { fontSize: 12, color: COLORS.textSecondary, fontWeight: '500', marginTop: 2 },
+  // ---- Pet companions ribbon ----
+  petsScroll: {
+    gap: SPACING.md,
+    paddingVertical: SPACING.xs,
+  },
+  petMini: {
+    alignItems: 'center',
+    width: 72,
+  },
+  petMiniName: {
+    fontFamily: FONTS.bodyMedium,
+    fontSize: 12,
+    color: COLORS.charcoal,
+    textAlign: 'center',
+    marginTop: 6,
+  },
+  addPetCard: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    width: 72,
+  },
+  addPetCircle: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    borderWidth: 2,
+    borderStyle: 'dashed',
+    borderColor: COLORS.primary,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: COLORS.primarySoft,
+  },
+  addPetLabel: {
+    fontFamily: FONTS.bodyMedium,
+    fontSize: 12,
+    color: COLORS.primary,
+    marginTop: 6,
+  },
 
-  bookingSection: { paddingHorizontal: 20, marginTop: 28 },
-  bookingCard: { borderRadius: RADIUS.xl, overflow: 'hidden', ...SHADOWS.lg },
-  bookingGradient: { padding: 18, borderRadius: RADIUS.xl },
-  bookingTop: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 },
-  bookingBadge: { backgroundColor: 'rgba(255,255,255,0.25)', borderRadius: RADIUS.full, paddingHorizontal: 12, paddingVertical: 4 },
-  bookingBadgeText: { color: '#FFF', fontWeight: '700', fontSize: 13 },
-  bookingPrice: { color: '#FFF', fontWeight: '800', fontSize: 22 },
-  bookingService: { color: '#FFF', fontWeight: '700', fontSize: 17, marginBottom: 8 },
-  bookingMeta: { flexDirection: 'row', gap: 16 },
-  bookingMetaText: { color: 'rgba(255,255,255,0.9)', fontSize: 13, fontWeight: '500' },
+  // Empty pets state
+  emptyPetsCard: {
+    marginVertical: 0,
+  },
+  emptyPetsRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: SPACING.md,
+  },
+  emptyPetsIconWrap: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: COLORS.primarySoft,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  emptyPetsText: {
+    flex: 1,
+    fontFamily: FONTS.bodyMedium,
+    fontSize: 14,
+    color: COLORS.textSecondary,
+  },
 
-  scansSection: { paddingHorizontal: 20, marginTop: 28 },
-  scanCard: { flexDirection: 'row', alignItems: 'center', backgroundColor: COLORS.white, borderRadius: RADIUS.lg, padding: 14, marginBottom: 10, ...SHADOWS.sm },
-  scanScoreBadge: { width: 44, height: 44, borderRadius: 12, alignItems: 'center', justifyContent: 'center', marginRight: 12 },
-  scanScoreText: { fontSize: 16, fontWeight: '800' },
-  scanInfo: { flex: 1, marginRight: 8 },
-  scanName: { fontSize: 14, fontWeight: '700', color: COLORS.text },
-  scanBrand: { fontSize: 12, color: COLORS.textSecondary, marginTop: 2 },
-  scanLabel: { borderRadius: RADIUS.full, paddingHorizontal: 10, paddingVertical: 4 },
-  scanLabelText: { fontSize: 11, fontWeight: '700' },
+  // ---- AI Assistant prompt card ----
+  aiCard: {
+    marginVertical: 0,
+    borderLeftWidth: 4,
+    borderLeftColor: COLORS.accent,
+  },
+  aiRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: SPACING.md,
+  },
+  aiIconWrap: {
+    width: 44,
+    height: 44,
+    borderRadius: RADIUS.md,
+    backgroundColor: COLORS.accentSoft,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  aiTextBlock: {
+    flex: 1,
+  },
+  aiTitle: {
+    fontFamily: FONTS.bodyMedium,
+    fontSize: 15,
+    color: COLORS.charcoal,
+    lineHeight: 20,
+  },
+  aiSubtitle: {
+    fontFamily: FONTS.body,
+    fontSize: 13,
+    color: COLORS.textTertiary,
+    marginTop: 2,
+  },
 
-  quickSection: { paddingHorizontal: 20, marginTop: 28 },
-  quickGrid: { flexDirection: 'row', justifyContent: 'space-between', marginTop: 12 },
-  quickAction: { alignItems: 'center', width: (width - 40 - 36) / 4 },
-  quickIconWrap: { width: 56, height: 56, borderRadius: RADIUS.xl, backgroundColor: COLORS.white, alignItems: 'center', justifyContent: 'center', ...SHADOWS.md, marginBottom: 8 },
-  quickIcon: { fontSize: 24 },
-  quickLabel: { fontSize: 11, color: COLORS.textSecondary, fontWeight: '600', textAlign: 'center' },
+  // ---- Feature cards row ----
+  featuresRow: {
+    flexDirection: 'row',
+    gap: SPACING.sm,
+  },
+  featureCard: {
+    flex: 1,
+    alignItems: 'center',
+    paddingVertical: SPACING.base,
+    paddingHorizontal: SPACING.sm,
+    marginVertical: 0,
+  },
+  featureIconCircle: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: SPACING.sm,
+  },
+  featureTitle: {
+    fontFamily: FONTS.bodySemiBold,
+    fontSize: 14,
+    color: COLORS.charcoal,
+    textAlign: 'center',
+    marginBottom: 2,
+  },
+  featureSubtitle: {
+    fontFamily: FONTS.body,
+    fontSize: 11,
+    color: COLORS.textTertiary,
+    textAlign: 'center',
+  },
 
-  tipSection: { paddingHorizontal: 20, marginTop: 28 },
-  tipGradient: { borderRadius: RADIUS.xl, padding: 20, flexDirection: 'row', alignItems: 'center', ...SHADOWS.lg },
-  tipEmoji: { fontSize: 34, marginRight: 14 },
-  tipContent: { flex: 1 },
-  tipTitle: { fontSize: 16, fontWeight: '700', color: '#FFF', marginBottom: 4 },
-  tipText: { fontSize: 13, color: 'rgba(255,255,255,0.85)', lineHeight: 18 },
-  tipArrow: { fontSize: 20, color: 'rgba(255,255,255,0.6)', fontWeight: '700' },
+  // ---- Stats dashboard ----
+  statsCard: {
+    marginVertical: 0,
+    paddingVertical: SPACING.lg,
+  },
+  statsRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  statCol: {
+    flex: 1,
+    alignItems: 'center',
+  },
+  statIconWrap: {
+    width: 44,
+    height: 44,
+    borderRadius: RADIUS.md,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: SPACING.sm,
+  },
+  statValue: {
+    fontFamily: FONTS.heading,
+    fontSize: 24,
+    letterSpacing: -0.3,
+  },
+  statLabel: {
+    fontFamily: FONTS.body,
+    fontSize: 12,
+    color: COLORS.textTertiary,
+    marginTop: 2,
+  },
+  statsDivider: {
+    width: 1,
+    height: 50,
+    backgroundColor: COLORS.borderLight,
+  },
+
+  // ---- Next booking ----
+  bookingCard: {
+    marginVertical: 0,
+    borderLeftWidth: 4,
+    borderLeftColor: COLORS.secondary,
+  },
+  bookingRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: SPACING.md,
+  },
+  bookingIconWrap: {
+    width: 44,
+    height: 44,
+    borderRadius: RADIUS.md,
+    backgroundColor: COLORS.secondarySoft,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  bookingInfo: {
+    flex: 1,
+  },
+  bookingService: {
+    fontFamily: FONTS.bodySemiBold,
+    fontSize: 15,
+    color: COLORS.charcoal,
+  },
+  bookingDate: {
+    fontFamily: FONTS.body,
+    fontSize: 13,
+    color: COLORS.textSecondary,
+    marginTop: 2,
+  },
+  bookingSitter: {
+    fontFamily: FONTS.body,
+    fontSize: 12,
+    color: COLORS.textTertiary,
+    marginTop: 2,
+  },
+
+  // ---- Recent scans ----
+  scanCard: {
+    marginVertical: 3,
+  },
+  scanRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: SPACING.md,
+  },
+  scanScoreBadge: {
+    width: 44,
+    height: 44,
+    borderRadius: RADIUS.md,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  scanScoreText: {
+    fontFamily: FONTS.heading,
+    fontSize: 16,
+    letterSpacing: -0.2,
+  },
+  scanInfo: {
+    flex: 1,
+  },
+  scanName: {
+    fontFamily: FONTS.bodySemiBold,
+    fontSize: 14,
+    color: COLORS.charcoal,
+  },
+  scanBrand: {
+    fontFamily: FONTS.body,
+    fontSize: 12,
+    color: COLORS.textTertiary,
+    marginTop: 2,
+  },
 });
 
 export default HomeScreen;

@@ -3,28 +3,30 @@ import {
   View, Text, ScrollView, StyleSheet, TouchableOpacity,
   Platform, Animated, ActivityIndicator, StatusBar, Dimensions,
 } from 'react-native';
+import { Feather } from '@expo/vector-icons';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { getPetSitterAPI, getPetSitterReviewsAPI } from '../../api/petsitters';
+import { FONTS } from '../../utils/typography';
 const colors = require('../../utils/colors');
 const { SHADOWS, RADIUS, SPACING, FONT_SIZE } = require('../../utils/colors');
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
-const TOP_PADDING = Platform.OS === 'ios' ? 58 : 48;
 
-const ANIMAL_EMOJI_MAP = {
-  chien: '🐶',
-  chat: '🐱',
-  rongeur: '🐹',
-  oiseau: '🐦',
-  reptile: '🦎',
+const ANIMAL_ICON_MAP = {
+  chien: 'gitlab',
+  chat: 'github',
+  rongeur: 'mouse-pointer',
+  oiseau: 'feather',
+  reptile: 'zap',
 };
 
 const SERVICE_ICONS = {
-  garde_domicile: { icon: '🏠', label: 'Garde a domicile', desc: 'Votre animal reste chez vous' },
-  garde_chez_sitter: { icon: '🏡', label: 'Garde chez le gardien', desc: 'Votre animal sejourne chez le gardien' },
-  promenade: { icon: '🦮', label: 'Promenade', desc: 'Balade quotidienne' },
-  visite: { icon: '👋', label: 'Visite a domicile', desc: 'Passage pour nourrir et cajoler' },
-  toilettage: { icon: '✨', label: 'Toilettage', desc: 'Soin et beaute' },
+  garde_domicile: { icon: 'home', label: 'Garde a domicile', desc: 'Votre animal reste chez vous' },
+  garde_chez_sitter: { icon: 'home', label: 'Garde chez le gardien', desc: 'Votre animal sejourne chez le gardien' },
+  promenade: { icon: 'map-pin', label: 'Promenade', desc: 'Balade quotidienne' },
+  visite: { icon: 'eye', label: 'Visite a domicile', desc: 'Passage pour nourrir et cajoler' },
+  toilettage: { icon: 'scissors', label: 'Toilettage', desc: 'Soin et beaute' },
 };
 
 const AVAILABILITY_DAYS = [
@@ -44,12 +46,10 @@ const StarRating = ({ rating, size = 16, showValue = false, light = false }) => 
   const hasHalf = (rating || 0) - fullStars >= 0.5;
   const emptyColor = light ? 'rgba(255,255,255,0.3)' : colors.border;
   for (let i = 0; i < 5; i++) {
-    if (i < fullStars) {
-      stars.push(<Text key={i} style={{ fontSize: size, color: '#F59E0B' }}>★</Text>);
-    } else if (i === fullStars && hasHalf) {
-      stars.push(<Text key={i} style={{ fontSize: size, color: '#F59E0B' }}>★</Text>);
+    if (i < fullStars || (i === fullStars && hasHalf)) {
+      stars.push(<Feather key={i} name="star" size={size} color="#F59E0B" />);
     } else {
-      stars.push(<Text key={i} style={{ fontSize: size, color: emptyColor }}>★</Text>);
+      stars.push(<Feather key={i} name="star" size={size} color={emptyColor} />);
     }
   }
   return (
@@ -58,7 +58,7 @@ const StarRating = ({ rating, size = 16, showValue = false, light = false }) => 
       {showValue && (
         <Text style={{
           fontSize: size - 2,
-          fontWeight: '700',
+          fontFamily: FONTS.heading,
           color: '#F59E0B',
           marginLeft: 4,
         }}>
@@ -75,7 +75,7 @@ const RatingBar = ({ stars, count, total }) => {
   return (
     <View style={styles.ratingBarRow}>
       <Text style={styles.ratingBarLabel}>{stars}</Text>
-      <Text style={styles.ratingBarStar}>★</Text>
+      <Feather name="star" size={10} color="#F59E0B" />
       <View style={styles.ratingBarTrack}>
         <View style={[styles.ratingBarFill, { width: `${percentage}%` }]} />
       </View>
@@ -85,10 +85,10 @@ const RatingBar = ({ stars, count, total }) => {
 };
 
 /* ---------- Section Card ---------- */
-const SectionCard = ({ title, icon, children, style }) => (
+const SectionCard = ({ title, iconName, children, style }) => (
   <View style={[styles.sectionCard, style]}>
     <View style={styles.sectionHeader}>
-      {icon && <Text style={styles.sectionIcon}>{icon}</Text>}
+      {iconName && <Feather name={iconName} size={18} color={colors.primary} />}
       <Text style={styles.sectionTitle}>{title}</Text>
     </View>
     {children}
@@ -97,6 +97,7 @@ const SectionCard = ({ title, icon, children, style }) => (
 
 /* ---------- Main Screen ---------- */
 const PetSitterDetailScreen = ({ route, navigation }) => {
+  const insets = useSafeAreaInsets();
   const [petsitter, setPetsitter] = useState(route.params?.petsitter || null);
   const [reviews, setReviews] = useState([]);
   const [loadingReviews, setLoadingReviews] = useState(true);
@@ -184,7 +185,7 @@ const PetSitterDetailScreen = ({ route, navigation }) => {
         {/* Hero Section */}
         <LinearGradient
           colors={[colors.primary, colors.primaryDark]}
-          style={styles.hero}
+          style={[styles.hero, { paddingTop: insets.top + 12 }]}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
         >
@@ -195,7 +196,7 @@ const PetSitterDetailScreen = ({ route, navigation }) => {
             activeOpacity={0.7}
             hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
           >
-            <Text style={styles.backBtnIcon}>←</Text>
+            <Feather name="arrow-left" size={22} color={colors.white} />
           </TouchableOpacity>
 
           <View style={styles.heroContent}>
@@ -206,7 +207,7 @@ const PetSitterDetailScreen = ({ route, navigation }) => {
               </View>
               {petsitter.verified && (
                 <View style={styles.heroVerifiedDot}>
-                  <Text style={styles.heroVerifiedCheck}>✓</Text>
+                  <Feather name="check" size={14} color={colors.white} />
                 </View>
               )}
             </View>
@@ -227,7 +228,7 @@ const PetSitterDetailScreen = ({ route, navigation }) => {
             {/* Verified Badge */}
             {petsitter.verified && (
               <View style={styles.heroVerifiedBadge}>
-                <Text style={styles.heroVerifiedBadgeIcon}>✓</Text>
+                <Feather name="check-circle" size={12} color="#34D399" />
                 <Text style={styles.heroVerifiedBadgeText}>Profil verifie</Text>
               </View>
             )}
@@ -259,13 +260,13 @@ const PetSitterDetailScreen = ({ route, navigation }) => {
         }}>
           {/* Bio */}
           {petsitter.bio ? (
-            <SectionCard title="A propos" icon="📝">
+            <SectionCard title="A propos" iconName="edit-3">
               <Text style={styles.bioText}>{petsitter.bio}</Text>
             </SectionCard>
           ) : null}
 
           {/* Pricing */}
-          <SectionCard title="Tarifs" icon="💰">
+          <SectionCard title="Tarifs" iconName="dollar-sign">
             <View style={styles.pricingRow}>
               <View style={styles.priceCard}>
                 <LinearGradient
@@ -274,7 +275,7 @@ const PetSitterDetailScreen = ({ route, navigation }) => {
                   start={{ x: 0, y: 0 }}
                   end={{ x: 1, y: 1 }}
                 >
-                  <Text style={styles.priceCardIcon}>🌙</Text>
+                  <Feather name="moon" size={24} color={colors.white} style={{ marginBottom: SPACING.sm }} />
                   <Text style={styles.priceCardAmount}>
                     {petsitter.pricePerDay || '--'} EUR
                   </Text>
@@ -288,7 +289,7 @@ const PetSitterDetailScreen = ({ route, navigation }) => {
                   start={{ x: 0, y: 0 }}
                   end={{ x: 1, y: 1 }}
                 >
-                  <Text style={styles.priceCardIcon}>⏰</Text>
+                  <Feather name="clock" size={24} color={colors.white} style={{ marginBottom: SPACING.sm }} />
                   <Text style={styles.priceCardAmount}>
                     {petsitter.pricePerHour || '--'} EUR
                   </Text>
@@ -300,18 +301,18 @@ const PetSitterDetailScreen = ({ route, navigation }) => {
 
           {/* Services */}
           {petsitter.services?.length > 0 && (
-            <SectionCard title="Services proposes" icon="🛎️">
+            <SectionCard title="Services proposes" iconName="bell">
               <View style={styles.servicesList}>
                 {petsitter.services.map((serviceKey, idx) => {
                   const serviceInfo = SERVICE_ICONS[serviceKey] || {
-                    icon: '📌',
+                    icon: 'map-pin',
                     label: serviceKey.replace(/_/g, ' '),
                     desc: '',
                   };
                   return (
                     <View key={idx} style={styles.serviceItem}>
                       <View style={styles.serviceIconBox}>
-                        <Text style={styles.serviceItemIcon}>{serviceInfo.icon}</Text>
+                        <Feather name={serviceInfo.icon} size={20} color={colors.primary} />
                       </View>
                       <View style={styles.serviceItemInfo}>
                         <Text style={styles.serviceItemLabel}>{serviceInfo.label}</Text>
@@ -320,7 +321,7 @@ const PetSitterDetailScreen = ({ route, navigation }) => {
                         ) : null}
                       </View>
                       <View style={styles.serviceCheckmark}>
-                        <Text style={styles.serviceCheckmarkIcon}>✓</Text>
+                        <Feather name="check" size={12} color="#10B981" />
                       </View>
                     </View>
                   );
@@ -331,13 +332,15 @@ const PetSitterDetailScreen = ({ route, navigation }) => {
 
           {/* Accepted Animals */}
           {petsitter.acceptedAnimals?.length > 0 && (
-            <SectionCard title="Animaux acceptes" icon="🐾">
+            <SectionCard title="Animaux acceptes" iconName="heart">
               <View style={styles.animalChips}>
                 {petsitter.acceptedAnimals.map((animal, idx) => (
                   <View key={idx} style={styles.animalChip}>
-                    <Text style={styles.animalChipEmoji}>
-                      {ANIMAL_EMOJI_MAP[animal.toLowerCase()] || '🐾'}
-                    </Text>
+                    <Feather
+                      name={ANIMAL_ICON_MAP[animal.toLowerCase()] || 'heart'}
+                      size={18}
+                      color={colors.primary}
+                    />
                     <Text style={styles.animalChipText}>
                       {animal.charAt(0).toUpperCase() + animal.slice(1)}
                     </Text>
@@ -348,7 +351,7 @@ const PetSitterDetailScreen = ({ route, navigation }) => {
           )}
 
           {/* Availability */}
-          <SectionCard title="Disponibilite" icon="📅">
+          <SectionCard title="Disponibilite" iconName="calendar">
             <View style={styles.availabilityRow}>
               {AVAILABILITY_DAYS.map((day, idx) => {
                 const available = petsitter.availability?.includes(day.key) ?? (idx < 5);
@@ -371,7 +374,7 @@ const PetSitterDetailScreen = ({ route, navigation }) => {
           </SectionCard>
 
           {/* Reviews */}
-          <SectionCard title={`Avis (${reviews.length})`} icon="⭐">
+          <SectionCard title={`Avis (${reviews.length})`} iconName="star">
             {loadingReviews ? (
               <ActivityIndicator
                 size="small"
@@ -380,7 +383,7 @@ const PetSitterDetailScreen = ({ route, navigation }) => {
               />
             ) : reviews.length === 0 ? (
               <View style={styles.noReviewsContainer}>
-                <Text style={styles.noReviewsIcon}>💬</Text>
+                <Feather name="message-circle" size={32} color={colors.textTertiary} style={{ marginBottom: SPACING.sm }} />
                 <Text style={styles.noReviewsText}>Pas encore d'avis</Text>
                 <Text style={styles.noReviewsSubtext}>
                   Soyez le premier a laisser un avis !
@@ -494,7 +497,7 @@ const PetSitterDetailScreen = ({ route, navigation }) => {
               })
             }
           >
-            <Text style={styles.contactBtnIcon}>💬</Text>
+            <Feather name="message-circle" size={22} color={colors.primary} />
           </TouchableOpacity>
 
           <TouchableOpacity
@@ -509,7 +512,7 @@ const PetSitterDetailScreen = ({ route, navigation }) => {
               end={{ x: 1, y: 0 }}
             >
               <Text style={styles.bookBtnText}>Reserver</Text>
-              <Text style={styles.bookBtnArrow}>→</Text>
+              <Feather name="arrow-right" size={18} color={colors.white} />
             </LinearGradient>
           </TouchableOpacity>
         </View>
@@ -538,13 +541,12 @@ const styles = StyleSheet.create({
   },
   loadingFullText: {
     fontSize: FONT_SIZE.sm,
+    fontFamily: FONTS.bodyMedium,
     color: colors.textSecondary,
-    fontWeight: '500',
   },
 
   // Hero
   hero: {
-    paddingTop: TOP_PADDING,
     paddingBottom: SPACING['2xl'],
     paddingHorizontal: SPACING.lg,
   },
@@ -556,11 +558,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: SPACING.md,
-  },
-  backBtnIcon: {
-    fontSize: 22,
-    color: colors.white,
-    fontWeight: '600',
   },
   heroContent: {
     alignItems: 'center',
@@ -581,7 +578,7 @@ const styles = StyleSheet.create({
   },
   heroAvatarLetter: {
     fontSize: FONT_SIZE['4xl'],
-    fontWeight: '700',
+    fontFamily: FONTS.heading,
     color: colors.white,
   },
   heroVerifiedDot: {
@@ -597,14 +594,9 @@ const styles = StyleSheet.create({
     borderWidth: 3,
     borderColor: colors.primary,
   },
-  heroVerifiedCheck: {
-    fontSize: 14,
-    color: colors.white,
-    fontWeight: '700',
-  },
   heroName: {
     fontSize: FONT_SIZE['2xl'],
-    fontWeight: '800',
+    fontFamily: FONTS.brand,
     color: colors.white,
     letterSpacing: -0.3,
     marginBottom: SPACING.sm,
@@ -617,8 +609,8 @@ const styles = StyleSheet.create({
   },
   heroReviewCount: {
     fontSize: FONT_SIZE.sm,
+    fontFamily: FONTS.bodyMedium,
     color: 'rgba(255,255,255,0.7)',
-    fontWeight: '500',
   },
   heroVerifiedBadge: {
     flexDirection: 'row',
@@ -632,15 +624,10 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: 'rgba(16, 185, 129, 0.35)',
   },
-  heroVerifiedBadgeIcon: {
-    fontSize: 12,
-    color: '#34D399',
-    fontWeight: '700',
-  },
   heroVerifiedBadgeText: {
     fontSize: FONT_SIZE.sm,
+    fontFamily: FONTS.bodySemiBold,
     color: '#34D399',
-    fontWeight: '600',
   },
   statsRow: {
     flexDirection: 'row',
@@ -658,13 +645,13 @@ const styles = StyleSheet.create({
   },
   statValue: {
     fontSize: FONT_SIZE.xl,
-    fontWeight: '800',
+    fontFamily: FONTS.heading,
     color: colors.white,
   },
   statLabel: {
     fontSize: FONT_SIZE.xs,
+    fontFamily: FONTS.bodyMedium,
     color: 'rgba(255,255,255,0.65)',
-    fontWeight: '500',
     marginTop: 2,
   },
   statDivider: {
@@ -690,18 +677,16 @@ const styles = StyleSheet.create({
     marginBottom: SPACING.base,
     gap: SPACING.sm,
   },
-  sectionIcon: {
-    fontSize: 18,
-  },
   sectionTitle: {
     fontSize: FONT_SIZE.lg,
-    fontWeight: '700',
+    fontFamily: FONTS.heading,
     color: colors.text,
   },
 
   // Bio
   bioText: {
     fontSize: FONT_SIZE.base,
+    fontFamily: FONTS.body,
     color: colors.textSecondary,
     lineHeight: 24,
   },
@@ -721,20 +706,16 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     borderRadius: RADIUS.lg,
   },
-  priceCardIcon: {
-    fontSize: 24,
-    marginBottom: SPACING.sm,
-  },
   priceCardAmount: {
     fontSize: FONT_SIZE.xl,
-    fontWeight: '800',
+    fontFamily: FONTS.heading,
     color: colors.white,
     marginBottom: 2,
   },
   priceCardUnit: {
     fontSize: FONT_SIZE.sm,
+    fontFamily: FONTS.bodyMedium,
     color: 'rgba(255,255,255,0.8)',
-    fontWeight: '500',
   },
 
   // Services
@@ -758,19 +739,17 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     ...SHADOWS.sm,
   },
-  serviceItemIcon: {
-    fontSize: 20,
-  },
   serviceItemInfo: {
     flex: 1,
   },
   serviceItemLabel: {
     fontSize: FONT_SIZE.base,
-    fontWeight: '600',
+    fontFamily: FONTS.bodySemiBold,
     color: colors.text,
   },
   serviceItemDesc: {
     fontSize: FONT_SIZE.xs,
+    fontFamily: FONTS.body,
     color: colors.textTertiary,
     marginTop: 2,
   },
@@ -781,11 +760,6 @@ const styles = StyleSheet.create({
     backgroundColor: '#ECFDF5',
     alignItems: 'center',
     justifyContent: 'center',
-  },
-  serviceCheckmarkIcon: {
-    fontSize: 12,
-    color: '#10B981',
-    fontWeight: '700',
   },
 
   // Animals
@@ -805,12 +779,9 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.primary + '20',
   },
-  animalChipEmoji: {
-    fontSize: 18,
-  },
   animalChipText: {
     fontSize: FONT_SIZE.sm,
-    fontWeight: '600',
+    fontFamily: FONTS.bodySemiBold,
     color: colors.primary,
   },
 
@@ -837,7 +808,7 @@ const styles = StyleSheet.create({
   },
   availabilityDayText: {
     fontSize: FONT_SIZE.sm,
-    fontWeight: '700',
+    fontFamily: FONTS.heading,
     color: colors.textTertiary,
   },
   availabilityDayTextActive: {
@@ -845,6 +816,7 @@ const styles = StyleSheet.create({
   },
   availabilityHint: {
     fontSize: FONT_SIZE.xs,
+    fontFamily: FONTS.body,
     color: colors.textTertiary,
     marginTop: SPACING.md,
     textAlign: 'center',
@@ -856,17 +828,14 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: SPACING.xl,
   },
-  noReviewsIcon: {
-    fontSize: 32,
-    marginBottom: SPACING.sm,
-  },
   noReviewsText: {
     fontSize: FONT_SIZE.base,
-    fontWeight: '600',
+    fontFamily: FONTS.bodySemiBold,
     color: colors.textSecondary,
   },
   noReviewsSubtext: {
     fontSize: FONT_SIZE.sm,
+    fontFamily: FONTS.body,
     color: colors.textTertiary,
     marginTop: SPACING.xs,
   },
@@ -884,15 +853,15 @@ const styles = StyleSheet.create({
   },
   ratingSummaryValue: {
     fontSize: FONT_SIZE['3xl'],
-    fontWeight: '800',
+    fontFamily: FONTS.heading,
     color: colors.text,
     marginBottom: 2,
   },
   ratingSummaryCount: {
     fontSize: FONT_SIZE.xs,
+    fontFamily: FONTS.bodyMedium,
     color: colors.textTertiary,
     marginTop: SPACING.xs,
-    fontWeight: '500',
   },
   ratingSummaryRight: {
     flex: 1,
@@ -907,14 +876,10 @@ const styles = StyleSheet.create({
   },
   ratingBarLabel: {
     fontSize: FONT_SIZE.xs,
-    fontWeight: '600',
+    fontFamily: FONTS.bodySemiBold,
     color: colors.textSecondary,
     width: 10,
     textAlign: 'right',
-  },
-  ratingBarStar: {
-    fontSize: 10,
-    color: '#F59E0B',
   },
   ratingBarTrack: {
     flex: 1,
@@ -930,6 +895,7 @@ const styles = StyleSheet.create({
   },
   ratingBarCount: {
     fontSize: FONT_SIZE.xs,
+    fontFamily: FONTS.body,
     color: colors.textTertiary,
     width: 18,
     textAlign: 'right',
@@ -969,21 +935,23 @@ const styles = StyleSheet.create({
   },
   reviewAuthorInitial: {
     fontSize: FONT_SIZE.sm,
-    fontWeight: '700',
+    fontFamily: FONTS.heading,
     color: colors.accent,
   },
   reviewAuthorName: {
     fontSize: FONT_SIZE.base,
-    fontWeight: '600',
+    fontFamily: FONTS.bodySemiBold,
     color: colors.text,
   },
   reviewDate: {
     fontSize: FONT_SIZE.xs,
+    fontFamily: FONTS.body,
     color: colors.textTertiary,
     marginTop: 1,
   },
   reviewComment: {
     fontSize: FONT_SIZE.sm,
+    fontFamily: FONTS.body,
     color: colors.textSecondary,
     lineHeight: 20,
     marginLeft: 48,
@@ -995,7 +963,7 @@ const styles = StyleSheet.create({
   },
   showMoreText: {
     fontSize: FONT_SIZE.sm,
-    fontWeight: '700',
+    fontFamily: FONTS.heading,
     color: colors.primary,
   },
 
@@ -1017,8 +985,8 @@ const styles = StyleSheet.create({
   },
   bottomBarPriceLabel: {
     fontSize: FONT_SIZE.xs,
+    fontFamily: FONTS.bodyMedium,
     color: colors.textTertiary,
-    fontWeight: '500',
   },
   bottomBarPriceRow: {
     flexDirection: 'row',
@@ -1027,13 +995,13 @@ const styles = StyleSheet.create({
   },
   bottomBarPrice: {
     fontSize: FONT_SIZE.xl,
-    fontWeight: '800',
+    fontFamily: FONTS.heading,
     color: colors.text,
   },
   bottomBarPriceUnit: {
     fontSize: FONT_SIZE.sm,
+    fontFamily: FONTS.bodyMedium,
     color: colors.textTertiary,
-    fontWeight: '500',
   },
   bottomBarActions: {
     flexDirection: 'row',
@@ -1048,9 +1016,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     borderWidth: 1.5,
     borderColor: colors.border,
-  },
-  contactBtnIcon: {
-    fontSize: 22,
   },
   bookBtnWrapper: {
     borderRadius: RADIUS.lg,
@@ -1069,13 +1034,8 @@ const styles = StyleSheet.create({
   },
   bookBtnText: {
     fontSize: FONT_SIZE.md,
-    fontWeight: '700',
+    fontFamily: FONTS.heading,
     color: colors.white,
-  },
-  bookBtnArrow: {
-    fontSize: FONT_SIZE.lg,
-    color: colors.white,
-    fontWeight: '600',
   },
 });
 

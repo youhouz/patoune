@@ -4,36 +4,38 @@ import {
   Alert, TextInput, Platform, Animated, ActivityIndicator,
   StatusBar, Dimensions,
 } from 'react-native';
+import { Feather } from '@expo/vector-icons';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { getMyPetsAPI } from '../../api/pets';
 import { createBookingAPI } from '../../api/petsitters';
+import { FONTS } from '../../utils/typography';
 const colors = require('../../utils/colors');
 const { SHADOWS, RADIUS, SPACING, FONT_SIZE } = require('../../utils/colors');
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
-const TOP_PADDING = Platform.OS === 'ios' ? 58 : 48;
 
 const STEPS = [
-  { key: 'pet', label: 'Animal', icon: '🐾' },
-  { key: 'service', label: 'Service', icon: '🛎️' },
-  { key: 'dates', label: 'Dates', icon: '📅' },
-  { key: 'confirm', label: 'Confirmer', icon: '✓' },
+  { key: 'pet', label: 'Animal', icon: 'heart' },
+  { key: 'service', label: 'Service', icon: 'bell' },
+  { key: 'dates', label: 'Dates', icon: 'calendar' },
+  { key: 'confirm', label: 'Confirmer', icon: 'check' },
 ];
 
 const SERVICES = [
-  { key: 'garde_domicile', label: 'Garde a domicile', icon: '🏠', desc: 'Chez vous' },
-  { key: 'garde_chez_sitter', label: 'Chez le gardien', icon: '🏡', desc: 'Chez le gardien' },
-  { key: 'promenade', label: 'Promenade', icon: '🦮', desc: 'Balade quotidienne' },
-  { key: 'visite', label: 'Visite a domicile', icon: '👋', desc: 'Visite ponctuelle' },
-  { key: 'toilettage', label: 'Toilettage', icon: '✨', desc: 'Soin & beaute' },
+  { key: 'garde_domicile', label: 'Garde a domicile', icon: 'home', desc: 'Chez vous' },
+  { key: 'garde_chez_sitter', label: 'Chez le gardien', icon: 'home', desc: 'Chez le gardien' },
+  { key: 'promenade', label: 'Promenade', icon: 'map-pin', desc: 'Balade quotidienne' },
+  { key: 'visite', label: 'Visite a domicile', icon: 'eye', desc: 'Visite ponctuelle' },
+  { key: 'toilettage', label: 'Toilettage', icon: 'scissors', desc: 'Soin & beaute' },
 ];
 
-const PET_SPECIES_EMOJI = {
-  chien: '🐶',
-  chat: '🐱',
-  rongeur: '🐹',
-  oiseau: '🐦',
-  reptile: '🦎',
+const PET_SPECIES_ICON = {
+  chien: 'gitlab',
+  chat: 'github',
+  rongeur: 'mouse-pointer',
+  oiseau: 'feather',
+  reptile: 'zap',
 };
 
 /* ---------- Step Indicator ---------- */
@@ -54,9 +56,11 @@ const StepIndicator = ({ currentStep }) => {
                 isCurrent && styles.stepDotInnerCurrent,
               ]}>
                 {isActive ? (
-                  <Text style={styles.stepDotIcon}>
-                    {idx < stepIndex ? '✓' : step.icon}
-                  </Text>
+                  <Feather
+                    name={idx < stepIndex ? 'check' : step.icon}
+                    size={14}
+                    color={colors.white}
+                  />
                 ) : (
                   <Text style={styles.stepDotNumber}>{idx + 1}</Text>
                 )}
@@ -80,13 +84,13 @@ const StepIndicator = ({ currentStep }) => {
 };
 
 /* ---------- Section Card ---------- */
-const SectionCard = ({ title, icon, number, children, style, active = true }) => (
+const SectionCard = ({ title, iconName, number, children, style, active = true }) => (
   <View style={[styles.sectionCard, !active && styles.sectionCardInactive, style]}>
     <View style={styles.sectionHeader}>
       <View style={[styles.sectionNumberBadge, active && styles.sectionNumberBadgeActive]}>
         <Text style={[styles.sectionNumber, active && styles.sectionNumberActive]}>{number}</Text>
       </View>
-      {icon && <Text style={styles.sectionIcon}>{icon}</Text>}
+      {iconName && <Feather name={iconName} size={18} color={active ? colors.primary : colors.textTertiary} />}
       <Text style={[styles.sectionTitle, !active && styles.sectionTitleInactive]}>{title}</Text>
     </View>
     {children}
@@ -95,6 +99,7 @@ const SectionCard = ({ title, icon, number, children, style, active = true }) =>
 
 /* ---------- Main Screen ---------- */
 const BookingScreen = ({ route, navigation }) => {
+  const insets = useSafeAreaInsets();
   const { petsitter } = route.params;
   const [pets, setPets] = useState([]);
   const [loadingPets, setLoadingPets] = useState(true);
@@ -253,7 +258,7 @@ const BookingScreen = ({ route, navigation }) => {
         {/* Header */}
         <LinearGradient
           colors={[colors.primary, colors.primaryDark]}
-          style={styles.header}
+          style={[styles.header, { paddingTop: insets.top + 12 }]}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
         >
@@ -264,7 +269,7 @@ const BookingScreen = ({ route, navigation }) => {
             activeOpacity={0.7}
             hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
           >
-            <Text style={styles.backBtnIcon}>←</Text>
+            <Feather name="arrow-left" size={22} color={colors.white} />
           </TouchableOpacity>
 
           <Text style={styles.headerTitle}>Nouvelle reservation</Text>
@@ -284,7 +289,7 @@ const BookingScreen = ({ route, navigation }) => {
             </View>
             {petsitter.verified && (
               <View style={styles.headerVerifiedBadge}>
-                <Text style={styles.headerVerifiedIcon}>✓</Text>
+                <Feather name="check" size={14} color="#34D399" />
               </View>
             )}
           </View>
@@ -297,12 +302,12 @@ const BookingScreen = ({ route, navigation }) => {
 
         <Animated.View style={{ opacity: fadeAnim }}>
           {/* Step 1: Pet Selection */}
-          <SectionCard title="Quel animal ?" icon="🐾" number="1" active={getCurrentStep() === 'pet' || !!selectedPet}>
+          <SectionCard title="Quel animal ?" iconName="heart" number="1" active={getCurrentStep() === 'pet' || !!selectedPet}>
             {loadingPets ? (
               <ActivityIndicator size="small" color={colors.primary} style={{ paddingVertical: SPACING.lg }} />
             ) : pets.length === 0 ? (
               <View style={styles.noPetsContainer}>
-                <Text style={styles.noPetsIcon}>🐾</Text>
+                <Feather name="heart" size={40} color={colors.textTertiary} style={{ marginBottom: SPACING.md }} />
                 <Text style={styles.noPetsText}>
                   Ajoutez un animal dans votre profil d'abord
                 </Text>
@@ -326,9 +331,11 @@ const BookingScreen = ({ route, navigation }) => {
                       activeOpacity={0.7}
                     >
                       <View style={[styles.petCardIcon, isSelected && styles.petCardIconActive]}>
-                        <Text style={styles.petCardEmoji}>
-                          {PET_SPECIES_EMOJI[pet.species?.toLowerCase()] || '🐾'}
-                        </Text>
+                        <Feather
+                          name={PET_SPECIES_ICON[pet.species?.toLowerCase()] || 'heart'}
+                          size={26}
+                          color={isSelected ? colors.primary : colors.textSecondary}
+                        />
                       </View>
                       <Text style={[styles.petCardName, isSelected && styles.petCardNameActive]} numberOfLines={1}>
                         {pet.name}
@@ -338,7 +345,7 @@ const BookingScreen = ({ route, navigation }) => {
                       </Text>
                       {isSelected && (
                         <View style={styles.petCardCheck}>
-                          <Text style={styles.petCardCheckText}>✓</Text>
+                          <Feather name="check" size={13} color={colors.white} />
                         </View>
                       )}
                     </TouchableOpacity>
@@ -349,7 +356,7 @@ const BookingScreen = ({ route, navigation }) => {
           </SectionCard>
 
           {/* Step 2: Service Selection */}
-          <SectionCard title="Quel service ?" icon="🛎️" number="2" active={getCurrentStep() === 'service' || !!selectedService}>
+          <SectionCard title="Quel service ?" iconName="bell" number="2" active={getCurrentStep() === 'service' || !!selectedService}>
             <View style={styles.serviceList}>
               {availableServices.map((service) => {
                 const isSelected = selectedService === service.key;
@@ -364,7 +371,7 @@ const BookingScreen = ({ route, navigation }) => {
                       {isSelected && <View style={styles.serviceRadioDot} />}
                     </View>
                     <View style={styles.serviceOptionIconBox}>
-                      <Text style={styles.serviceOptionIcon}>{service.icon}</Text>
+                      <Feather name={service.icon} size={20} color={isSelected ? colors.primary : colors.textSecondary} />
                     </View>
                     <View style={styles.serviceOptionInfo}>
                       <Text style={[styles.serviceOptionLabel, isSelected && styles.serviceOptionLabelActive]}>
@@ -387,7 +394,7 @@ const BookingScreen = ({ route, navigation }) => {
               })}
               {availableServices.length === 0 && (
                 <View style={styles.noServiceContainer}>
-                  <Text style={styles.noServiceIcon}>🚫</Text>
+                  <Feather name="alert-circle" size={28} color={colors.textTertiary} style={{ marginBottom: SPACING.sm }} />
                   <Text style={styles.noServiceText}>Aucun service disponible</Text>
                 </View>
               )}
@@ -395,12 +402,12 @@ const BookingScreen = ({ route, navigation }) => {
           </SectionCard>
 
           {/* Step 3: Dates */}
-          <SectionCard title="Quand ?" icon="📅" number="3" active={getCurrentStep() === 'dates' || (!!startDate && !!endDate)}>
+          <SectionCard title="Quand ?" iconName="calendar" number="3" active={getCurrentStep() === 'dates' || (!!startDate && !!endDate)}>
             <View style={styles.dateRow}>
               <View style={styles.dateField}>
                 <Text style={styles.dateLabel}>Debut</Text>
                 <View style={[styles.dateInputWrapper, startDate.length === 10 && styles.dateInputWrapperFilled]}>
-                  <Text style={styles.dateInputIcon}>📆</Text>
+                  <Feather name="calendar" size={16} color={startDate.length === 10 ? '#10B981' : colors.textTertiary} style={{ marginRight: SPACING.sm }} />
                   <TextInput
                     style={styles.dateInput}
                     value={startDate}
@@ -414,13 +421,13 @@ const BookingScreen = ({ route, navigation }) => {
               </View>
               <View style={styles.dateArrow}>
                 <View style={styles.dateArrowCircle}>
-                  <Text style={styles.dateArrowText}>→</Text>
+                  <Feather name="arrow-right" size={16} color={colors.primary} />
                 </View>
               </View>
               <View style={styles.dateField}>
                 <Text style={styles.dateLabel}>Fin</Text>
                 <View style={[styles.dateInputWrapper, endDate.length === 10 && styles.dateInputWrapperFilled]}>
-                  <Text style={styles.dateInputIcon}>📆</Text>
+                  <Feather name="calendar" size={16} color={endDate.length === 10 ? '#10B981' : colors.textTertiary} style={{ marginRight: SPACING.sm }} />
                   <TextInput
                     style={styles.dateInput}
                     value={endDate}
@@ -435,7 +442,7 @@ const BookingScreen = ({ route, navigation }) => {
             </View>
             {getDays() > 0 && (
               <View style={styles.durationBadge}>
-                <Text style={styles.durationIcon}>⏱️</Text>
+                <Feather name="clock" size={13} color="#10B981" />
                 <Text style={styles.durationText}>
                   {getDays()} jour{getDays() > 1 ? 's' : ''}
                 </Text>
@@ -444,7 +451,7 @@ const BookingScreen = ({ route, navigation }) => {
           </SectionCard>
 
           {/* Step 4: Notes */}
-          <SectionCard title="Notes (optionnel)" icon="📝" number="4" active>
+          <SectionCard title="Notes (optionnel)" iconName="edit-3" number="4" active>
             <TextInput
               style={styles.notesInput}
               value={notes}
@@ -467,7 +474,7 @@ const BookingScreen = ({ route, navigation }) => {
               end={{ x: 1, y: 1 }}
             >
               <View style={styles.summaryHeader}>
-                <Text style={styles.summaryHeaderIcon}>📋</Text>
+                <Feather name="clipboard" size={18} color={colors.primary} />
                 <Text style={styles.summaryHeaderTitle}>Recapitulatif</Text>
               </View>
 
@@ -478,11 +485,18 @@ const BookingScreen = ({ route, navigation }) => {
 
               <View style={styles.summaryRow}>
                 <Text style={styles.summaryLabel}>Animal</Text>
-                <Text style={styles.summaryValue}>
-                  {selectedPetObj
-                    ? `${PET_SPECIES_EMOJI[selectedPetObj.species?.toLowerCase()] || '🐾'} ${selectedPetObj.name}`
-                    : '--'}
-                </Text>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+                  {selectedPetObj && (
+                    <Feather
+                      name={PET_SPECIES_ICON[selectedPetObj.species?.toLowerCase()] || 'heart'}
+                      size={14}
+                      color={colors.primary}
+                    />
+                  )}
+                  <Text style={styles.summaryValue}>
+                    {selectedPetObj ? selectedPetObj.name : '--'}
+                  </Text>
+                </View>
               </View>
 
               <View style={styles.summaryRow}>
@@ -495,7 +509,7 @@ const BookingScreen = ({ route, navigation }) => {
               <View style={styles.summaryRow}>
                 <Text style={styles.summaryLabel}>Periode</Text>
                 <Text style={styles.summaryValue}>
-                  {startDate && endDate ? `${startDate} → ${endDate}` : '--'}
+                  {startDate && endDate ? `${startDate} - ${endDate}` : '--'}
                 </Text>
               </View>
 
@@ -535,7 +549,7 @@ const BookingScreen = ({ route, navigation }) => {
                   <ActivityIndicator size="small" color={colors.white} />
                 ) : (
                   <>
-                    <Text style={styles.confirmBtnIcon}>✓</Text>
+                    <Feather name="check" size={18} color={colors.white} />
                     <Text style={styles.confirmBtnText}>Confirmer la reservation</Text>
                   </>
                 )}
@@ -568,7 +582,6 @@ const styles = StyleSheet.create({
 
   // Header
   header: {
-    paddingTop: TOP_PADDING,
     paddingBottom: SPACING.xl,
     paddingHorizontal: SPACING.lg,
   },
@@ -581,14 +594,9 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     marginBottom: SPACING.md,
   },
-  backBtnIcon: {
-    fontSize: 22,
-    color: colors.white,
-    fontWeight: '600',
-  },
   headerTitle: {
     fontSize: FONT_SIZE['2xl'],
-    fontWeight: '800',
+    fontFamily: FONTS.brand,
     color: colors.white,
     letterSpacing: -0.3,
     marginBottom: SPACING.base,
@@ -611,7 +619,7 @@ const styles = StyleSheet.create({
   },
   headerSitterInitial: {
     fontSize: FONT_SIZE.lg,
-    fontWeight: '700',
+    fontFamily: FONTS.heading,
     color: colors.white,
   },
   headerSitterInfo: {
@@ -619,13 +627,13 @@ const styles = StyleSheet.create({
   },
   headerSitterName: {
     fontSize: FONT_SIZE.base,
-    fontWeight: '700',
+    fontFamily: FONTS.heading,
     color: colors.white,
   },
   headerSitterPrice: {
     fontSize: FONT_SIZE.xs,
+    fontFamily: FONTS.bodyMedium,
     color: 'rgba(255,255,255,0.75)',
-    fontWeight: '500',
     marginTop: 2,
   },
   headerVerifiedBadge: {
@@ -635,11 +643,6 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(16, 185, 129, 0.3)',
     alignItems: 'center',
     justifyContent: 'center',
-  },
-  headerVerifiedIcon: {
-    fontSize: 14,
-    color: '#34D399',
-    fontWeight: '700',
   },
 
   // Step Indicator
@@ -679,19 +682,14 @@ const styles = StyleSheet.create({
     backgroundColor: colors.primary,
     borderColor: colors.primary,
   },
-  stepDotIcon: {
-    fontSize: 14,
-    color: colors.white,
-    fontWeight: '700',
-  },
   stepDotNumber: {
     fontSize: FONT_SIZE.sm,
-    fontWeight: '700',
+    fontFamily: FONTS.heading,
     color: colors.textTertiary,
   },
   stepDotLabel: {
     fontSize: 10,
-    fontWeight: '600',
+    fontFamily: FONTS.bodySemiBold,
     color: colors.textTertiary,
     textAlign: 'center',
   },
@@ -742,18 +740,15 @@ const styles = StyleSheet.create({
   },
   sectionNumber: {
     fontSize: FONT_SIZE.xs,
-    fontWeight: '700',
+    fontFamily: FONTS.heading,
     color: colors.textTertiary,
   },
   sectionNumberActive: {
     color: colors.white,
   },
-  sectionIcon: {
-    fontSize: 18,
-  },
   sectionTitle: {
     fontSize: FONT_SIZE.lg,
-    fontWeight: '700',
+    fontFamily: FONTS.heading,
     color: colors.text,
   },
   sectionTitleInactive: {
@@ -765,12 +760,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: SPACING.xl,
   },
-  noPetsIcon: {
-    fontSize: 40,
-    marginBottom: SPACING.md,
-  },
   noPetsText: {
     fontSize: FONT_SIZE.base,
+    fontFamily: FONTS.body,
     color: colors.textSecondary,
     textAlign: 'center',
     marginBottom: SPACING.base,
@@ -784,7 +776,7 @@ const styles = StyleSheet.create({
   },
   noPetsBtnText: {
     fontSize: FONT_SIZE.base,
-    fontWeight: '600',
+    fontFamily: FONTS.bodySemiBold,
     color: colors.primary,
   },
 
@@ -821,12 +813,9 @@ const styles = StyleSheet.create({
   petCardIconActive: {
     backgroundColor: colors.white,
   },
-  petCardEmoji: {
-    fontSize: 26,
-  },
   petCardName: {
     fontSize: FONT_SIZE.base,
-    fontWeight: '700',
+    fontFamily: FONTS.heading,
     color: colors.text,
     marginBottom: 2,
   },
@@ -835,8 +824,8 @@ const styles = StyleSheet.create({
   },
   petCardSpecies: {
     fontSize: FONT_SIZE.xs,
+    fontFamily: FONTS.bodyMedium,
     color: colors.textTertiary,
-    fontWeight: '500',
   },
   petCardSpeciesActive: {
     color: colors.primary,
@@ -852,11 +841,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     ...SHADOWS.sm,
-  },
-  petCardCheckText: {
-    fontSize: 13,
-    color: colors.white,
-    fontWeight: '700',
   },
 
   // Service List
@@ -904,15 +888,12 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     ...SHADOWS.sm,
   },
-  serviceOptionIcon: {
-    fontSize: 20,
-  },
   serviceOptionInfo: {
     flex: 1,
   },
   serviceOptionLabel: {
     fontSize: FONT_SIZE.base,
-    fontWeight: '600',
+    fontFamily: FONTS.bodySemiBold,
     color: colors.text,
   },
   serviceOptionLabelActive: {
@@ -920,6 +901,7 @@ const styles = StyleSheet.create({
   },
   serviceOptionDesc: {
     fontSize: FONT_SIZE.xs,
+    fontFamily: FONTS.body,
     color: colors.textTertiary,
     marginTop: 1,
   },
@@ -928,7 +910,7 @@ const styles = StyleSheet.create({
   },
   serviceOptionPrice: {
     fontSize: FONT_SIZE.md,
-    fontWeight: '700',
+    fontFamily: FONTS.heading,
     color: colors.textSecondary,
   },
   serviceOptionPriceActive: {
@@ -936,20 +918,17 @@ const styles = StyleSheet.create({
   },
   serviceOptionPriceUnit: {
     fontSize: 10,
+    fontFamily: FONTS.bodyMedium,
     color: colors.textTertiary,
-    fontWeight: '500',
     marginTop: -1,
   },
   noServiceContainer: {
     alignItems: 'center',
     paddingVertical: SPACING.xl,
   },
-  noServiceIcon: {
-    fontSize: 28,
-    marginBottom: SPACING.sm,
-  },
   noServiceText: {
     fontSize: FONT_SIZE.sm,
+    fontFamily: FONTS.body,
     color: colors.textTertiary,
     fontStyle: 'italic',
     textAlign: 'center',
@@ -966,7 +945,7 @@ const styles = StyleSheet.create({
   },
   dateLabel: {
     fontSize: FONT_SIZE.sm,
-    fontWeight: '600',
+    fontFamily: FONTS.bodySemiBold,
     color: colors.textSecondary,
     marginBottom: SPACING.sm,
   },
@@ -983,16 +962,12 @@ const styles = StyleSheet.create({
     borderColor: '#10B981',
     backgroundColor: '#ECFDF5',
   },
-  dateInputIcon: {
-    fontSize: 16,
-    marginRight: SPACING.sm,
-  },
   dateInput: {
     flex: 1,
     paddingVertical: SPACING.md,
     fontSize: FONT_SIZE.base,
+    fontFamily: FONTS.bodySemiBold,
     color: colors.text,
-    fontWeight: '600',
   },
   dateArrow: {
     paddingBottom: SPACING.sm,
@@ -1005,11 +980,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  dateArrowText: {
-    fontSize: FONT_SIZE.md,
-    color: colors.primary,
-    fontWeight: '700',
-  },
   durationBadge: {
     flexDirection: 'row',
     alignSelf: 'flex-start',
@@ -1021,12 +991,9 @@ const styles = StyleSheet.create({
     marginTop: SPACING.md,
     gap: SPACING.xs,
   },
-  durationIcon: {
-    fontSize: 13,
-  },
   durationText: {
     fontSize: FONT_SIZE.sm,
-    fontWeight: '600',
+    fontFamily: FONTS.bodySemiBold,
     color: '#10B981',
   },
 
@@ -1037,6 +1004,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: SPACING.base,
     paddingVertical: SPACING.md,
     fontSize: FONT_SIZE.base,
+    fontFamily: FONTS.body,
     color: colors.text,
     borderWidth: 1.5,
     borderColor: colors.border,
@@ -1045,6 +1013,7 @@ const styles = StyleSheet.create({
   },
   notesHint: {
     fontSize: FONT_SIZE.xs,
+    fontFamily: FONTS.body,
     color: colors.textTertiary,
     textAlign: 'right',
     marginTop: SPACING.xs,
@@ -1070,12 +1039,9 @@ const styles = StyleSheet.create({
     gap: SPACING.sm,
     marginBottom: SPACING.base,
   },
-  summaryHeaderIcon: {
-    fontSize: 18,
-  },
   summaryHeaderTitle: {
     fontSize: FONT_SIZE.lg,
-    fontWeight: '700',
+    fontFamily: FONTS.heading,
     color: colors.text,
   },
   summaryRow: {
@@ -1086,18 +1052,19 @@ const styles = StyleSheet.create({
   },
   summaryLabel: {
     fontSize: FONT_SIZE.base,
+    fontFamily: FONTS.body,
     color: colors.textSecondary,
   },
   summaryValue: {
     fontSize: FONT_SIZE.base,
-    fontWeight: '600',
+    fontFamily: FONTS.bodySemiBold,
     color: colors.text,
     maxWidth: '60%',
     textAlign: 'right',
   },
   summaryCalcValue: {
     fontSize: FONT_SIZE.sm,
-    fontWeight: '500',
+    fontFamily: FONTS.bodyMedium,
     color: colors.textTertiary,
     fontStyle: 'italic',
   },
@@ -1113,12 +1080,12 @@ const styles = StyleSheet.create({
   },
   summaryTotalLabel: {
     fontSize: FONT_SIZE.lg,
-    fontWeight: '700',
+    fontFamily: FONTS.heading,
     color: colors.text,
   },
   summaryTotalValue: {
     fontSize: FONT_SIZE['2xl'],
-    fontWeight: '800',
+    fontFamily: FONTS.heading,
     color: colors.primary,
   },
 
@@ -1139,18 +1106,14 @@ const styles = StyleSheet.create({
     width: '100%',
     ...SHADOWS.glow(),
   },
-  confirmBtnIcon: {
-    fontSize: 18,
-    color: colors.white,
-    fontWeight: '700',
-  },
   confirmBtnText: {
     fontSize: FONT_SIZE.md,
-    fontWeight: '700',
+    fontFamily: FONTS.heading,
     color: colors.white,
   },
   confirmHint: {
     fontSize: FONT_SIZE.sm,
+    fontFamily: FONTS.body,
     color: colors.textTertiary,
     marginTop: SPACING.md,
     textAlign: 'center',

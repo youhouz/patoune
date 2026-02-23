@@ -4,30 +4,40 @@ import {
   TouchableOpacity, TextInput, Platform, Animated, RefreshControl,
   StatusBar, Dimensions,
 } from 'react-native';
+import { Feather } from '@expo/vector-icons';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { searchPetSittersAPI } from '../../api/petsitters';
+import useLocation from '../../hooks/useLocation';
+import { FONTS } from '../../utils/typography';
 const colors = require('../../utils/colors');
 const { SHADOWS, RADIUS, SPACING, FONT_SIZE } = require('../../utils/colors');
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
-const TOP_PADDING = Platform.OS === 'ios' ? 58 : 48;
 
 const ANIMAL_FILTERS = [
-  { key: 'Tous', emoji: '🐾', label: 'Tous' },
-  { key: 'Chien', emoji: '🐶', label: 'Chiens' },
-  { key: 'Chat', emoji: '🐱', label: 'Chats' },
-  { key: 'Rongeur', emoji: '🐹', label: 'Rongeurs' },
-  { key: 'Oiseau', emoji: '🐦', label: 'Oiseaux' },
-  { key: 'Reptile', emoji: '🦎', label: 'Reptiles' },
+  { key: 'Tous', icon: 'heart', label: 'Tous' },
+  { key: 'Chien', icon: 'gitlab', label: 'Chiens' },
+  { key: 'Chat', icon: 'github', label: 'Chats' },
+  { key: 'Rongeur', icon: 'mouse-pointer', label: 'Rongeurs' },
+  { key: 'Oiseau', icon: 'feather', label: 'Oiseaux' },
+  { key: 'Reptile', icon: 'zap', label: 'Reptiles' },
 ];
 
-const ANIMAL_EMOJI_MAP = {
-  chien: '🐶',
-  chat: '🐱',
-  rongeur: '🐹',
-  oiseau: '🐦',
-  reptile: '🦎',
+const ANIMAL_ICON_MAP = {
+  chien: 'gitlab',
+  chat: 'github',
+  rongeur: 'mouse-pointer',
+  oiseau: 'feather',
+  reptile: 'zap',
 };
+
+const RADIUS_FILTERS = [
+  { key: 5, label: '5 km' },
+  { key: 10, label: '10 km' },
+  { key: 25, label: '25 km' },
+  { key: 50, label: '50 km' },
+];
 
 /* ---------- Star Rating ---------- */
 const StarRating = ({ rating, size = 14 }) => {
@@ -35,12 +45,10 @@ const StarRating = ({ rating, size = 14 }) => {
   const fullStars = Math.floor(rating || 0);
   const hasHalf = (rating || 0) - fullStars >= 0.5;
   for (let i = 0; i < 5; i++) {
-    if (i < fullStars) {
-      stars.push(<Text key={i} style={{ fontSize: size, color: '#F59E0B' }}>★</Text>);
-    } else if (i === fullStars && hasHalf) {
-      stars.push(<Text key={i} style={{ fontSize: size, color: '#F59E0B' }}>★</Text>);
+    if (i < fullStars || (i === fullStars && hasHalf)) {
+      stars.push(<Feather key={i} name="star" size={size} color="#F59E0B" />);
     } else {
-      stars.push(<Text key={i} style={{ fontSize: size, color: colors.border }}>★</Text>);
+      stars.push(<Feather key={i} name="star" size={size} color={colors.border} />);
     }
   }
   return <View style={{ flexDirection: 'row', alignItems: 'center', gap: 1 }}>{stars}</View>;
@@ -155,7 +163,7 @@ const PetSitterCard = ({ petsitter, onPress, index }) => {
             </LinearGradient>
             {petsitter.verified && (
               <View style={styles.verifiedDot}>
-                <Text style={styles.verifiedCheck}>✓</Text>
+                <Feather name="check" size={10} color={colors.white} />
               </View>
             )}
           </View>
@@ -168,7 +176,7 @@ const PetSitterCard = ({ petsitter, onPress, index }) => {
               </Text>
               {petsitter.verified && (
                 <View style={styles.verifiedBadge}>
-                  <Text style={styles.verifiedBadgeIcon}>✓</Text>
+                  <Feather name="check-circle" size={9} color="#10B981" />
                   <Text style={styles.verifiedBadgeText}>Verifie</Text>
                 </View>
               )}
@@ -195,13 +203,27 @@ const PetSitterCard = ({ petsitter, onPress, index }) => {
               </Text>
             ) : null}
 
+            {/* Distance if available */}
+            {petsitter.distance != null && (
+              <View style={styles.distanceRow}>
+                <Feather name="map-pin" size={11} color={colors.secondary} />
+                <Text style={styles.distanceText}>
+                  {petsitter.distance < 1
+                    ? `${Math.round(petsitter.distance * 1000)} m`
+                    : `${petsitter.distance.toFixed(1)} km`}
+                </Text>
+              </View>
+            )}
+
             {/* Accepted animals */}
             <View style={styles.animalTags}>
               {petsitter.acceptedAnimals?.slice(0, 4).map((animal, idx) => (
                 <View key={idx} style={styles.animalTag}>
-                  <Text style={styles.animalTagEmoji}>
-                    {ANIMAL_EMOJI_MAP[animal.toLowerCase()] || '🐾'}
-                  </Text>
+                  <Feather
+                    name={ANIMAL_ICON_MAP[animal.toLowerCase()] || 'heart'}
+                    size={11}
+                    color={colors.primary}
+                  />
                   <Text style={styles.animalTagText}>
                     {animal.charAt(0).toUpperCase() + animal.slice(1)}
                   </Text>
@@ -232,17 +254,25 @@ const PetSitterCard = ({ petsitter, onPress, index }) => {
 
 /* ---------- Main Screen ---------- */
 const PetSittersListScreen = ({ navigation }) => {
+  const insets = useSafeAreaInsets();
   const [petsitters, setPetsitters] = useState([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [selectedAnimal, setSelectedAnimal] = useState('Tous');
+  const [selectedRadius, setSelectedRadius] = useState(25);
   const [searchQuery, setSearchQuery] = useState('');
   const [searchFocused, setSearchFocused] = useState(false);
   const scrollY = useRef(new Animated.Value(0)).current;
 
+  const { location, city, loading: locationLoading, requestLocation } = useLocation();
+
+  useEffect(() => {
+    requestLocation();
+  }, []);
+
   useEffect(() => {
     loadPetSitters();
-  }, [selectedAnimal]);
+  }, [selectedAnimal, location, selectedRadius]);
 
   const loadPetSitters = async () => {
     if (!refreshing) setLoading(true);
@@ -253,6 +283,11 @@ const PetSittersListScreen = ({ navigation }) => {
       }
       if (searchQuery.trim()) {
         params.search = searchQuery.trim();
+      }
+      if (location) {
+        params.lat = location.latitude;
+        params.lng = location.longitude;
+        params.radius = selectedRadius;
       }
       const response = await searchPetSittersAPI(params);
       setPetsitters(response.data.petsitters || []);
@@ -267,7 +302,7 @@ const PetSittersListScreen = ({ navigation }) => {
   const onRefresh = useCallback(() => {
     setRefreshing(true);
     loadPetSitters();
-  }, [selectedAnimal, searchQuery]);
+  }, [selectedAnimal, searchQuery, location, selectedRadius]);
 
   const filteredPetsitters = petsitters.filter((ps) => {
     if (!searchQuery.trim()) return true;
@@ -293,14 +328,14 @@ const PetSittersListScreen = ({ navigation }) => {
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 0 }}
           >
-            <Text style={styles.filterEmoji}>{item.emoji}</Text>
+            <Feather name={item.icon} size={15} color={colors.white} />
             <Text style={[styles.filterText, styles.filterTextActive]}>
               {item.label}
             </Text>
           </LinearGradient>
         ) : (
           <View style={styles.filterChipInner}>
-            <Text style={styles.filterEmoji}>{item.emoji}</Text>
+            <Feather name={item.icon} size={15} color={colors.textSecondary} />
             <Text style={styles.filterText}>{item.label}</Text>
           </View>
         )}
@@ -313,7 +348,7 @@ const PetSittersListScreen = ({ navigation }) => {
       {/* Gradient Header */}
       <LinearGradient
         colors={[colors.primary, colors.primaryDark]}
-        style={styles.header}
+        style={[styles.header, { paddingTop: insets.top + 12 }]}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
       >
@@ -324,11 +359,26 @@ const PetSittersListScreen = ({ navigation }) => {
               De confiance pour vos compagnons
             </Text>
           </View>
+          {/* Location indicator */}
+          <TouchableOpacity
+            style={styles.locationBadge}
+            onPress={requestLocation}
+            activeOpacity={0.7}
+          >
+            <Feather
+              name="map-pin"
+              size={14}
+              color={city ? colors.white : 'rgba(255,255,255,0.6)'}
+            />
+            <Text style={styles.locationText} numberOfLines={1}>
+              {locationLoading ? 'Localisation...' : city || 'Localiser'}
+            </Text>
+          </TouchableOpacity>
         </View>
 
         {/* Search Bar */}
         <View style={[styles.searchContainer, searchFocused && styles.searchContainerFocused]}>
-          <Text style={styles.searchIcon}>🔍</Text>
+          <Feather name="search" size={17} color={colors.textTertiary} style={{ marginRight: SPACING.sm }} />
           <TextInput
             style={styles.searchInput}
             value={searchQuery}
@@ -346,7 +396,7 @@ const PetSittersListScreen = ({ navigation }) => {
               style={styles.searchClear}
               hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
             >
-              <Text style={styles.searchClearText}>✕</Text>
+              <Feather name="x" size={14} color={colors.textSecondary} />
             </TouchableOpacity>
           )}
         </View>
@@ -363,6 +413,28 @@ const PetSittersListScreen = ({ navigation }) => {
           contentContainerStyle={styles.filterList}
         />
       </View>
+
+      {/* Radius Filter Pills (only when location is available) */}
+      {location && (
+        <View style={styles.radiusSection}>
+          <Feather name="target" size={13} color={colors.textTertiary} style={{ marginRight: SPACING.sm }} />
+          {RADIUS_FILTERS.map((rf) => {
+            const isActive = selectedRadius === rf.key;
+            return (
+              <TouchableOpacity
+                key={rf.key}
+                style={[styles.radiusPill, isActive && styles.radiusPillActive]}
+                onPress={() => setSelectedRadius(rf.key)}
+                activeOpacity={0.7}
+              >
+                <Text style={[styles.radiusPillText, isActive && styles.radiusPillTextActive]}>
+                  {rf.label}
+                </Text>
+              </TouchableOpacity>
+            );
+          })}
+        </View>
+      )}
 
       {/* Results count */}
       {!loading && (
@@ -399,7 +471,7 @@ const PetSittersListScreen = ({ navigation }) => {
     return (
       <View style={styles.emptyContainer}>
         <View style={styles.emptyIconCircle}>
-          <Text style={styles.emptyIcon}>🔍</Text>
+          <Feather name="search" size={40} color={colors.primary} />
         </View>
         <Text style={styles.emptyTitle}>Aucun gardien trouve</Text>
         <Text style={styles.emptySubtext}>
@@ -475,7 +547,6 @@ const styles = StyleSheet.create({
 
   // Header
   header: {
-    paddingTop: TOP_PADDING,
     paddingBottom: SPACING.xl,
     paddingHorizontal: SPACING.lg,
   },
@@ -487,15 +558,32 @@ const styles = StyleSheet.create({
   },
   headerTitle: {
     fontSize: FONT_SIZE['3xl'],
-    fontWeight: '800',
+    fontFamily: FONTS.brand,
     color: colors.white,
     letterSpacing: -0.5,
   },
   headerSubtitle: {
     fontSize: FONT_SIZE.sm,
+    fontFamily: FONTS.bodyMedium,
     color: 'rgba(255,255,255,0.75)',
     marginTop: SPACING.xs,
-    fontWeight: '500',
+  },
+
+  // Location badge
+  locationBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(255,255,255,0.15)',
+    paddingHorizontal: SPACING.md,
+    paddingVertical: SPACING.sm,
+    borderRadius: RADIUS.full,
+    gap: SPACING.xs,
+    maxWidth: 160,
+  },
+  locationText: {
+    fontSize: FONT_SIZE.xs,
+    fontFamily: FONTS.bodySemiBold,
+    color: colors.white,
   },
 
   // Search
@@ -514,13 +602,10 @@ const styles = StyleSheet.create({
   searchContainerFocused: {
     borderColor: 'rgba(255,255,255,0.5)',
   },
-  searchIcon: {
-    fontSize: 17,
-    marginRight: SPACING.sm,
-  },
   searchInput: {
     flex: 1,
     fontSize: FONT_SIZE.base,
+    fontFamily: FONTS.body,
     color: colors.text,
     paddingVertical: 0,
   },
@@ -531,11 +616,6 @@ const styles = StyleSheet.create({
     backgroundColor: colors.background,
     alignItems: 'center',
     justifyContent: 'center',
-  },
-  searchClearText: {
-    fontSize: 11,
-    color: colors.textSecondary,
-    fontWeight: '800',
   },
 
   // Filters
@@ -574,16 +654,45 @@ const styles = StyleSheet.create({
     paddingVertical: SPACING.sm + 2,
     gap: SPACING.xs,
   },
-  filterEmoji: {
-    fontSize: 15,
-  },
   filterText: {
     fontSize: FONT_SIZE.sm,
-    fontWeight: '600',
+    fontFamily: FONTS.bodySemiBold,
     color: colors.textSecondary,
   },
   filterTextActive: {
     color: colors.white,
+  },
+
+  // Radius filter
+  radiusSection: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: colors.white,
+    paddingHorizontal: SPACING.base,
+    paddingVertical: SPACING.sm,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.borderLight,
+  },
+  radiusPill: {
+    paddingHorizontal: SPACING.md,
+    paddingVertical: SPACING.xs + 2,
+    borderRadius: RADIUS.full,
+    backgroundColor: colors.background,
+    marginRight: SPACING.sm,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  radiusPillActive: {
+    backgroundColor: colors.secondarySoft,
+    borderColor: colors.secondary,
+  },
+  radiusPillText: {
+    fontSize: FONT_SIZE.xs,
+    fontFamily: FONTS.bodySemiBold,
+    color: colors.textTertiary,
+  },
+  radiusPillTextActive: {
+    color: colors.secondary,
   },
 
   // Results count
@@ -597,13 +706,13 @@ const styles = StyleSheet.create({
   },
   resultsText: {
     fontSize: FONT_SIZE.sm,
+    fontFamily: FONTS.bodySemiBold,
     color: colors.textTertiary,
-    fontWeight: '600',
   },
   clearFilterText: {
     fontSize: FONT_SIZE.sm,
+    fontFamily: FONTS.bodySemiBold,
     color: colors.primary,
-    fontWeight: '600',
   },
 
   // List
@@ -639,7 +748,7 @@ const styles = StyleSheet.create({
   },
   avatarLetter: {
     fontSize: FONT_SIZE.xl,
-    fontWeight: '700',
+    fontFamily: FONTS.heading,
     color: colors.white,
   },
   verifiedDot: {
@@ -655,11 +764,6 @@ const styles = StyleSheet.create({
     borderWidth: 2.5,
     borderColor: colors.white,
   },
-  verifiedCheck: {
-    fontSize: 10,
-    color: colors.white,
-    fontWeight: '700',
-  },
   cardInfo: {
     flex: 1,
     marginRight: SPACING.sm,
@@ -672,7 +776,7 @@ const styles = StyleSheet.create({
   },
   cardName: {
     fontSize: FONT_SIZE.md,
-    fontWeight: '700',
+    fontFamily: FONTS.heading,
     color: colors.text,
     flexShrink: 1,
   },
@@ -685,14 +789,9 @@ const styles = StyleSheet.create({
     borderRadius: RADIUS.xs,
     gap: 3,
   },
-  verifiedBadgeIcon: {
-    fontSize: 9,
-    color: '#10B981',
-    fontWeight: '700',
-  },
   verifiedBadgeText: {
     fontSize: FONT_SIZE.xs,
-    fontWeight: '600',
+    fontFamily: FONTS.bodySemiBold,
     color: '#10B981',
   },
   ratingRow: {
@@ -703,11 +802,12 @@ const styles = StyleSheet.create({
   },
   ratingText: {
     fontSize: FONT_SIZE.sm,
-    fontWeight: '700',
+    fontFamily: FONTS.heading,
     color: colors.text,
   },
   reviewCount: {
     fontSize: FONT_SIZE.xs,
+    fontFamily: FONTS.body,
     color: colors.textTertiary,
   },
   expBadge: {
@@ -719,14 +819,26 @@ const styles = StyleSheet.create({
   },
   expText: {
     fontSize: FONT_SIZE.xs - 1,
-    fontWeight: '600',
+    fontFamily: FONTS.bodySemiBold,
     color: colors.info,
   },
   bioPreview: {
     fontSize: FONT_SIZE.sm,
+    fontFamily: FONTS.body,
     color: colors.textSecondary,
     lineHeight: 19,
     marginBottom: SPACING.sm,
+  },
+  distanceRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    marginBottom: SPACING.sm,
+  },
+  distanceText: {
+    fontSize: FONT_SIZE.xs,
+    fontFamily: FONTS.bodyMedium,
+    color: colors.secondary,
   },
   animalTags: {
     flexDirection: 'row',
@@ -745,12 +857,9 @@ const styles = StyleSheet.create({
   animalTagMore: {
     backgroundColor: colors.background,
   },
-  animalTagEmoji: {
-    fontSize: 11,
-  },
   animalTagText: {
     fontSize: FONT_SIZE.xs,
-    fontWeight: '500',
+    fontFamily: FONTS.bodyMedium,
     color: colors.primary,
   },
   priceBox: {
@@ -763,13 +872,13 @@ const styles = StyleSheet.create({
   },
   priceAmount: {
     fontSize: FONT_SIZE.xl,
-    fontWeight: '800',
+    fontFamily: FONTS.heading,
     color: colors.primary,
     letterSpacing: -0.5,
   },
   priceCurrency: {
     fontSize: 10,
-    fontWeight: '700',
+    fontFamily: FONTS.heading,
     color: colors.primary,
     marginTop: -2,
     letterSpacing: 0.5,
@@ -782,8 +891,8 @@ const styles = StyleSheet.create({
   },
   priceUnit: {
     fontSize: FONT_SIZE.xs,
+    fontFamily: FONTS.bodyMedium,
     color: colors.textTertiary,
-    fontWeight: '500',
   },
 
   // Skeleton
@@ -805,8 +914,8 @@ const styles = StyleSheet.create({
   },
   loadingText: {
     fontSize: FONT_SIZE.sm,
+    fontFamily: FONTS.bodyMedium,
     color: colors.textSecondary,
-    fontWeight: '500',
   },
 
   // Empty
@@ -824,17 +933,15 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     marginBottom: SPACING.xl,
   },
-  emptyIcon: {
-    fontSize: 40,
-  },
   emptyTitle: {
     fontSize: FONT_SIZE.xl,
-    fontWeight: '700',
+    fontFamily: FONTS.heading,
     color: colors.text,
     marginBottom: SPACING.sm,
   },
   emptySubtext: {
     fontSize: FONT_SIZE.base,
+    fontFamily: FONTS.body,
     color: colors.textSecondary,
     textAlign: 'center',
     lineHeight: 22,
@@ -851,7 +958,7 @@ const styles = StyleSheet.create({
   },
   emptyResetText: {
     fontSize: FONT_SIZE.base,
-    fontWeight: '700',
+    fontFamily: FONTS.heading,
     color: colors.white,
   },
 });

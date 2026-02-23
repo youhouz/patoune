@@ -9,34 +9,34 @@ import {
   Alert,
   Switch,
   Platform,
-  StatusBar,
   KeyboardAvoidingView,
   ActivityIndicator,
   Animated,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
+import { Feather } from '@expo/vector-icons';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { addPetAPI } from '../../api/pets';
-const colors = require('../../utils/colors');
-const { SHADOWS, RADIUS, SPACING, FONT_SIZE } = require('../../utils/colors');
-
-const HEADER_PADDING_TOP = Platform.OS === 'ios' ? 56 : (StatusBar.currentHeight || 24) + 12;
+import { FONTS } from '../../utils/typography';
+const { COLORS, SHADOWS, RADIUS, SPACING, FONT_SIZE } = require('../../utils/colors');
 
 const SPECIES = [
-  { key: 'chien', label: 'Chien', icon: '🐕', color: '#FF6B35' },
-  { key: 'chat', label: 'Chat', icon: '🐱', color: '#6C5CE7' },
-  { key: 'rongeur', label: 'Rongeur', icon: '🐹', color: '#F59E0B' },
-  { key: 'oiseau', label: 'Oiseau', icon: '🐦', color: '#3B82F6' },
-  { key: 'reptile', label: 'Reptile', icon: '🦎', color: '#10B981' },
-  { key: 'poisson', label: 'Poisson', icon: '🐟', color: '#0EA5E9' },
-  { key: 'autre', label: 'Autre', icon: '🐾', color: '#6B7280' },
+  { key: 'chien', label: 'Chien', icon: 'gitlab', color: COLORS.primary },
+  { key: 'chat', label: 'Chat', icon: 'github', color: COLORS.accent },
+  { key: 'rongeur', label: 'Rongeur', icon: 'mouse-pointer', color: COLORS.warning },
+  { key: 'oiseau', label: 'Oiseau', icon: 'feather', color: COLORS.secondary },
+  { key: 'reptile', label: 'Reptile', icon: 'zap', color: COLORS.success },
+  { key: 'poisson', label: 'Poisson', icon: 'droplet', color: COLORS.info },
+  { key: 'autre', label: 'Autre', icon: 'heart', color: COLORS.pebble },
 ];
 
 const GENDERS = [
-  { key: 'male', label: 'Male', icon: '♂', color: '#3B82F6', bgColor: '#EFF6FF' },
-  { key: 'femelle', label: 'Femelle', icon: '♀', color: '#EC4899', bgColor: '#FDF2F8' },
+  { key: 'male', label: 'Male', icon: '\u2642', color: '#3B82F6', bgColor: '#EFF6FF' },
+  { key: 'femelle', label: 'Femelle', icon: '\u2640', color: '#EC4899', bgColor: '#FDF2F8' },
 ];
 
 const AddPetScreen = ({ navigation }) => {
+  const insets = useSafeAreaInsets();
   const [name, setName] = useState('');
   const [species, setSpecies] = useState('');
   const [breed, setBreed] = useState('');
@@ -122,7 +122,7 @@ const AddPetScreen = ({ navigation }) => {
       }).start();
 
       Alert.alert(
-        'Felicitations ! 🎉',
+        'Felicitations !',
         `${name.trim()} a ete ajoute avec succes a votre famille.`,
         [{ text: 'Super', onPress: () => navigation.goBack() }]
       );
@@ -146,16 +146,14 @@ const AddPetScreen = ({ navigation }) => {
 
   return (
     <View style={styles.container}>
-      <StatusBar barStyle="dark-content" backgroundColor={colors.background} />
-
       {/* Header */}
-      <View style={styles.header}>
+      <View style={[styles.header, { paddingTop: insets.top + 12 }]}>
         <TouchableOpacity
           style={styles.backButton}
           onPress={() => navigation.goBack()}
           activeOpacity={0.7}
         >
-          <Text style={styles.backArrow}>‹</Text>
+          <Feather name="arrow-left" size={20} color={COLORS.charcoal} />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Nouvel animal</Text>
         {/* Progress indicator */}
@@ -167,7 +165,7 @@ const AddPetScreen = ({ navigation }) => {
                 {
                   width: `${progress * 100}%`,
                   backgroundColor:
-                    progress === 1 ? '#10B981' : '#FF6B35',
+                    progress === 1 ? COLORS.success : COLORS.primary,
                 },
               ]}
             />
@@ -197,15 +195,19 @@ const AddPetScreen = ({ navigation }) => {
                 colors={
                   selectedSpecies
                     ? [selectedSpecies.color, selectedSpecies.color + 'CC']
-                    : ['#FF6B35', '#FF8F65']
+                    : COLORS.gradientPrimary
                 }
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 1 }}
                 style={styles.previewGradient}
               >
-                <Text style={styles.previewIcon}>
-                  {selectedSpecies?.icon || '🐾'}
-                </Text>
+                <View style={styles.previewIconContainer}>
+                  <Feather
+                    name={selectedSpecies?.icon || 'heart'}
+                    size={32}
+                    color={COLORS.white}
+                  />
+                </View>
                 <View style={styles.previewInfo}>
                   <Text style={styles.previewName} numberOfLines={1}>
                     {name || 'Nom de votre animal'}
@@ -239,7 +241,7 @@ const AddPetScreen = ({ navigation }) => {
                     clearError('name');
                   }}
                   placeholder="ex: Rex, Minou, Bulle..."
-                  placeholderTextColor={colors.placeholder}
+                  placeholderTextColor={COLORS.placeholder}
                   autoCapitalize="words"
                   returnKeyType="next"
                   onSubmitEditing={() => breedRef.current?.focus()}
@@ -276,11 +278,11 @@ const AddPetScreen = ({ navigation }) => {
                         }}
                         activeOpacity={0.7}
                       >
-                        <Text style={styles.speciesEmoji}>{s.icon}</Text>
+                        <Feather name={s.icon} size={18} color={isActive ? s.color : COLORS.pebble} />
                         <Text
                           style={[
                             styles.speciesLabel,
-                            isActive && { color: s.color, fontWeight: '700' },
+                            isActive && { color: s.color, fontFamily: FONTS.heading },
                           ]}
                         >
                           {s.label}
@@ -292,7 +294,7 @@ const AddPetScreen = ({ navigation }) => {
                               { backgroundColor: s.color },
                             ]}
                           >
-                            <Text style={styles.speciesCheckText}>✓</Text>
+                            <Feather name="check" size={10} color={COLORS.white} />
                           </View>
                         )}
                       </TouchableOpacity>
@@ -341,7 +343,7 @@ const AddPetScreen = ({ navigation }) => {
                             styles.genderLabel,
                             isActive && {
                               color: g.color,
-                              fontWeight: '700',
+                              fontFamily: FONTS.heading,
                             },
                           ]}
                         >
@@ -354,7 +356,7 @@ const AddPetScreen = ({ navigation }) => {
                               { backgroundColor: g.color },
                             ]}
                           >
-                            <Text style={styles.genderCheckText}>✓</Text>
+                            <Feather name="check" size={11} color={COLORS.white} />
                           </View>
                         )}
                       </TouchableOpacity>
@@ -378,7 +380,7 @@ const AddPetScreen = ({ navigation }) => {
                   value={breed}
                   onChangeText={setBreed}
                   placeholder="ex: Labrador, Siamois, Persan..."
-                  placeholderTextColor={colors.placeholder}
+                  placeholderTextColor={COLORS.placeholder}
                   autoCapitalize="words"
                   returnKeyType="next"
                   onSubmitEditing={() => ageRef.current?.focus()}
@@ -401,7 +403,7 @@ const AddPetScreen = ({ navigation }) => {
                       clearError('age');
                     }}
                     placeholder="ex: 3"
-                    placeholderTextColor={colors.placeholder}
+                    placeholderTextColor={COLORS.placeholder}
                     keyboardType="numeric"
                     returnKeyType="next"
                     onSubmitEditing={() => weightRef.current?.focus()}
@@ -425,7 +427,7 @@ const AddPetScreen = ({ navigation }) => {
                       clearError('weight');
                     }}
                     placeholder="ex: 12.5"
-                    placeholderTextColor={colors.placeholder}
+                    placeholderTextColor={COLORS.placeholder}
                     keyboardType="decimal-pad"
                     returnKeyType="done"
                   />
@@ -438,7 +440,7 @@ const AddPetScreen = ({ navigation }) => {
               {/* Vaccinated Switch */}
               <View style={styles.switchRow}>
                 <View style={styles.switchIconContainer}>
-                  <Text style={styles.switchEmoji}>💉</Text>
+                  <Feather name="shield" size={18} color={COLORS.success} />
                 </View>
                 <View style={styles.switchInfo}>
                   <Text style={styles.switchLabel}>Vaccine</Text>
@@ -450,11 +452,11 @@ const AddPetScreen = ({ navigation }) => {
                   value={vaccinated}
                   onValueChange={setVaccinated}
                   trackColor={{
-                    false: colors.border,
-                    true: '#10B98170',
+                    false: COLORS.border,
+                    true: COLORS.success + '70',
                   }}
-                  thumbColor={vaccinated ? '#10B981' : '#f4f3f4'}
-                  ios_backgroundColor={colors.border}
+                  thumbColor={vaccinated ? COLORS.success : '#f4f3f4'}
+                  ios_backgroundColor={COLORS.border}
                 />
               </View>
             </View>
@@ -475,7 +477,7 @@ const AddPetScreen = ({ navigation }) => {
                   value={specialNeeds}
                   onChangeText={setSpecialNeeds}
                   placeholder="Decrivez les besoins particuliers de votre animal..."
-                  placeholderTextColor={colors.placeholder}
+                  placeholderTextColor={COLORS.placeholder}
                   multiline
                   textAlignVertical="top"
                   numberOfLines={4}
@@ -500,18 +502,18 @@ const AddPetScreen = ({ navigation }) => {
             <LinearGradient
               colors={
                 loading
-                  ? [colors.textLight, colors.textTertiary]
-                  : ['#FF6B35', '#FF8F65']
+                  ? [COLORS.sand, COLORS.pebble]
+                  : COLORS.gradientPrimary
               }
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 0 }}
               style={styles.submitGradient}
             >
               {loading ? (
-                <ActivityIndicator size="small" color={colors.white} />
+                <ActivityIndicator size="small" color={COLORS.white} />
               ) : (
                 <>
-                  <Text style={styles.submitIcon}>🐾</Text>
+                  <Feather name="heart" size={18} color={COLORS.white} />
                   <Text style={styles.submitText}>
                     Ajouter {name.trim() || 'mon animal'}
                   </Text>
@@ -530,7 +532,7 @@ const AddPetScreen = ({ navigation }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.background,
+    backgroundColor: COLORS.cream,
   },
   keyboardView: {
     flex: 1,
@@ -548,33 +550,26 @@ const styles = StyleSheet.create({
   header: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingTop: HEADER_PADDING_TOP,
     paddingBottom: SPACING.base,
     paddingHorizontal: SPACING.lg,
-    backgroundColor: colors.background,
+    backgroundColor: COLORS.cream,
     borderBottomWidth: 1,
-    borderBottomColor: colors.border,
+    borderBottomColor: COLORS.border,
   },
   backButton: {
     width: 36,
     height: 36,
     borderRadius: RADIUS.md,
-    backgroundColor: colors.white,
+    backgroundColor: COLORS.white,
     alignItems: 'center',
     justifyContent: 'center',
     ...SHADOWS.sm,
   },
-  backArrow: {
-    fontSize: 26,
-    color: colors.text,
-    fontWeight: '600',
-    marginTop: -2,
-  },
   headerTitle: {
     flex: 1,
     fontSize: FONT_SIZE.xl,
-    fontWeight: '800',
-    color: colors.text,
+    fontFamily: FONTS.heading,
+    color: COLORS.charcoal,
     marginLeft: SPACING.base,
     letterSpacing: 0.2,
   },
@@ -587,7 +582,7 @@ const styles = StyleSheet.create({
     width: 40,
     height: 4,
     borderRadius: 2,
-    backgroundColor: colors.border,
+    backgroundColor: COLORS.border,
     overflow: 'hidden',
   },
   progressFill: {
@@ -596,8 +591,8 @@ const styles = StyleSheet.create({
   },
   progressText: {
     fontSize: FONT_SIZE.xs,
-    fontWeight: '600',
-    color: colors.textTertiary,
+    fontFamily: FONTS.bodySemiBold,
+    color: COLORS.pebble,
   },
 
   // Preview Card
@@ -613,8 +608,7 @@ const styles = StyleSheet.create({
     padding: SPACING.base,
     borderRadius: RADIUS.xl,
   },
-  previewIcon: {
-    fontSize: 36,
+  previewIconContainer: {
     marginRight: SPACING.base,
   },
   previewInfo: {
@@ -622,14 +616,14 @@ const styles = StyleSheet.create({
   },
   previewName: {
     fontSize: FONT_SIZE.lg,
-    fontWeight: '700',
-    color: colors.white,
+    fontFamily: FONTS.heading,
+    color: COLORS.white,
     marginBottom: 2,
   },
   previewSpecies: {
     fontSize: FONT_SIZE.sm,
+    fontFamily: FONTS.bodyMedium,
     color: 'rgba(255, 255, 255, 0.85)',
-    fontWeight: '500',
   },
 
   // Sections
@@ -638,15 +632,15 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     fontSize: FONT_SIZE.sm,
-    fontWeight: '700',
-    color: colors.textSecondary,
+    fontFamily: FONTS.bodySemiBold,
+    color: COLORS.stone,
     textTransform: 'uppercase',
     letterSpacing: 0.8,
     marginBottom: SPACING.md,
     marginLeft: SPACING.xs,
   },
   sectionCard: {
-    backgroundColor: colors.white,
+    backgroundColor: COLORS.white,
     borderRadius: RADIUS.xl,
     padding: SPACING.base,
     ...SHADOWS.md,
@@ -661,34 +655,36 @@ const styles = StyleSheet.create({
   },
   label: {
     fontSize: FONT_SIZE.sm,
-    fontWeight: '600',
-    color: colors.text,
+    fontFamily: FONTS.bodySemiBold,
+    color: COLORS.charcoal,
     marginBottom: SPACING.sm,
   },
   labelHint: {
     fontSize: FONT_SIZE.xs,
-    color: colors.textTertiary,
+    fontFamily: FONTS.body,
+    color: COLORS.pebble,
     marginBottom: SPACING.sm,
     marginTop: -SPACING.xs,
     lineHeight: 16,
   },
   required: {
-    color: colors.error,
+    color: COLORS.error,
     fontWeight: '400',
   },
   input: {
-    backgroundColor: colors.background,
+    backgroundColor: COLORS.linen,
     borderRadius: RADIUS.lg,
     paddingHorizontal: SPACING.base,
     paddingVertical: SPACING.md + 2,
     fontSize: FONT_SIZE.base,
-    color: colors.text,
+    fontFamily: FONTS.body,
+    color: COLORS.charcoal,
     borderWidth: 1.5,
-    borderColor: colors.border,
+    borderColor: COLORS.border,
   },
   inputError: {
-    borderColor: colors.error,
-    backgroundColor: colors.errorSoft,
+    borderColor: COLORS.error,
+    backgroundColor: COLORS.errorSoft,
   },
   textArea: {
     minHeight: 100,
@@ -697,14 +693,15 @@ const styles = StyleSheet.create({
   },
   errorText: {
     fontSize: FONT_SIZE.xs,
-    color: colors.error,
-    fontWeight: '500',
+    fontFamily: FONTS.bodyMedium,
+    color: COLORS.error,
     marginTop: SPACING.xs,
     marginLeft: SPACING.xs,
   },
   charCount: {
     fontSize: FONT_SIZE.xs,
-    color: colors.textLight,
+    fontFamily: FONTS.body,
+    color: COLORS.sand,
     textAlign: 'right',
     marginTop: SPACING.xs,
   },
@@ -721,18 +718,15 @@ const styles = StyleSheet.create({
     paddingHorizontal: SPACING.md,
     paddingVertical: SPACING.sm + 2,
     borderRadius: RADIUS.lg,
-    backgroundColor: colors.background,
+    backgroundColor: COLORS.linen,
     borderWidth: 1.5,
-    borderColor: colors.border,
+    borderColor: COLORS.border,
     gap: SPACING.xs,
-  },
-  speciesEmoji: {
-    fontSize: 18,
   },
   speciesLabel: {
     fontSize: FONT_SIZE.sm,
-    fontWeight: '600',
-    color: colors.textSecondary,
+    fontFamily: FONTS.bodySemiBold,
+    color: COLORS.stone,
   },
   speciesCheck: {
     width: 18,
@@ -741,11 +735,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     marginLeft: 2,
-  },
-  speciesCheckText: {
-    fontSize: 10,
-    color: colors.white,
-    fontWeight: '800',
   },
 
   // Gender
@@ -760,19 +749,19 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     paddingVertical: SPACING.base,
     borderRadius: RADIUS.lg,
-    backgroundColor: colors.background,
+    backgroundColor: COLORS.linen,
     borderWidth: 1.5,
-    borderColor: colors.border,
+    borderColor: COLORS.border,
     gap: SPACING.sm,
   },
   genderIcon: {
     fontSize: 20,
-    color: colors.textSecondary,
+    color: COLORS.stone,
   },
   genderLabel: {
     fontSize: FONT_SIZE.base,
-    fontWeight: '600',
-    color: colors.textSecondary,
+    fontFamily: FONTS.bodySemiBold,
+    color: COLORS.stone,
   },
   genderCheck: {
     width: 20,
@@ -780,11 +769,6 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     alignItems: 'center',
     justifyContent: 'center',
-  },
-  genderCheckText: {
-    fontSize: 11,
-    color: colors.white,
-    fontWeight: '800',
   },
 
   // Inline Row (Age + Weight)
@@ -809,13 +793,10 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: RADIUS.md,
-    backgroundColor: colors.background,
+    backgroundColor: COLORS.linen,
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: SPACING.md,
-  },
-  switchEmoji: {
-    fontSize: 18,
   },
   switchInfo: {
     flex: 1,
@@ -823,14 +804,14 @@ const styles = StyleSheet.create({
   },
   switchLabel: {
     fontSize: FONT_SIZE.base,
-    fontWeight: '600',
-    color: colors.text,
+    fontFamily: FONTS.bodySemiBold,
+    color: COLORS.charcoal,
     marginBottom: 2,
   },
   switchDescription: {
     fontSize: FONT_SIZE.xs,
-    color: colors.textTertiary,
-    fontWeight: '400',
+    fontFamily: FONTS.body,
+    color: COLORS.pebble,
   },
 
   // Submit
@@ -838,7 +819,7 @@ const styles = StyleSheet.create({
     borderRadius: RADIUS.xl,
     overflow: 'hidden',
     marginTop: SPACING.sm,
-    ...SHADOWS.glow('#FF6B35'),
+    ...SHADOWS.glow(COLORS.primary),
   },
   submitButtonDisabled: {
     ...SHADOWS.sm,
@@ -851,13 +832,10 @@ const styles = StyleSheet.create({
     borderRadius: RADIUS.xl,
     gap: SPACING.sm,
   },
-  submitIcon: {
-    fontSize: 18,
-  },
   submitText: {
     fontSize: FONT_SIZE.md,
-    fontWeight: '700',
-    color: colors.white,
+    fontFamily: FONTS.heading,
+    color: COLORS.white,
     letterSpacing: 0.3,
   },
 
