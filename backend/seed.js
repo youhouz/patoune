@@ -115,8 +115,8 @@ const seed = async () => {
       owner: users[0]._id, name: 'Rex', species: 'chien', breed: 'Labrador Retriever',
       age: 4, weight: 30, gender: 'male', vaccinated: true,
       photos: [
-        'https://images.unsplash.com/photo-1579213838058-4a30e2344bd8?w=600&h=600&fit=crop',
-        'https://images.unsplash.com/photo-1605897472198-242be42d1a71?w=600&h=600&fit=crop',
+        'https://images.unsplash.com/photo-1552053831-71594a27632d?w=600&h=600&fit=crop',
+        'https://images.unsplash.com/photo-1591160690555-5debfba289f0?w=600&h=600&fit=crop',
       ],
       description: 'Chien tres joueur et affectueux. Adore les promenades au parc et jouer a la balle. Tres sociable avec les autres chiens.',
     },
@@ -151,7 +151,7 @@ const seed = async () => {
       owner: users[2]._id, name: 'Noisette', species: 'rongeur', breed: 'Hamster dore',
       age: 1, weight: 0.15, gender: 'femelle', vaccinated: false,
       photos: [
-        'https://images.unsplash.com/photo-1425082661507-d6d2f85d15be?w=600&h=600&fit=crop',
+        'https://images.unsplash.com/photo-1548767797-d8c844163c4c?w=600&h=600&fit=crop',
       ],
       description: 'Petit hamster energique qui adore sa roue. Mange bien et est en pleine forme.',
     },
@@ -169,7 +169,7 @@ const seed = async () => {
       age: 5, weight: 8, gender: 'femelle', vaccinated: true,
       specialNeeds: 'Traitement cardiaque quotidien',
       photos: [
-        'https://images.unsplash.com/photo-1583337130417-13104dec14a3?w=600&h=600&fit=crop',
+        'https://images.unsplash.com/photo-1598133894008-61f7fdb8cc3a?w=600&h=600&fit=crop',
         'https://images.unsplash.com/photo-1587300003388-59208cc962cb?w=600&h=600&fit=crop',
       ],
       description: 'Petite chienne adorable et tres douce. Besoin de promenades calmes.',
@@ -264,7 +264,7 @@ const seed = async () => {
     {
       barcode: '3564700266236', name: 'Pedigree Vital Protection Adult', brand: 'Pedigree',
       category: 'alimentation', targetAnimal: ['chien'],
-      image: 'https://images.unsplash.com/photo-1589924749163-2e2f7b490e2e?w=400&h=400&fit=crop',
+      image: 'https://images.unsplash.com/photo-1585846416120-3a7354ed7d39?w=400&h=400&fit=crop',
       ingredients: [
         { name: 'Cereales', isControversial: true, risk: 'moderate' },
         { name: 'Viandes et sous-produits animaux (dont 4% poulet)', isControversial: true, risk: 'moderate' },
@@ -334,7 +334,7 @@ const seed = async () => {
     {
       barcode: '4007817602270', name: 'Dreamies Mix Poulet & Canard', brand: 'Dreamies',
       category: 'alimentation', targetAnimal: ['chat'],
-      image: 'https://images.unsplash.com/photo-1583337130417-13104dec14a3?w=400&h=400&fit=crop',
+      image: 'https://images.unsplash.com/photo-1589924691995-400dc9ecc119?w=400&h=400&fit=crop',
       ingredients: [
         { name: 'Cereales', isControversial: true, risk: 'moderate' },
         { name: 'Viande et sous-produits animaux (8%)', isControversial: true, risk: 'moderate' },
@@ -449,7 +449,7 @@ const seed = async () => {
       services: ['garde_domicile', 'promenade', 'visite', 'garde_chez_sitter'],
       pricePerDay: 25, pricePerHour: 12,
       photos: [
-        'https://images.unsplash.com/photo-1558618666-fcd25c85f82e?w=600&h=400&fit=crop',
+        'https://images.unsplash.com/photo-1416879595882-3373a0480b5b?w=600&h=400&fit=crop',
         'https://images.unsplash.com/photo-1583511655857-d19b40a7a54e?w=600&h=400&fit=crop',
       ],
       availability: [
@@ -514,7 +514,7 @@ const seed = async () => {
       pricePerDay: 32, pricePerHour: 15,
       photos: [
         'https://images.unsplash.com/photo-1601758174114-e711c0cbaa69?w=600&h=400&fit=crop',
-        'https://images.unsplash.com/photo-1587764379990-bcc0c1e15c46?w=600&h=400&fit=crop',
+        'https://images.unsplash.com/photo-1558904541-efa843a96f01?w=600&h=400&fit=crop',
       ],
       availability: [
         { day: 'lundi', startTime: '08:00', endTime: '19:00' },
@@ -557,7 +557,7 @@ const seed = async () => {
       services: ['promenade', 'visite', 'garde_domicile'],
       pricePerDay: 28, pricePerHour: 14,
       photos: [
-        'https://images.unsplash.com/photo-1477884213360-7e9d7dcc8f9a?w=600&h=400&fit=crop',
+        'https://images.unsplash.com/photo-1564013799919-ab600027ffc6?w=600&h=400&fit=crop',
         'https://images.unsplash.com/photo-1534361960057-19889db9621e?w=600&h=400&fit=crop',
       ],
       availability: [
