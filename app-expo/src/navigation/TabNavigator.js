@@ -29,7 +29,7 @@ const stackScreenOptions = {
   headerTintColor: colors.primary,
   headerTitleStyle: {
     fontWeight: '700',
-    fontSize: 17,
+    fontSize: 18,
     color: colors.text,
   },
   headerBackTitleVisible: false,
@@ -54,19 +54,25 @@ const ProfileNavigator = () => (
   </ProfileStack.Navigator>
 );
 
-const TAB_ICONS = {
-  Accueil: { default: '🏠', active: '🏠' },
-  Scanner: { default: '📷', active: '📷' },
-  Garde: { default: '🐾', active: '🐾' },
-  Profil: { default: '👤', active: '👤' },
+// Tab configuration with emoji and label
+const TAB_CONFIG = {
+  Accueil: { emoji: '🏠', label: 'Accueil' },
+  Scanner: { emoji: '📷', label: 'Scanner' },
+  Garde:   { emoji: '🐾', label: 'Garde' },
+  Profil:  { emoji: '👤', label: 'Profil' },
 };
 
-const TabIcon = ({ route, focused }) => (
-  <View style={[styles.tabIconWrap, focused && styles.tabIconActive]}>
-    <Text style={[styles.tabEmoji, focused && styles.tabEmojiActive]}>
-      {TAB_ICONS[route]?.default || '•'}
+// Revolut-style: soft orange pill on active + bold colored label
+const TabIcon = ({ routeName, focused }) => (
+  <View style={styles.tabItem}>
+    <View style={[styles.iconPill, focused && styles.iconPillActive]}>
+      <Text style={[styles.tabEmoji, focused && styles.tabEmojiActive]}>
+        {TAB_CONFIG[routeName]?.emoji || '•'}
+      </Text>
+    </View>
+    <Text style={[styles.tabLabel, focused && styles.tabLabelActive]}>
+      {TAB_CONFIG[routeName]?.label}
     </Text>
-    {focused && <View style={styles.activeDot} />}
   </View>
 );
 
@@ -74,21 +80,18 @@ const TabNavigator = () => (
   <Tab.Navigator
     screenOptions={({ route }) => ({
       headerShown: false,
-      tabBarIcon: ({ focused }) => <TabIcon route={route.name} focused={focused} />,
+      tabBarIcon: ({ focused }) => <TabIcon routeName={route.name} focused={focused} />,
+      tabBarLabel: () => null,
       tabBarActiveTintColor: colors.primary,
       tabBarInactiveTintColor: colors.textLight,
       tabBarStyle: {
-        height: Platform.OS === 'ios' ? 88 : 68,
-        paddingBottom: Platform.OS === 'ios' ? 28 : 10,
-        paddingTop: 10,
+        height: Platform.OS === 'ios' ? 86 : 68,
+        paddingBottom: Platform.OS === 'ios' ? 22 : 6,
+        paddingTop: 6,
         backgroundColor: colors.white,
-        borderTopWidth: 0,
+        borderTopWidth: 1,
+        borderTopColor: colors.borderLight,
         ...SHADOWS.lg,
-      },
-      tabBarLabelStyle: {
-        fontSize: 11,
-        fontWeight: '600',
-        marginTop: -2,
       },
     })}
   >
@@ -100,14 +103,21 @@ const TabNavigator = () => (
 );
 
 const styles = StyleSheet.create({
-  tabIconWrap: {
+  tabItem: {
     alignItems: 'center',
     justifyContent: 'center',
-    width: 44,
-    height: 32,
+    paddingTop: 2,
   },
-  tabIconActive: {
-    // no transform needed
+  iconPill: {
+    width: 52,
+    height: 30,
+    borderRadius: 15,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: 'transparent',
+  },
+  iconPillActive: {
+    backgroundColor: colors.primarySoft,
   },
   tabEmoji: {
     fontSize: 22,
@@ -115,14 +125,16 @@ const styles = StyleSheet.create({
   },
   tabEmojiActive: {
     opacity: 1,
-    fontSize: 24,
   },
-  activeDot: {
-    width: 5,
-    height: 5,
-    borderRadius: 2.5,
-    backgroundColor: colors.primary,
+  tabLabel: {
+    fontSize: 11,
+    fontWeight: '500',
+    color: colors.textLight,
     marginTop: 3,
+  },
+  tabLabelActive: {
+    color: colors.primary,
+    fontWeight: '700',
   },
 });
 

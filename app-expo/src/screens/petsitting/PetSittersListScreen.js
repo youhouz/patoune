@@ -220,7 +220,7 @@ const PetSitterCard = ({ petsitter, onPress, index }) => {
           {/* Price */}
           <View style={styles.priceBox}>
             <Text style={styles.priceAmount}>{priceDisplay}</Text>
-            <Text style={styles.priceCurrency}>EUR</Text>
+            <Text style={styles.priceCurrency}>€</Text>
             <View style={styles.priceDivider} />
             <Text style={styles.priceUnit}>/jour</Text>
           </View>

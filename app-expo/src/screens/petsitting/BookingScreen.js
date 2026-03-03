@@ -173,9 +173,9 @@ const BookingScreen = ({ route, navigation }) => {
 
   const getUnitLabel = () => {
     if (selectedService === 'promenade' || selectedService === 'visite') {
-      return 'EUR/h';
+      return '€/h';
     }
-    return 'EUR/j';
+    return '€/j';
   };
 
   // Determine current step for the indicator
@@ -279,7 +279,7 @@ const BookingScreen = ({ route, navigation }) => {
                 {petsitter.user?.name || 'Gardien'}
               </Text>
               <Text style={styles.headerSitterPrice}>
-                {petsitter.pricePerHour || '--'} EUR/h  •  {petsitter.pricePerDay || '--'} EUR/jour
+                {petsitter.pricePerHour || '--'} €/h  •  {petsitter.pricePerDay || '--'} €/jour
               </Text>
             </View>
             {petsitter.verified && (
@@ -379,7 +379,7 @@ const BookingScreen = ({ route, navigation }) => {
                           : `${petsitter.pricePerDay || '--'}`}
                       </Text>
                       <Text style={styles.serviceOptionPriceUnit}>
-                        {service.key === 'promenade' || service.key === 'visite' ? 'EUR/h' : 'EUR/j'}
+                        {service.key === 'promenade' || service.key === 'visite' ? '€/h' : '€/j'}
                       </Text>
                     </View>
                   </TouchableOpacity>
@@ -512,7 +512,7 @@ const BookingScreen = ({ route, navigation }) => {
 
               <View style={styles.summaryTotalRow}>
                 <Text style={styles.summaryTotalLabel}>Total estime</Text>
-                <Text style={styles.summaryTotalValue}>{calculatePrice()} EUR</Text>
+                <Text style={styles.summaryTotalValue}>{calculatePrice()} €</Text>
               </View>
             </LinearGradient>
           </View>

@@ -3,7 +3,8 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 
 // Production: Render.com backend URL
 // Dev: change to http://localhost:5000/api or your local IP
-const API_URL = 'https://patoune-api.onrender.com/api';
+// Pour Codespaces, utiliser l'URL dynamique ou localhost si port forwarded
+const API_URL = 'http://localhost:5000/api';
 
 const api = axios.create({
   baseURL: API_URL,

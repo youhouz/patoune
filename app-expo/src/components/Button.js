@@ -9,13 +9,14 @@ const Button = ({
   variant = 'primary', disabled, icon, size = 'md',
   fullWidth = true
 }) => {
+  // Generous touch targets — accessible for all ages
   const sizeStyles = {
-    sm: { paddingVertical: 10, paddingHorizontal: 16, minHeight: 40 },
-    md: { paddingVertical: 14, paddingHorizontal: 24, minHeight: 52 },
-    lg: { paddingVertical: 18, paddingHorizontal: 32, minHeight: 58 },
+    sm: { paddingVertical: 12, paddingHorizontal: 18, minHeight: 46 },
+    md: { paddingVertical: 15, paddingHorizontal: 26, minHeight: 54 },
+    lg: { paddingVertical: 19, paddingHorizontal: 32, minHeight: 62 },
   };
 
-  const fontSizes = { sm: 14, md: 16, lg: 18 };
+  const fontSizes = { sm: 15, md: 17, lg: 19 };
 
   if (variant === 'primary') {
     return (
@@ -39,7 +40,7 @@ const Button = ({
             <ActivityIndicator color="#FFF" size="small" />
           ) : (
             <View style={styles.content}>
-              {icon && <Text style={styles.icon}>{icon}</Text>}
+              {icon && <Text style={[styles.icon, { fontSize: fontSizes[size] }]}>{icon}</Text>}
               <Text style={[styles.text, styles.primaryText, { fontSize: fontSizes[size] }, textStyle]}>
                 {title}
               </Text>
@@ -81,7 +82,7 @@ const Button = ({
         styles.button, sizeStyles[size],
         {
           backgroundColor: v.bg,
-          borderWidth: variant === 'outline' ? 1.5 : 0,
+          borderWidth: variant === 'outline' ? 2 : 0,
           borderColor: v.border,
           borderRadius: RADIUS.lg,
         },
@@ -97,7 +98,7 @@ const Button = ({
         <ActivityIndicator color={v.textColor} size="small" />
       ) : (
         <View style={styles.content}>
-          {icon && <Text style={styles.icon}>{icon}</Text>}
+          {icon && <Text style={[styles.icon, { fontSize: fontSizes[size] }]}>{icon}</Text>}
           <Text style={[styles.text, { color: v.textColor, fontSize: fontSizes[size] }, textStyle]}>
             {title}
           </Text>
@@ -118,11 +119,11 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   icon: {
-    fontSize: 18,
+    lineHeight: undefined,
   },
   text: {
     fontWeight: '700',
-    letterSpacing: 0.3,
+    letterSpacing: 0.2,
   },
   primaryText: {
     color: '#FFF',

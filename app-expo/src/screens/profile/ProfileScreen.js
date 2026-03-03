@@ -112,7 +112,7 @@ const ProfileScreen = ({ navigation }) => {
   const handleLogout = () => {
     Alert.alert(
       'Deconnexion',
-      'Etes-vous sur de vouloir vous deconnecter ?',
+      'Voulez-vous vraiment vous deconnecter ?',
       [
         { text: 'Annuler', style: 'cancel' },
         { text: 'Se deconnecter', style: 'destructive', onPress: logout },
@@ -156,7 +156,7 @@ const ProfileScreen = ({ navigation }) => {
           label: 'Reglages',
           subtitle: 'Compte, preferences, a propos',
           screen: 'Settings',
-          accentColor: '#6C5CE7',
+          accentColor: '#5B5BD6',
           bgColor: colors.accentSoft,
         },
       ],
@@ -302,7 +302,11 @@ const ProfileScreen = ({ navigation }) => {
 
         {/* App footer */}
         <View style={styles.footer}>
-          <Text style={styles.footerText}>Patoune v1.0.0</Text>
+          <View style={styles.footerBadge}>
+            <Text style={styles.footerPaw}>🐾</Text>
+            <Text style={styles.footerText}>patoune</Text>
+          </View>
+          <Text style={styles.footerVersion}>v1.0.0 — Le meilleur pour vos animaux</Text>
         </View>
 
         <View style={styles.bottomSpacer} />
@@ -570,11 +574,28 @@ const styles = StyleSheet.create({
   footer: {
     alignItems: 'center',
     marginTop: SPACING.xl,
+    paddingVertical: SPACING.md,
+  },
+  footerBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    marginBottom: 5,
+  },
+  footerPaw: {
+    fontSize: 16,
   },
   footerText: {
-    fontSize: FONT_SIZE.xs,
+    fontSize: 18,
+    color: colors.text,
+    fontWeight: '900',
+    letterSpacing: 1.5,
+    textTransform: 'lowercase',
+  },
+  footerVersion: {
+    fontSize: 12,
     color: colors.textLight,
-    fontWeight: '500',
+    fontWeight: '400',
   },
 
   bottomSpacer: {

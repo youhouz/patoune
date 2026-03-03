@@ -39,13 +39,19 @@ const LoginScreen = ({ navigation }) => {
 
       {/* Header gradient with brand */}
       <LinearGradient
-        colors={['#FF6B35', '#FF8F65', '#FFB088']}
+        colors={['#FF6B35', '#FF7848', '#FFB088']}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
         style={styles.headerGradient}
       >
+        {/* Decorative circles */}
+        <View style={styles.circle1} />
+        <View style={styles.circle2} />
+
         <View style={styles.headerContent}>
-          <Text style={styles.pawEmoji}>🐾</Text>
+          <View style={styles.logoCircle}>
+            <Text style={styles.pawEmoji}>🐾</Text>
+          </View>
           <Text style={styles.logo}>patoune</Text>
           <Text style={styles.tagline}>Le meilleur pour vos animaux</Text>
         </View>
@@ -61,12 +67,12 @@ const LoginScreen = ({ navigation }) => {
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
         >
-          <Text style={styles.welcomeBack}>Content de te revoir !</Text>
-          <Text style={styles.subtitle}>Connecte-toi pour continuer</Text>
+          <Text style={styles.welcomeBack}>Content de vous revoir !</Text>
+          <Text style={styles.subtitle}>Connectez-vous pour continuer</Text>
 
           {/* Email field */}
           <View style={styles.fieldGroup}>
-            <Text style={styles.label}>Email</Text>
+            <Text style={styles.label}>Adresse email</Text>
             <View style={[
               styles.inputWrapper,
               focusedField === 'email' && styles.inputFocused,
@@ -76,7 +82,7 @@ const LoginScreen = ({ navigation }) => {
                 style={styles.input}
                 value={email}
                 onChangeText={setEmail}
-                placeholder="ton@email.com"
+                placeholder="votre@email.com"
                 placeholderTextColor={colors.textLight}
                 keyboardType="email-address"
                 autoCapitalize="none"
@@ -99,7 +105,7 @@ const LoginScreen = ({ navigation }) => {
                 style={[styles.input, { flex: 1 }]}
                 value={password}
                 onChangeText={setPassword}
-                placeholder="Ton mot de passe"
+                placeholder="Votre mot de passe"
                 placeholderTextColor={colors.textLight}
                 secureTextEntry={!showPassword}
                 onFocus={() => setFocusedField('password')}
@@ -108,7 +114,7 @@ const LoginScreen = ({ navigation }) => {
               <TouchableOpacity
                 style={styles.eyeBtn}
                 onPress={() => setShowPassword(!showPassword)}
-                hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
               >
                 <Text style={styles.eyeIcon}>{showPassword ? '🙈' : '👁️'}</Text>
               </TouchableOpacity>
@@ -119,7 +125,7 @@ const LoginScreen = ({ navigation }) => {
             title="Se connecter"
             onPress={handleLogin}
             loading={loading}
-            style={{ marginTop: 8 }}
+            style={{ marginTop: 10 }}
             size="lg"
           />
 
@@ -134,10 +140,10 @@ const LoginScreen = ({ navigation }) => {
           <TouchableOpacity
             style={styles.registerBtn}
             onPress={() => navigation.navigate('Register')}
-            activeOpacity={0.7}
+            activeOpacity={0.75}
           >
             <Text style={styles.registerText}>
-              Pas encore de compte ?{' '}
+              Pas encore de compte ?{'  '}
               <Text style={styles.registerBold}>Creer un compte</Text>
             </Text>
           </TouchableOpacity>
@@ -153,9 +159,22 @@ const styles = StyleSheet.create({
     backgroundColor: colors.white,
   },
   headerGradient: {
-    paddingTop: Platform.OS === 'ios' ? 60 : 50,
-    paddingBottom: 50,
+    paddingTop: Platform.OS === 'ios' ? 64 : 52,
+    paddingBottom: 56,
     alignItems: 'center',
+    overflow: 'hidden',
+  },
+  circle1: {
+    position: 'absolute',
+    top: -40, right: -40,
+    width: 160, height: 160, borderRadius: 80,
+    backgroundColor: 'rgba(255,255,255,0.08)',
+  },
+  circle2: {
+    position: 'absolute',
+    bottom: 0, left: -50,
+    width: 200, height: 200, borderRadius: 100,
+    backgroundColor: 'rgba(255,255,255,0.06)',
   },
   headerContent: {
     alignItems: 'center',
@@ -164,29 +183,39 @@ const styles = StyleSheet.create({
   headerCurve: {
     position: 'absolute',
     bottom: -1,
-    left: 0,
-    right: 0,
-    height: 30,
+    left: 0, right: 0,
+    height: 32,
     backgroundColor: colors.white,
-    borderTopLeftRadius: 30,
-    borderTopRightRadius: 30,
+    borderTopLeftRadius: 32,
+    borderTopRightRadius: 32,
+  },
+  logoCircle: {
+    width: 76,
+    height: 76,
+    borderRadius: 38,
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 14,
+    borderWidth: 2,
+    borderColor: 'rgba(255,255,255,0.3)',
   },
   pawEmoji: {
-    fontSize: 48,
-    marginBottom: 8,
+    fontSize: 36,
   },
   logo: {
-    fontSize: 42,
+    fontSize: 40,
     fontWeight: '900',
     color: '#FFF',
-    letterSpacing: 3,
+    letterSpacing: 2,
     textTransform: 'lowercase',
   },
   tagline: {
-    fontSize: 14,
-    color: 'rgba(255,255,255,0.85)',
-    marginTop: 6,
+    fontSize: 15,
+    color: 'rgba(255,255,255,0.88)',
+    marginTop: 8,
     fontWeight: '500',
+    letterSpacing: 0.2,
   },
   formWrapper: {
     flex: 1,
@@ -194,28 +223,29 @@ const styles = StyleSheet.create({
   scroll: {
     flexGrow: 1,
     paddingHorizontal: 24,
-    paddingTop: 8,
-    paddingBottom: 40,
+    paddingTop: 12,
+    paddingBottom: 48,
   },
   welcomeBack: {
     fontSize: 26,
     fontWeight: '800',
     color: colors.text,
-    marginBottom: 4,
+    marginBottom: 6,
+    letterSpacing: -0.3,
   },
   subtitle: {
-    fontSize: 15,
+    fontSize: 16,
     color: colors.textSecondary,
-    marginBottom: 28,
+    marginBottom: 30,
   },
   fieldGroup: {
-    marginBottom: 18,
+    marginBottom: 20,
   },
   label: {
-    fontSize: 14,
-    fontWeight: '600',
+    fontSize: 15,
+    fontWeight: '700',
     color: colors.text,
-    marginBottom: 8,
+    marginBottom: 9,
     marginLeft: 2,
   },
   inputWrapper: {
@@ -223,35 +253,36 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     backgroundColor: colors.background,
     borderRadius: RADIUS.lg,
-    borderWidth: 1.5,
+    borderWidth: 2,
     borderColor: colors.border,
-    paddingHorizontal: 14,
-    height: 54,
+    paddingHorizontal: 16,
+    height: 60,
   },
   inputFocused: {
     borderColor: colors.primary,
     backgroundColor: colors.primarySoft,
   },
   inputIcon: {
-    fontSize: 18,
-    marginRight: 10,
+    fontSize: 20,
+    marginRight: 12,
   },
   input: {
     flex: 1,
-    fontSize: 15,
+    fontSize: 16,
     color: colors.text,
     paddingVertical: 0,
+    fontWeight: '500',
   },
   eyeBtn: {
     padding: 4,
   },
   eyeIcon: {
-    fontSize: 18,
+    fontSize: 20,
   },
   separator: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginVertical: 24,
+    marginVertical: 26,
   },
   separatorLine: {
     flex: 1,
@@ -260,23 +291,26 @@ const styles = StyleSheet.create({
   },
   separatorText: {
     marginHorizontal: 16,
-    fontSize: 13,
+    fontSize: 14,
     color: colors.textTertiary,
-    fontWeight: '500',
+    fontWeight: '600',
   },
   registerBtn: {
     alignItems: 'center',
-    paddingVertical: 14,
+    paddingVertical: 18,
     backgroundColor: colors.primarySoft,
     borderRadius: RADIUS.lg,
+    borderWidth: 1.5,
+    borderColor: colors.primary + '25',
   },
   registerText: {
-    fontSize: 15,
+    fontSize: 16,
     color: colors.textSecondary,
+    fontWeight: '500',
   },
   registerBold: {
     color: colors.primary,
-    fontWeight: '700',
+    fontWeight: '800',
   },
 });
 

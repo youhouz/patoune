@@ -335,7 +335,7 @@ const SettingsScreen = ({ navigation }) => {
                   description: 'Nouveaux messages de gardiens',
                   value: notifMessages,
                   onValueChange: setNotifMessages,
-                  accentColor: '#6C5CE7',
+                  accentColor: '#5B5BD6',
                   isLast: true,
                 })}
               </View>

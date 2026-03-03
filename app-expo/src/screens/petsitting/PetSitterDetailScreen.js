@@ -276,7 +276,7 @@ const PetSitterDetailScreen = ({ route, navigation }) => {
                 >
                   <Text style={styles.priceCardIcon}>🌙</Text>
                   <Text style={styles.priceCardAmount}>
-                    {petsitter.pricePerDay || '--'} EUR
+                    {petsitter.pricePerDay || '--'} €
                   </Text>
                   <Text style={styles.priceCardUnit}>par jour</Text>
                 </LinearGradient>
@@ -290,7 +290,7 @@ const PetSitterDetailScreen = ({ route, navigation }) => {
                 >
                   <Text style={styles.priceCardIcon}>⏰</Text>
                   <Text style={styles.priceCardAmount}>
-                    {petsitter.pricePerHour || '--'} EUR
+                    {petsitter.pricePerHour || '--'} €
                   </Text>
                   <Text style={styles.priceCardUnit}>par heure</Text>
                 </LinearGradient>
@@ -478,7 +478,7 @@ const PetSitterDetailScreen = ({ route, navigation }) => {
         <View style={styles.bottomBarPriceCol}>
           <Text style={styles.bottomBarPriceLabel}>A partir de</Text>
           <View style={styles.bottomBarPriceRow}>
-            <Text style={styles.bottomBarPrice}>{petsitter.pricePerDay || '--'} EUR</Text>
+            <Text style={styles.bottomBarPrice}>{petsitter.pricePerDay || '--'} €</Text>
             <Text style={styles.bottomBarPriceUnit}>/jour</Text>
           </View>
         </View>

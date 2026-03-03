@@ -23,7 +23,7 @@ const HEADER_PADDING_TOP = Platform.OS === 'ios' ? 56 : (StatusBar.currentHeight
 
 const SPECIES = [
   { key: 'chien', label: 'Chien', icon: '🐕', color: '#FF6B35' },
-  { key: 'chat', label: 'Chat', icon: '🐱', color: '#6C5CE7' },
+  { key: 'chat', label: 'Chat', icon: '🐱', color: '#5B5BD6' },
   { key: 'rongeur', label: 'Rongeur', icon: '🐹', color: '#F59E0B' },
   { key: 'oiseau', label: 'Oiseau', icon: '🐦', color: '#3B82F6' },
   { key: 'reptile', label: 'Reptile', icon: '🦎', color: '#10B981' },
@@ -556,8 +556,8 @@ const styles = StyleSheet.create({
     borderBottomColor: colors.border,
   },
   backButton: {
-    width: 36,
-    height: 36,
+    width: 44,
+    height: 44,
     borderRadius: RADIUS.md,
     backgroundColor: colors.white,
     alignItems: 'center',

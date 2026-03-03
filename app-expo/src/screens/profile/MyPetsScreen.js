@@ -22,7 +22,7 @@ const HEADER_PADDING_TOP = Platform.OS === 'ios' ? 56 : (StatusBar.currentHeight
 
 const SPECIES_CONFIG = {
   chien: { icon: '🐕', label: 'Chien', gradient: ['#FF6B35', '#FF8F65'] },
-  chat: { icon: '🐱', label: 'Chat', gradient: ['#6C5CE7', '#A29BFE'] },
+  chat: { icon: '🐱', label: 'Chat', gradient: ['#5B5BD6', '#8B8BF5'] },
   rongeur: { icon: '🐹', label: 'Rongeur', gradient: ['#F59E0B', '#FBBF24'] },
   oiseau: { icon: '🐦', label: 'Oiseau', gradient: ['#3B82F6', '#60A5FA'] },
   reptile: { icon: '🦎', label: 'Reptile', gradient: ['#10B981', '#34D399'] },
