@@ -32,6 +32,7 @@ app.use('/api/petsitters', require('./src/routes/petsitters'));
 app.use('/api/bookings', require('./src/routes/bookings'));
 app.use('/api/reviews', require('./src/routes/reviews'));
 app.use('/api/messages', require('./src/routes/messages'));
+app.use('/api/ai', require('./src/routes/ai'));
 
 // Route de test
 app.get('/', (req, res) => {

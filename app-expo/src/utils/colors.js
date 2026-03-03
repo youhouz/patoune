@@ -62,6 +62,14 @@ const COLORS = {
   info: '#2563EB',
   infoSoft: '#EFF6FF',
 
+  // Semantic aliases — v2.0 scanner/history screen compatibility
+  cream: '#FDFAF7',
+  linen: '#F5F0EB',
+  charcoal: '#111827',
+  stone: '#4B5563',
+  pebble: '#9CA3AF',
+  sand: '#C4C9D4',
+
   // Shadows & Overlays
   shadow: 'rgba(0, 0, 0, 0.04)',
   shadowMedium: 'rgba(0, 0, 0, 0.08)',

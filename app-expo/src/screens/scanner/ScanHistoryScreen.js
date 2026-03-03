@@ -14,10 +14,11 @@ import {
   ScrollView,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
+import { Feather } from '@expo/vector-icons';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { getScanHistoryAPI } from '../../api/products';
+import { FONTS } from '../../utils/typography';
 const { COLORS, SHADOWS, RADIUS, SPACING, FONT_SIZE, getScoreColor, getScoreBg, getScoreLabel } = require('../../utils/colors');
-
-const TOP_PADDING = Platform.OS === 'ios' ? 58 : 48;
 
 const FILTER_OPTIONS = [
   { key: 'all', label: 'Tous', icon: null, color: COLORS.primary },
@@ -28,6 +29,7 @@ const FILTER_OPTIONS = [
 ];
 
 const ScanHistoryScreen = ({ navigation }) => {
+  const insets = useSafeAreaInsets();
   const [history, setHistory] = useState([]);
   const [filteredHistory, setFilteredHistory] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -152,8 +154,8 @@ const ScanHistoryScreen = ({ navigation }) => {
     const score = product.nutritionScore;
     const hasScore = score !== null && score !== undefined;
     const displayScore = hasScore ? score : '--';
-    const scoreColor = hasScore ? getScoreColor(score) : COLORS.textTertiary;
-    const scoreBgColor = hasScore ? getScoreBg(score) : COLORS.background;
+    const scoreColor = hasScore ? getScoreColor(score) : COLORS.pebble;
+    const scoreBgColor = hasScore ? getScoreBg(score) : COLORS.linen;
     const label = hasScore ? getScoreLabel(score) : '';
 
     return (
@@ -184,7 +186,7 @@ const ScanHistoryScreen = ({ navigation }) => {
           ) : null}
           {item.scannedAt ? (
             <View style={styles.dateBadge}>
-              <Text style={styles.dateIcon}>🕐</Text>
+              <Feather name="clock" size={11} color={COLORS.pebble} />
               <Text style={styles.dateText}>{formatDate(item.scannedAt)}</Text>
             </View>
           ) : null}
@@ -192,7 +194,7 @@ const ScanHistoryScreen = ({ navigation }) => {
 
         {/* Chevron */}
         <View style={styles.chevronContainer}>
-          <Text style={styles.chevronIcon}>›</Text>
+          <Feather name="chevron-right" size={18} color={COLORS.pebble} />
         </View>
       </TouchableOpacity>
     );
@@ -203,7 +205,7 @@ const ScanHistoryScreen = ({ navigation }) => {
       return (
         <View style={styles.emptyContainer}>
           <View style={[styles.emptyIconCircle, { backgroundColor: COLORS.errorSoft }]}>
-            <Text style={styles.emptyIcon}>⚠️</Text>
+            <Feather name="alert-triangle" size={36} color={COLORS.error} />
           </View>
           <Text style={styles.emptyTitle}>Erreur de chargement</Text>
           <Text style={styles.emptySubtitle}>
@@ -223,20 +225,24 @@ const ScanHistoryScreen = ({ navigation }) => {
       );
     }
 
+    const isFiltered = searchQuery || activeFilter !== 'all';
+
     return (
       <View style={styles.emptyContainer}>
         <View style={styles.emptyIconCircle}>
-          <Text style={styles.emptyIcon}>
-            {searchQuery || activeFilter !== 'all' ? '🔍' : '📦'}
-          </Text>
+          <Feather
+            name={isFiltered ? 'search' : 'package'}
+            size={36}
+            color={COLORS.primary}
+          />
         </View>
         <Text style={styles.emptyTitle}>
-          {searchQuery || activeFilter !== 'all'
+          {isFiltered
             ? 'Aucun resultat'
             : 'Aucun scan pour le moment'}
         </Text>
         <Text style={styles.emptySubtitle}>
-          {searchQuery || activeFilter !== 'all'
+          {isFiltered
             ? 'Essayez de modifier votre recherche ou vos filtres'
             : 'Scannez votre premier produit pour commencer a construire votre historique'}
         </Text>
@@ -252,7 +258,7 @@ const ScanHistoryScreen = ({ navigation }) => {
               end={{ x: 1, y: 0 }}
               style={styles.emptyButtonGradient}
             >
-              <Text style={styles.emptyButtonIcon}>📷</Text>
+              <Feather name="camera" size={18} color={COLORS.white} />
               <Text style={styles.emptyButtonText}>Scanner un produit</Text>
             </LinearGradient>
           </TouchableOpacity>
@@ -265,7 +271,7 @@ const ScanHistoryScreen = ({ navigation }) => {
     <View style={styles.listHeader}>
       {/* Search bar */}
       <View style={styles.searchContainer}>
-        <Text style={styles.searchIcon}>🔍</Text>
+        <Feather name="search" size={16} color={COLORS.sand} style={{ marginRight: SPACING.sm }} />
         <TextInput
           style={styles.searchInput}
           value={searchQuery}
@@ -282,7 +288,7 @@ const ScanHistoryScreen = ({ navigation }) => {
             activeOpacity={0.7}
           >
             <View style={styles.clearCircle}>
-              <Text style={styles.clearSearchText}>✕</Text>
+              <Feather name="x" size={11} color={COLORS.stone} />
             </View>
           </TouchableOpacity>
         )}
@@ -316,7 +322,7 @@ const ScanHistoryScreen = ({ navigation }) => {
               <Text
                 style={[
                   styles.filterText,
-                  isActive && { color: filter.color, fontWeight: '700' },
+                  isActive && { color: filter.color, fontFamily: FONTS.heading },
                 ]}
               >
                 {filter.label}
@@ -347,7 +353,7 @@ const ScanHistoryScreen = ({ navigation }) => {
           colors={COLORS.gradientPrimary}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
-          style={styles.headerGradient}
+          style={[styles.headerGradient, { paddingTop: insets.top + SPACING.md }]}
         >
           <View style={styles.headerContent}>
             <TouchableOpacity
@@ -355,7 +361,7 @@ const ScanHistoryScreen = ({ navigation }) => {
               onPress={() => navigation.goBack()}
               activeOpacity={0.7}
             >
-              <Text style={styles.backIcon}>{'‹'}</Text>
+              <Feather name="chevron-left" size={22} color={COLORS.white} />
             </TouchableOpacity>
             <Text style={styles.headerTitle}>Historique</Text>
             <View style={styles.headerPlaceholder} />
@@ -378,7 +384,7 @@ const ScanHistoryScreen = ({ navigation }) => {
         colors={COLORS.gradientPrimary}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
-        style={styles.headerGradient}
+        style={[styles.headerGradient, { paddingTop: insets.top + SPACING.md }]}
       >
         <View style={styles.headerContent}>
           <TouchableOpacity
@@ -386,7 +392,7 @@ const ScanHistoryScreen = ({ navigation }) => {
             onPress={() => navigation.goBack()}
             activeOpacity={0.7}
           >
-            <Text style={styles.backIcon}>{'‹'}</Text>
+            <Feather name="chevron-left" size={22} color={COLORS.white} />
           </TouchableOpacity>
           <Text style={styles.headerTitle}>Historique</Text>
           <View style={styles.headerBadge}>
@@ -433,12 +439,11 @@ const ScanHistoryScreen = ({ navigation }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: COLORS.background,
+    backgroundColor: COLORS.cream,
   },
 
   // Header
   headerGradient: {
-    paddingTop: TOP_PADDING,
     paddingBottom: SPACING.xl,
     paddingHorizontal: SPACING.xl,
     borderBottomLeftRadius: RADIUS['2xl'],
@@ -458,16 +463,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  backIcon: {
-    fontSize: 26,
-    color: COLORS.white,
-    fontWeight: '400',
-    marginTop: -2,
-    lineHeight: 28,
-  },
   headerTitle: {
     fontSize: FONT_SIZE['2xl'],
-    fontWeight: '800',
+    fontFamily: FONTS.heading,
     color: COLORS.white,
     letterSpacing: -0.3,
   },
@@ -481,7 +479,7 @@ const styles = StyleSheet.create({
   },
   headerBadgeText: {
     fontSize: FONT_SIZE.sm,
-    fontWeight: '700',
+    fontFamily: FONTS.heading,
     color: COLORS.white,
   },
   headerPlaceholder: {
@@ -490,7 +488,7 @@ const styles = StyleSheet.create({
   headerSubtitle: {
     fontSize: FONT_SIZE.sm,
     color: 'rgba(255,255,255,0.75)',
-    fontWeight: '500',
+    fontFamily: FONTS.bodyMedium,
     textAlign: 'center',
   },
 
@@ -521,16 +519,12 @@ const styles = StyleSheet.create({
     borderColor: COLORS.border,
     ...SHADOWS.sm,
   },
-  searchIcon: {
-    fontSize: 16,
-    marginRight: SPACING.sm,
-  },
   searchInput: {
     flex: 1,
     fontSize: FONT_SIZE.base,
-    color: COLORS.textPrimary,
+    color: COLORS.charcoal,
     paddingVertical: Platform.OS === 'ios' ? SPACING.md + 2 : SPACING.md,
-    fontWeight: '500',
+    fontFamily: FONTS.bodyMedium,
   },
   clearSearch: {
     padding: SPACING.xs,
@@ -542,11 +536,6 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.border,
     alignItems: 'center',
     justifyContent: 'center',
-  },
-  clearSearchText: {
-    fontSize: 11,
-    color: COLORS.textSecondary,
-    fontWeight: '700',
   },
 
   // Filters
@@ -575,8 +564,8 @@ const styles = StyleSheet.create({
   },
   filterText: {
     fontSize: FONT_SIZE.xs,
-    fontWeight: '600',
-    color: COLORS.textSecondary,
+    fontFamily: FONTS.bodySemiBold,
+    color: COLORS.stone,
   },
 
   // Results info
@@ -586,8 +575,8 @@ const styles = StyleSheet.create({
   },
   resultsCount: {
     fontSize: FONT_SIZE.sm,
-    fontWeight: '600',
-    color: COLORS.textTertiary,
+    fontFamily: FONTS.bodySemiBold,
+    color: COLORS.pebble,
   },
 
   // History cards
@@ -614,12 +603,12 @@ const styles = StyleSheet.create({
   },
   scoreNumberCard: {
     fontSize: FONT_SIZE.xl,
-    fontWeight: '900',
+    fontFamily: FONTS.heading,
     letterSpacing: -0.5,
   },
   scoreLabelCard: {
     fontSize: 9,
-    fontWeight: '700',
+    fontFamily: FONTS.heading,
     marginTop: 3,
     textTransform: 'uppercase',
     letterSpacing: 0.3,
@@ -629,14 +618,14 @@ const styles = StyleSheet.create({
   },
   productName: {
     fontSize: FONT_SIZE.base,
-    fontWeight: '700',
-    color: COLORS.textPrimary,
+    fontFamily: FONTS.heading,
+    color: COLORS.charcoal,
     marginBottom: 3,
   },
   productBrand: {
     fontSize: FONT_SIZE.sm,
-    fontWeight: '500',
-    color: COLORS.textSecondary,
+    fontFamily: FONTS.bodyMedium,
+    color: COLORS.stone,
     marginBottom: 6,
   },
   dateBadge: {
@@ -644,28 +633,19 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 4,
   },
-  dateIcon: {
-    fontSize: 11,
-  },
   dateText: {
     fontSize: FONT_SIZE.xs,
-    fontWeight: '500',
-    color: COLORS.textTertiary,
+    fontFamily: FONTS.bodyMedium,
+    color: COLORS.pebble,
   },
   chevronContainer: {
     width: 30,
     height: 30,
     borderRadius: 15,
-    backgroundColor: COLORS.background,
+    backgroundColor: COLORS.linen,
     alignItems: 'center',
     justifyContent: 'center',
     marginLeft: SPACING.sm,
-  },
-  chevronIcon: {
-    fontSize: 20,
-    color: COLORS.textTertiary,
-    fontWeight: '400',
-    marginTop: -1,
   },
   separator: {
     height: SPACING.md,
@@ -686,20 +666,17 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     marginBottom: SPACING.xl,
   },
-  emptyIcon: {
-    fontSize: 40,
-  },
   emptyTitle: {
     fontSize: FONT_SIZE.xl,
-    fontWeight: '700',
-    color: COLORS.textPrimary,
+    fontFamily: FONTS.heading,
+    color: COLORS.charcoal,
     marginBottom: SPACING.sm,
     textAlign: 'center',
   },
   emptySubtitle: {
     fontSize: FONT_SIZE.sm,
-    fontWeight: '500',
-    color: COLORS.textSecondary,
+    fontFamily: FONTS.bodyMedium,
+    color: COLORS.stone,
     textAlign: 'center',
     lineHeight: 20,
     paddingHorizontal: SPACING.lg,
@@ -717,12 +694,9 @@ const styles = StyleSheet.create({
     borderRadius: RADIUS.lg,
     gap: SPACING.sm,
   },
-  emptyButtonIcon: {
-    fontSize: 18,
-  },
   emptyButtonText: {
     fontSize: FONT_SIZE.base,
-    fontWeight: '700',
+    fontFamily: FONTS.heading,
     color: COLORS.white,
   },
   retryButton: {
@@ -733,7 +707,7 @@ const styles = StyleSheet.create({
   },
   retryButtonText: {
     fontSize: FONT_SIZE.base,
-    fontWeight: '700',
+    fontFamily: FONTS.heading,
     color: COLORS.white,
   },
 
@@ -746,8 +720,8 @@ const styles = StyleSheet.create({
   },
   loadingText: {
     fontSize: FONT_SIZE.sm,
-    fontWeight: '500',
-    color: COLORS.textTertiary,
+    fontFamily: FONTS.bodyMedium,
+    color: COLORS.pebble,
   },
 });
 

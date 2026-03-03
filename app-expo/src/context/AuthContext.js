@@ -50,13 +50,18 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  const register = async (name, email, password, phone) => {
+  const register = async (name, email, password, phone, role, address, guardianProfile) => {
     try {
-      const response = await registerAPI(name, email, password, phone);
+      const response = await registerAPI(name, email, password, phone, role, address, guardianProfile);
       const { token: newToken, user: userData } = response.data;
 
       await AsyncStorage.setItem('token', newToken);
       await AsyncStorage.setItem('user', JSON.stringify(userData));
+
+      // Also store role for quick access
+      if (role) {
+        await AsyncStorage.setItem('userRole', role);
+      }
 
       setToken(newToken);
       setUser(userData);
@@ -71,6 +76,7 @@ export const AuthProvider = ({ children }) => {
   const logout = async () => {
     await AsyncStorage.removeItem('token');
     await AsyncStorage.removeItem('user');
+    await AsyncStorage.removeItem('userRole');
     setToken(null);
     setUser(null);
   };

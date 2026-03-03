@@ -1,10 +1,9 @@
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-// Production: Render.com backend URL
+// Production: Vercel backend URL
 // Dev: change to http://localhost:5000/api or your local IP
-// Pour Codespaces, utiliser l'URL dynamique ou localhost si port forwarded
-const API_URL = 'http://localhost:5000/api';
+const API_URL = 'https://backend-woad-tau-80.vercel.app/api';
 
 const api = axios.create({
   baseURL: API_URL,

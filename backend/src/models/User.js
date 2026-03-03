@@ -37,6 +37,17 @@ const userSchema = new mongoose.Schema({
   isPetSitter: {
     type: Boolean,
     default: false
+  },
+  role: {
+    type: String,
+    enum: ['user', 'guardian', 'both'],
+    default: 'user'
+  },
+  address: {
+    street: String,
+    city: String,
+    postalCode: String,
+    country: { type: String, default: 'France' }
   }
 }, {
   timestamps: true

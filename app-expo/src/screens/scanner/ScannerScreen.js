@@ -12,20 +12,33 @@ import {
   Dimensions,
   ActivityIndicator,
   KeyboardAvoidingView,
+  ScrollView,
   Vibration,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { CameraView, useCameraPermissions } from 'expo-camera';
+import { Feather } from '@expo/vector-icons';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { scanProductAPI } from '../../api/products';
+import { FONTS } from '../../utils/typography';
 const { COLORS, SPACING, RADIUS, FONT_SIZE, SHADOWS } = require('../../utils/colors');
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const SCAN_FRAME_SIZE = SCREEN_WIDTH * 0.62;
 const CORNER_SIZE = 28;
 const CORNER_WIDTH = 3.5;
-const TOP_PADDING = Platform.OS === 'ios' ? 58 : 48;
+
+const DEMO_PRODUCTS = [
+  { barcode: '8710255130002', name: 'Orijen Original', brand: 'Orijen', icon: 'heart', score: 95 },
+  { barcode: '3017620422003', name: 'Royal Canin Maxi', brand: 'Royal Canin', icon: 'heart', score: 62 },
+  { barcode: '3564700266236', name: 'Pedigree Vital', brand: 'Pedigree', icon: 'heart', score: 31 },
+  { barcode: '4260215761024', name: 'Applaws Chat', brand: 'Applaws', icon: 'gitlab', score: 93 },
+  { barcode: '5410340620007', name: 'Whiskas Poisson', brand: 'Whiskas', icon: 'gitlab', score: 22 },
+  { barcode: '4047059414422', name: 'Kong Classic M', brand: 'Kong', icon: 'gift', score: 92 },
+];
 
 const ScannerScreen = ({ navigation }) => {
+  const insets = useSafeAreaInsets();
   const [permission, requestPermission] = useCameraPermissions();
   const [barcode, setBarcode] = useState('');
   const [scanning, setScanning] = useState(false);
@@ -208,7 +221,7 @@ const ScannerScreen = ({ navigation }) => {
   const renderPermissionRequest = () => (
     <View style={styles.permissionContainer}>
       <View style={styles.permIconCircle}>
-        <Text style={styles.permIcon}>📸</Text>
+        <Feather name="camera" size={36} color={COLORS.primary} />
       </View>
       <Text style={styles.permTitle}>Acces camera requis</Text>
       <Text style={styles.permDescription}>
@@ -320,6 +333,12 @@ const ScannerScreen = ({ navigation }) => {
     </View>
   );
 
+  const STEP_ICONS = [
+    { icon: 'smartphone', label: 'Scannez', desc: 'le code-barres', bg: COLORS.primarySoft, color: COLORS.primary },
+    { icon: 'star', label: 'Decouvrez', desc: 'le score', bg: COLORS.secondarySoft, color: COLORS.secondary },
+    { icon: 'search', label: 'Verifiez', desc: 'les ingredients', bg: COLORS.accentSoft, color: COLORS.accent },
+  ];
+
   return (
     <KeyboardAvoidingView
       style={styles.container}
@@ -332,7 +351,7 @@ const ScannerScreen = ({ navigation }) => {
         colors={COLORS.gradientPrimary}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
-        style={styles.header}
+        style={[styles.header, { paddingTop: insets.top + SPACING.md }]}
       >
         <View style={styles.headerContent}>
           <View>
@@ -344,13 +363,13 @@ const ScannerScreen = ({ navigation }) => {
             onPress={() => navigation.navigate('ScanHistory')}
             activeOpacity={0.8}
           >
-            <Text style={styles.historyIcon}>📋</Text>
+            <Feather name="clipboard" size={16} color={COLORS.white} />
             <Text style={styles.historyText}>Historique</Text>
           </TouchableOpacity>
         </View>
       </LinearGradient>
 
-      <Animated.View
+      <Animated.ScrollView
         style={[
           styles.body,
           {
@@ -358,11 +377,16 @@ const ScannerScreen = ({ navigation }) => {
             transform: [{ translateY: slideUp }],
           },
         ]}
+        showsVerticalScrollIndicator={false}
+        bounces={true}
+        contentContainerStyle={{ paddingBottom: SPACING['3xl'] }}
       >
         {/* Error toast */}
         {errorMessage !== '' && (
           <Animated.View style={[styles.errorToast, { opacity: errorOpacity }]}>
-            <Text style={styles.errorToastIcon}>!</Text>
+            <View style={styles.errorToastIconContainer}>
+              <Feather name="alert-triangle" size={13} color={COLORS.white} />
+            </View>
             <Text style={styles.errorToastText}>{errorMessage}</Text>
           </Animated.View>
         )}
@@ -399,7 +423,7 @@ const ScannerScreen = ({ navigation }) => {
               onPress={() => setManualMode(false)}
               activeOpacity={0.7}
             >
-              <Text style={styles.toggleEmoji}>📷</Text>
+              <Feather name="camera" size={16} color={!manualMode ? COLORS.primary : COLORS.stone} />
               <Text
                 style={[
                   styles.toggleText,
@@ -417,7 +441,7 @@ const ScannerScreen = ({ navigation }) => {
               onPress={() => setManualMode(true)}
               activeOpacity={0.7}
             >
-              <Text style={styles.toggleEmoji}>⌨️</Text>
+              <Feather name="edit-3" size={16} color={manualMode ? COLORS.primary : COLORS.stone} />
               <Text
                 style={[
                   styles.toggleText,
@@ -435,7 +459,7 @@ const ScannerScreen = ({ navigation }) => {
           <View style={styles.manualInputSection}>
             <View style={styles.inputWrapper}>
               <View style={styles.inputContainer}>
-                <Text style={styles.inputIcon}>🔍</Text>
+                <Feather name="search" size={18} color={COLORS.sand} style={{ marginRight: SPACING.sm }} />
                 <TextInput
                   style={styles.input}
                   value={barcode}
@@ -454,7 +478,7 @@ const ScannerScreen = ({ navigation }) => {
                     activeOpacity={0.7}
                   >
                     <View style={styles.clearCircle}>
-                      <Text style={styles.clearText}>✕</Text>
+                      <Feather name="x" size={11} color={COLORS.stone} />
                     </View>
                   </TouchableOpacity>
                 )}
@@ -493,24 +517,15 @@ const ScannerScreen = ({ navigation }) => {
           <View style={styles.infoSection}>
             <Text style={styles.infoTitle}>Comment ca marche ?</Text>
             <View style={styles.stepsRow}>
-              {[
-                { icon: '📱', label: 'Scannez', desc: 'le code-barres' },
-                { icon: '✨', label: 'Decouvrez', desc: 'le score' },
-                { icon: '🔬', label: 'Verifiez', desc: 'les ingredients' },
-              ].map((step, index) => (
+              {STEP_ICONS.map((step, index) => (
                 <View key={index} style={styles.stepCard}>
                   <View
                     style={[
                       styles.stepIconCircle,
-                      {
-                        backgroundColor:
-                          index === 0 ? COLORS.primarySoft
-                            : index === 1 ? COLORS.secondarySoft
-                              : COLORS.accentSoft,
-                      },
+                      { backgroundColor: step.bg },
                     ]}
                   >
-                    <Text style={styles.stepIcon}>{step.icon}</Text>
+                    <Feather name={step.icon} size={20} color={step.color} />
                   </View>
                   <Text style={styles.stepLabel}>{step.label}</Text>
                   <Text style={styles.stepDesc}>{step.desc}</Text>
@@ -519,7 +534,48 @@ const ScannerScreen = ({ navigation }) => {
             </View>
           </View>
         )}
-      </Animated.View>
+
+        {/* Demo products for quick testing */}
+        <View style={styles.demoSection}>
+          <Text style={styles.demoTitle}>Produits demo</Text>
+          <Text style={styles.demoSubtitle}>Appuyez pour tester le scanner</Text>
+          <View style={styles.demoGrid}>
+            {DEMO_PRODUCTS.map((item) => (
+              <TouchableOpacity
+                key={item.barcode}
+                style={styles.demoCard}
+                onPress={() => handleBarcodeScan(item.barcode)}
+                disabled={scanning}
+                activeOpacity={0.7}
+              >
+                <View style={[
+                  styles.demoIconCircle,
+                  { backgroundColor: item.score >= 70 ? COLORS.successSoft : item.score >= 40 ? COLORS.warningSoft : COLORS.errorSoft }
+                ]}>
+                  <Feather
+                    name={item.icon}
+                    size={18}
+                    color={item.score >= 70 ? COLORS.success : item.score >= 40 ? COLORS.warning : COLORS.error}
+                  />
+                </View>
+                <Text style={styles.demoName} numberOfLines={1}>{item.name}</Text>
+                <Text style={styles.demoBrand}>{item.brand}</Text>
+                <View style={[
+                  styles.demoScoreBadge,
+                  { backgroundColor: item.score >= 70 ? COLORS.successSoft : item.score >= 40 ? COLORS.warningSoft : COLORS.errorSoft }
+                ]}>
+                  <Text style={[
+                    styles.demoScoreText,
+                    { color: item.score >= 70 ? COLORS.success : item.score >= 40 ? COLORS.warning : COLORS.error }
+                  ]}>
+                    {item.score}/100
+                  </Text>
+                </View>
+              </TouchableOpacity>
+            ))}
+          </View>
+        </View>
+      </Animated.ScrollView>
     </KeyboardAvoidingView>
   );
 };
@@ -527,7 +583,7 @@ const ScannerScreen = ({ navigation }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: COLORS.background,
+    backgroundColor: COLORS.cream,
   },
   centered: {
     justifyContent: 'center',
@@ -536,13 +592,12 @@ const styles = StyleSheet.create({
   loadingText: {
     marginTop: SPACING.md,
     fontSize: FONT_SIZE.sm,
-    color: COLORS.textTertiary,
-    fontWeight: '500',
+    color: COLORS.pebble,
+    fontFamily: FONTS.bodyMedium,
   },
 
   // Header
   header: {
-    paddingTop: TOP_PADDING,
     paddingBottom: SPACING.lg,
     paddingHorizontal: SPACING.xl,
     borderBottomLeftRadius: RADIUS['2xl'],
@@ -555,7 +610,7 @@ const styles = StyleSheet.create({
   },
   headerTitle: {
     fontSize: FONT_SIZE['3xl'],
-    fontWeight: '800',
+    fontFamily: FONTS.heading,
     color: COLORS.white,
     letterSpacing: -0.5,
   },
@@ -563,7 +618,7 @@ const styles = StyleSheet.create({
     fontSize: FONT_SIZE.sm,
     color: 'rgba(255,255,255,0.8)',
     marginTop: 2,
-    fontWeight: '500',
+    fontFamily: FONTS.bodyMedium,
   },
   historyButton: {
     flexDirection: 'row',
@@ -574,13 +629,10 @@ const styles = StyleSheet.create({
     borderRadius: RADIUS.xl,
     gap: 6,
   },
-  historyIcon: {
-    fontSize: 16,
-  },
   historyText: {
     color: COLORS.white,
     fontSize: FONT_SIZE.sm,
-    fontWeight: '600',
+    fontFamily: FONTS.bodySemiBold,
   },
 
   // Body
@@ -601,22 +653,19 @@ const styles = StyleSheet.create({
     gap: SPACING.sm,
     ...SHADOWS.md,
   },
-  errorToastIcon: {
+  errorToastIconContainer: {
     width: 22,
     height: 22,
     borderRadius: 11,
     backgroundColor: 'rgba(255,255,255,0.25)',
-    textAlign: 'center',
-    lineHeight: 22,
-    fontSize: FONT_SIZE.sm,
-    fontWeight: '800',
-    color: COLORS.white,
+    alignItems: 'center',
+    justifyContent: 'center',
     overflow: 'hidden',
   },
   errorToastText: {
     flex: 1,
     fontSize: FONT_SIZE.sm,
-    fontWeight: '600',
+    fontFamily: FONTS.bodySemiBold,
     color: COLORS.white,
   },
 
@@ -672,13 +721,13 @@ const styles = StyleSheet.create({
   scanHint: {
     color: 'rgba(255,255,255,0.9)',
     fontSize: FONT_SIZE.sm,
-    fontWeight: '600',
+    fontFamily: FONTS.bodySemiBold,
     textAlign: 'center',
   },
   scanSubHint: {
     color: 'rgba(255,255,255,0.5)',
     fontSize: FONT_SIZE.xs,
-    fontWeight: '500',
+    fontFamily: FONTS.bodyMedium,
     textAlign: 'center',
     marginTop: 3,
   },
@@ -686,7 +735,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 10,
-    backgroundColor: 'rgba(255,107,53,0.3)',
+    backgroundColor: 'rgba(196,112,75,0.3)',
     paddingHorizontal: SPACING.lg,
     paddingVertical: SPACING.sm + 2,
     borderRadius: RADIUS.full,
@@ -694,7 +743,7 @@ const styles = StyleSheet.create({
   scanningText: {
     color: COLORS.white,
     fontSize: FONT_SIZE.sm,
-    fontWeight: '600',
+    fontFamily: FONTS.bodySemiBold,
   },
 
   // Corner styles
@@ -755,17 +804,14 @@ const styles = StyleSheet.create({
     width: 80,
     height: 80,
     borderRadius: 40,
-    backgroundColor: 'rgba(255,107,53,0.15)',
+    backgroundColor: 'rgba(196,112,75,0.15)',
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: SPACING.lg,
   },
-  permIcon: {
-    fontSize: 36,
-  },
   permTitle: {
     fontSize: FONT_SIZE.xl,
-    fontWeight: '700',
+    fontFamily: FONTS.heading,
     color: COLORS.white,
     marginBottom: SPACING.sm,
   },
@@ -776,6 +822,7 @@ const styles = StyleSheet.create({
     lineHeight: 20,
     marginBottom: SPACING.xl,
     paddingHorizontal: SPACING.lg,
+    fontFamily: FONTS.body,
   },
   permButton: {
     borderRadius: RADIUS.lg,
@@ -789,7 +836,7 @@ const styles = StyleSheet.create({
   permButtonText: {
     color: COLORS.white,
     fontSize: FONT_SIZE.base,
-    fontWeight: '700',
+    fontFamily: FONTS.heading,
   },
   permManualLink: {
     marginTop: SPACING.lg,
@@ -798,7 +845,7 @@ const styles = StyleSheet.create({
   permManualText: {
     color: 'rgba(255,255,255,0.5)',
     fontSize: FONT_SIZE.sm,
-    fontWeight: '500',
+    fontFamily: FONTS.bodyMedium,
     textDecorationLine: 'underline',
   },
 
@@ -819,20 +866,20 @@ const styles = StyleSheet.create({
   },
   manualIconText: {
     fontSize: FONT_SIZE.xl,
-    fontWeight: '900',
+    fontFamily: FONTS.heading,
     color: COLORS.white,
     letterSpacing: 1,
   },
   manualTitle: {
     fontSize: FONT_SIZE.xl,
-    fontWeight: '700',
+    fontFamily: FONTS.heading,
     color: COLORS.white,
     marginBottom: 4,
   },
   manualSubtitle: {
     fontSize: FONT_SIZE.sm,
     color: 'rgba(255,255,255,0.55)',
-    fontWeight: '500',
+    fontFamily: FONTS.bodyMedium,
     textAlign: 'center',
     paddingHorizontal: SPACING.lg,
     lineHeight: 19,
@@ -862,13 +909,10 @@ const styles = StyleSheet.create({
   toggleOptionActive: {
     backgroundColor: COLORS.primarySoft,
   },
-  toggleEmoji: {
-    fontSize: 16,
-  },
   toggleText: {
     fontSize: FONT_SIZE.sm,
-    fontWeight: '600',
-    color: COLORS.textTertiary,
+    fontFamily: FONTS.bodySemiBold,
+    color: COLORS.stone,
   },
   toggleTextActive: {
     color: COLORS.primary,
@@ -892,16 +936,12 @@ const styles = StyleSheet.create({
     borderColor: COLORS.border,
     ...SHADOWS.sm,
   },
-  inputIcon: {
-    fontSize: 18,
-    marginRight: SPACING.sm,
-  },
   input: {
     flex: 1,
     fontSize: FONT_SIZE.base,
-    color: COLORS.textPrimary,
+    color: COLORS.charcoal,
     paddingVertical: Platform.OS === 'ios' ? SPACING.base : SPACING.md,
-    fontWeight: '500',
+    fontFamily: FONTS.bodyMedium,
     letterSpacing: 1.5,
   },
   clearButton: {
@@ -915,15 +955,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  clearText: {
-    fontSize: 11,
-    color: COLORS.textSecondary,
-    fontWeight: '700',
-  },
   barcodeLength: {
     fontSize: FONT_SIZE.xs,
-    color: COLORS.textTertiary,
-    fontWeight: '500',
+    color: COLORS.pebble,
+    fontFamily: FONTS.bodyMedium,
     textAlign: 'right',
     paddingRight: SPACING.xs,
   },
@@ -944,7 +979,7 @@ const styles = StyleSheet.create({
   searchButtonText: {
     color: COLORS.white,
     fontSize: FONT_SIZE.base,
-    fontWeight: '700',
+    fontFamily: FONTS.heading,
   },
 
   // Info section
@@ -955,8 +990,8 @@ const styles = StyleSheet.create({
   },
   infoTitle: {
     fontSize: FONT_SIZE.lg,
-    fontWeight: '700',
-    color: COLORS.textPrimary,
+    fontFamily: FONTS.heading,
+    color: COLORS.charcoal,
     marginBottom: SPACING.base,
   },
   stepsRow: {
@@ -979,21 +1014,79 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     marginBottom: SPACING.sm,
   },
-  stepIcon: {
-    fontSize: 20,
-  },
   stepLabel: {
     fontSize: FONT_SIZE.xs,
-    fontWeight: '700',
-    color: COLORS.textPrimary,
+    fontFamily: FONTS.heading,
+    color: COLORS.charcoal,
     marginBottom: 2,
   },
   stepDesc: {
     fontSize: FONT_SIZE.xs,
-    color: COLORS.textSecondary,
+    color: COLORS.stone,
     textAlign: 'center',
     lineHeight: 15,
-    fontWeight: '500',
+    fontFamily: FONTS.bodyMedium,
+  },
+
+  // Demo products section
+  demoSection: {
+    paddingHorizontal: SPACING.xl,
+    marginTop: SPACING.xl,
+  },
+  demoTitle: {
+    fontSize: FONT_SIZE.lg,
+    fontFamily: FONTS.heading,
+    color: COLORS.charcoal,
+    marginBottom: SPACING.xs,
+  },
+  demoSubtitle: {
+    fontSize: FONT_SIZE.sm,
+    fontFamily: FONTS.bodyMedium,
+    color: COLORS.stone,
+    marginBottom: SPACING.base,
+  },
+  demoGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: SPACING.md,
+  },
+  demoCard: {
+    width: (SCREEN_WIDTH - SPACING.xl * 2 - SPACING.md * 2) / 3,
+    backgroundColor: COLORS.white,
+    borderRadius: RADIUS.lg,
+    padding: SPACING.md,
+    alignItems: 'center',
+    ...SHADOWS.sm,
+  },
+  demoIconCircle: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: SPACING.sm,
+  },
+  demoName: {
+    fontSize: FONT_SIZE.xs,
+    fontFamily: FONTS.bodySemiBold,
+    color: COLORS.charcoal,
+    textAlign: 'center',
+    marginBottom: 2,
+  },
+  demoBrand: {
+    fontSize: FONT_SIZE.xs,
+    fontFamily: FONTS.bodyMedium,
+    color: COLORS.pebble,
+    marginBottom: SPACING.sm,
+  },
+  demoScoreBadge: {
+    paddingHorizontal: SPACING.sm,
+    paddingVertical: SPACING.xs,
+    borderRadius: RADIUS.sm,
+  },
+  demoScoreText: {
+    fontSize: FONT_SIZE.xs,
+    fontFamily: FONTS.heading,
   },
 });
 

@@ -2,7 +2,7 @@
   "expo": {
     "name": "Patoune",
     "slug": "patoune",
-    "version": "1.0.0",
+    "version": "2.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
@@ -10,7 +10,7 @@
     "splash": {
       "image": "./assets/splash-icon.png",
       "resizeMode": "contain",
-      "backgroundColor": "#FF6B35"
+      "backgroundColor": "#2C2825"
     },
     "ios": {
       "supportsTablet": true,
@@ -22,14 +22,24 @@
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
-        "backgroundColor": "#FF6B35"
+        "backgroundColor": "#C4704B"
       },
       "edgeToEdgeEnabled": true,
       "package": "com.patoune.app",
       "permissions": ["CAMERA"]
     },
     "web": {
-      "favicon": "./assets/favicon.png"
+      "favicon": "./assets/favicon.png",
+      "name": "Patoune",
+      "shortName": "Patoune",
+      "description": "Le compagnon de vos compagnons - Scanner produits, garde animaux, assistant IA",
+      "lang": "fr",
+      "themeColor": "#C4704B",
+      "backgroundColor": "#FDFAF7",
+      "display": "standalone",
+      "startUrl": "/",
+      "scope": "/",
+      "orientation": "portrait"
     },
     "plugins": [
       [

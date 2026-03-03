@@ -4,14 +4,16 @@ import {
   StyleSheet, KeyboardAvoidingView, Platform, Animated,
   ActivityIndicator, StatusBar, Dimensions,
 } from 'react-native';
+import { Feather } from '@expo/vector-icons';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import api from '../../api/client';
 import { useAuth } from '../../context/AuthContext';
+import { FONTS } from '../../utils/typography';
 const colors = require('../../utils/colors');
 const { SHADOWS, RADIUS, SPACING, FONT_SIZE } = require('../../utils/colors');
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
-const TOP_PADDING = Platform.OS === 'ios' ? 58 : 48;
 const MAX_MESSAGE_LENGTH = 1000;
 
 /* ---------- Scroll to Bottom FAB ---------- */
@@ -39,7 +41,7 @@ const ScrollToBottomFAB = ({ visible, onPress, unreadCount }) => {
         onPress={onPress}
         activeOpacity={0.8}
       >
-        <Text style={styles.scrollFabIcon}>↓</Text>
+        <Feather name="chevron-down" size={20} color={colors.primary} />
         {unreadCount > 0 && (
           <View style={styles.scrollFabBadge}>
             <Text style={styles.scrollFabBadgeText}>{unreadCount}</Text>
@@ -52,6 +54,7 @@ const ScrollToBottomFAB = ({ visible, onPress, unreadCount }) => {
 
 /* ---------- Main Screen ---------- */
 const MessagesScreen = ({ route, navigation }) => {
+  const insets = useSafeAreaInsets();
   const { userId, userName } = route.params;
   const { user } = useAuth();
   const [messages, setMessages] = useState([]);
@@ -242,25 +245,22 @@ const MessagesScreen = ({ route, navigation }) => {
             ]}
           >
             {isMe ? (
-              <LinearGradient
-                colors={colors.gradientPrimary}
+              <View
                 style={[
-                  styles.myMessageGradient,
+                  styles.myMessageInner,
                   firstInGroup && { borderTopRightRadius: RADIUS.xl },
                   !firstInGroup && { borderTopRightRadius: RADIUS.xs },
                   lastInGroup && { borderBottomRightRadius: RADIUS.xs },
                 ]}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 1 }}
               >
                 <Text style={styles.myMessageText}>{item.content}</Text>
                 {lastInGroup && (
                   <View style={styles.myTimeRow}>
                     <Text style={styles.myTime}>{formatTime(item.createdAt)}</Text>
-                    <Text style={styles.myReadReceipt}>✓✓</Text>
+                    <Feather name="check" size={10} color={colors.pebble} />
                   </View>
                 )}
-              </LinearGradient>
+              </View>
             ) : (
               <View style={styles.otherMessageInner}>
                 <Text style={styles.otherMessageText}>{item.content}</Text>
@@ -280,14 +280,14 @@ const MessagesScreen = ({ route, navigation }) => {
     return (
       <View style={styles.emptyContainer}>
         <View style={styles.emptyIconCircle}>
-          <Text style={styles.emptyIcon}>💬</Text>
+          <Feather name="message-circle" size={36} color={colors.primary} />
         </View>
         <Text style={styles.emptyTitle}>Demarrez la conversation</Text>
         <Text style={styles.emptySubtext}>
           Envoyez un message a {userName || 'ce gardien'}{'\n'}pour organiser la garde de votre animal
         </Text>
         <View style={styles.emptySuggestions}>
-          {['Bonjour ! 👋', 'Disponible cette semaine ?', 'Tarifs pour 2 jours ?'].map((suggestion, idx) => (
+          {['Bonjour !', 'Disponible cette semaine ?', 'Tarifs pour 2 jours ?'].map((suggestion, idx) => (
             <TouchableOpacity
               key={idx}
               style={styles.emptySuggestionChip}
@@ -316,7 +316,7 @@ const MessagesScreen = ({ route, navigation }) => {
       {/* Header */}
       <LinearGradient
         colors={[colors.primary, colors.primaryDark]}
-        style={styles.header}
+        style={[styles.header, { paddingTop: insets.top + 8 }]}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 0 }}
       >
@@ -327,7 +327,7 @@ const MessagesScreen = ({ route, navigation }) => {
             activeOpacity={0.7}
             hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
           >
-            <Text style={styles.headerBackIcon}>←</Text>
+            <Feather name="arrow-left" size={20} color={colors.white} />
           </TouchableOpacity>
 
           <View style={styles.headerAvatar}>
@@ -428,12 +428,12 @@ const MessagesScreen = ({ route, navigation }) => {
               {sending ? (
                 <ActivityIndicator size="small" color={colors.white} />
               ) : (
-                <Text style={styles.sendBtnIcon}>↑</Text>
+                <Feather name="send" size={18} color={colors.white} />
               )}
             </LinearGradient>
           ) : (
             <View style={[styles.sendBtn, styles.sendBtnDisabled]}>
-              <Text style={[styles.sendBtnIcon, styles.sendBtnIconDisabled]}>↑</Text>
+              <Feather name="send" size={18} color={colors.textLight} />
             </View>
           )}
         </TouchableOpacity>
@@ -445,12 +445,11 @@ const MessagesScreen = ({ route, navigation }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.background,
+    backgroundColor: colors.cream,
   },
 
   // Header
   header: {
-    paddingTop: TOP_PADDING,
     paddingBottom: SPACING.md + 2,
     paddingHorizontal: SPACING.base,
   },
@@ -467,11 +466,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  headerBackIcon: {
-    fontSize: 20,
-    color: colors.white,
-    fontWeight: '700',
-  },
   headerAvatar: {
     width: 42,
     height: 42,
@@ -484,7 +478,7 @@ const styles = StyleSheet.create({
   },
   headerAvatarLetter: {
     fontSize: FONT_SIZE.lg,
-    fontWeight: '700',
+    fontFamily: FONTS.heading,
     color: colors.white,
   },
   headerInfo: {
@@ -492,7 +486,7 @@ const styles = StyleSheet.create({
   },
   headerName: {
     fontSize: FONT_SIZE.md,
-    fontWeight: '700',
+    fontFamily: FONTS.heading,
     color: colors.white,
   },
   headerOnlineRow: {
@@ -509,8 +503,8 @@ const styles = StyleSheet.create({
   },
   headerOnlineText: {
     fontSize: FONT_SIZE.xs,
+    fontFamily: FONTS.bodyMedium,
     color: 'rgba(255,255,255,0.75)',
-    fontWeight: '500',
   },
 
   // Messages List
@@ -544,8 +538,8 @@ const styles = StyleSheet.create({
   },
   dateText: {
     fontSize: FONT_SIZE.xs,
+    fontFamily: FONTS.bodySemiBold,
     color: colors.textSecondary,
-    fontWeight: '600',
     textTransform: 'capitalize',
   },
 
@@ -578,7 +572,7 @@ const styles = StyleSheet.create({
   },
   messageBubbleInitial: {
     fontSize: FONT_SIZE.xs,
-    fontWeight: '700',
+    fontFamily: FONTS.heading,
     color: colors.accent,
   },
 
@@ -590,6 +584,7 @@ const styles = StyleSheet.create({
   },
   myMessage: {
     borderBottomRightRadius: RADIUS.xs,
+    backgroundColor: colors.primarySoft,
   },
   otherMessage: {
     borderBottomLeftRadius: RADIUS.xs,
@@ -599,8 +594,8 @@ const styles = StyleSheet.create({
     borderColor: colors.borderLight,
   },
 
-  // My message (gradient)
-  myMessageGradient: {
+  // My message (primarySoft bg)
+  myMessageInner: {
     paddingHorizontal: SPACING.base,
     paddingVertical: SPACING.md,
     borderRadius: RADIUS.xl,
@@ -608,8 +603,9 @@ const styles = StyleSheet.create({
   },
   myMessageText: {
     fontSize: FONT_SIZE.base,
+    fontFamily: FONTS.body,
     lineHeight: 22,
-    color: colors.white,
+    color: colors.charcoal,
   },
   myTimeRow: {
     flexDirection: 'row',
@@ -620,11 +616,8 @@ const styles = StyleSheet.create({
   },
   myTime: {
     fontSize: FONT_SIZE.xs - 1,
-    color: 'rgba(255,255,255,0.7)',
-  },
-  myReadReceipt: {
-    fontSize: FONT_SIZE.xs - 1,
-    color: 'rgba(255,255,255,0.7)',
+    fontFamily: FONTS.body,
+    color: colors.pebble,
   },
 
   // Other message
@@ -634,11 +627,13 @@ const styles = StyleSheet.create({
   },
   otherMessageText: {
     fontSize: FONT_SIZE.base,
+    fontFamily: FONTS.body,
     lineHeight: 22,
     color: colors.text,
   },
   otherTime: {
     fontSize: FONT_SIZE.xs - 1,
+    fontFamily: FONTS.body,
     color: colors.textTertiary,
     marginTop: SPACING.xs,
   },
@@ -659,17 +654,15 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     marginBottom: SPACING.lg,
   },
-  emptyIcon: {
-    fontSize: 36,
-  },
   emptyTitle: {
     fontSize: FONT_SIZE.xl,
-    fontWeight: '700',
+    fontFamily: FONTS.heading,
     color: colors.text,
     marginBottom: SPACING.sm,
   },
   emptySubtext: {
     fontSize: FONT_SIZE.base,
+    fontFamily: FONTS.body,
     color: colors.textSecondary,
     textAlign: 'center',
     lineHeight: 22,
@@ -692,7 +685,7 @@ const styles = StyleSheet.create({
   },
   emptySuggestionText: {
     fontSize: FONT_SIZE.sm,
-    fontWeight: '600',
+    fontFamily: FONTS.bodySemiBold,
     color: colors.primary,
   },
 
@@ -714,11 +707,6 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.borderLight,
   },
-  scrollFabIcon: {
-    fontSize: 20,
-    color: colors.primary,
-    fontWeight: '700',
-  },
   scrollFabBadge: {
     position: 'absolute',
     top: -4,
@@ -732,8 +720,8 @@ const styles = StyleSheet.create({
   },
   scrollFabBadgeText: {
     fontSize: 10,
+    fontFamily: FONTS.heading,
     color: colors.white,
-    fontWeight: '700',
   },
 
   // Loading
@@ -745,8 +733,8 @@ const styles = StyleSheet.create({
   },
   loadingText: {
     fontSize: FONT_SIZE.sm,
+    fontFamily: FONTS.bodyMedium,
     color: colors.textSecondary,
-    fontWeight: '500',
   },
 
   // Input Bar
@@ -777,6 +765,7 @@ const styles = StyleSheet.create({
   },
   input: {
     fontSize: FONT_SIZE.base,
+    fontFamily: FONTS.body,
     color: colors.text,
     lineHeight: 22,
     maxHeight: 100,
@@ -794,14 +783,6 @@ const styles = StyleSheet.create({
   },
   sendBtnDisabled: {
     backgroundColor: colors.border,
-  },
-  sendBtnIcon: {
-    fontSize: 22,
-    color: colors.white,
-    fontWeight: '700',
-  },
-  sendBtnIconDisabled: {
-    color: colors.textLight,
   },
 });
 
