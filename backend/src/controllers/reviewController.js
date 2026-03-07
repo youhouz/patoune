@@ -1,12 +1,39 @@
 const Review = require('../models/Review');
 const PetSitter = require('../models/PetSitter');
+const Booking = require('../models/Booking');
 
 // @desc    Laisser un avis
 // @route   POST /api/reviews
 exports.createReview = async (req, res, next) => {
   try {
-    req.body.author = req.user.id;
-    const review = await Review.create(req.body);
+    const { petsitter, booking: bookingId, rating, comment } = req.body;
+
+    if (!petsitter || !bookingId || !rating) {
+      return res.status(400).json({
+        success: false,
+        error: 'Les champs petsitter, booking et rating sont requis'
+      });
+    }
+
+    // Vérifier que la réservation existe et appartient à l'utilisateur
+    const booking = await Booking.findById(bookingId);
+    if (!booking) {
+      return res.status(404).json({ success: false, error: 'Réservation non trouvée' });
+    }
+    if (booking.owner.toString() !== req.user.id) {
+      return res.status(403).json({ success: false, error: 'Vous ne pouvez noter que vos propres réservations' });
+    }
+    if (booking.status !== 'completed') {
+      return res.status(400).json({ success: false, error: 'Vous ne pouvez noter qu\'une réservation terminée' });
+    }
+
+    const review = await Review.create({
+      author: req.user.id,
+      petsitter,
+      booking: bookingId,
+      rating,
+      comment: comment || ''
+    });
 
     // Recalculer la note moyenne du gardien
     const reviews = await Review.find({ petsitter: req.body.petsitter });

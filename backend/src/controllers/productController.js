@@ -92,9 +92,10 @@ exports.searchProducts = async (req, res, next) => {
     const filter = {};
 
     if (q) {
+      const escaped = q.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
       filter.$or = [
-        { name: { $regex: q, $options: 'i' } },
-        { brand: { $regex: q, $options: 'i' } }
+        { name: { $regex: escaped, $options: 'i' } },
+        { brand: { $regex: escaped, $options: 'i' } }
       ];
     }
     if (category) filter.category = category;
