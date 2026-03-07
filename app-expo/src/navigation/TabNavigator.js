@@ -58,11 +58,11 @@ const ProfileNavigator = () => (
 const TAB_CONFIG = {
   Accueil: { emoji: '🏠', label: 'Accueil' },
   Scanner: { emoji: '📷', label: 'Scanner' },
-  Garde:   { emoji: '🐾', label: 'Garde' },
+  Garde:   { emoji: '❤️', label: 'Garde' },
   Profil:  { emoji: '👤', label: 'Profil' },
 };
 
-// Revolut-style: soft orange pill on active + bold colored label
+// Premium pill tab with glow effect on active
 const TabIcon = ({ routeName, focused }) => (
   <View style={styles.tabItem}>
     <View style={[styles.iconPill, focused && styles.iconPillActive]}>
@@ -110,32 +110,38 @@ const styles = StyleSheet.create({
     paddingTop: 2,
   },
   iconPill: {
-    width: 52,
-    height: 30,
-    borderRadius: 15,
+    width: 56,
+    height: 32,
+    borderRadius: 16,
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: 'transparent',
   },
   iconPillActive: {
     backgroundColor: colors.primarySoft,
+    shadowColor: colors.primary,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 8,
+    elevation: 4,
   },
   tabEmoji: {
-    fontSize: 22,
-    opacity: 0.4,
+    fontSize: 21,
+    opacity: 0.35,
   },
   tabEmojiActive: {
     opacity: 1,
   },
   tabLabel: {
     fontSize: 11,
-    fontWeight: '500',
+    fontWeight: '600',
     color: colors.textLight,
-    marginTop: 3,
+    marginTop: 4,
+    letterSpacing: 0.1,
   },
   tabLabelActive: {
     color: colors.primary,
-    fontWeight: '700',
+    fontWeight: '800',
   },
 });
 
