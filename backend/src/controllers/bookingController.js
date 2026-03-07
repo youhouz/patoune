@@ -42,10 +42,25 @@ exports.getMyBookings = async (req, res, next) => {
 exports.updateBookingStatus = async (req, res, next) => {
   try {
     const { status } = req.body;
-    const booking = await Booking.findById(req.params.id);
+
+    const validStatuses = ['pending', 'confirmed', 'ongoing', 'completed', 'cancelled'];
+    if (!status || !validStatuses.includes(status)) {
+      return res.status(400).json({ success: false, error: 'Statut invalide' });
+    }
+
+    const booking = await Booking.findById(req.params.id).populate('sitter');
 
     if (!booking) {
       return res.status(404).json({ success: false, error: 'Réservation non trouvée' });
+    }
+
+    // Seul le propriétaire ou le gardien peut modifier le statut
+    const sitterUserId = booking.sitter?.user?.toString();
+    const isOwner = booking.owner.toString() === req.user.id;
+    const isSitter = sitterUserId === req.user.id;
+
+    if (!isOwner && !isSitter) {
+      return res.status(403).json({ success: false, error: 'Non autorisé à modifier cette réservation' });
     }
 
     booking.status = status;

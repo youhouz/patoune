@@ -1,6 +1,26 @@
 const PetSitter = require('../models/PetSitter');
 const User = require('../models/User');
 
+// Champs autorisés pour la création/modification d'un profil gardien
+// Exclut: rating, reviewCount, verified (champs gérés par le système)
+const ALLOWED_SITTER_FIELDS = [
+  'bio', 'experience', 'acceptedAnimals', 'services',
+  'pricePerDay', 'pricePerHour', 'availability', 'location', 'radius', 'photos'
+];
+
+function pickAllowedFields(body) {
+  const picked = {};
+  for (const key of ALLOWED_SITTER_FIELDS) {
+    if (body[key] !== undefined) picked[key] = body[key];
+  }
+  return picked;
+}
+
+// Echapper les caractères spéciaux regex pour éviter les attaques ReDoS
+function escapeRegex(str) {
+  return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
 // @desc    Rechercher des gardiens (géolocalisé avec distance)
 // @route   GET /api/petsitters?lat=&lng=&radius=&animal=&service=&search=
 exports.searchPetSitters = async (req, res, next) => {
@@ -30,7 +50,7 @@ exports.searchPetSitters = async (req, res, next) => {
       if (animal) matchStage.acceptedAnimals = animal;
       if (service) matchStage.services = service;
       if (search) {
-        matchStage.bio = { $regex: search, $options: 'i' };
+        matchStage.bio = { $regex: escapeRegex(search), $options: 'i' };
       }
 
       if (Object.keys(matchStage).length > 0) {
@@ -62,7 +82,7 @@ exports.searchPetSitters = async (req, res, next) => {
     if (animal) filter.acceptedAnimals = animal;
     if (service) filter.services = service;
     if (search) {
-      filter.bio = { $regex: search, $options: 'i' };
+      filter.bio = { $regex: escapeRegex(search), $options: 'i' };
     }
 
     const petsitters = await PetSitter.find(filter)
@@ -104,8 +124,9 @@ exports.becomePetSitter = async (req, res, next) => {
       });
     }
 
-    req.body.user = req.user.id;
-    const petsitter = await PetSitter.create(req.body);
+    const sitterData = pickAllowedFields(req.body);
+    sitterData.user = req.user.id;
+    const petsitter = await PetSitter.create(sitterData);
 
     // Marquer l'utilisateur comme pet sitter
     await User.findByIdAndUpdate(req.user.id, { isPetSitter: true });
@@ -128,7 +149,8 @@ exports.updatePetSitter = async (req, res, next) => {
       });
     }
 
-    petsitter = await PetSitter.findByIdAndUpdate(petsitter._id, req.body, {
+    const updates = pickAllowedFields(req.body);
+    petsitter = await PetSitter.findByIdAndUpdate(petsitter._id, updates, {
       new: true,
       runValidators: true
     }).populate('user', 'name avatar');
