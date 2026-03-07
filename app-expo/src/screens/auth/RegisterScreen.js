@@ -1,23 +1,22 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import {
   View, Text, TextInput, TouchableOpacity,
   StyleSheet, KeyboardAvoidingView, Platform, ScrollView, StatusBar,
-  Animated, Dimensions
+  Animated, Dimensions, ActivityIndicator
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useAuth } from '../../context/AuthContext';
 import { showAlert } from '../../utils/alert';
-import Button from '../../components/Button';
 const colors = require('../../utils/colors');
-const { RADIUS, SHADOWS } = require('../../utils/colors');
+const { RADIUS, SHADOWS, SPACING } = require('../../utils/colors');
 
 const { width } = Dimensions.get('window');
 
 const STEPS = [
-  { title: 'Tes infos', subtitle: 'Dis-nous qui tu es' },
-  { title: 'Ton adresse', subtitle: 'Pour trouver des services pres de chez toi' },
-  { title: 'Ton role', subtitle: 'Comment utilises-tu Patoune ?' },
-  { title: 'Bienvenue !', subtitle: 'Tout est pret' },
+  { title: 'Tes infos', subtitle: 'Dis-nous qui tu es', icon: '👤' },
+  { title: 'Ton adresse', subtitle: 'Pour trouver des services pres de chez toi', icon: '📍' },
+  { title: 'Ton role', subtitle: 'Comment utilises-tu Patoune ?', icon: '🎭' },
+  { title: 'Bienvenue !', subtitle: 'Tout est pret', icon: '🎉' },
 ];
 
 const ROLES = [
@@ -26,24 +25,58 @@ const ROLES = [
   { value: 'both', label: 'Les deux', icon: '🤝', desc: 'Proprietaire et gardien' },
 ];
 
-const InputField = ({ label, icon, value, onChangeText, placeholder, focusedField, fieldName, setFocusedField, ...props }) => (
-  <View style={styles.fieldGroup}>
-    <Text style={styles.label}>{label}</Text>
-    <View style={[styles.inputWrapper, focusedField === fieldName && styles.inputFocused]}>
-      <Text style={styles.inputIcon}>{icon}</Text>
-      <TextInput
-        style={styles.input}
-        value={value}
-        onChangeText={onChangeText}
-        placeholder={placeholder}
-        placeholderTextColor={colors.textLight}
-        onFocus={() => setFocusedField(fieldName)}
-        onBlur={() => setFocusedField(null)}
-        {...props}
-      />
+const PremiumInput = ({ label, icon, value, onChangeText, placeholder, isFocused, fieldName, setFocusedField, ...props }) => {
+  const glowAnim = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    Animated.timing(glowAnim, {
+      toValue: isFocused ? 1 : 0,
+      duration: 220,
+      useNativeDriver: false,
+    }).start();
+  }, [isFocused]);
+
+  const borderColor = glowAnim.interpolate({
+    inputRange: [0, 1],
+    outputRange: [colors.border, colors.primary],
+  });
+
+  const shadowOpacity = glowAnim.interpolate({
+    inputRange: [0, 1],
+    outputRange: [0, 0.2],
+  });
+
+  return (
+    <View style={styles.fieldGroup}>
+      <Text style={styles.label}>{label}</Text>
+      <Animated.View style={[
+        styles.inputWrapper,
+        {
+          borderColor,
+          shadowColor: colors.primary,
+          shadowOpacity,
+          shadowOffset: { width: 0, height: 4 },
+          shadowRadius: 14,
+        },
+        isFocused && styles.inputFocused,
+      ]}>
+        <View style={[styles.inputIconWrap, isFocused && styles.inputIconWrapActive]}>
+          <Text style={styles.inputIcon}>{icon}</Text>
+        </View>
+        <TextInput
+          style={styles.input}
+          value={value}
+          onChangeText={onChangeText}
+          placeholder={placeholder}
+          placeholderTextColor={colors.textLight}
+          onFocus={() => setFocusedField(fieldName)}
+          onBlur={() => setFocusedField(null)}
+          {...props}
+        />
+      </Animated.View>
     </View>
-  </View>
-);
+  );
+};
 
 const RegisterScreen = ({ navigation }) => {
   const { register } = useAuth();
@@ -58,16 +91,33 @@ const RegisterScreen = ({ navigation }) => {
   const [role, setRole] = useState('user');
   const [loading, setLoading] = useState(false);
   const [focusedField, setFocusedField] = useState(null);
+
+  // Animations
   const slideAnim = useRef(new Animated.Value(0)).current;
+  const fadeSectionAnim = useRef(new Animated.Value(1)).current;
+  const headerScale = useRef(new Animated.Value(0.9)).current;
+  const headerFade = useRef(new Animated.Value(0)).current;
+  const ctaBtnScale = useRef(new Animated.Value(1)).current;
+
+  useEffect(() => {
+    Animated.parallel([
+      Animated.timing(headerFade, { toValue: 1, duration: 600, useNativeDriver: true }),
+      Animated.spring(headerScale, { toValue: 1, tension: 45, friction: 8, useNativeDriver: true }),
+    ]).start();
+  }, []);
 
   const animateStep = (nextStep) => {
     const direction = nextStep > step ? 1 : -1;
-    Animated.sequence([
-      Animated.timing(slideAnim, { toValue: -direction * 30, duration: 120, useNativeDriver: true }),
-      Animated.timing(slideAnim, { toValue: 0, duration: 0, useNativeDriver: true }),
+    Animated.parallel([
+      Animated.timing(fadeSectionAnim, { toValue: 0, duration: 120, useNativeDriver: true }),
+      Animated.timing(slideAnim, { toValue: -direction * 40, duration: 120, useNativeDriver: true }),
     ]).start(() => {
       setStep(nextStep);
-      Animated.timing(slideAnim, { toValue: 0, duration: 200, useNativeDriver: true }).start();
+      slideAnim.setValue(direction * 40);
+      Animated.parallel([
+        Animated.timing(fadeSectionAnim, { toValue: 1, duration: 250, useNativeDriver: true }),
+        Animated.spring(slideAnim, { toValue: 0, tension: 50, friction: 9, useNativeDriver: true }),
+      ]).start();
     });
   };
 
@@ -92,7 +142,6 @@ const RegisterScreen = ({ navigation }) => {
         }
         return true;
       case 1:
-        // City/postal code are optional
         return true;
       case 2:
         return true;
@@ -117,8 +166,6 @@ const RegisterScreen = ({ navigation }) => {
   };
 
   const handleCommencer = async () => {
-    // Register the user — on success, AuthContext sets user
-    // and AppNavigator auto-switches to the main app
     setLoading(true);
     const address = (city || postalCode) ? {
       city: city.trim(),
@@ -138,56 +185,68 @@ const RegisterScreen = ({ navigation }) => {
     if (!result.success) {
       showAlert('Erreur', result.error);
     }
-    // On success, AuthContext sets user → AppNavigator shows TabNavigator
+  };
+
+  const animateButtonPress = (callback) => {
+    Animated.sequence([
+      Animated.timing(ctaBtnScale, { toValue: 0.94, duration: 70, useNativeDriver: true }),
+      Animated.spring(ctaBtnScale, { toValue: 1, tension: 300, friction: 10, useNativeDriver: true }),
+    ]).start();
+    callback();
+  };
+
+  const getPasswordStrength = () => {
+    if (password.length === 0) return null;
+    if (password.length < 6) return { label: 'Faible', color: colors.error, width: '33%' };
+    if (password.length < 10) return { label: 'Moyen', color: colors.warning, width: '66%' };
+    return { label: 'Fort', color: colors.success, width: '100%' };
   };
 
   const renderStep0 = () => (
     <>
-      <InputField
+      <PremiumInput
         label="Nom complet" icon="👤" fieldName="name"
         value={name} onChangeText={setName} placeholder="Ton prenom et nom"
-        focusedField={focusedField} setFocusedField={setFocusedField}
+        isFocused={focusedField === 'name'} setFocusedField={setFocusedField}
         autoCapitalize="words"
       />
-      <InputField
+      <PremiumInput
         label="Email" icon="📧" fieldName="email"
         value={email} onChangeText={setEmail} placeholder="ton@email.com"
-        focusedField={focusedField} setFocusedField={setFocusedField}
+        isFocused={focusedField === 'email'} setFocusedField={setFocusedField}
         keyboardType="email-address" autoCapitalize="none"
       />
-      <InputField
+      <PremiumInput
         label="Telephone (optionnel)" icon="📱" fieldName="phone"
         value={phone} onChangeText={setPhone} placeholder="06 12 34 56 78"
-        focusedField={focusedField} setFocusedField={setFocusedField}
+        isFocused={focusedField === 'phone'} setFocusedField={setFocusedField}
         keyboardType="phone-pad"
       />
-      <InputField
+      <PremiumInput
         label="Mot de passe" icon="🔒" fieldName="password"
         value={password} onChangeText={setPassword} placeholder="Minimum 6 caracteres"
-        focusedField={focusedField} setFocusedField={setFocusedField}
+        isFocused={focusedField === 'password'} setFocusedField={setFocusedField}
         secureTextEntry
       />
-      <InputField
+      <PremiumInput
         label="Confirmer" icon="🔐" fieldName="confirm"
         value={confirmPassword} onChangeText={setConfirmPassword} placeholder="Retape ton mot de passe"
-        focusedField={focusedField} setFocusedField={setFocusedField}
+        isFocused={focusedField === 'confirm'} setFocusedField={setFocusedField}
         secureTextEntry
       />
-      {password.length > 0 && (
+      {getPasswordStrength() && (
         <View style={styles.strengthRow}>
           <View style={styles.strengthBar}>
-            <View style={[
+            <Animated.View style={[
               styles.strengthFill,
               {
-                width: password.length < 6 ? '33%' : password.length < 10 ? '66%' : '100%',
-                backgroundColor: password.length < 6 ? colors.error : password.length < 10 ? colors.warning : colors.success,
+                width: getPasswordStrength().width,
+                backgroundColor: getPasswordStrength().color,
               }
             ]} />
           </View>
-          <Text style={[styles.strengthText, {
-            color: password.length < 6 ? colors.error : password.length < 10 ? colors.warning : colors.success
-          }]}>
-            {password.length < 6 ? 'Faible' : password.length < 10 ? 'Moyen' : 'Fort'}
+          <Text style={[styles.strengthText, { color: getPasswordStrength().color }]}>
+            {getPasswordStrength().label}
           </Text>
         </View>
       )}
@@ -196,79 +255,101 @@ const RegisterScreen = ({ navigation }) => {
 
   const renderStep1 = () => (
     <>
-      <InputField
+      <PremiumInput
         label="Ville" icon="📍" fieldName="city"
         value={city} onChangeText={setCity} placeholder="Ex: Asnieres-sur-Seine"
-        focusedField={focusedField} setFocusedField={setFocusedField}
+        isFocused={focusedField === 'city'} setFocusedField={setFocusedField}
         autoCapitalize="words"
       />
-      <InputField
+      <PremiumInput
         label="Code postal" icon="🏠" fieldName="postalCode"
         value={postalCode} onChangeText={setPostalCode} placeholder="Ex: 92600"
-        focusedField={focusedField} setFocusedField={setFocusedField}
+        isFocused={focusedField === 'postalCode'} setFocusedField={setFocusedField}
         keyboardType="number-pad" maxLength={5}
       />
-      <View style={styles.optionalNote}>
-        <Text style={styles.optionalText}>
-          Ces informations sont optionnelles mais permettent de trouver des gardiens pres de chez toi.
-        </Text>
+      <View style={styles.infoCard}>
+        <LinearGradient
+          colors={['#EFF6FF', '#F0F4FF']}
+          style={styles.infoCardGradient}
+        >
+          <Text style={styles.infoIcon}>{'💡'}</Text>
+          <Text style={styles.infoText}>
+            Ces informations sont optionnelles mais permettent de trouver des gardiens pres de chez toi.
+          </Text>
+        </LinearGradient>
       </View>
     </>
   );
 
   const renderStep2 = () => (
     <View style={styles.rolesContainer}>
-      {ROLES.map((r) => (
-        <TouchableOpacity
-          key={r.value}
-          style={[styles.roleCard, role === r.value && styles.roleCardActive]}
-          onPress={() => setRole(r.value)}
-          activeOpacity={0.7}
-        >
-          <View style={styles.roleCardInner}>
-            <Text style={styles.roleIcon}>{r.icon}</Text>
-            <View style={styles.roleTextWrap}>
-              <Text style={[styles.roleLabel, role === r.value && styles.roleLabelActive]}>{r.label}</Text>
-              <Text style={styles.roleDesc}>{r.desc}</Text>
+      {ROLES.map((r, index) => {
+        const isActive = role === r.value;
+        return (
+          <TouchableOpacity
+            key={r.value}
+            style={[styles.roleCard, isActive && styles.roleCardActive]}
+            onPress={() => setRole(r.value)}
+            activeOpacity={0.8}
+          >
+            {isActive && (
+              <LinearGradient
+                colors={['rgba(255,107,53,0.08)', 'rgba(255,107,53,0.03)']}
+                style={StyleSheet.absoluteFill}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+              />
+            )}
+            <View style={styles.roleCardInner}>
+              <View style={[styles.roleIconWrap, isActive && styles.roleIconWrapActive]}>
+                <Text style={styles.roleIcon}>{r.icon}</Text>
+              </View>
+              <View style={styles.roleTextWrap}>
+                <Text style={[styles.roleLabel, isActive && styles.roleLabelActive]}>{r.label}</Text>
+                <Text style={styles.roleDesc}>{r.desc}</Text>
+              </View>
+              <View style={[styles.radioOuter, isActive && styles.radioOuterActive]}>
+                {isActive && (
+                  <View style={styles.radioInner}>
+                    <Text style={styles.radioCheck}>{'\u2713'}</Text>
+                  </View>
+                )}
+              </View>
             </View>
-            <View style={[styles.radioOuter, role === r.value && styles.radioOuterActive]}>
-              {role === r.value && <View style={styles.radioInner} />}
-            </View>
-          </View>
-        </TouchableOpacity>
-      ))}
+          </TouchableOpacity>
+        );
+      })}
     </View>
   );
 
   const renderStep3 = () => (
     <View style={styles.summaryContainer}>
-      <View style={styles.checkCircle}>
-        <Text style={styles.checkIcon}>✓</Text>
-      </View>
+      <LinearGradient
+        colors={[colors.secondary, colors.secondaryLight]}
+        style={styles.checkCircle}
+      >
+        <Text style={styles.checkIcon}>{'\u2713'}</Text>
+      </LinearGradient>
       <Text style={styles.welcomeTitle}>Bienvenue sur Patoune !</Text>
       <Text style={styles.welcomeSub}>Tout est pret. Voici un resume de votre profil :</Text>
 
       <View style={styles.summaryCard}>
-        <View style={styles.summaryRow}>
-          <Text style={styles.summaryIcon}>👤</Text>
-          <Text style={styles.summaryValue}>{name}</Text>
-        </View>
-        <View style={styles.summaryRow}>
-          <Text style={styles.summaryIcon}>📧</Text>
-          <Text style={styles.summaryValue}>{email}</Text>
-        </View>
-        {(city || postalCode) ? (
-          <View style={styles.summaryRow}>
-            <Text style={styles.summaryIcon}>📍</Text>
-            <Text style={styles.summaryValue}>
-              {city}{city && postalCode ? ' ' : ''}{postalCode ? `(${postalCode})` : ''}
-            </Text>
+        {[
+          { icon: '👤', value: name },
+          { icon: '📧', value: email },
+          ...(city || postalCode ? [{ icon: '📍', value: `${city}${city && postalCode ? ' ' : ''}${postalCode ? `(${postalCode})` : ''}` }] : []),
+          { icon: '🏷️', value: ROLES.find(r => r.value === role)?.label },
+        ].map((item, i, arr) => (
+          <View key={i}>
+            <View style={styles.summaryRow}>
+              <View style={styles.summaryIconWrap}>
+                <Text style={styles.summaryIcon}>{item.icon}</Text>
+              </View>
+              <Text style={styles.summaryValue}>{item.value}</Text>
+            </View>
+            {i < arr.length - 1 && <View style={styles.summaryDivider} />}
           </View>
-        ) : null}
-        <View style={styles.summaryRow}>
-          <Text style={styles.summaryIcon}>🏷️</Text>
-          <Text style={styles.summaryValue}>{ROLES.find(r => r.value === role)?.label}</Text>
-        </View>
+        ))}
       </View>
     </View>
   );
@@ -280,34 +361,64 @@ const RegisterScreen = ({ navigation }) => {
     <View style={styles.container}>
       <StatusBar barStyle="light-content" />
 
-      <LinearGradient
-        colors={['#FF6B35', '#FF8F65', '#FFB088']}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1 }}
-        style={styles.headerGradient}
-      >
-        <TouchableOpacity
-          onPress={handleBack}
-          style={styles.backBtn}
-          hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+      {/* Premium header with gradient */}
+      <Animated.View style={{ opacity: headerFade, transform: [{ scale: headerScale }] }}>
+        <LinearGradient
+          colors={['#E55A25', '#FF6B35', '#FF8F65']}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={styles.headerGradient}
         >
-          <Text style={styles.backIcon}>{step === 3 ? '' : '←'}</Text>
-        </TouchableOpacity>
-        <View style={styles.headerContent}>
-          <Text style={styles.headerTitle}>
-            {step === 3 ? '' : STEPS[step].title}
-          </Text>
-          <Text style={styles.headerSub}>
-            {step === 3 ? '' : STEPS[step].subtitle}
-          </Text>
-        </View>
-        <View style={styles.headerCurve} />
-      </LinearGradient>
+          {/* Decorative orbs in header */}
+          <View style={styles.headerOrb1} />
+          <View style={styles.headerOrb2} />
 
-      {/* Progress bar */}
+          {/* Back button */}
+          <TouchableOpacity
+            onPress={handleBack}
+            style={styles.backBtn}
+            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+          >
+            <Text style={styles.backIcon}>{step === 3 ? '' : '\u2190'}</Text>
+          </TouchableOpacity>
+
+          <View style={styles.headerContent}>
+            {step < 3 && (
+              <>
+                <View style={styles.stepBadge}>
+                  <Text style={styles.stepBadgeText}>{STEPS[step].icon}</Text>
+                </View>
+                <Text style={styles.headerTitle}>{STEPS[step].title}</Text>
+                <Text style={styles.headerSub}>{STEPS[step].subtitle}</Text>
+              </>
+            )}
+          </View>
+
+          <View style={styles.headerCurve} />
+        </LinearGradient>
+      </Animated.View>
+
+      {/* Premium progress indicator */}
       <View style={styles.progressContainer}>
-        <View style={styles.progressBar}>
-          <View style={[styles.progressFill, { width: `${((step + 1) / STEPS.length) * 100}%` }]} />
+        <View style={styles.progressSteps}>
+          {STEPS.map((s, i) => (
+            <View key={i} style={styles.progressStepWrap}>
+              {i > 0 && (
+                <View style={[styles.progressConnector, i <= step && styles.progressConnectorActive]} />
+              )}
+              <View style={[
+                styles.progressDot,
+                i < step && styles.progressDotCompleted,
+                i === step && styles.progressDotCurrent,
+              ]}>
+                {i < step ? (
+                  <Text style={styles.progressDotCheck}>{'\u2713'}</Text>
+                ) : i === step ? (
+                  <View style={styles.progressDotPulse} />
+                ) : null}
+              </View>
+            </View>
+          ))}
         </View>
         <Text style={styles.progressText}>Etape {step + 1} sur {STEPS.length}</Text>
       </View>
@@ -321,30 +432,44 @@ const RegisterScreen = ({ navigation }) => {
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
         >
-          <Animated.View style={{ transform: [{ translateX: slideAnim }] }}>
+          <Animated.View style={{
+            transform: [{ translateX: slideAnim }],
+            opacity: fadeSectionAnim,
+          }}>
             {stepContent[step]()}
           </Animated.View>
         </ScrollView>
       </KeyboardAvoidingView>
 
-      {/* Bottom CTA */}
+      {/* Premium bottom CTA */}
       <View style={styles.bottomCTA}>
-        {isLastStep ? (
-          <Button
-            title="Commencer"
-            onPress={handleCommencer}
-            loading={loading}
-            size="lg"
-            icon="→"
-          />
-        ) : (
-          <Button
-            title="Continuer"
-            onPress={handleNext}
-            size="lg"
-            icon="→"
-          />
-        )}
+        <Animated.View style={{ transform: [{ scale: ctaBtnScale }] }}>
+          <TouchableOpacity
+            onPress={() => animateButtonPress(isLastStep ? handleCommencer : handleNext)}
+            disabled={loading}
+            activeOpacity={1}
+          >
+            <LinearGradient
+              colors={loading ? ['#D1D5DB', '#C4C9D4'] : ['#E55A25', '#FF6B35', '#FF8F65']}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 0 }}
+              style={styles.premiumBtn}
+            >
+              {loading ? (
+                <ActivityIndicator color="#FFF" size="small" />
+              ) : (
+                <View style={styles.premiumBtnContent}>
+                  <Text style={styles.premiumBtnText}>
+                    {isLastStep ? 'Commencer' : 'Continuer'}
+                  </Text>
+                  <View style={styles.premiumBtnArrowWrap}>
+                    <Text style={styles.premiumBtnArrow}>{isLastStep ? '🚀' : '\u2192'}</Text>
+                  </View>
+                </View>
+              )}
+            </LinearGradient>
+          </TouchableOpacity>
+        </Animated.View>
 
         {step === 0 && (
           <TouchableOpacity
@@ -365,22 +490,43 @@ const RegisterScreen = ({ navigation }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.white,
+    backgroundColor: '#FAFBFC',
   },
+  // Header
   headerGradient: {
     paddingTop: Platform.OS === 'ios' ? 60 : 48,
-    paddingBottom: 44,
+    paddingBottom: 48,
     paddingHorizontal: 24,
     overflow: 'hidden',
+  },
+  headerOrb1: {
+    position: 'absolute',
+    width: 200,
+    height: 200,
+    borderRadius: 100,
+    backgroundColor: 'rgba(255,255,255,0.06)',
+    top: -60,
+    right: -40,
+  },
+  headerOrb2: {
+    position: 'absolute',
+    width: 140,
+    height: 140,
+    borderRadius: 70,
+    backgroundColor: 'rgba(255,255,255,0.04)',
+    bottom: 20,
+    left: -50,
   },
   backBtn: {
     width: 44,
     height: 44,
-    borderRadius: 22,
-    backgroundColor: 'rgba(255,255,255,0.25)',
+    borderRadius: 14,
+    backgroundColor: 'rgba(255,255,255,0.2)',
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: 14,
+    marginBottom: 16,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.15)',
   },
   backIcon: {
     fontSize: 22,
@@ -390,8 +536,20 @@ const styles = StyleSheet.create({
   headerContent: {
     zIndex: 1,
   },
+  stepBadge: {
+    width: 40,
+    height: 40,
+    borderRadius: 12,
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 12,
+  },
+  stepBadgeText: {
+    fontSize: 20,
+  },
   headerTitle: {
-    fontSize: 30,
+    fontSize: 32,
     fontWeight: '900',
     color: '#FFF',
     letterSpacing: -0.3,
@@ -401,6 +559,7 @@ const styles = StyleSheet.create({
     color: 'rgba(255,255,255,0.88)',
     marginTop: 6,
     fontWeight: '500',
+    lineHeight: 22,
   },
   headerCurve: {
     position: 'absolute',
@@ -408,70 +567,125 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     height: 28,
-    backgroundColor: colors.white,
+    backgroundColor: '#FAFBFC',
     borderTopLeftRadius: 28,
     borderTopRightRadius: 28,
   },
+  // Progress indicator
   progressContainer: {
     paddingHorizontal: 24,
-    paddingTop: 8,
-    paddingBottom: 4,
+    paddingTop: 4,
+    paddingBottom: 8,
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 12,
+    justifyContent: 'space-between',
   },
-  progressBar: {
+  progressSteps: {
+    flexDirection: 'row',
+    alignItems: 'center',
     flex: 1,
-    height: 6,
-    backgroundColor: colors.border,
-    borderRadius: 3,
-    overflow: 'hidden',
+    marginRight: 16,
   },
-  progressFill: {
-    height: '100%',
+  progressStepWrap: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+  },
+  progressConnector: {
+    flex: 1,
+    height: 3,
+    backgroundColor: colors.border,
+    borderRadius: 2,
+    marginHorizontal: 4,
+  },
+  progressConnectorActive: {
     backgroundColor: colors.primary,
-    borderRadius: 3,
+  },
+  progressDot: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: colors.background,
+    borderWidth: 2,
+    borderColor: colors.border,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  progressDotCompleted: {
+    backgroundColor: colors.primary,
+    borderColor: colors.primary,
+  },
+  progressDotCurrent: {
+    borderColor: colors.primary,
+    borderWidth: 3,
+    backgroundColor: '#FFF',
+  },
+  progressDotCheck: {
+    fontSize: 13,
+    color: '#FFF',
+    fontWeight: '800',
+  },
+  progressDotPulse: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: colors.primary,
   },
   progressText: {
-    fontSize: 13,
+    fontSize: 12,
     color: colors.textTertiary,
-    fontWeight: '600',
+    fontWeight: '700',
+    letterSpacing: 0.3,
   },
+  // Form
   formWrapper: {
     flex: 1,
   },
   scroll: {
     paddingHorizontal: 24,
-    paddingTop: 16,
+    paddingTop: 20,
     paddingBottom: 24,
   },
+  // Input fields
   fieldGroup: {
-    marginBottom: 18,
+    marginBottom: 20,
   },
   label: {
-    fontSize: 15,
+    fontSize: 12,
     fontWeight: '700',
-    color: colors.text,
-    marginBottom: 9,
-    marginLeft: 2,
+    color: colors.textSecondary,
+    marginBottom: 8,
+    marginLeft: 4,
+    letterSpacing: 1.2,
+    textTransform: 'uppercase',
   },
   inputWrapper: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: colors.background,
+    backgroundColor: '#FFF',
     borderRadius: RADIUS.lg,
-    borderWidth: 2,
+    borderWidth: 1.5,
     borderColor: colors.border,
-    paddingHorizontal: 16,
-    height: 60,
+    paddingHorizontal: 6,
+    height: 64,
   },
   inputFocused: {
-    borderColor: colors.primary,
+    backgroundColor: '#FFF',
+  },
+  inputIconWrap: {
+    width: 46,
+    height: 46,
+    borderRadius: 14,
     backgroundColor: colors.primarySoft,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 12,
+  },
+  inputIconWrapActive: {
+    backgroundColor: '#FFE8DB',
   },
   inputIcon: {
-    fontSize: 20,
-    marginRight: 12,
+    fontSize: 18,
   },
   input: {
     flex: 1,
@@ -480,15 +694,18 @@ const styles = StyleSheet.create({
     paddingVertical: 0,
     fontWeight: '500',
   },
+  // Password strength
   strengthRow: {
     flexDirection: 'row',
     alignItems: 'center',
     marginBottom: 8,
-    gap: 10,
+    marginTop: -8,
+    gap: 12,
+    paddingHorizontal: 4,
   },
   strengthBar: {
     flex: 1,
-    height: 5,
+    height: 6,
     backgroundColor: colors.border,
     borderRadius: 3,
     overflow: 'hidden',
@@ -498,51 +715,80 @@ const styles = StyleSheet.create({
     borderRadius: 3,
   },
   strengthText: {
-    fontSize: 13,
-    fontWeight: '700',
+    fontSize: 12,
+    fontWeight: '800',
+    letterSpacing: 0.5,
+    textTransform: 'uppercase',
   },
-  optionalNote: {
-    backgroundColor: colors.infoSoft,
-    padding: 16,
-    borderRadius: RADIUS.md,
+  // Info card
+  infoCard: {
     marginTop: 8,
+    borderRadius: RADIUS.lg,
+    overflow: 'hidden',
   },
-  optionalText: {
+  infoCardGradient: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    padding: 18,
+  },
+  infoIcon: {
+    fontSize: 18,
+    marginRight: 12,
+    marginTop: 1,
+  },
+  infoText: {
+    flex: 1,
     fontSize: 14,
     color: colors.info,
-    lineHeight: 20,
+    lineHeight: 21,
+    fontWeight: '500',
   },
   // Role cards
   rolesContainer: {
-    gap: 14,
+    gap: 16,
   },
   roleCard: {
-    backgroundColor: colors.background,
-    borderRadius: RADIUS.lg,
+    backgroundColor: '#FFF',
+    borderRadius: RADIUS.xl,
     borderWidth: 2,
     borderColor: colors.border,
-    padding: 18,
+    padding: 20,
+    overflow: 'hidden',
   },
   roleCardActive: {
     borderColor: colors.primary,
-    backgroundColor: colors.primarySoft,
+    ...SHADOWS.md,
+    shadowColor: colors.primary,
+    shadowOpacity: 0.15,
   },
   roleCardInner: {
     flexDirection: 'row',
     alignItems: 'center',
   },
+  roleIconWrap: {
+    width: 52,
+    height: 52,
+    borderRadius: 16,
+    backgroundColor: colors.primarySoft,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 16,
+  },
+  roleIconWrapActive: {
+    backgroundColor: '#FFE0CC',
+  },
   roleIcon: {
-    fontSize: 32,
-    marginRight: 14,
+    fontSize: 26,
   },
   roleTextWrap: {
     flex: 1,
   },
   roleLabel: {
     fontSize: 17,
-    fontWeight: '700',
+    fontWeight: '800',
     color: colors.text,
     marginBottom: 3,
+    letterSpacing: -0.2,
   },
   roleLabelActive: {
     color: colors.primary,
@@ -550,92 +796,150 @@ const styles = StyleSheet.create({
   roleDesc: {
     fontSize: 14,
     color: colors.textSecondary,
+    lineHeight: 20,
   },
   radioOuter: {
-    width: 24,
-    height: 24,
-    borderRadius: 12,
+    width: 26,
+    height: 26,
+    borderRadius: 13,
     borderWidth: 2,
     borderColor: colors.border,
     alignItems: 'center',
     justifyContent: 'center',
-    marginLeft: 10,
+    marginLeft: 12,
   },
   radioOuterActive: {
     borderColor: colors.primary,
+    backgroundColor: colors.primary,
   },
   radioInner: {
-    width: 12,
-    height: 12,
-    borderRadius: 6,
-    backgroundColor: colors.primary,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  radioCheck: {
+    fontSize: 14,
+    color: '#FFF',
+    fontWeight: '800',
   },
   // Summary (step 4)
   summaryContainer: {
     alignItems: 'center',
-    paddingTop: 20,
+    paddingTop: 16,
   },
   checkCircle: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    backgroundColor: colors.secondary,
+    width: 88,
+    height: 88,
+    borderRadius: 44,
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 24,
+    ...SHADOWS.lg,
+    shadowColor: colors.secondary,
+    shadowOpacity: 0.3,
   },
   checkIcon: {
-    fontSize: 36,
+    fontSize: 40,
     color: '#FFF',
     fontWeight: '700',
   },
   welcomeTitle: {
-    fontSize: 26,
+    fontSize: 28,
     fontWeight: '900',
     color: colors.text,
     marginBottom: 8,
     textAlign: 'center',
+    letterSpacing: -0.5,
   },
   welcomeSub: {
     fontSize: 16,
     color: colors.textSecondary,
     textAlign: 'center',
     marginBottom: 28,
+    lineHeight: 24,
   },
   summaryCard: {
-    backgroundColor: colors.background,
-    borderRadius: RADIUS.lg,
-    padding: 20,
+    backgroundColor: '#FFF',
+    borderRadius: RADIUS.xl,
+    padding: 24,
     width: '100%',
-    gap: 16,
     borderWidth: 1,
-    borderColor: colors.border,
+    borderColor: colors.borderLight,
+    ...SHADOWS.md,
   },
   summaryRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 14,
+    paddingVertical: 4,
+  },
+  summaryIconWrap: {
+    width: 40,
+    height: 40,
+    borderRadius: 12,
+    backgroundColor: colors.primarySoft,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 14,
   },
   summaryIcon: {
-    fontSize: 20,
+    fontSize: 18,
   },
   summaryValue: {
+    flex: 1,
     fontSize: 16,
     color: colors.text,
-    fontWeight: '500',
+    fontWeight: '600',
+  },
+  summaryDivider: {
+    height: 1,
+    backgroundColor: colors.borderLight,
+    marginVertical: 14,
+    marginLeft: 54,
   },
   // Bottom CTA
   bottomCTA: {
     paddingHorizontal: 24,
-    paddingBottom: Platform.OS === 'ios' ? 34 : 24,
-    paddingTop: 12,
-    backgroundColor: colors.white,
+    paddingBottom: Platform.OS === 'ios' ? 36 : 24,
+    paddingTop: 14,
+    backgroundColor: '#FAFBFC',
     borderTopWidth: 1,
     borderTopColor: colors.borderLight,
   },
+  premiumBtn: {
+    height: 64,
+    borderRadius: RADIUS.lg,
+    alignItems: 'center',
+    justifyContent: 'center',
+    ...SHADOWS.lg,
+    shadowColor: '#E55A25',
+    shadowOpacity: 0.4,
+  },
+  premiumBtnContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  premiumBtnText: {
+    color: '#FFF',
+    fontSize: 18,
+    fontWeight: '800',
+    letterSpacing: 0.5,
+    marginRight: 10,
+  },
+  premiumBtnArrowWrap: {
+    width: 32,
+    height: 32,
+    borderRadius: 10,
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  premiumBtnArrow: {
+    color: '#FFF',
+    fontSize: 16,
+    fontWeight: '700',
+  },
   loginLink: {
     alignItems: 'center',
-    marginTop: 14,
+    marginTop: 16,
     paddingVertical: 14,
   },
   loginText: {
