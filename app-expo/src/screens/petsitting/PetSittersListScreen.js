@@ -268,7 +268,7 @@ const PetSittersListScreen = ({ navigation }) => {
   const [searchFocused, setSearchFocused] = useState(false);
   const scrollY = useRef(new Animated.Value(0)).current;
 
-  const { location, city, loading: locationLoading, requestLocation } = useLocation();
+  const { location, city, loading: locationLoading, error: locationError, requestLocation } = useLocation();
 
   useEffect(() => {
     requestLocation();
@@ -375,7 +375,7 @@ const PetSittersListScreen = ({ navigation }) => {
               color={city ? colors.white : 'rgba(255,255,255,0.6)'}
             />
             <Text style={styles.locationText} numberOfLines={1}>
-              {locationLoading ? 'Localisation...' : city || 'Localiser'}
+              {locationLoading ? 'Localisation...' : city || (locationError ? 'Reessayer' : 'Localiser')}
             </Text>
           </TouchableOpacity>
         </View>
