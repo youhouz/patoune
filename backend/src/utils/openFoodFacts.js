@@ -9,6 +9,27 @@ const { calculateScore } = require('./scoreCalculator');
 const OFF_API = 'https://world.openfoodfacts.org/api/v2/product';
 const OPFF_API = 'https://world.openpetfoodfacts.org/api/v2/product';
 
+// Lists for risk classification (mirrors scoreCalculator)
+const CONTROVERSIAL_INGREDIENTS = [
+  'sous-produits animaux', 'farine animale', 'bha', 'bht', 'ethoxyquin',
+  'propylene glycol', 'colorant', 'sucre', 'sel ajouté', 'sel ajoute', 'maïs', 'mais',
+  'blé', 'ble', 'soja', 'gluten', 'carraghénane', 'carraghenane',
+  'by-products', 'animal meal', 'corn', 'wheat', 'soy', 'sugar', 'salt',
+  'propylene', 'colorant', 'carrageenan'
+];
+
+const DANGEROUS_ADDITIVES = [
+  'E320', 'E321', 'E324', 'E310', 'E311', 'E312',
+  'E102', 'E110', 'E124', 'E129', 'E131', 'E133',
+  'E250', 'E251', 'E252'
+];
+
+const MODERATE_ADDITIVES = [
+  'E200', 'E202', 'E211', 'E212',
+  'E330', 'E331', 'E332',
+  'E414', 'E415', 'E440'
+];
+
 /**
  * Recherche un produit sur Open Pet Food Facts puis Open Food Facts
  * @param {string} barcode
@@ -42,27 +63,47 @@ async function fetchProductFromOpenFoodFacts(barcode) {
  * Formate les donnees Open Food Facts vers notre schema Product
  */
 function formatProduct(offProduct, barcode, source) {
-  // Extraire les ingredients
+  // Extraire les ingredients avec classification des risques
   const ingredients = [];
   if (offProduct.ingredients) {
     offProduct.ingredients.slice(0, 15).forEach((ing) => {
+      const name = (ing.text || ing.id || 'Inconnu');
+      const nameLower = name.toLowerCase();
+      const isControversial = CONTROVERSIAL_INGREDIENTS.some(c => nameLower.includes(c));
       ingredients.push({
-        name: ing.text || ing.id || 'Inconnu',
-        isControversial: false,
-        risk: 'safe',
+        name,
+        isControversial,
+        risk: isControversial ? 'dangerous' : 'safe',
+      });
+    });
+  }
+  // Also check ingredients_text if structured ingredients are missing
+  if (ingredients.length === 0 && offProduct.ingredients_text) {
+    offProduct.ingredients_text.split(/[,;]/).slice(0, 15).forEach((text) => {
+      const name = text.trim();
+      if (!name) return;
+      const nameLower = name.toLowerCase();
+      const isControversial = CONTROVERSIAL_INGREDIENTS.some(c => nameLower.includes(c));
+      ingredients.push({
+        name,
+        isControversial,
+        risk: isControversial ? 'dangerous' : 'safe',
       });
     });
   }
 
-  // Extraire les additifs
+  // Extraire les additifs avec classification precise
   const additives = [];
   if (offProduct.additives_tags) {
     offProduct.additives_tags.forEach((additive) => {
       const code = additive.replace('en:', '').toUpperCase();
+      let risk = 'safe';
+      if (DANGEROUS_ADDITIVES.includes(code)) risk = 'dangerous';
+      else if (MODERATE_ADDITIVES.includes(code)) risk = 'moderate';
       additives.push({
-        code: code,
+        code,
         name: code,
-        risk: 'moderate', // Par defaut, a affiner
+        risk,
       });
     });
   }
