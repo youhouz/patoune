@@ -1,11 +1,12 @@
 import React, { useState, useRef } from 'react';
 import {
   View, Text, TextInput, TouchableOpacity,
-  StyleSheet, KeyboardAvoidingView, Platform, ScrollView, Alert,
+  StyleSheet, KeyboardAvoidingView, Platform, ScrollView,
   Animated, StatusBar, Dimensions
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useAuth } from '../../context/AuthContext';
+import { showAlert } from '../../utils/alert';
 import Button from '../../components/Button';
 const colors = require('../../utils/colors');
 const { SHADOWS, RADIUS, SPACING } = require('../../utils/colors');
@@ -22,14 +23,14 @@ const LoginScreen = ({ navigation }) => {
 
   const handleLogin = async () => {
     if (!email || !password) {
-      Alert.alert('Oups !', 'Remplis tous les champs pour continuer');
+      showAlert('Oups !', 'Remplis tous les champs pour continuer');
       return;
     }
     setLoading(true);
     const result = await login(email.trim().toLowerCase(), password);
     setLoading(false);
     if (!result.success) {
-      Alert.alert('Connexion impossible', result.error);
+      showAlert('Connexion impossible', result.error);
     }
   };
 

@@ -85,14 +85,15 @@ const TabNavigator = () => (
       tabBarActiveTintColor: colors.primary,
       tabBarInactiveTintColor: colors.textLight,
       tabBarStyle: {
-        height: Platform.OS === 'ios' ? 86 : 68,
-        paddingBottom: Platform.OS === 'ios' ? 22 : 6,
+        height: Platform.OS === 'ios' ? 86 : Platform.OS === 'web' ? 64 : 68,
+        paddingBottom: Platform.OS === 'ios' ? 22 : Platform.OS === 'web' ? 8 : 6,
         paddingTop: 6,
         backgroundColor: colors.white,
         borderTopWidth: 1,
         borderTopColor: colors.borderLight,
         ...SHADOWS.lg,
       },
+      tabBarAccessibilityLabel: route.name,
     })}
   >
     <Tab.Screen name="Accueil" component={HomeScreen} />

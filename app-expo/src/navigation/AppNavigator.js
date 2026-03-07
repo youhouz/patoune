@@ -1,10 +1,15 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { NavigationContainer } from '@react-navigation/native';
-import { View, Text, StyleSheet, StatusBar, Animated } from 'react-native';
+import { View, Text, StyleSheet, StatusBar, Animated, Platform } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useAuth } from '../context/AuthContext';
 import AuthNavigator from './AuthNavigator';
 import TabNavigator from './TabNavigator';
+import OnboardingScreen from '../screens/OnboardingScreen';
+import PWAInstallBanner from '../components/PWAInstallBanner';
+
+const ONBOARDING_KEY = 'onboarding_completed';
 
 // ─── Animated Splash Screen ──────────────────────────────
 const SplashLoader = () => {
@@ -70,13 +75,34 @@ const SplashLoader = () => {
 // ─── App Navigator ───────────────────────────────────────
 const AppNavigator = () => {
   const { user, loading } = useAuth();
+  const [showOnboarding, setShowOnboarding] = useState(null); // null = loading
 
-  if (loading) return <SplashLoader />;
+  useEffect(() => {
+    AsyncStorage.getItem(ONBOARDING_KEY).then((val) => {
+      setShowOnboarding(!val);
+    });
+  }, []);
+
+  const handleOnboardingComplete = async () => {
+    await AsyncStorage.setItem(ONBOARDING_KEY, 'true');
+    setShowOnboarding(false);
+  };
+
+  if (loading || showOnboarding === null) return <SplashLoader />;
+
+  // Show onboarding for first-time visitors (not logged in)
+  if (showOnboarding && !user) {
+    return <OnboardingScreen onComplete={handleOnboardingComplete} />;
+  }
 
   return (
-    <NavigationContainer>
-      {user ? <TabNavigator /> : <AuthNavigator />}
-    </NavigationContainer>
+    <View style={{ flex: 1 }}>
+      <NavigationContainer>
+        {user ? <TabNavigator /> : <AuthNavigator />}
+      </NavigationContainer>
+      {/* PWA install banner — only shows on web when conditions are met */}
+      <PWAInstallBanner />
+    </View>
   );
 };
 

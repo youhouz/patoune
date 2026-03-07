@@ -4,7 +4,7 @@ import {
   TouchableOpacity, TextInput, Platform, Animated, RefreshControl,
   StatusBar, Dimensions, Image,
 } from 'react-native';
-import { Feather } from '@expo/vector-icons';
+import { Feather, FontAwesome } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { searchPetSittersAPI } from '../../api/petsitters';
@@ -16,20 +16,22 @@ const { SHADOWS, RADIUS, SPACING, FONT_SIZE } = require('../../utils/colors');
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
 const ANIMAL_FILTERS = [
-  { key: 'Tous', icon: 'heart', label: 'Tous' },
-  { key: 'Chien', icon: 'gitlab', label: 'Chiens' },
-  { key: 'Chat', icon: 'github', label: 'Chats' },
-  { key: 'Rongeur', icon: 'mouse-pointer', label: 'Rongeurs' },
-  { key: 'Oiseau', icon: 'feather', label: 'Oiseaux' },
-  { key: 'Reptile', icon: 'zap', label: 'Reptiles' },
+  { key: 'Tous', emoji: '❤️', label: 'Tous' },
+  { key: 'Chien', emoji: '🐕', label: 'Chiens' },
+  { key: 'Chat', emoji: '🐈', label: 'Chats' },
+  { key: 'Rongeur', emoji: '🐹', label: 'Rongeurs' },
+  { key: 'Oiseau', emoji: '🐦', label: 'Oiseaux' },
+  { key: 'Reptile', emoji: '🦎', label: 'Reptiles' },
 ];
 
-const ANIMAL_ICON_MAP = {
-  chien: 'gitlab',
-  chat: 'github',
-  rongeur: 'mouse-pointer',
-  oiseau: 'feather',
-  reptile: 'zap',
+const ANIMAL_EMOJI_MAP = {
+  chien: '🐕',
+  chat: '🐈',
+  rongeur: '🐹',
+  oiseau: '🐦',
+  reptile: '🦎',
+  poisson: '🐟',
+  autre: '🐾',
 };
 
 const RADIUS_FILTERS = [
@@ -45,10 +47,12 @@ const StarRating = ({ rating, size = 14 }) => {
   const fullStars = Math.floor(rating || 0);
   const hasHalf = (rating || 0) - fullStars >= 0.5;
   for (let i = 0; i < 5; i++) {
-    if (i < fullStars || (i === fullStars && hasHalf)) {
-      stars.push(<Feather key={i} name="star" size={size} color="#F59E0B" />);
+    if (i < fullStars) {
+      stars.push(<FontAwesome key={i} name="star" size={size} color="#F59E0B" />);
+    } else if (i === fullStars && hasHalf) {
+      stars.push(<FontAwesome key={i} name="star-half-full" size={size} color="#F59E0B" />);
     } else {
-      stars.push(<Feather key={i} name="star" size={size} color={colors.border} />);
+      stars.push(<FontAwesome key={i} name="star-o" size={size} color={colors.border} />);
     }
   }
   return <View style={{ flexDirection: 'row', alignItems: 'center', gap: 1 }}>{stars}</View>;
@@ -149,6 +153,8 @@ const PetSitterCard = ({ petsitter, onPress, index }) => {
         onPressIn={onPressIn}
         onPressOut={onPressOut}
         activeOpacity={1}
+        accessibilityRole="button"
+        accessibilityLabel={`${petsitter.user?.name || 'Gardien'}, ${petsitter.rating?.toFixed(1) || 0} etoiles, ${priceDisplay} euros par jour`}
       >
         <View style={styles.cardContent}>
           {/* Avatar */}
@@ -223,11 +229,9 @@ const PetSitterCard = ({ petsitter, onPress, index }) => {
             <View style={styles.animalTags}>
               {petsitter.acceptedAnimals?.slice(0, 4).map((animal, idx) => (
                 <View key={idx} style={styles.animalTag}>
-                  <Feather
-                    name={ANIMAL_ICON_MAP[animal.toLowerCase()] || 'heart'}
-                    size={11}
-                    color={colors.primary}
-                  />
+                  <Text style={styles.animalTagEmoji}>
+                    {ANIMAL_EMOJI_MAP[animal.toLowerCase()] || '🐾'}
+                  </Text>
                   <Text style={styles.animalTagText}>
                     {animal.charAt(0).toUpperCase() + animal.slice(1)}
                   </Text>
@@ -268,7 +272,7 @@ const PetSittersListScreen = ({ navigation }) => {
   const [searchFocused, setSearchFocused] = useState(false);
   const scrollY = useRef(new Animated.Value(0)).current;
 
-  const { location, city, loading: locationLoading, requestLocation } = useLocation();
+  const { location, city, loading: locationLoading, error: locationError, requestLocation } = useLocation();
 
   useEffect(() => {
     requestLocation();
@@ -332,14 +336,14 @@ const PetSittersListScreen = ({ navigation }) => {
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 0 }}
           >
-            <Feather name={item.icon} size={15} color={colors.white} />
+            <Text style={styles.filterEmoji}>{item.emoji}</Text>
             <Text style={[styles.filterText, styles.filterTextActive]}>
               {item.label}
             </Text>
           </LinearGradient>
         ) : (
           <View style={styles.filterChipInner}>
-            <Feather name={item.icon} size={15} color={colors.textSecondary} />
+            <Text style={styles.filterEmoji}>{item.emoji}</Text>
             <Text style={styles.filterText}>{item.label}</Text>
           </View>
         )}
@@ -375,7 +379,7 @@ const PetSittersListScreen = ({ navigation }) => {
               color={city ? colors.white : 'rgba(255,255,255,0.6)'}
             />
             <Text style={styles.locationText} numberOfLines={1}>
-              {locationLoading ? 'Localisation...' : city || 'Localiser'}
+              {locationLoading ? 'Localisation...' : city || (locationError ? 'Reessayer' : 'Localiser')}
             </Text>
           </TouchableOpacity>
         </View>
@@ -438,6 +442,17 @@ const PetSittersListScreen = ({ navigation }) => {
             );
           })}
         </View>
+      )}
+
+      {/* Location error banner */}
+      {locationError && !location && (
+        <TouchableOpacity style={styles.locationErrorBanner} onPress={requestLocation} activeOpacity={0.7}>
+          <Feather name="alert-circle" size={16} color={colors.warning} />
+          <Text style={styles.locationErrorText}>
+            Localisation indisponible. Appuyez pour reessayer.
+          </Text>
+          <Feather name="refresh-cw" size={14} color={colors.warning} />
+        </TouchableOpacity>
       )}
 
       {/* Results count */}
@@ -658,6 +673,9 @@ const styles = StyleSheet.create({
     paddingVertical: SPACING.sm + 2,
     gap: SPACING.xs,
   },
+  filterEmoji: {
+    fontSize: 15,
+  },
   filterText: {
     fontSize: FONT_SIZE.sm,
     fontFamily: FONTS.bodySemiBold,
@@ -697,6 +715,27 @@ const styles = StyleSheet.create({
   },
   radiusPillTextActive: {
     color: colors.secondary,
+  },
+
+  // Location error
+  locationErrorBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: colors.warningSoft,
+    marginHorizontal: SPACING.base,
+    marginTop: SPACING.sm,
+    paddingHorizontal: SPACING.base,
+    paddingVertical: SPACING.md,
+    borderRadius: RADIUS.lg,
+    gap: SPACING.sm,
+    borderWidth: 1,
+    borderColor: colors.warning + '30',
+  },
+  locationErrorText: {
+    flex: 1,
+    fontSize: FONT_SIZE.sm,
+    fontFamily: FONTS.bodyMedium,
+    color: colors.warning,
   },
 
   // Results count
@@ -860,6 +899,9 @@ const styles = StyleSheet.create({
   },
   animalTagMore: {
     backgroundColor: colors.background,
+  },
+  animalTagEmoji: {
+    fontSize: 11,
   },
   animalTagText: {
     fontSize: FONT_SIZE.xs,

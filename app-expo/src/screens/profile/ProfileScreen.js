@@ -110,6 +110,12 @@ const ProfileScreen = ({ navigation }) => {
   };
 
   const handleLogout = () => {
+    if (Platform.OS === 'web') {
+      if (window.confirm('Voulez-vous vraiment vous deconnecter ?')) {
+        logout();
+      }
+      return;
+    }
     Alert.alert(
       'Deconnexion',
       'Voulez-vous vraiment vous deconnecter ?',
@@ -294,6 +300,8 @@ const ProfileScreen = ({ navigation }) => {
             style={styles.logoutButton}
             onPress={handleLogout}
             activeOpacity={0.6}
+            accessibilityRole="button"
+            accessibilityLabel="Se deconnecter"
           >
             <Text style={styles.logoutIcon}>🚪</Text>
             <Text style={styles.logoutText}>Se deconnecter</Text>
@@ -306,7 +314,7 @@ const ProfileScreen = ({ navigation }) => {
             <Text style={styles.footerPaw}>🐾</Text>
             <Text style={styles.footerText}>patoune</Text>
           </View>
-          <Text style={styles.footerVersion}>v1.0.0 — Le meilleur pour vos animaux</Text>
+          <Text style={styles.footerVersion}>v2.0.0 — Le meilleur pour vos animaux</Text>
         </View>
 
         <View style={styles.bottomSpacer} />

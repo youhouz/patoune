@@ -16,7 +16,8 @@
       "supportsTablet": true,
       "bundleIdentifier": "com.patoune.app",
       "infoPlist": {
-        "NSCameraUsageDescription": "Patoune utilise la camera pour scanner les codes-barres des produits pour animaux"
+        "NSCameraUsageDescription": "Patoune utilise la camera pour scanner les codes-barres des produits pour animaux",
+        "NSLocationWhenInUseUsageDescription": "Patoune utilise ta position pour trouver des gardiens pres de chez toi"
       }
     },
     "android": {
@@ -26,7 +27,7 @@
       },
       "edgeToEdgeEnabled": true,
       "package": "com.patoune.app",
-      "permissions": ["CAMERA"]
+      "permissions": ["CAMERA", "ACCESS_FINE_LOCATION", "ACCESS_COARSE_LOCATION"]
     },
     "web": {
       "favicon": "./assets/favicon.png",
@@ -46,6 +47,12 @@
         "expo-camera",
         {
           "cameraPermission": "Patoune utilise la camera pour scanner les codes-barres des produits pour animaux"
+        }
+      ],
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "Patoune utilise ta position pour trouver des gardiens pres de chez toi"
         }
       ]
     ]

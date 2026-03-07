@@ -6,7 +6,6 @@ import {
   TouchableOpacity,
   StyleSheet,
   ActivityIndicator,
-  Alert,
   Platform,
   StatusBar,
   Animated,
@@ -15,6 +14,7 @@ import {
 import { LinearGradient } from 'expo-linear-gradient';
 import { useFocusEffect } from '@react-navigation/native';
 import { getMyPetsAPI, deletePetAPI } from '../../api/pets';
+import { showAlert } from '../../utils/alert';
 const colors = require('../../utils/colors');
 const { SHADOWS, RADIUS, SPACING, FONT_SIZE } = require('../../utils/colors');
 
@@ -82,7 +82,7 @@ const MyPetsScreen = ({ navigation }) => {
   }, []);
 
   const handleDelete = (pet) => {
-    Alert.alert(
+    showAlert(
       'Supprimer cet animal',
       `Etes-vous sur de vouloir supprimer ${pet.name} ?\nCette action est irreversible.`,
       [
@@ -96,7 +96,7 @@ const MyPetsScreen = ({ navigation }) => {
               await deletePetAPI(pet._id);
               setPets((prev) => prev.filter((p) => p._id !== pet._id));
             } catch (err) {
-              Alert.alert('Erreur', 'Impossible de supprimer cet animal. Reessayez.');
+              showAlert('Erreur', 'Impossible de supprimer cet animal. Reessayez.');
             } finally {
               setDeletingId(null);
             }

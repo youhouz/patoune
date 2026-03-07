@@ -6,7 +6,6 @@ import {
   ScrollView,
   TouchableOpacity,
   StyleSheet,
-  Alert,
   Switch,
   Platform,
   StatusBar,
@@ -16,6 +15,7 @@ import {
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { addPetAPI } from '../../api/pets';
+import { showAlert } from '../../utils/alert';
 const colors = require('../../utils/colors');
 const { SHADOWS, RADIUS, SPACING, FONT_SIZE } = require('../../utils/colors');
 
@@ -121,7 +121,7 @@ const AddPetScreen = ({ navigation }) => {
         useNativeDriver: true,
       }).start();
 
-      Alert.alert(
+      showAlert(
         'Felicitations ! 🎉',
         `${name.trim()} a ete ajoute avec succes a votre famille.`,
         [{ text: 'Super', onPress: () => navigation.goBack() }]
@@ -130,7 +130,7 @@ const AddPetScreen = ({ navigation }) => {
       const msg =
         error?.response?.data?.error ||
         "Impossible d'ajouter l'animal. Verifiez votre connexion et reessayez.";
-      Alert.alert('Erreur', msg);
+      showAlert('Erreur', msg);
     } finally {
       setLoading(false);
     }

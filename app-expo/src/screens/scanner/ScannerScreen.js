@@ -4,7 +4,6 @@ import {
   Text,
   TouchableOpacity,
   StyleSheet,
-  Alert,
   TextInput,
   Animated,
   Platform,
@@ -20,6 +19,7 @@ import { CameraView, useCameraPermissions } from 'expo-camera';
 import { Feather } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { scanProductAPI } from '../../api/products';
+import { showAlert } from '../../utils/alert';
 import { FONTS } from '../../utils/typography';
 const { COLORS, SPACING, RADIUS, FONT_SIZE, SHADOWS } = require('../../utils/colors');
 
@@ -29,12 +29,12 @@ const CORNER_SIZE = 28;
 const CORNER_WIDTH = 3.5;
 
 const DEMO_PRODUCTS = [
-  { barcode: '8710255130002', name: 'Orijen Original', brand: 'Orijen', icon: 'heart', score: 95 },
-  { barcode: '3017620422003', name: 'Royal Canin Maxi', brand: 'Royal Canin', icon: 'heart', score: 62 },
-  { barcode: '3564700266236', name: 'Pedigree Vital', brand: 'Pedigree', icon: 'heart', score: 31 },
-  { barcode: '4260215761024', name: 'Applaws Chat', brand: 'Applaws', icon: 'gitlab', score: 93 },
-  { barcode: '5410340620007', name: 'Whiskas Poisson', brand: 'Whiskas', icon: 'gitlab', score: 22 },
-  { barcode: '4047059414422', name: 'Kong Classic M', brand: 'Kong', icon: 'gift', score: 92 },
+  { barcode: '5425039484051', name: 'Poulet & Dinde', brand: 'Edgard Cooper', icon: 'heart', score: 85 },
+  { barcode: '7613033831287', name: 'Friskies Light Chien', brand: 'Purina', icon: 'heart', score: 55 },
+  { barcode: '5010394133852', name: 'Biscotti Multi Mix', brand: 'Pedigree', icon: 'heart', score: 40 },
+  { barcode: '3222270550673', name: 'Mousselines Chat', brand: 'Gourmet', icon: 'gitlab', score: 60 },
+  { barcode: '5998749108536', name: 'Friandises Saumon', brand: 'Whiskas', icon: 'gitlab', score: 35 },
+  { barcode: '5998749117750', name: 'Catisfactions', brand: 'Catisfactions', icon: 'gitlab', score: 45 },
 ];
 
 const ScannerScreen = ({ navigation }) => {
@@ -42,7 +42,7 @@ const ScannerScreen = ({ navigation }) => {
   const [permission, requestPermission] = useCameraPermissions();
   const [barcode, setBarcode] = useState('');
   const [scanning, setScanning] = useState(false);
-  const [manualMode, setManualMode] = useState(false);
+  const [manualMode, setManualMode] = useState(Platform.OS === 'web');
   const [scanned, setScanned] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
 
@@ -159,19 +159,15 @@ const ScannerScreen = ({ navigation }) => {
       }
     } catch (error) {
       if (error.response?.status === 404) {
-        Alert.alert(
-          'Produit non trouve',
-          "Ce produit n'est pas encore dans notre base de donnees. Voulez-vous contribuer en l'ajoutant ?",
-          [
-            { text: 'Non merci', style: 'cancel' },
-            {
-              text: 'Contribuer',
-              onPress: () => {
-                // TODO: navigate to add product screen
-              },
-            },
-          ]
-        );
+        if (Platform.OS === 'web') {
+          showError('Produit non trouve dans notre base de donnees');
+        } else {
+          showAlert(
+            'Produit non trouve',
+            "Ce produit n'est pas encore dans notre base de donnees.",
+            [{ text: 'OK' }]
+          );
+        }
       } else if (error.message === 'Network Error') {
         showError('Pas de connexion internet');
       } else {
@@ -207,8 +203,8 @@ const ScannerScreen = ({ navigation }) => {
     outputRange: [0, SCAN_FRAME_SIZE - 4],
   });
 
-  // Loading permission state
-  if (!permission) {
+  // Loading permission state (skip on web — no camera permissions needed)
+  if (!permission && Platform.OS !== 'web') {
     return (
       <View style={[styles.container, styles.centered]}>
         <StatusBar barStyle="dark-content" translucent backgroundColor="transparent" />
@@ -394,7 +390,7 @@ const ScannerScreen = ({ navigation }) => {
         {/* Camera / Manual zone */}
         <View style={styles.cameraContainer}>
           <View style={styles.cameraArea}>
-            {!manualMode && permission.granted ? (
+            {!manualMode && permission?.granted ? (
               <CameraView
                 style={StyleSheet.absoluteFillObject}
                 barcodeScannerSettings={{
@@ -404,7 +400,7 @@ const ScannerScreen = ({ navigation }) => {
               >
                 {renderScanFrame()}
               </CameraView>
-            ) : !manualMode && !permission.granted ? (
+            ) : !manualMode && !permission?.granted ? (
               renderPermissionRequest()
             ) : (
               renderManualMode()
@@ -419,8 +415,15 @@ const ScannerScreen = ({ navigation }) => {
               style={[
                 styles.toggleOption,
                 !manualMode && styles.toggleOptionActive,
+                Platform.OS === 'web' && manualMode && styles.toggleOptionDisabled,
               ]}
-              onPress={() => setManualMode(false)}
+              onPress={() => {
+                if (Platform.OS === 'web') {
+                  showError('Le scan camera necessite l\'app mobile. Utilisez la saisie manuelle.');
+                  return;
+                }
+                setManualMode(false);
+              }}
               activeOpacity={0.7}
             >
               <Feather name="camera" size={16} color={!manualMode ? COLORS.primary : COLORS.stone} />
@@ -908,6 +911,9 @@ const styles = StyleSheet.create({
   },
   toggleOptionActive: {
     backgroundColor: COLORS.primarySoft,
+  },
+  toggleOptionDisabled: {
+    opacity: 0.5,
   },
   toggleText: {
     fontSize: FONT_SIZE.sm,
