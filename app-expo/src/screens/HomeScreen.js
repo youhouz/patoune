@@ -1,7 +1,7 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useRef, useEffect } from 'react';
 import {
   View, Text, ScrollView, TouchableOpacity, StyleSheet,
-  Platform, StatusBar, Dimensions, RefreshControl
+  Platform, StatusBar, Dimensions, RefreshControl, Animated,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useFocusEffect } from '@react-navigation/native';
@@ -9,27 +9,101 @@ import { useAuth } from '../context/AuthContext';
 import { getMyPetsAPI } from '../api/pets';
 import { getScanHistoryAPI } from '../api/products';
 import { getMyBookingsAPI } from '../api/petsitters';
-const { COLORS, SPACING, RADIUS, SHADOWS, getScoreColor, getScoreLabel } = require('../utils/colors');
+import { FONTS, TEXT_STYLES } from '../utils/typography';
+const { COLORS, SPACING, RADIUS, SHADOWS, FONT_SIZE, getScoreColor, getScoreLabel } = require('../utils/colors');
 
 const { width } = Dimensions.get('window');
+
+// ─── Animated wrapper with staggered fade-in + slide-up ──────
+const AnimatedSection = ({ delay = 0, children, style }) => {
+  const fadeAnim = useRef(new Animated.Value(0)).current;
+  const slideAnim = useRef(new Animated.Value(28)).current;
+
+  useEffect(() => {
+    Animated.parallel([
+      Animated.timing(fadeAnim, {
+        toValue: 1,
+        duration: 600,
+        delay,
+        useNativeDriver: true,
+      }),
+      Animated.timing(slideAnim, {
+        toValue: 0,
+        duration: 550,
+        delay,
+        useNativeDriver: true,
+      }),
+    ]).start();
+  }, []);
+
+  return (
+    <Animated.View style={[style, { opacity: fadeAnim, transform: [{ translateY: slideAnim }] }]}>
+      {children}
+    </Animated.View>
+  );
+};
+
+// ─── Pressable card with scale micro-interaction ─────────────
+const PressableCard = ({ onPress, style, children, activeOpacity = 0.92 }) => {
+  const scaleAnim = useRef(new Animated.Value(1)).current;
+
+  const handlePressIn = () => {
+    Animated.spring(scaleAnim, {
+      toValue: 0.965,
+      friction: 8,
+      tension: 100,
+      useNativeDriver: true,
+    }).start();
+  };
+
+  const handlePressOut = () => {
+    Animated.spring(scaleAnim, {
+      toValue: 1,
+      friction: 5,
+      tension: 40,
+      useNativeDriver: true,
+    }).start();
+  };
+
+  return (
+    <TouchableOpacity
+      onPress={onPress}
+      onPressIn={handlePressIn}
+      onPressOut={handlePressOut}
+      activeOpacity={activeOpacity}
+      style={{ flex: style?.flex }}
+    >
+      <Animated.View style={[style, { transform: [{ scale: scaleAnim }] }]}>
+        {children}
+      </Animated.View>
+    </TouchableOpacity>
+  );
+};
+
+// ─── Glass Card wrapper ──────────────────────────────────────
+const GlassCard = ({ children, style }) => (
+  <View style={[s.glassCard, style]}>
+    {children}
+  </View>
+);
 
 // ─── Recent Scan Card ──────────────────────────────────────
 const RecentScanCard = ({ scan, onPress }) => {
   const score = scan.product?.nutritionScore || 0;
   const color = getScoreColor(score);
   return (
-    <TouchableOpacity style={s.scanCard} onPress={onPress} activeOpacity={0.75}>
-      <View style={[s.scanScoreBadge, { backgroundColor: color + '18' }]}>
+    <PressableCard style={s.scanCard} onPress={onPress}>
+      <View style={[s.scanScoreBadge, { backgroundColor: color + '15' }]}>
         <Text style={[s.scanScoreText, { color }]}>{score}</Text>
       </View>
       <View style={s.scanInfo}>
         <Text style={s.scanName} numberOfLines={1}>{scan.product?.name || 'Produit'}</Text>
         <Text style={s.scanBrand} numberOfLines={1}>{scan.product?.brand || ''}</Text>
       </View>
-      <View style={[s.scanLabel, { backgroundColor: color + '15' }]}>
+      <View style={[s.scanLabel, { backgroundColor: color + '12' }]}>
         <Text style={[s.scanLabelText, { color }]}>{getScoreLabel(score)}</Text>
       </View>
-    </TouchableOpacity>
+    </PressableCard>
   );
 };
 
@@ -47,17 +121,18 @@ const NextBookingCard = ({ booking }) => {
     toilettage: 'Toilettage',
   };
   return (
-    <View style={s.bookingCard}>
+    <PressableCard style={s.bookingCard}>
       <LinearGradient
         colors={['#059669', '#10B981']}
         start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}
         style={s.bookingGradient}
       >
+        <View style={s.bookingDecoCircle} />
         <View style={s.bookingTop}>
           <View style={s.bookingBadge}>
             <Text style={s.bookingBadgeText}>{dayLabel}</Text>
           </View>
-          <Text style={s.bookingPrice}>{booking.totalPrice} €</Text>
+          <Text style={s.bookingPrice}>{booking.totalPrice} EUR</Text>
         </View>
         <Text style={s.bookingService}>{serviceLabels[booking.service] || booking.service}</Text>
         <View style={s.bookingMeta}>
@@ -66,12 +141,12 @@ const NextBookingCard = ({ booking }) => {
           </Text>
           <View style={s.bookingStatusBadge}>
             <Text style={s.bookingStatusText}>
-              {booking.status === 'confirmed' ? '✓ Confirme' : '⏳ En attente'}
+              {booking.status === 'confirmed' ? 'Confirme' : 'En attente'}
             </Text>
           </View>
         </View>
       </LinearGradient>
-    </View>
+    </PressableCard>
   );
 };
 
@@ -81,7 +156,12 @@ const PetMiniCard = ({ pet }) => {
   return (
     <View style={s.petMini}>
       <View style={s.petMiniAvatar}>
-        <Text style={s.petMiniEmoji}>{speciesEmojis[pet.species] || '🐾'}</Text>
+        <LinearGradient
+          colors={[COLORS.primarySoft, '#FFF3EE']}
+          style={s.petMiniAvatarGradient}
+        >
+          <Text style={s.petMiniEmoji}>{speciesEmojis[pet.species] || '🐾'}</Text>
+        </LinearGradient>
       </View>
       <Text style={s.petMiniName} numberOfLines={1}>{pet.name}</Text>
     </View>
@@ -96,6 +176,17 @@ const HomeScreen = ({ navigation }) => {
   const [bookings, setBookings] = useState([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+
+  // Hero entry animation
+  const heroFade = useRef(new Animated.Value(0)).current;
+  const heroSlide = useRef(new Animated.Value(20)).current;
+
+  useEffect(() => {
+    Animated.parallel([
+      Animated.timing(heroFade, { toValue: 1, duration: 500, useNativeDriver: true }),
+      Animated.timing(heroSlide, { toValue: 0, duration: 450, useNativeDriver: true }),
+    ]).start();
+  }, []);
 
   const fetchData = async () => {
     try {
@@ -161,42 +252,53 @@ const HomeScreen = ({ navigation }) => {
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={COLORS.primary} />}
       >
         {/* ── Hero Header ── */}
-        <LinearGradient
-          colors={['#FF6B35', '#FF7848', '#FFB088']}
-          start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}
-          style={s.hero}
-        >
-          {/* Decorative circles */}
-          <View style={s.heroCircle1} />
-          <View style={s.heroCircle2} />
+        <Animated.View style={{ opacity: heroFade, transform: [{ translateY: heroSlide }] }}>
+          <LinearGradient
+            colors={COLORS.gradientHero}
+            start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}
+            style={s.hero}
+          >
+            {/* Decorative circles */}
+            <View style={s.heroCircle1} />
+            <View style={s.heroCircle2} />
+            <View style={s.heroCircle3} />
 
-          <View style={s.heroTop}>
-            <View style={s.heroGreetBox}>
-              <Text style={s.greeting}>{greetText} 👋</Text>
-              <Text style={s.userName}>{firstName}</Text>
+            <View style={s.heroTop}>
+              <View style={s.heroGreetBox}>
+                <Text style={s.greetingOverline}>{greetText}</Text>
+                <Text style={s.userName}>{firstName}</Text>
+              </View>
+              <TouchableOpacity
+                style={s.avatarBtn}
+                onPress={() => navigation.navigate('Profil')}
+                activeOpacity={0.8}
+              >
+                <LinearGradient
+                  colors={['rgba(255,255,255,0.32)', 'rgba(255,255,255,0.12)']}
+                  style={s.avatarGradient}
+                >
+                  <Text style={s.avatarText}>{user?.name?.charAt(0)?.toUpperCase() || '?'}</Text>
+                </LinearGradient>
+              </TouchableOpacity>
             </View>
-            <TouchableOpacity
-              style={s.avatarBtn}
-              onPress={() => navigation.navigate('Profil')}
-              activeOpacity={0.8}
-            >
-              <Text style={s.avatarText}>{user?.name?.charAt(0)?.toUpperCase() || '?'}</Text>
-            </TouchableOpacity>
-          </View>
 
-          {/* Search bar */}
-          <TouchableOpacity style={s.searchBar} onPress={() => navigation.navigate('Scanner')} activeOpacity={0.8}>
-            <Text style={s.searchIcon}>🔍</Text>
-            <Text style={s.searchPlaceholder}>Rechercher un produit, un gardien...</Text>
-          </TouchableOpacity>
-        </LinearGradient>
+            {/* Search bar — glass style */}
+            <TouchableOpacity style={s.searchBar} onPress={() => navigation.navigate('Scanner')} activeOpacity={0.8}>
+              <Text style={s.searchIcon}>🔍</Text>
+              <Text style={s.searchPlaceholder}>Rechercher un produit, un gardien...</Text>
+            </TouchableOpacity>
+          </LinearGradient>
+        </Animated.View>
 
         {/* ── Mes animaux ── */}
         {pets.length > 0 && (
-          <View style={s.petsSection}>
+          <AnimatedSection delay={100} style={s.petsSection}>
             <View style={s.sectionHeader}>
               <Text style={s.sectionTitle}>Mes compagnons</Text>
-              <TouchableOpacity onPress={() => navigation.navigate('Profil', { screen: 'MyPets' })}>
+              <TouchableOpacity
+                onPress={() => navigation.navigate('Profil', { screen: 'MyPets' })}
+                hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+              >
                 <Text style={s.seeAll}>Voir tout</Text>
               </TouchableOpacity>
             </View>
@@ -207,16 +309,17 @@ const HomeScreen = ({ navigation }) => {
                 <Text style={s.petMiniAddLabel}>Ajouter</Text>
               </TouchableOpacity>
             </ScrollView>
-          </View>
+          </AnimatedSection>
         )}
 
         {/* ── Que faire ? ── */}
-        <View style={s.featuresSection}>
+        <AnimatedSection delay={200} style={s.featuresSection}>
           <Text style={s.sectionTitle}>Que voulez-vous faire ?</Text>
           <View style={s.featuresGrid}>
             {features.map((f, idx) => (
-              <TouchableOpacity key={idx} onPress={f.onPress} activeOpacity={0.85} style={s.featureCardWrapper}>
+              <PressableCard key={idx} onPress={f.onPress} style={s.featureCardWrapper}>
                 <LinearGradient colors={f.gradient} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={s.featureCard}>
+                  <View style={s.featureDecoCircle} />
                   <Text style={s.featureIcon}>{f.icon}</Text>
                   <View>
                     <Text style={s.featureTitle}>{f.title}</Text>
@@ -224,23 +327,23 @@ const HomeScreen = ({ navigation }) => {
                   </View>
                   <View style={s.featureArrow}><Text style={s.featureArrowText}>→</Text></View>
                 </LinearGradient>
-              </TouchableOpacity>
+              </PressableCard>
             ))}
           </View>
-        </View>
+        </AnimatedSection>
 
         {/* ── Tableau de bord ── */}
-        <View style={s.statsSection}>
+        <AnimatedSection delay={300} style={s.statsSection}>
           <Text style={s.sectionTitle}>Mon tableau de bord</Text>
-          <View style={s.statsCard}>
+          <GlassCard style={s.statsCard}>
             {[
-              { value: recentScans.length, label: 'Produits\nscannés', icon: '📷', color: '#FF6B35' },
-              { value: pets.length, label: 'Animaux\nenregistrés', icon: '🐾', color: '#059669' },
+              { value: recentScans.length, label: 'Produits\nscannes', icon: '📷', color: '#FF6B35' },
+              { value: pets.length, label: 'Animaux\nenregistres', icon: '🐾', color: '#059669' },
               { value: bookings.length, label: 'Gardes\na venir', icon: '📅', color: '#2563EB' },
             ].map((stat, idx) => (
               <React.Fragment key={idx}>
                 <View style={s.stat}>
-                  <View style={[s.statIconWrap, { backgroundColor: stat.color + '12' }]}>
+                  <View style={[s.statIconWrap, { backgroundColor: stat.color + '10' }]}>
                     <Text style={s.statIcon}>{stat.icon}</Text>
                   </View>
                   <Text style={[s.statValue, { color: stat.color }]}>{loading ? '-' : stat.value}</Text>
@@ -249,28 +352,34 @@ const HomeScreen = ({ navigation }) => {
                 {idx < 2 && <View style={s.statDivider} />}
               </React.Fragment>
             ))}
-          </View>
-        </View>
+          </GlassCard>
+        </AnimatedSection>
 
         {/* ── Prochaine garde ── */}
         {bookings.length > 0 && (
-          <View style={s.bookingSection}>
+          <AnimatedSection delay={400} style={s.bookingSection}>
             <View style={s.sectionHeader}>
               <Text style={s.sectionTitle}>Prochaine garde</Text>
-              <TouchableOpacity onPress={() => navigation.navigate('Garde')}>
+              <TouchableOpacity
+                onPress={() => navigation.navigate('Garde')}
+                hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+              >
                 <Text style={s.seeAll}>Historique</Text>
               </TouchableOpacity>
             </View>
             <NextBookingCard booking={bookings[0]} />
-          </View>
+          </AnimatedSection>
         )}
 
         {/* ── Derniers scans ── */}
         {recentScans.length > 0 && (
-          <View style={s.scansSection}>
+          <AnimatedSection delay={500} style={s.scansSection}>
             <View style={s.sectionHeader}>
               <Text style={s.sectionTitle}>Derniers scans</Text>
-              <TouchableOpacity onPress={() => navigation.navigate('Scanner', { screen: 'ScanHistory' })}>
+              <TouchableOpacity
+                onPress={() => navigation.navigate('Scanner', { screen: 'ScanHistory' })}
+                hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+              >
                 <Text style={s.seeAll}>Voir tout</Text>
               </TouchableOpacity>
             </View>
@@ -281,35 +390,39 @@ const HomeScreen = ({ navigation }) => {
                 onPress={() => navigation.navigate('Scanner', { screen: 'ProductResult', params: { product: scan.product } })}
               />
             ))}
-          </View>
+          </AnimatedSection>
         )}
 
         {/* ── Acces rapide ── */}
-        <View style={s.quickSection}>
+        <AnimatedSection delay={550} style={s.quickSection}>
           <Text style={s.sectionTitle}>Acces rapide</Text>
           <View style={s.quickGrid}>
             {[
-              { icon: '📋', label: 'Historique scans', onPress: () => navigation.navigate('Scanner', { screen: 'ScanHistory' }) },
+              { icon: '📋', label: 'Historique\nscans', onPress: () => navigation.navigate('Scanner', { screen: 'ScanHistory' }) },
               { icon: '📅', label: 'Reservations', onPress: () => navigation.navigate('Garde') },
               { icon: '💬', label: 'Messages', onPress: () => navigation.navigate('Garde', { screen: 'Messages' }) },
               { icon: '⚙️', label: 'Reglages', onPress: () => navigation.navigate('Profil', { screen: 'Settings' }) },
             ].map((qa, idx) => (
-              <TouchableOpacity key={idx} style={s.quickAction} onPress={qa.onPress} activeOpacity={0.7}>
-                <View style={s.quickIconWrap}><Text style={s.quickIcon}>{qa.icon}</Text></View>
+              <PressableCard key={idx} style={s.quickAction} onPress={qa.onPress}>
+                <GlassCard style={s.quickIconWrap}>
+                  <Text style={s.quickIcon}>{qa.icon}</Text>
+                </GlassCard>
                 <Text style={s.quickLabel}>{qa.label}</Text>
-              </TouchableOpacity>
+              </PressableCard>
             ))}
           </View>
-        </View>
+        </AnimatedSection>
 
         {/* ── Banniere Patoune ── */}
-        <View style={s.bannerSection}>
-          <TouchableOpacity activeOpacity={0.9} onPress={() => navigation.navigate('Scanner')}>
+        <AnimatedSection delay={600} style={s.bannerSection}>
+          <PressableCard onPress={() => navigation.navigate('Scanner')} style={s.bannerPressable}>
             <LinearGradient
-              colors={['#5B5BD6', '#8B8BF5']}
+              colors={COLORS.gradientAccent}
               start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}
               style={s.bannerGradient}
             >
+              <View style={s.bannerDecoCircle1} />
+              <View style={s.bannerDecoCircle2} />
               <View style={s.bannerIconCircle}>
                 <Text style={s.bannerEmoji}>🔬</Text>
               </View>
@@ -317,14 +430,14 @@ const HomeScreen = ({ navigation }) => {
                 <Text style={s.bannerTitle}>Controlez ce que mange votre animal</Text>
                 <Text style={s.bannerText}>Scannez les emballages pour connaitre la qualite de chaque produit.</Text>
                 <View style={s.bannerBtn}>
-                  <Text style={s.bannerBtnText}>Scanner maintenant →</Text>
+                  <Text style={s.bannerBtnText}>Scanner maintenant  →</Text>
                 </View>
               </View>
             </LinearGradient>
-          </TouchableOpacity>
-        </View>
+          </PressableCard>
+        </AnimatedSection>
 
-        <View style={{ height: 32 }} />
+        <View style={{ height: 40 }} />
       </ScrollView>
     </View>
   );
@@ -332,174 +445,364 @@ const HomeScreen = ({ navigation }) => {
 
 const s = StyleSheet.create({
   container: { flex: 1, backgroundColor: COLORS.background },
-  scrollContent: { paddingBottom: 20 },
+  scrollContent: { paddingBottom: 24 },
 
-  // Hero
+  // ── Glass Card (shared) ──
+  glassCard: {
+    backgroundColor: COLORS.white,
+    borderRadius: RADIUS['2xl'],
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.8)',
+    ...SHADOWS.md,
+  },
+
+  // ── Hero ──
   hero: {
-    paddingTop: Platform.OS === 'ios' ? 60 : 50,
-    paddingHorizontal: 20,
-    paddingBottom: 30,
-    borderBottomLeftRadius: 32,
-    borderBottomRightRadius: 32,
+    paddingTop: Platform.OS === 'ios' ? 64 : 54,
+    paddingHorizontal: SPACING.xl,
+    paddingBottom: 36,
+    borderBottomLeftRadius: 36,
+    borderBottomRightRadius: 36,
     overflow: 'hidden',
   },
   heroCircle1: {
-    position: 'absolute', top: -50, right: -50,
-    width: 180, height: 180, borderRadius: 90,
-    backgroundColor: 'rgba(255,255,255,0.07)',
+    position: 'absolute', top: -60, right: -60,
+    width: 200, height: 200, borderRadius: 100,
+    backgroundColor: 'rgba(255,255,255,0.08)',
   },
   heroCircle2: {
-    position: 'absolute', bottom: -60, left: -40,
-    width: 220, height: 220, borderRadius: 110,
+    position: 'absolute', bottom: -70, left: -50,
+    width: 240, height: 240, borderRadius: 120,
     backgroundColor: 'rgba(255,255,255,0.05)',
   },
-  heroTop: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 22 },
-  heroGreetBox: {},
-  greeting: { fontSize: 15, color: 'rgba(255,255,255,0.88)', fontWeight: '500', marginBottom: 3 },
-  userName: { fontSize: 30, fontWeight: '800', color: '#FFF', letterSpacing: -0.5 },
-  avatarBtn: {
-    width: 52, height: 52, borderRadius: 26,
-    backgroundColor: 'rgba(255,255,255,0.22)',
-    alignItems: 'center', justifyContent: 'center',
-    borderWidth: 2.5, borderColor: 'rgba(255,255,255,0.4)',
+  heroCircle3: {
+    position: 'absolute', top: 60, left: width * 0.4,
+    width: 100, height: 100, borderRadius: 50,
+    backgroundColor: 'rgba(255,255,255,0.04)',
   },
-  avatarText: { fontSize: 22, fontWeight: '800', color: '#FFF' },
+  heroTop: {
+    flexDirection: 'row', justifyContent: 'space-between',
+    alignItems: 'center', marginBottom: 26,
+  },
+  heroGreetBox: {},
+  greetingOverline: {
+    fontFamily: FONTS.bodyMedium,
+    fontSize: FONT_SIZE.sm,
+    color: 'rgba(255,255,255,0.82)',
+    letterSpacing: 0.8,
+    textTransform: 'uppercase',
+    marginBottom: 4,
+  },
+  userName: {
+    fontFamily: FONTS.brand,
+    fontSize: 34,
+    color: '#FFF',
+    letterSpacing: -0.5,
+    lineHeight: 40,
+  },
+  avatarBtn: {
+    width: 56, height: 56, borderRadius: 28,
+    overflow: 'hidden',
+    ...SHADOWS.glow('rgba(255,255,255,0.3)'),
+  },
+  avatarGradient: {
+    flex: 1,
+    alignItems: 'center', justifyContent: 'center',
+    borderRadius: 28,
+    borderWidth: 2.5, borderColor: 'rgba(255,255,255,0.35)',
+  },
+  avatarText: {
+    fontFamily: FONTS.heading,
+    fontSize: 24,
+    color: '#FFF',
+  },
   searchBar: {
     flexDirection: 'row', alignItems: 'center',
-    backgroundColor: 'rgba(255,255,255,0.18)',
-    borderRadius: RADIUS.lg, paddingHorizontal: 16, height: 52,
-    borderWidth: 1.5, borderColor: 'rgba(255,255,255,0.2)',
+    backgroundColor: 'rgba(255,255,255,0.16)',
+    borderRadius: RADIUS.xl, paddingHorizontal: 18, height: 54,
+    borderWidth: 1, borderColor: 'rgba(255,255,255,0.18)',
+    // Glass-morphism effect approximation
+    ...Platform.select({
+      ios: {
+        shadowColor: 'rgba(0,0,0,0.1)',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 1,
+        shadowRadius: 8,
+      },
+      android: { elevation: 2 },
+    }),
   },
-  searchIcon: { fontSize: 17, marginRight: 10 },
-  searchPlaceholder: { fontSize: 15, color: 'rgba(255,255,255,0.78)', fontWeight: '500' },
+  searchIcon: { fontSize: 17, marginRight: 12 },
+  searchPlaceholder: {
+    fontFamily: FONTS.bodyMedium,
+    fontSize: FONT_SIZE.sm,
+    color: 'rgba(255,255,255,0.72)',
+  },
 
-  // Section header
-  sectionHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 },
-  sectionTitle: { fontSize: 19, fontWeight: '800', color: COLORS.text, letterSpacing: -0.2 },
-  seeAll: { fontSize: 14, fontWeight: '700', color: COLORS.primary },
+  // ── Section header ──
+  sectionHeader: {
+    flexDirection: 'row', justifyContent: 'space-between',
+    alignItems: 'center', marginBottom: 16,
+  },
+  sectionTitle: {
+    fontFamily: FONTS.heading,
+    fontSize: FONT_SIZE.lg,
+    color: COLORS.text,
+    letterSpacing: -0.3,
+  },
+  seeAll: {
+    fontFamily: FONTS.bodySemiBold,
+    fontSize: FONT_SIZE.sm,
+    color: COLORS.primary,
+  },
 
-  // Pets
-  petsSection: { paddingLeft: 20, marginTop: 24 },
-  petsScroll: { gap: 14, paddingRight: 20 },
-  petMini: { alignItems: 'center', width: 70 },
+  // ── Pets ──
+  petsSection: { paddingLeft: SPACING.xl, marginTop: 28 },
+  petsScroll: { gap: 16, paddingRight: SPACING.xl },
+  petMini: { alignItems: 'center', width: 76 },
   petMiniAvatar: {
-    width: 60, height: 60, borderRadius: 30,
-    backgroundColor: COLORS.primarySoft,
-    alignItems: 'center', justifyContent: 'center',
-    borderWidth: 2.5, borderColor: COLORS.primary + '25', marginBottom: 7,
-  },
-  petMiniEmoji: { fontSize: 28 },
-  petMiniName: { fontSize: 13, fontWeight: '600', color: COLORS.text, textAlign: 'center' },
-  petMiniAdd: { alignItems: 'center', width: 70, justifyContent: 'center' },
-  petMiniAddCircle: {
-    width: 60, height: 60, borderRadius: 30,
-    borderWidth: 2, borderColor: COLORS.border, borderStyle: 'dashed',
-    alignItems: 'center', justifyContent: 'center', marginBottom: 7,
-  },
-  petMiniAddIcon: { fontSize: 26, color: COLORS.textTertiary },
-  petMiniAddLabel: { fontSize: 13, fontWeight: '500', color: COLORS.textTertiary },
-
-  // Features
-  featuresSection: { paddingHorizontal: 20, marginTop: 26 },
-  featuresGrid: { flexDirection: 'row', gap: 10, marginTop: 14 },
-  featureCardWrapper: { flex: 1 },
-  featureCard: {
-    borderRadius: RADIUS.xl, padding: 16,
-    height: 152, justifyContent: 'space-between',
-    ...SHADOWS.lg,
-  },
-  featureIcon: { fontSize: 32 },
-  featureTitle: { fontSize: 17, fontWeight: '800', color: '#FFF' },
-  featureSubtitle: { fontSize: 12, color: 'rgba(255,255,255,0.82)', fontWeight: '500', marginTop: 3 },
-  featureArrow: {
-    width: 30, height: 30, borderRadius: 15,
-    backgroundColor: 'rgba(255,255,255,0.25)',
-    alignItems: 'center', justifyContent: 'center', alignSelf: 'flex-end',
-  },
-  featureArrowText: { color: '#FFF', fontSize: 15, fontWeight: '700' },
-
-  // Stats
-  statsSection: { paddingHorizontal: 20, marginTop: 30 },
-  statsCard: {
-    backgroundColor: COLORS.white, borderRadius: RADIUS.xl,
-    paddingVertical: 22, paddingHorizontal: 8,
-    flexDirection: 'row', justifyContent: 'space-around',
-    ...SHADOWS.md, marginTop: 14,
-  },
-  stat: { alignItems: 'center', flex: 1 },
-  statDivider: { width: 1, backgroundColor: COLORS.border, marginVertical: 8 },
-  statIconWrap: {
-    width: 52, height: 52, borderRadius: RADIUS.lg,
-    alignItems: 'center', justifyContent: 'center', marginBottom: 10,
-  },
-  statIcon: { fontSize: 24 },
-  statValue: { fontSize: 28, fontWeight: '800', letterSpacing: -0.5 },
-  statLabel: { fontSize: 12, color: COLORS.textSecondary, fontWeight: '500', marginTop: 4, textAlign: 'center', lineHeight: 16 },
-
-  // Booking
-  bookingSection: { paddingHorizontal: 20, marginTop: 30 },
-  bookingCard: { borderRadius: RADIUS.xl, overflow: 'hidden', ...SHADOWS.lg, marginTop: 14 },
-  bookingGradient: { padding: 20, borderRadius: RADIUS.xl },
-  bookingTop: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 },
-  bookingBadge: {
-    backgroundColor: 'rgba(255,255,255,0.25)',
-    borderRadius: RADIUS.full, paddingHorizontal: 14, paddingVertical: 5,
-  },
-  bookingBadgeText: { color: '#FFF', fontWeight: '700', fontSize: 14 },
-  bookingPrice: { color: '#FFF', fontWeight: '900', fontSize: 26, letterSpacing: -0.5 },
-  bookingService: { color: '#FFF', fontWeight: '700', fontSize: 18, marginBottom: 10 },
-  bookingMeta: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  bookingMetaText: { color: 'rgba(255,255,255,0.9)', fontSize: 14, fontWeight: '500' },
-  bookingStatusBadge: { backgroundColor: 'rgba(255,255,255,0.2)', borderRadius: RADIUS.full, paddingHorizontal: 12, paddingVertical: 3 },
-  bookingStatusText: { color: '#FFF', fontSize: 12, fontWeight: '700' },
-
-  // Scans
-  scansSection: { paddingHorizontal: 20, marginTop: 30 },
-  scanCard: {
-    flexDirection: 'row', alignItems: 'center',
-    backgroundColor: COLORS.white, borderRadius: RADIUS.lg,
-    padding: 14, marginTop: 10,
+    width: 66, height: 66, borderRadius: 33,
+    marginBottom: 8,
     ...SHADOWS.sm,
   },
-  scanScoreBadge: { width: 48, height: 48, borderRadius: 14, alignItems: 'center', justifyContent: 'center', marginRight: 14 },
-  scanScoreText: { fontSize: 17, fontWeight: '900' },
-  scanInfo: { flex: 1, marginRight: 8 },
-  scanName: { fontSize: 15, fontWeight: '700', color: COLORS.text },
-  scanBrand: { fontSize: 13, color: COLORS.textSecondary, marginTop: 3 },
-  scanLabel: { borderRadius: RADIUS.full, paddingHorizontal: 12, paddingVertical: 5 },
-  scanLabelText: { fontSize: 12, fontWeight: '700' },
+  petMiniAvatarGradient: {
+    width: 66, height: 66, borderRadius: 33,
+    alignItems: 'center', justifyContent: 'center',
+    borderWidth: 2.5, borderColor: COLORS.primary + '20',
+  },
+  petMiniEmoji: { fontSize: 30 },
+  petMiniName: {
+    fontFamily: FONTS.bodySemiBold,
+    fontSize: FONT_SIZE.xs,
+    color: COLORS.text,
+    textAlign: 'center',
+  },
+  petMiniAdd: { alignItems: 'center', width: 76, justifyContent: 'center' },
+  petMiniAddCircle: {
+    width: 66, height: 66, borderRadius: 33,
+    borderWidth: 2, borderColor: COLORS.border, borderStyle: 'dashed',
+    alignItems: 'center', justifyContent: 'center', marginBottom: 8,
+  },
+  petMiniAddIcon: { fontSize: 28, color: COLORS.textTertiary },
+  petMiniAddLabel: {
+    fontFamily: FONTS.bodyMedium,
+    fontSize: FONT_SIZE.xs,
+    color: COLORS.textTertiary,
+  },
 
-  // Quick actions
-  quickSection: { paddingHorizontal: 20, marginTop: 30 },
-  quickGrid: { flexDirection: 'row', justifyContent: 'space-between', marginTop: 14 },
+  // ── Features ──
+  featuresSection: { paddingHorizontal: SPACING.xl, marginTop: 30 },
+  featuresGrid: { flexDirection: 'row', gap: 12, marginTop: 16 },
+  featureCardWrapper: { flex: 1 },
+  featureCard: {
+    borderRadius: RADIUS['2xl'], padding: 18,
+    height: 162, justifyContent: 'space-between',
+    overflow: 'hidden',
+    ...SHADOWS.lg,
+  },
+  featureDecoCircle: {
+    position: 'absolute', top: -20, right: -20,
+    width: 80, height: 80, borderRadius: 40,
+    backgroundColor: 'rgba(255,255,255,0.1)',
+  },
+  featureIcon: { fontSize: 34 },
+  featureTitle: {
+    fontFamily: FONTS.heading,
+    fontSize: FONT_SIZE.md,
+    color: '#FFF',
+  },
+  featureSubtitle: {
+    fontFamily: FONTS.body,
+    fontSize: FONT_SIZE.xs,
+    color: 'rgba(255,255,255,0.8)',
+    marginTop: 3,
+  },
+  featureArrow: {
+    width: 32, height: 32, borderRadius: 16,
+    backgroundColor: 'rgba(255,255,255,0.22)',
+    alignItems: 'center', justifyContent: 'center', alignSelf: 'flex-end',
+  },
+  featureArrowText: {
+    color: '#FFF', fontSize: 16,
+    fontFamily: FONTS.heading,
+  },
+
+  // ── Stats ──
+  statsSection: { paddingHorizontal: SPACING.xl, marginTop: 32 },
+  statsCard: {
+    paddingVertical: 24, paddingHorizontal: 10,
+    flexDirection: 'row', justifyContent: 'space-around',
+    marginTop: 16,
+  },
+  stat: { alignItems: 'center', flex: 1 },
+  statDivider: { width: 1, backgroundColor: COLORS.borderLight, marginVertical: 10 },
+  statIconWrap: {
+    width: 54, height: 54, borderRadius: RADIUS.lg,
+    alignItems: 'center', justifyContent: 'center', marginBottom: 12,
+  },
+  statIcon: { fontSize: 26 },
+  statValue: {
+    fontFamily: FONTS.heading,
+    fontSize: FONT_SIZE['2xl'],
+    letterSpacing: -0.5,
+  },
+  statLabel: {
+    fontFamily: FONTS.body,
+    fontSize: FONT_SIZE.xs,
+    color: COLORS.textSecondary,
+    marginTop: 4, textAlign: 'center', lineHeight: 16,
+  },
+
+  // ── Booking ──
+  bookingSection: { paddingHorizontal: SPACING.xl, marginTop: 32 },
+  bookingCard: {
+    borderRadius: RADIUS['2xl'], overflow: 'hidden',
+    ...SHADOWS.lg, marginTop: 16,
+  },
+  bookingGradient: { padding: 22, borderRadius: RADIUS['2xl'], overflow: 'hidden' },
+  bookingDecoCircle: {
+    position: 'absolute', top: -30, right: -30,
+    width: 120, height: 120, borderRadius: 60,
+    backgroundColor: 'rgba(255,255,255,0.06)',
+  },
+  bookingTop: {
+    flexDirection: 'row', justifyContent: 'space-between',
+    alignItems: 'center', marginBottom: 12,
+  },
+  bookingBadge: {
+    backgroundColor: 'rgba(255,255,255,0.22)',
+    borderRadius: RADIUS.full, paddingHorizontal: 16, paddingVertical: 6,
+  },
+  bookingBadgeText: {
+    fontFamily: FONTS.bodySemiBold,
+    color: '#FFF', fontSize: FONT_SIZE.sm,
+  },
+  bookingPrice: {
+    fontFamily: FONTS.heading,
+    color: '#FFF', fontSize: FONT_SIZE['2xl'],
+    letterSpacing: -0.5,
+  },
+  bookingService: {
+    fontFamily: FONTS.heading,
+    color: '#FFF', fontSize: FONT_SIZE.lg,
+    marginBottom: 12,
+  },
+  bookingMeta: {
+    flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
+  },
+  bookingMetaText: {
+    fontFamily: FONTS.bodyMedium,
+    color: 'rgba(255,255,255,0.88)', fontSize: FONT_SIZE.sm,
+  },
+  bookingStatusBadge: {
+    backgroundColor: 'rgba(255,255,255,0.18)',
+    borderRadius: RADIUS.full, paddingHorizontal: 14, paddingVertical: 4,
+  },
+  bookingStatusText: {
+    fontFamily: FONTS.bodySemiBold,
+    color: '#FFF', fontSize: FONT_SIZE.xs,
+  },
+
+  // ── Scans ──
+  scansSection: { paddingHorizontal: SPACING.xl, marginTop: 32 },
+  scanCard: {
+    flexDirection: 'row', alignItems: 'center',
+    backgroundColor: COLORS.white,
+    borderRadius: RADIUS.xl,
+    padding: 16, marginTop: 10,
+    borderWidth: 1, borderColor: COLORS.borderLight,
+    ...SHADOWS.sm,
+  },
+  scanScoreBadge: {
+    width: 50, height: 50, borderRadius: 16,
+    alignItems: 'center', justifyContent: 'center', marginRight: 14,
+  },
+  scanScoreText: {
+    fontFamily: FONTS.heading,
+    fontSize: FONT_SIZE.md,
+  },
+  scanInfo: { flex: 1, marginRight: 10 },
+  scanName: {
+    fontFamily: FONTS.bodySemiBold,
+    fontSize: FONT_SIZE.sm,
+    color: COLORS.text,
+  },
+  scanBrand: {
+    fontFamily: FONTS.body,
+    fontSize: FONT_SIZE.xs,
+    color: COLORS.textSecondary,
+    marginTop: 3,
+  },
+  scanLabel: {
+    borderRadius: RADIUS.full, paddingHorizontal: 14, paddingVertical: 6,
+  },
+  scanLabelText: {
+    fontFamily: FONTS.bodySemiBold,
+    fontSize: FONT_SIZE.xs,
+  },
+
+  // ── Quick actions ──
+  quickSection: { paddingHorizontal: SPACING.xl, marginTop: 32 },
+  quickGrid: { flexDirection: 'row', justifyContent: 'space-between', marginTop: 16 },
   quickAction: { alignItems: 'center', flex: 1 },
   quickIconWrap: {
-    width: 60, height: 60, borderRadius: RADIUS.xl,
-    backgroundColor: COLORS.white,
+    width: 64, height: 64, borderRadius: RADIUS.xl,
     alignItems: 'center', justifyContent: 'center',
-    ...SHADOWS.md, marginBottom: 8,
+    marginBottom: 10,
   },
-  quickIcon: { fontSize: 26 },
-  quickLabel: { fontSize: 11, color: COLORS.textSecondary, fontWeight: '600', textAlign: 'center', lineHeight: 15 },
+  quickIcon: { fontSize: 28 },
+  quickLabel: {
+    fontFamily: FONTS.bodyMedium,
+    fontSize: FONT_SIZE.xs - 1,
+    color: COLORS.textSecondary,
+    textAlign: 'center', lineHeight: 16,
+  },
 
-  // Banner
-  bannerSection: { paddingHorizontal: 20, marginTop: 30 },
-  bannerGradient: { borderRadius: RADIUS.xl, padding: 22, ...SHADOWS.lg },
-  bannerIconCircle: {
-    width: 56, height: 56, borderRadius: 28,
-    backgroundColor: 'rgba(255,255,255,0.2)',
-    alignItems: 'center', justifyContent: 'center', marginBottom: 14,
+  // ── Banner ──
+  bannerSection: { paddingHorizontal: SPACING.xl, marginTop: 32 },
+  bannerPressable: {},
+  bannerGradient: {
+    borderRadius: RADIUS['2xl'], padding: 24,
+    overflow: 'hidden',
+    ...SHADOWS.lg,
   },
-  bannerEmoji: { fontSize: 28 },
+  bannerDecoCircle1: {
+    position: 'absolute', top: -40, right: -40,
+    width: 140, height: 140, borderRadius: 70,
+    backgroundColor: 'rgba(255,255,255,0.06)',
+  },
+  bannerDecoCircle2: {
+    position: 'absolute', bottom: -50, left: -30,
+    width: 120, height: 120, borderRadius: 60,
+    backgroundColor: 'rgba(255,255,255,0.04)',
+  },
+  bannerIconCircle: {
+    width: 60, height: 60, borderRadius: 30,
+    backgroundColor: 'rgba(255,255,255,0.18)',
+    alignItems: 'center', justifyContent: 'center', marginBottom: 16,
+  },
+  bannerEmoji: { fontSize: 30 },
   bannerContent: {},
-  bannerTitle: { fontSize: 18, fontWeight: '800', color: '#FFF', marginBottom: 8, lineHeight: 24 },
-  bannerText: { fontSize: 14, color: 'rgba(255,255,255,0.85)', lineHeight: 20, marginBottom: 16 },
+  bannerTitle: {
+    fontFamily: FONTS.heading,
+    fontSize: FONT_SIZE.lg,
+    color: '#FFF', marginBottom: 8, lineHeight: 26,
+  },
+  bannerText: {
+    fontFamily: FONTS.body,
+    fontSize: FONT_SIZE.sm,
+    color: 'rgba(255,255,255,0.82)', lineHeight: 22, marginBottom: 18,
+  },
   bannerBtn: {
     alignSelf: 'flex-start',
-    backgroundColor: 'rgba(255,255,255,0.22)',
-    borderRadius: RADIUS.full, paddingHorizontal: 18, paddingVertical: 8,
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    borderRadius: RADIUS.full, paddingHorizontal: 22, paddingVertical: 10,
+    borderWidth: 1, borderColor: 'rgba(255,255,255,0.15)',
   },
-  bannerBtnText: { color: '#FFF', fontWeight: '700', fontSize: 14 },
+  bannerBtnText: {
+    fontFamily: FONTS.bodySemiBold,
+    color: '#FFF', fontSize: FONT_SIZE.sm,
+  },
 });
 
 export default HomeScreen;
