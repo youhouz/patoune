@@ -159,19 +159,15 @@ const ScannerScreen = ({ navigation }) => {
       }
     } catch (error) {
       if (error.response?.status === 404) {
-        Alert.alert(
-          'Produit non trouve',
-          "Ce produit n'est pas encore dans notre base de donnees. Voulez-vous contribuer en l'ajoutant ?",
-          [
-            { text: 'Non merci', style: 'cancel' },
-            {
-              text: 'Contribuer',
-              onPress: () => {
-                // TODO: navigate to add product screen
-              },
-            },
-          ]
-        );
+        if (Platform.OS === 'web') {
+          showError('Produit non trouve dans notre base de donnees');
+        } else {
+          Alert.alert(
+            'Produit non trouve',
+            "Ce produit n'est pas encore dans notre base de donnees.",
+            [{ text: 'OK' }]
+          );
+        }
       } else if (error.message === 'Network Error') {
         showError('Pas de connexion internet');
       } else {

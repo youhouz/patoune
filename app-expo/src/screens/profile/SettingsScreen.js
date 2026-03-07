@@ -82,6 +82,12 @@ const SettingsScreen = ({ navigation }) => {
   };
 
   const handleLogout = () => {
+    if (Platform.OS === 'web') {
+      if (window.confirm('Voulez-vous vraiment vous deconnecter ?')) {
+        logout();
+      }
+      return;
+    }
     Alert.alert(
       'Deconnexion',
       'Etes-vous sur de vouloir vous deconnecter ?',

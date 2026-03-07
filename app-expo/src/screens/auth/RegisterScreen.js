@@ -1,11 +1,12 @@
 import React, { useState, useRef } from 'react';
 import {
   View, Text, TextInput, TouchableOpacity,
-  StyleSheet, KeyboardAvoidingView, Platform, ScrollView, Alert, StatusBar,
+  StyleSheet, KeyboardAvoidingView, Platform, ScrollView, StatusBar,
   Animated, Dimensions
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useAuth } from '../../context/AuthContext';
+import { showAlert } from '../../utils/alert';
 import Button from '../../components/Button';
 const colors = require('../../utils/colors');
 const { RADIUS, SHADOWS } = require('../../utils/colors');
@@ -74,19 +75,19 @@ const RegisterScreen = ({ navigation }) => {
     switch (step) {
       case 0:
         if (!name || !email || !password || !confirmPassword) {
-          Alert.alert('Champs manquants', 'Remplis tous les champs obligatoires');
+          showAlert('Champs manquants', 'Remplis tous les champs obligatoires');
           return false;
         }
         if (password !== confirmPassword) {
-          Alert.alert('Oups !', 'Les mots de passe ne correspondent pas');
+          showAlert('Oups !', 'Les mots de passe ne correspondent pas');
           return false;
         }
         if (password.length < 6) {
-          Alert.alert('Mot de passe trop court', 'Minimum 6 caracteres requis');
+          showAlert('Mot de passe trop court', 'Minimum 6 caracteres requis');
           return false;
         }
         if (!/^\S+@\S+\.\S+$/.test(email)) {
-          Alert.alert('Email invalide', 'Verifie ton adresse email');
+          showAlert('Email invalide', 'Verifie ton adresse email');
           return false;
         }
         return true;
@@ -135,7 +136,7 @@ const RegisterScreen = ({ navigation }) => {
     );
     setLoading(false);
     if (!result.success) {
-      Alert.alert('Erreur', result.error);
+      showAlert('Erreur', result.error);
     }
     // On success, AuthContext sets user → AppNavigator shows TabNavigator
   };

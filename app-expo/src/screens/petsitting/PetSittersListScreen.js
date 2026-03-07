@@ -4,7 +4,7 @@ import {
   TouchableOpacity, TextInput, Platform, Animated, RefreshControl,
   StatusBar, Dimensions, Image,
 } from 'react-native';
-import { Feather } from '@expo/vector-icons';
+import { Feather, FontAwesome } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { searchPetSittersAPI } from '../../api/petsitters';
@@ -45,10 +45,12 @@ const StarRating = ({ rating, size = 14 }) => {
   const fullStars = Math.floor(rating || 0);
   const hasHalf = (rating || 0) - fullStars >= 0.5;
   for (let i = 0; i < 5; i++) {
-    if (i < fullStars || (i === fullStars && hasHalf)) {
-      stars.push(<Feather key={i} name="star" size={size} color="#F59E0B" />);
+    if (i < fullStars) {
+      stars.push(<FontAwesome key={i} name="star" size={size} color="#F59E0B" />);
+    } else if (i === fullStars && hasHalf) {
+      stars.push(<FontAwesome key={i} name="star-half-full" size={size} color="#F59E0B" />);
     } else {
-      stars.push(<Feather key={i} name="star" size={size} color={colors.border} />);
+      stars.push(<FontAwesome key={i} name="star-o" size={size} color={colors.border} />);
     }
   }
   return <View style={{ flexDirection: 'row', alignItems: 'center', gap: 1 }}>{stars}</View>;
@@ -440,6 +442,17 @@ const PetSittersListScreen = ({ navigation }) => {
         </View>
       )}
 
+      {/* Location error banner */}
+      {locationError && !location && (
+        <TouchableOpacity style={styles.locationErrorBanner} onPress={requestLocation} activeOpacity={0.7}>
+          <Feather name="alert-circle" size={16} color={colors.warning} />
+          <Text style={styles.locationErrorText}>
+            Localisation indisponible. Appuyez pour reessayer.
+          </Text>
+          <Feather name="refresh-cw" size={14} color={colors.warning} />
+        </TouchableOpacity>
+      )}
+
       {/* Results count */}
       {!loading && (
         <View style={styles.resultsCount}>
@@ -697,6 +710,27 @@ const styles = StyleSheet.create({
   },
   radiusPillTextActive: {
     color: colors.secondary,
+  },
+
+  // Location error
+  locationErrorBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: colors.warningSoft,
+    marginHorizontal: SPACING.base,
+    marginTop: SPACING.sm,
+    paddingHorizontal: SPACING.base,
+    paddingVertical: SPACING.md,
+    borderRadius: RADIUS.lg,
+    gap: SPACING.sm,
+    borderWidth: 1,
+    borderColor: colors.warning + '30',
+  },
+  locationErrorText: {
+    flex: 1,
+    fontSize: FONT_SIZE.sm,
+    fontFamily: FONTS.bodyMedium,
+    color: colors.warning,
   },
 
   // Results count
