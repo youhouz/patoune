@@ -31,12 +31,14 @@ const SERVICES = [
   { key: 'toilettage', label: 'Toilettage', icon: 'scissors', desc: 'Soin & beaute' },
 ];
 
-const PET_SPECIES_ICON = {
-  chien: 'gitlab',
-  chat: 'github',
-  rongeur: 'mouse-pointer',
-  oiseau: 'feather',
-  reptile: 'zap',
+const PET_SPECIES_EMOJI = {
+  chien: '🐕',
+  chat: '🐈',
+  rongeur: '🐹',
+  oiseau: '🐦',
+  reptile: '🦎',
+  poisson: '🐟',
+  autre: '🐾',
 };
 
 /* ---------- Step Indicator ---------- */
@@ -332,11 +334,9 @@ const BookingScreen = ({ route, navigation }) => {
                       activeOpacity={0.7}
                     >
                       <View style={[styles.petCardIcon, isSelected && styles.petCardIconActive]}>
-                        <Feather
-                          name={PET_SPECIES_ICON[pet.species?.toLowerCase()] || 'heart'}
-                          size={26}
-                          color={isSelected ? colors.primary : colors.textSecondary}
-                        />
+                        <Text style={{ fontSize: 26 }}>
+                          {PET_SPECIES_EMOJI[pet.species?.toLowerCase()] || '🐾'}
+                        </Text>
                       </View>
                       <Text style={[styles.petCardName, isSelected && styles.petCardNameActive]} numberOfLines={1}>
                         {pet.name}
@@ -488,11 +488,9 @@ const BookingScreen = ({ route, navigation }) => {
                 <Text style={styles.summaryLabel}>Animal</Text>
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
                   {selectedPetObj && (
-                    <Feather
-                      name={PET_SPECIES_ICON[selectedPetObj.species?.toLowerCase()] || 'heart'}
-                      size={14}
-                      color={colors.primary}
-                    />
+                    <Text style={{ fontSize: 14 }}>
+                      {PET_SPECIES_EMOJI[selectedPetObj.species?.toLowerCase()] || '🐾'}
+                    </Text>
                   )}
                   <Text style={styles.summaryValue}>
                     {selectedPetObj ? selectedPetObj.name : '--'}
@@ -713,11 +711,10 @@ const styles = StyleSheet.create({
     backgroundColor: colors.white,
     marginHorizontal: SPACING.base,
     marginTop: SPACING.base,
-    borderRadius: RADIUS.xl,
-    padding: SPACING.lg,
-    ...SHADOWS.md,
-    borderWidth: 1,
-    borderColor: colors.borderLight,
+    borderRadius: RADIUS['2xl'],
+    padding: SPACING.xl,
+    ...SHADOWS.lg,
+    borderWidth: 0,
   },
   sectionCardInactive: {
     opacity: 0.6,

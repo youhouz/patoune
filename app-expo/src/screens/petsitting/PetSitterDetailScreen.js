@@ -13,12 +13,14 @@ const { SHADOWS, RADIUS, SPACING, FONT_SIZE } = require('../../utils/colors');
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
-const ANIMAL_ICON_MAP = {
-  chien: 'gitlab',
-  chat: 'github',
-  rongeur: 'mouse-pointer',
-  oiseau: 'feather',
-  reptile: 'zap',
+const ANIMAL_EMOJI_MAP = {
+  chien: '🐕',
+  chat: '🐈',
+  rongeur: '🐹',
+  oiseau: '🐦',
+  reptile: '🦎',
+  poisson: '🐟',
+  autre: '🐾',
 };
 
 const SERVICE_ICONS = {
@@ -363,11 +365,9 @@ const PetSitterDetailScreen = ({ route, navigation }) => {
               <View style={styles.animalChips}>
                 {petsitter.acceptedAnimals.map((animal, idx) => (
                   <View key={idx} style={styles.animalChip}>
-                    <Feather
-                      name={ANIMAL_ICON_MAP[animal.toLowerCase()] || 'heart'}
-                      size={18}
-                      color={colors.primary}
-                    />
+                    <Text style={{ fontSize: 18 }}>
+                      {ANIMAL_EMOJI_MAP[animal.toLowerCase()] || '🐾'}
+                    </Text>
                     <Text style={styles.animalChipText}>
                       {animal.charAt(0).toUpperCase() + animal.slice(1)}
                     </Text>
@@ -594,14 +594,14 @@ const styles = StyleSheet.create({
     marginBottom: SPACING.base,
   },
   heroAvatar: {
-    width: 100,
-    height: 100,
-    borderRadius: 50,
+    width: 110,
+    height: 110,
+    borderRadius: 55,
     backgroundColor: 'rgba(255,255,255,0.2)',
     alignItems: 'center',
     justifyContent: 'center',
-    borderWidth: 3,
-    borderColor: 'rgba(255,255,255,0.35)',
+    borderWidth: 4,
+    borderColor: 'rgba(255,255,255,0.4)',
   },
   heroAvatarLetter: {
     fontSize: FONT_SIZE['4xl'],
@@ -698,11 +698,10 @@ const styles = StyleSheet.create({
     backgroundColor: colors.white,
     marginHorizontal: SPACING.base,
     marginTop: SPACING.base,
-    borderRadius: RADIUS.xl,
-    padding: SPACING.lg,
-    ...SHADOWS.md,
-    borderWidth: 1,
-    borderColor: colors.borderLight,
+    borderRadius: RADIUS['2xl'],
+    padding: SPACING.xl,
+    ...SHADOWS.lg,
+    borderWidth: 0,
   },
   sectionHeader: {
     flexDirection: 'row',
