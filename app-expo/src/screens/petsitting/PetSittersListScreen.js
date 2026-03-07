@@ -4,7 +4,7 @@ import {
   TouchableOpacity, TextInput, Platform, Animated, RefreshControl,
   StatusBar, Dimensions, Image,
 } from 'react-native';
-import { Feather, FontAwesome } from '@expo/vector-icons';
+import { Feather } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { searchPetSittersAPI } from '../../api/petsitters';
@@ -41,21 +41,31 @@ const RADIUS_FILTERS = [
   { key: 50, label: '50 km' },
 ];
 
-/* ---------- Star Rating ---------- */
+/* ---------- Star Rating (Unicode — renders filled on all platforms) ---------- */
 const StarRating = ({ rating, size = 14 }) => {
+  const val = rating || 0;
+  const fullStars = Math.floor(val);
+  const hasHalf = val - fullStars >= 0.25;
   const stars = [];
-  const fullStars = Math.floor(rating || 0);
-  const hasHalf = (rating || 0) - fullStars >= 0.5;
   for (let i = 0; i < 5; i++) {
     if (i < fullStars) {
-      stars.push(<FontAwesome key={i} name="star" size={size} color="#F59E0B" />);
+      stars.push(
+        <Text key={i} style={{ fontSize: size, color: '#F59E0B', lineHeight: size + 2 }}>★</Text>
+      );
     } else if (i === fullStars && hasHalf) {
-      stars.push(<FontAwesome key={i} name="star-half-full" size={size} color="#F59E0B" />);
+      // Half star: overlapping empty + clipped filled
+      stars.push(
+        <View key={i} style={{ width: size * 0.75, overflow: 'hidden' }}>
+          <Text style={{ fontSize: size, color: '#F59E0B', lineHeight: size + 2 }}>★</Text>
+        </View>
+      );
     } else {
-      stars.push(<FontAwesome key={i} name="star-o" size={size} color={colors.border} />);
+      stars.push(
+        <Text key={i} style={{ fontSize: size, color: colors.border, lineHeight: size + 2 }}>★</Text>
+      );
     }
   }
-  return <View style={{ flexDirection: 'row', alignItems: 'center', gap: 1 }}>{stars}</View>;
+  return <View style={{ flexDirection: 'row', alignItems: 'center', gap: 0 }}>{stars}</View>;
 };
 
 /* ---------- Skeleton Placeholder ---------- */
@@ -767,30 +777,29 @@ const styles = StyleSheet.create({
   card: {
     backgroundColor: colors.white,
     marginHorizontal: SPACING.base,
-    marginBottom: SPACING.md,
-    borderRadius: RADIUS.xl,
-    ...SHADOWS.md,
-    borderWidth: 1,
-    borderColor: colors.borderLight,
+    marginBottom: SPACING.base,
+    borderRadius: RADIUS['2xl'],
+    ...SHADOWS.lg,
+    borderWidth: 0,
   },
   cardContent: {
     flexDirection: 'row',
-    padding: SPACING.base,
+    padding: SPACING.lg,
     alignItems: 'flex-start',
   },
   avatarContainer: {
     position: 'relative',
-    marginRight: SPACING.md,
+    marginRight: SPACING.base,
   },
   avatar: {
-    width: 56,
-    height: 56,
+    width: 64,
+    height: 64,
     borderRadius: RADIUS['2xl'],
     alignItems: 'center',
     justifyContent: 'center',
   },
   avatarLetter: {
-    fontSize: FONT_SIZE.xl,
+    fontSize: FONT_SIZE['2xl'],
     fontFamily: FONTS.heading,
     color: colors.white,
   },
@@ -798,13 +807,13 @@ const styles = StyleSheet.create({
     position: 'absolute',
     bottom: -2,
     right: -2,
-    width: 20,
-    height: 20,
+    width: 22,
+    height: 22,
     borderRadius: RADIUS.full,
     backgroundColor: '#10B981',
     alignItems: 'center',
     justifyContent: 'center',
-    borderWidth: 2.5,
+    borderWidth: 3,
     borderColor: colors.white,
   },
   cardInfo: {
@@ -815,21 +824,22 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: SPACING.sm,
-    marginBottom: 4,
+    marginBottom: 5,
   },
   cardName: {
-    fontSize: FONT_SIZE.md,
+    fontSize: FONT_SIZE.lg,
     fontFamily: FONTS.heading,
     color: colors.text,
     flexShrink: 1,
+    letterSpacing: -0.2,
   },
   verifiedBadge: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: '#ECFDF5',
-    paddingHorizontal: SPACING.sm,
-    paddingVertical: 2,
-    borderRadius: RADIUS.xs,
+    paddingHorizontal: SPACING.sm + 2,
+    paddingVertical: 3,
+    borderRadius: RADIUS.full,
     gap: 3,
   },
   verifiedBadgeText: {
@@ -840,8 +850,8 @@ const styles = StyleSheet.create({
   ratingRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: SPACING.xs,
-    marginBottom: SPACING.sm,
+    gap: SPACING.xs + 2,
+    marginBottom: SPACING.sm + 2,
   },
   ratingText: {
     fontSize: FONT_SIZE.sm,
@@ -855,9 +865,9 @@ const styles = StyleSheet.create({
   },
   expBadge: {
     backgroundColor: colors.infoSoft,
-    paddingHorizontal: SPACING.sm,
-    paddingVertical: 1,
-    borderRadius: RADIUS.xs,
+    paddingHorizontal: SPACING.sm + 2,
+    paddingVertical: 2,
+    borderRadius: RADIUS.full,
     marginLeft: SPACING.xs,
   },
   expText: {
@@ -869,71 +879,71 @@ const styles = StyleSheet.create({
     fontSize: FONT_SIZE.sm,
     fontFamily: FONTS.body,
     color: colors.textSecondary,
-    lineHeight: 19,
-    marginBottom: SPACING.sm,
+    lineHeight: 20,
+    marginBottom: SPACING.sm + 2,
   },
   distanceRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 4,
-    marginBottom: SPACING.sm,
+    gap: 5,
+    marginBottom: SPACING.sm + 2,
   },
   distanceText: {
     fontSize: FONT_SIZE.xs,
-    fontFamily: FONTS.bodyMedium,
+    fontFamily: FONTS.bodySemiBold,
     color: colors.secondary,
   },
   animalTags: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: SPACING.xs,
+    gap: SPACING.sm,
   },
   animalTag: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: colors.primarySoft,
-    paddingHorizontal: SPACING.sm,
-    paddingVertical: 3,
-    borderRadius: RADIUS.sm,
-    gap: 3,
+    paddingHorizontal: SPACING.md,
+    paddingVertical: 5,
+    borderRadius: RADIUS.full,
+    gap: 4,
   },
   animalTagMore: {
     backgroundColor: colors.background,
   },
   animalTagEmoji: {
-    fontSize: 11,
+    fontSize: 12,
   },
   animalTagText: {
     fontSize: FONT_SIZE.xs,
-    fontFamily: FONTS.bodyMedium,
+    fontFamily: FONTS.bodySemiBold,
     color: colors.primary,
   },
   priceBox: {
     alignItems: 'center',
     backgroundColor: colors.primarySoft,
-    paddingHorizontal: SPACING.md,
-    paddingVertical: SPACING.md,
-    borderRadius: RADIUS.lg,
-    minWidth: 62,
+    paddingHorizontal: SPACING.base,
+    paddingVertical: SPACING.base,
+    borderRadius: RADIUS.xl,
+    minWidth: 68,
   },
   priceAmount: {
-    fontSize: FONT_SIZE.xl,
+    fontSize: FONT_SIZE['2xl'],
     fontFamily: FONTS.heading,
     color: colors.primary,
     letterSpacing: -0.5,
   },
   priceCurrency: {
-    fontSize: 10,
+    fontSize: 11,
     fontFamily: FONTS.heading,
     color: colors.primary,
     marginTop: -2,
     letterSpacing: 0.5,
   },
   priceDivider: {
-    width: 20,
+    width: 24,
     height: 1,
-    backgroundColor: colors.primary + '30',
-    marginVertical: 4,
+    backgroundColor: colors.primary + '25',
+    marginVertical: 5,
   },
   priceUnit: {
     fontSize: FONT_SIZE.xs,

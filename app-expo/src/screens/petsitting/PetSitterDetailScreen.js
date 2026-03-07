@@ -39,21 +39,32 @@ const AVAILABILITY_DAYS = [
   { key: 'dim', label: 'D' },
 ];
 
-/* ---------- Star Rating ---------- */
+/* ---------- Star Rating (Unicode — renders filled on all platforms) ---------- */
 const StarRating = ({ rating, size = 16, showValue = false, light = false }) => {
+  const val = rating || 0;
   const stars = [];
-  const fullStars = Math.floor(rating || 0);
-  const hasHalf = (rating || 0) - fullStars >= 0.5;
+  const fullStars = Math.floor(val);
+  const hasHalf = val - fullStars >= 0.25;
   const emptyColor = light ? 'rgba(255,255,255,0.3)' : colors.border;
   for (let i = 0; i < 5; i++) {
-    if (i < fullStars || (i === fullStars && hasHalf)) {
-      stars.push(<Feather key={i} name="star" size={size} color="#F59E0B" />);
+    if (i < fullStars) {
+      stars.push(
+        <Text key={i} style={{ fontSize: size, color: '#F59E0B', lineHeight: size + 2 }}>★</Text>
+      );
+    } else if (i === fullStars && hasHalf) {
+      stars.push(
+        <View key={i} style={{ width: size * 0.75, overflow: 'hidden' }}>
+          <Text style={{ fontSize: size, color: '#F59E0B', lineHeight: size + 2 }}>★</Text>
+        </View>
+      );
     } else {
-      stars.push(<Feather key={i} name="star" size={size} color={emptyColor} />);
+      stars.push(
+        <Text key={i} style={{ fontSize: size, color: emptyColor, lineHeight: size + 2 }}>★</Text>
+      );
     }
   }
   return (
-    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 2 }}>
+    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 1 }}>
       {stars}
       {showValue && (
         <Text style={{
@@ -62,7 +73,7 @@ const StarRating = ({ rating, size = 16, showValue = false, light = false }) => 
           color: '#F59E0B',
           marginLeft: 4,
         }}>
-          {(rating || 0).toFixed(1)}
+          {val.toFixed(1)}
         </Text>
       )}
     </View>
@@ -75,7 +86,7 @@ const RatingBar = ({ stars, count, total }) => {
   return (
     <View style={styles.ratingBarRow}>
       <Text style={styles.ratingBarLabel}>{stars}</Text>
-      <Feather name="star" size={10} color="#F59E0B" />
+      <Text style={{ fontSize: 10, color: '#F59E0B' }}>★</Text>
       <View style={styles.ratingBarTrack}>
         <View style={[styles.ratingBarFill, { width: `${percentage}%` }]} />
       </View>

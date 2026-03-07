@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
-import { Feather, FontAwesome } from '@expo/vector-icons';
+import { Feather } from '@expo/vector-icons';
 import Avatar from './Avatar';
 import { FONTS } from '../utils/typography';
 const colors = require('../utils/colors');
@@ -16,18 +16,26 @@ const ANIMAL_EMOJI_MAP = {
   autre: '🐾',
 };
 
-/* ---------- Star Rating ---------- */
+/* ---------- Star Rating (Unicode — renders filled on all platforms) ---------- */
 const StarRating = ({ value = 0, count, size = 13 }) => {
   const fullStars = Math.floor(value);
-  const hasHalf = value - fullStars >= 0.5;
+  const hasHalf = value - fullStars >= 0.25;
   const stars = [];
   for (let i = 0; i < 5; i++) {
     if (i < fullStars) {
-      stars.push(<FontAwesome key={i} name="star" size={size} color="#F59E0B" />);
+      stars.push(
+        <Text key={i} style={{ fontSize: size, color: '#F59E0B', lineHeight: size + 2 }}>★</Text>
+      );
     } else if (i === fullStars && hasHalf) {
-      stars.push(<FontAwesome key={i} name="star-half-full" size={size} color="#F59E0B" />);
+      stars.push(
+        <View key={i} style={{ width: size * 0.75, overflow: 'hidden' }}>
+          <Text style={{ fontSize: size, color: '#F59E0B', lineHeight: size + 2 }}>★</Text>
+        </View>
+      );
     } else {
-      stars.push(<FontAwesome key={i} name="star-o" size={size} color={colors.border} />);
+      stars.push(
+        <Text key={i} style={{ fontSize: size, color: colors.border, lineHeight: size + 2 }}>★</Text>
+      );
     }
   }
   return (
