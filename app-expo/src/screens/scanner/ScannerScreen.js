@@ -4,7 +4,6 @@ import {
   Text,
   TouchableOpacity,
   StyleSheet,
-  Alert,
   TextInput,
   Animated,
   Platform,
@@ -20,6 +19,7 @@ import { CameraView, useCameraPermissions } from 'expo-camera';
 import { Feather } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { scanProductAPI } from '../../api/products';
+import { showAlert } from '../../utils/alert';
 import { FONTS } from '../../utils/typography';
 const { COLORS, SPACING, RADIUS, FONT_SIZE, SHADOWS } = require('../../utils/colors');
 
@@ -162,7 +162,7 @@ const ScannerScreen = ({ navigation }) => {
         if (Platform.OS === 'web') {
           showError('Produit non trouve dans notre base de donnees');
         } else {
-          Alert.alert(
+          showAlert(
             'Produit non trouve',
             "Ce produit n'est pas encore dans notre base de donnees.",
             [{ text: 'OK' }]

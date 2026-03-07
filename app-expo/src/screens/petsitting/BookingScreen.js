@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import {
   View, Text, ScrollView, TouchableOpacity, StyleSheet,
-  Alert, TextInput, Platform, Animated, ActivityIndicator,
+  TextInput, Platform, Animated, ActivityIndicator,
   StatusBar, Dimensions,
 } from 'react-native';
 import { Feather } from '@expo/vector-icons';
@@ -9,6 +9,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { getMyPetsAPI } from '../../api/pets';
 import { createBookingAPI } from '../../api/petsitters';
+import { showAlert } from '../../utils/alert';
 import { FONTS } from '../../utils/typography';
 const colors = require('../../utils/colors');
 const { SHADOWS, RADIUS, SPACING, FONT_SIZE } = require('../../utils/colors');
@@ -195,26 +196,26 @@ const BookingScreen = ({ route, navigation }) => {
 
   const handleBooking = async () => {
     if (!selectedPet) {
-      Alert.alert('Attention', 'Selectionnez un animal');
+      showAlert('Attention', 'Selectionnez un animal');
       return;
     }
     if (!selectedService) {
-      Alert.alert('Attention', 'Selectionnez un service');
+      showAlert('Attention', 'Selectionnez un service');
       return;
     }
     if (!startDate || !endDate) {
-      Alert.alert('Attention', 'Renseignez les dates (format: AAAA-MM-JJ)');
+      showAlert('Attention', 'Renseignez les dates (format: AAAA-MM-JJ)');
       return;
     }
 
     const start = new Date(startDate);
     const end = new Date(endDate);
     if (isNaN(start.getTime()) || isNaN(end.getTime())) {
-      Alert.alert('Attention', 'Format de date invalide. Utilisez AAAA-MM-JJ');
+      showAlert('Attention', 'Format de date invalide. Utilisez AAAA-MM-JJ');
       return;
     }
     if (end <= start) {
-      Alert.alert('Attention', 'La date de fin doit etre apres la date de debut');
+      showAlert('Attention', 'La date de fin doit etre apres la date de debut');
       return;
     }
 
@@ -230,13 +231,13 @@ const BookingScreen = ({ route, navigation }) => {
         notes,
       });
 
-      Alert.alert(
+      showAlert(
         'Reservation envoyee !',
         'Le gardien va confirmer votre reservation sous peu.',
         [{ text: 'Super !', onPress: () => navigation.goBack() }]
       );
     } catch (error) {
-      Alert.alert('Erreur', 'Impossible de creer la reservation. Reessayez.');
+      showAlert('Erreur', 'Impossible de creer la reservation. Reessayez.');
     } finally {
       setLoading(false);
     }

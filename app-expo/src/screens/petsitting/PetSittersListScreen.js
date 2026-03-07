@@ -16,20 +16,22 @@ const { SHADOWS, RADIUS, SPACING, FONT_SIZE } = require('../../utils/colors');
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
 const ANIMAL_FILTERS = [
-  { key: 'Tous', icon: 'heart', label: 'Tous' },
-  { key: 'Chien', icon: 'gitlab', label: 'Chiens' },
-  { key: 'Chat', icon: 'github', label: 'Chats' },
-  { key: 'Rongeur', icon: 'mouse-pointer', label: 'Rongeurs' },
-  { key: 'Oiseau', icon: 'feather', label: 'Oiseaux' },
-  { key: 'Reptile', icon: 'zap', label: 'Reptiles' },
+  { key: 'Tous', emoji: '❤️', label: 'Tous' },
+  { key: 'Chien', emoji: '🐕', label: 'Chiens' },
+  { key: 'Chat', emoji: '🐈', label: 'Chats' },
+  { key: 'Rongeur', emoji: '🐹', label: 'Rongeurs' },
+  { key: 'Oiseau', emoji: '🐦', label: 'Oiseaux' },
+  { key: 'Reptile', emoji: '🦎', label: 'Reptiles' },
 ];
 
-const ANIMAL_ICON_MAP = {
-  chien: 'gitlab',
-  chat: 'github',
-  rongeur: 'mouse-pointer',
-  oiseau: 'feather',
-  reptile: 'zap',
+const ANIMAL_EMOJI_MAP = {
+  chien: '🐕',
+  chat: '🐈',
+  rongeur: '🐹',
+  oiseau: '🐦',
+  reptile: '🦎',
+  poisson: '🐟',
+  autre: '🐾',
 };
 
 const RADIUS_FILTERS = [
@@ -151,6 +153,8 @@ const PetSitterCard = ({ petsitter, onPress, index }) => {
         onPressIn={onPressIn}
         onPressOut={onPressOut}
         activeOpacity={1}
+        accessibilityRole="button"
+        accessibilityLabel={`${petsitter.user?.name || 'Gardien'}, ${petsitter.rating?.toFixed(1) || 0} etoiles, ${priceDisplay} euros par jour`}
       >
         <View style={styles.cardContent}>
           {/* Avatar */}
@@ -225,11 +229,9 @@ const PetSitterCard = ({ petsitter, onPress, index }) => {
             <View style={styles.animalTags}>
               {petsitter.acceptedAnimals?.slice(0, 4).map((animal, idx) => (
                 <View key={idx} style={styles.animalTag}>
-                  <Feather
-                    name={ANIMAL_ICON_MAP[animal.toLowerCase()] || 'heart'}
-                    size={11}
-                    color={colors.primary}
-                  />
+                  <Text style={styles.animalTagEmoji}>
+                    {ANIMAL_EMOJI_MAP[animal.toLowerCase()] || '🐾'}
+                  </Text>
                   <Text style={styles.animalTagText}>
                     {animal.charAt(0).toUpperCase() + animal.slice(1)}
                   </Text>
@@ -334,14 +336,14 @@ const PetSittersListScreen = ({ navigation }) => {
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 0 }}
           >
-            <Feather name={item.icon} size={15} color={colors.white} />
+            <Text style={styles.filterEmoji}>{item.emoji}</Text>
             <Text style={[styles.filterText, styles.filterTextActive]}>
               {item.label}
             </Text>
           </LinearGradient>
         ) : (
           <View style={styles.filterChipInner}>
-            <Feather name={item.icon} size={15} color={colors.textSecondary} />
+            <Text style={styles.filterEmoji}>{item.emoji}</Text>
             <Text style={styles.filterText}>{item.label}</Text>
           </View>
         )}
@@ -671,6 +673,9 @@ const styles = StyleSheet.create({
     paddingVertical: SPACING.sm + 2,
     gap: SPACING.xs,
   },
+  filterEmoji: {
+    fontSize: 15,
+  },
   filterText: {
     fontSize: FONT_SIZE.sm,
     fontFamily: FONTS.bodySemiBold,
@@ -894,6 +899,9 @@ const styles = StyleSheet.create({
   },
   animalTagMore: {
     backgroundColor: colors.background,
+  },
+  animalTagEmoji: {
+    fontSize: 11,
   },
   animalTagText: {
     fontSize: FONT_SIZE.xs,

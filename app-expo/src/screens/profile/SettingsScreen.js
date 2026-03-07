@@ -6,7 +6,6 @@ import {
   ScrollView,
   TouchableOpacity,
   StyleSheet,
-  Alert,
   Switch,
   Platform,
   StatusBar,
@@ -16,6 +15,7 @@ import {
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useAuth } from '../../context/AuthContext';
+import { showAlert } from '../../utils/alert';
 import api from '../../api/client';
 const colors = require('../../utils/colors');
 const { SHADOWS, RADIUS, SPACING, FONT_SIZE } = require('../../utils/colors');
@@ -62,7 +62,7 @@ const SettingsScreen = ({ navigation }) => {
 
   const handleSave = async () => {
     if (!name.trim()) {
-      Alert.alert('Champ requis', 'Le nom ne peut pas etre vide');
+      showAlert('Champ requis', 'Le nom ne peut pas etre vide');
       return;
     }
 
@@ -73,9 +73,9 @@ const SettingsScreen = ({ navigation }) => {
         phone: phone.trim(),
       });
       updateUser(response.data.user);
-      Alert.alert('Succes', 'Votre profil a ete mis a jour');
+      showAlert('Succes', 'Votre profil a ete mis a jour');
     } catch (error) {
-      Alert.alert('Erreur', 'Impossible de mettre a jour le profil. Reessayez.');
+      showAlert('Erreur', 'Impossible de mettre a jour le profil. Reessayez.');
     } finally {
       setSaving(false);
     }
@@ -88,7 +88,7 @@ const SettingsScreen = ({ navigation }) => {
       }
       return;
     }
-    Alert.alert(
+    showAlert(
       'Deconnexion',
       'Etes-vous sur de vouloir vous deconnecter ?',
       [

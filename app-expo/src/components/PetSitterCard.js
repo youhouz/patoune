@@ -1,35 +1,33 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
-import { Feather } from '@expo/vector-icons';
+import { Feather, FontAwesome } from '@expo/vector-icons';
 import Avatar from './Avatar';
 import { FONTS } from '../utils/typography';
 const colors = require('../utils/colors');
 const { SHADOWS, RADIUS } = require('../utils/colors');
 
-const ANIMAL_ICON_MAP = {
-  chien: 'gitlab',
-  chat: 'github',
-  rongeur: 'mouse-pointer',
-  oiseau: 'feather',
-  reptile: 'zap',
-  poisson: 'droplet',
-  autre: 'heart',
+const ANIMAL_EMOJI_MAP = {
+  chien: '🐕',
+  chat: '🐈',
+  rongeur: '🐹',
+  oiseau: '🐦',
+  reptile: '🦎',
+  poisson: '🐟',
+  autre: '🐾',
 };
 
-/* ---------- Star Rating (inline with Feather icons) ---------- */
+/* ---------- Star Rating ---------- */
 const StarRating = ({ value = 0, count, size = 13 }) => {
   const fullStars = Math.floor(value);
   const hasHalf = value - fullStars >= 0.5;
   const stars = [];
   for (let i = 0; i < 5; i++) {
-    if (i < fullStars || (i === fullStars && hasHalf)) {
-      stars.push(
-        <Feather key={i} name="star" size={size} color="#F59E0B" />
-      );
+    if (i < fullStars) {
+      stars.push(<FontAwesome key={i} name="star" size={size} color="#F59E0B" />);
+    } else if (i === fullStars && hasHalf) {
+      stars.push(<FontAwesome key={i} name="star-half-full" size={size} color="#F59E0B" />);
     } else {
-      stars.push(
-        <Feather key={i} name="star" size={size} color={colors.border} />
-      );
+      stars.push(<FontAwesome key={i} name="star-o" size={size} color={colors.border} />);
     }
   }
   return (
@@ -87,11 +85,9 @@ const PetSitterCard = ({ petsitter, onPress }) => {
         <View style={styles.tags}>
           {acceptedAnimals?.slice(0, 4).map((animal, idx) => (
             <View key={idx} style={styles.animalChip}>
-              <Feather
-                name={ANIMAL_ICON_MAP[animal] || 'heart'}
-                size={12}
-                color={colors.primary}
-              />
+              <Text style={styles.animalEmoji}>
+                {ANIMAL_EMOJI_MAP[animal] || '🐾'}
+              </Text>
               <Text style={styles.animalText}>{animal}</Text>
             </View>
           ))}
@@ -207,6 +203,9 @@ const styles = StyleSheet.create({
     paddingVertical: 4,
     borderRadius: RADIUS.sm,
     gap: 4,
+  },
+  animalEmoji: {
+    fontSize: 12,
   },
   animalText: {
     fontSize: 11,
