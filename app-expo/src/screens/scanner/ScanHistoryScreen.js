@@ -12,6 +12,7 @@ import {
   Animated,
   RefreshControl,
   ScrollView,
+  Dimensions,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Feather } from '@expo/vector-icons';
@@ -20,8 +21,11 @@ import { getScanHistoryAPI } from '../../api/products';
 import { FONTS } from '../../utils/typography';
 const { COLORS, SHADOWS, RADIUS, SPACING, FONT_SIZE, getScoreColor, getScoreBg, getScoreLabel } = require('../../utils/colors');
 
+const { width: SCREEN_WIDTH } = Dimensions.get('window');
+const AnimatedTouchable = Animated.createAnimatedComponent(TouchableOpacity);
+
 const FILTER_OPTIONS = [
-  { key: 'all', label: 'Tous', icon: null, color: COLORS.primary },
+  { key: 'all', label: 'Tous', icon: 'grid', color: COLORS.primary },
   { key: 'excellent', label: 'Excellent', icon: null, color: COLORS.scoreExcellent },
   { key: 'good', label: 'Bon', icon: null, color: COLORS.scoreGood },
   { key: 'mediocre', label: 'Moyen', icon: null, color: COLORS.scoreMediocre },
@@ -41,20 +45,31 @@ const ScanHistoryScreen = ({ navigation }) => {
   // Animations
   const fadeIn = useRef(new Animated.Value(0)).current;
   const slideUp = useRef(new Animated.Value(30)).current;
+  const headerScale = useRef(new Animated.Value(0.96)).current;
+  const backScale = useRef(new Animated.Value(1)).current;
 
   useEffect(() => {
     loadHistory();
-    Animated.parallel([
-      Animated.timing(fadeIn, {
+    Animated.stagger(80, [
+      Animated.spring(headerScale, {
         toValue: 1,
-        duration: 500,
+        friction: 8,
+        tension: 60,
         useNativeDriver: true,
       }),
-      Animated.timing(slideUp, {
-        toValue: 0,
-        duration: 500,
-        useNativeDriver: true,
-      }),
+      Animated.parallel([
+        Animated.timing(fadeIn, {
+          toValue: 1,
+          duration: 500,
+          useNativeDriver: true,
+        }),
+        Animated.spring(slideUp, {
+          toValue: 0,
+          friction: 8,
+          tension: 50,
+          useNativeDriver: true,
+        }),
+      ]),
     ]).start();
   }, []);
 
@@ -147,6 +162,13 @@ const ScanHistoryScreen = ({ navigation }) => {
     }
   };
 
+  const onButtonPressIn = (scaleRef) => {
+    Animated.spring(scaleRef, { toValue: 0.92, friction: 8, tension: 100, useNativeDriver: true }).start();
+  };
+  const onButtonPressOut = (scaleRef) => {
+    Animated.spring(scaleRef, { toValue: 1, friction: 5, tension: 80, useNativeDriver: true }).start();
+  };
+
   const renderItem = ({ item, index }) => {
     const product = item.product;
     if (!product) return null;
@@ -158,45 +180,67 @@ const ScanHistoryScreen = ({ navigation }) => {
     const scoreBgColor = hasScore ? getScoreBg(score) : COLORS.linen;
     const label = hasScore ? getScoreLabel(score) : '';
 
+    const cardScale = useRef(new Animated.Value(1)).current;
+
     return (
-      <TouchableOpacity
-        style={styles.historyCard}
+      <AnimatedTouchable
+        style={[styles.historyCard, { transform: [{ scale: cardScale }] }]}
         onPress={() => navigation.navigate('ProductResult', { product })}
-        activeOpacity={0.65}
+        onPressIn={() => onButtonPressIn(cardScale)}
+        onPressOut={() => onButtonPressOut(cardScale)}
+        activeOpacity={1}
       >
-        {/* Score circle */}
-        <View style={styles.cardScoreSection}>
-          <View style={[styles.scoreBadge, { backgroundColor: scoreBgColor, borderColor: scoreColor + '30' }]}>
-            <Text style={[styles.scoreNumberCard, { color: scoreColor }]}>{displayScore}</Text>
-          </View>
-          {label ? (
-            <Text style={[styles.scoreLabelCard, { color: scoreColor }]} numberOfLines={1}>{label}</Text>
-          ) : null}
+        {/* Timeline connector */}
+        <View style={styles.timelineConnector}>
+          <View style={[styles.timelineDot, { backgroundColor: scoreColor + '30', borderColor: scoreColor }]} />
+          {index < filteredHistory.length - 1 && <View style={styles.timelineLine} />}
         </View>
 
-        {/* Product info */}
-        <View style={styles.cardInfoSection}>
-          <Text style={styles.productName} numberOfLines={1}>
-            {product.name || 'Produit inconnu'}
-          </Text>
-          {product.brand ? (
-            <Text style={styles.productBrand} numberOfLines={1}>
-              {product.brand}
-            </Text>
-          ) : null}
-          {item.scannedAt ? (
-            <View style={styles.dateBadge}>
-              <Feather name="clock" size={11} color={COLORS.pebble} />
-              <Text style={styles.dateText}>{formatDate(item.scannedAt)}</Text>
+        {/* Card content */}
+        <View style={styles.cardBody}>
+          {/* Score circle — Premium ring */}
+          <View style={styles.cardScoreSection}>
+            <View style={[styles.scoreRingOuter, { borderColor: scoreColor + '25' }]}>
+              <View style={[styles.scoreBadge, { backgroundColor: scoreBgColor }]}>
+                <Text style={[styles.scoreNumberCard, { color: scoreColor }]}>{displayScore}</Text>
+              </View>
             </View>
-          ) : null}
-        </View>
+            {label ? (
+              <View style={[styles.scoreLabelPill, { backgroundColor: scoreColor + '12' }]}>
+                <Text style={[styles.scoreLabelCard, { color: scoreColor }]} numberOfLines={1}>{label}</Text>
+              </View>
+            ) : null}
+          </View>
 
-        {/* Chevron */}
-        <View style={styles.chevronContainer}>
-          <Feather name="chevron-right" size={18} color={COLORS.pebble} />
+          {/* Product info */}
+          <View style={styles.cardInfoSection}>
+            <Text style={styles.productName} numberOfLines={1}>
+              {product.name || 'Produit inconnu'}
+            </Text>
+            {product.brand ? (
+              <Text style={styles.productBrand} numberOfLines={1}>
+                {product.brand}
+              </Text>
+            ) : null}
+            {item.scannedAt ? (
+              <View style={styles.dateBadge}>
+                <Feather name="clock" size={11} color={COLORS.pebble} />
+                <Text style={styles.dateText}>{formatDate(item.scannedAt)}</Text>
+              </View>
+            ) : null}
+          </View>
+
+          {/* Chevron — Premium */}
+          <View style={styles.chevronContainer}>
+            <LinearGradient
+              colors={[COLORS.primarySoft, '#FFF5F0']}
+              style={styles.chevronGradient}
+            >
+              <Feather name="chevron-right" size={16} color={COLORS.primary} />
+            </LinearGradient>
+          </View>
         </View>
-      </TouchableOpacity>
+      </AnimatedTouchable>
     );
   };
 
@@ -219,7 +263,15 @@ const ScanHistoryScreen = ({ navigation }) => {
             }}
             activeOpacity={0.8}
           >
-            <Text style={styles.retryButtonText}>Reessayer</Text>
+            <LinearGradient
+              colors={COLORS.gradientPrimary}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 0 }}
+              style={styles.retryButtonGradient}
+            >
+              <Feather name="refresh-cw" size={16} color={COLORS.white} style={{ marginRight: 8 }} />
+              <Text style={styles.retryButtonText}>Reessayer</Text>
+            </LinearGradient>
           </TouchableOpacity>
         </View>
       );
@@ -269,9 +321,11 @@ const ScanHistoryScreen = ({ navigation }) => {
 
   const renderHeader = () => (
     <View style={styles.listHeader}>
-      {/* Search bar */}
+      {/* Search bar — Premium */}
       <View style={styles.searchContainer}>
-        <Feather name="search" size={16} color={COLORS.sand} style={{ marginRight: SPACING.sm }} />
+        <View style={styles.searchIconWrap}>
+          <Feather name="search" size={15} color={COLORS.primary} />
+        </View>
         <TextInput
           style={styles.searchInput}
           value={searchQuery}
@@ -294,7 +348,7 @@ const ScanHistoryScreen = ({ navigation }) => {
         )}
       </View>
 
-      {/* Filter chips - horizontal scroll */}
+      {/* Filter chips — Premium */}
       <ScrollView
         horizontal
         showsHorizontalScrollIndicator={false}
@@ -309,8 +363,8 @@ const ScanHistoryScreen = ({ navigation }) => {
               style={[
                 styles.filterChip,
                 isActive && {
-                  backgroundColor: filter.color + '15',
-                  borderColor: filter.color + '40',
+                  backgroundColor: filter.color + '12',
+                  borderColor: filter.color + '30',
                 },
               ]}
               onPress={() => setActiveFilter(filter.key)}
@@ -318,6 +372,9 @@ const ScanHistoryScreen = ({ navigation }) => {
             >
               {filter.key !== 'all' && (
                 <View style={[styles.filterDot, { backgroundColor: filter.color }]} />
+              )}
+              {filter.key === 'all' && (
+                <Feather name="grid" size={12} color={isActive ? filter.color : COLORS.stone} style={{ marginRight: 2 }} />
               )}
               <Text
                 style={[
@@ -332,14 +389,19 @@ const ScanHistoryScreen = ({ navigation }) => {
         })}
       </ScrollView>
 
-      {/* Results count */}
+      {/* Results count — Premium */}
       <View style={styles.resultsInfo}>
-        <Text style={styles.resultsCount}>
-          {filteredHistory.length} {filteredHistory.length <= 1 ? 'produit' : 'produits'}
-          {activeFilter !== 'all' || searchQuery
-            ? ` (filtre${filteredHistory.length > 1 ? 's' : ''})`
-            : ''}
-        </Text>
+        <View style={styles.resultsLeft}>
+          <Text style={styles.resultsCount}>
+            {filteredHistory.length} {filteredHistory.length <= 1 ? 'produit' : 'produits'}
+          </Text>
+          {(activeFilter !== 'all' || searchQuery) && (
+            <View style={styles.filteredBadge}>
+              <Feather name="filter" size={10} color={COLORS.primary} />
+              <Text style={styles.filteredText}>Filtre</Text>
+            </View>
+          )}
+        </View>
       </View>
     </View>
   );
@@ -350,7 +412,7 @@ const ScanHistoryScreen = ({ navigation }) => {
       <View style={styles.container}>
         <StatusBar barStyle="light-content" translucent backgroundColor="transparent" />
         <LinearGradient
-          colors={COLORS.gradientPrimary}
+          colors={['#FF6B35', '#FF8F65']}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
           style={[styles.headerGradient, { paddingTop: insets.top + SPACING.md }]}
@@ -361,14 +423,18 @@ const ScanHistoryScreen = ({ navigation }) => {
               onPress={() => navigation.goBack()}
               activeOpacity={0.7}
             >
-              <Feather name="chevron-left" size={22} color={COLORS.white} />
+              <View style={styles.backButtonGlass}>
+                <Feather name="chevron-left" size={20} color={COLORS.white} />
+              </View>
             </TouchableOpacity>
             <Text style={styles.headerTitle}>Historique</Text>
             <View style={styles.headerPlaceholder} />
           </View>
         </LinearGradient>
         <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color={COLORS.primary} />
+          <View style={styles.loadingIconWrap}>
+            <ActivityIndicator size="large" color={COLORS.primary} />
+          </View>
           <Text style={styles.loadingText}>Chargement de l'historique...</Text>
         </View>
       </View>
@@ -379,26 +445,33 @@ const ScanHistoryScreen = ({ navigation }) => {
     <View style={styles.container}>
       <StatusBar barStyle="light-content" translucent backgroundColor="transparent" />
 
-      {/* Header */}
+      {/* Header — Premium */}
       <LinearGradient
-        colors={COLORS.gradientPrimary}
+        colors={['#FF6B35', '#FF7F45', '#FF9560']}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
         style={[styles.headerGradient, { paddingTop: insets.top + SPACING.md }]}
       >
-        <View style={styles.headerContent}>
-          <TouchableOpacity
-            style={styles.backButton}
+        {/* Decorative element */}
+        <View style={styles.headerDecorCircle} />
+
+        <Animated.View style={[styles.headerContent, { transform: [{ scale: headerScale }] }]}>
+          <AnimatedTouchable
+            style={[styles.backButton, { transform: [{ scale: backScale }] }]}
             onPress={() => navigation.goBack()}
-            activeOpacity={0.7}
+            onPressIn={() => onButtonPressIn(backScale)}
+            onPressOut={() => onButtonPressOut(backScale)}
+            activeOpacity={1}
           >
-            <Feather name="chevron-left" size={22} color={COLORS.white} />
-          </TouchableOpacity>
+            <View style={styles.backButtonGlass}>
+              <Feather name="chevron-left" size={20} color={COLORS.white} />
+            </View>
+          </AnimatedTouchable>
           <Text style={styles.headerTitle}>Historique</Text>
           <View style={styles.headerBadge}>
             <Text style={styles.headerBadgeText}>{history.length}</Text>
           </View>
-        </View>
+        </Animated.View>
         <Text style={styles.headerSubtitle}>Vos produits scannes</Text>
       </LinearGradient>
 
@@ -442,12 +515,22 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.cream,
   },
 
-  // Header
+  // Header — Premium
   headerGradient: {
-    paddingBottom: SPACING.xl,
+    paddingBottom: SPACING.xl + 4,
     paddingHorizontal: SPACING.xl,
-    borderBottomLeftRadius: RADIUS['2xl'],
-    borderBottomRightRadius: RADIUS['2xl'],
+    borderBottomLeftRadius: RADIUS['3xl'],
+    borderBottomRightRadius: RADIUS['3xl'],
+    overflow: 'hidden',
+  },
+  headerDecorCircle: {
+    position: 'absolute',
+    top: -20,
+    right: -30,
+    width: 120,
+    height: 120,
+    borderRadius: 60,
+    backgroundColor: 'rgba(255,255,255,0.06)',
   },
   headerContent: {
     flexDirection: 'row',
@@ -455,13 +538,16 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     marginBottom: SPACING.xs,
   },
-  backButton: {
-    width: 38,
-    height: 38,
-    borderRadius: 19,
-    backgroundColor: 'rgba(255,255,255,0.2)',
+  backButton: {},
+  backButtonGlass: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: 'rgba(255,255,255,0.15)',
     alignItems: 'center',
     justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.1)',
   },
   headerTitle: {
     fontSize: FONT_SIZE['2xl'],
@@ -470,12 +556,14 @@ const styles = StyleSheet.create({
     letterSpacing: -0.3,
   },
   headerBadge: {
-    backgroundColor: 'rgba(255,255,255,0.2)',
+    backgroundColor: 'rgba(255,255,255,0.18)',
     paddingHorizontal: SPACING.md,
-    paddingVertical: SPACING.xs,
+    paddingVertical: SPACING.xs + 1,
     borderRadius: RADIUS.full,
-    minWidth: 38,
+    minWidth: 40,
     alignItems: 'center',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.1)',
   },
   headerBadgeText: {
     fontSize: FONT_SIZE.sm,
@@ -483,13 +571,14 @@ const styles = StyleSheet.create({
     color: COLORS.white,
   },
   headerPlaceholder: {
-    width: 38,
+    width: 40,
   },
   headerSubtitle: {
     fontSize: FONT_SIZE.sm,
-    color: 'rgba(255,255,255,0.75)',
+    color: 'rgba(255,255,255,0.8)',
     fontFamily: FONTS.bodyMedium,
     textAlign: 'center',
+    letterSpacing: 0.2,
   },
 
   // Content
@@ -499,46 +588,55 @@ const styles = StyleSheet.create({
   },
   listContent: {
     paddingHorizontal: SPACING.xl,
-    paddingBottom: SPACING['3xl'],
+    paddingBottom: SPACING['3xl'] + 20,
   },
 
   // List header
   listHeader: {
-    paddingTop: SPACING.lg,
+    paddingTop: SPACING.lg + 4,
     marginBottom: SPACING.sm,
   },
 
-  // Search
+  // Search — Premium
   searchContainer: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: COLORS.white,
-    borderRadius: RADIUS.lg,
+    borderRadius: RADIUS.xl,
     paddingHorizontal: SPACING.base,
     borderWidth: 1.5,
     borderColor: COLORS.border,
-    ...SHADOWS.sm,
+    ...SHADOWS.md,
+  },
+  searchIconWrap: {
+    width: 30,
+    height: 30,
+    borderRadius: 15,
+    backgroundColor: COLORS.primarySoft,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: SPACING.sm,
   },
   searchInput: {
     flex: 1,
     fontSize: FONT_SIZE.base,
     color: COLORS.charcoal,
-    paddingVertical: Platform.OS === 'ios' ? SPACING.md + 2 : SPACING.md,
+    paddingVertical: Platform.OS === 'ios' ? SPACING.md + 3 : SPACING.md + 1,
     fontFamily: FONTS.bodyMedium,
   },
   clearSearch: {
     padding: SPACING.xs,
   },
   clearCircle: {
-    width: 22,
-    height: 22,
-    borderRadius: 11,
-    backgroundColor: COLORS.border,
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    backgroundColor: COLORS.borderLight,
     alignItems: 'center',
     justifyContent: 'center',
   },
 
-  // Filters
+  // Filters — Premium
   filtersScroll: {
     marginTop: SPACING.base,
   },
@@ -549,13 +647,14 @@ const styles = StyleSheet.create({
   filterChip: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: SPACING.md,
-    paddingVertical: SPACING.sm + 1,
+    paddingHorizontal: SPACING.md + 2,
+    paddingVertical: SPACING.sm + 2,
     borderRadius: RADIUS.full,
     borderWidth: 1.5,
     borderColor: COLORS.border,
     backgroundColor: COLORS.white,
     gap: 5,
+    ...SHADOWS.sm,
   },
   filterDot: {
     width: 8,
@@ -568,48 +667,109 @@ const styles = StyleSheet.create({
     color: COLORS.stone,
   },
 
-  // Results info
+  // Results info — Premium
   resultsInfo: {
-    marginTop: SPACING.base,
+    marginTop: SPACING.base + 2,
     marginBottom: SPACING.xs,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  resultsLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: SPACING.sm,
   },
   resultsCount: {
     fontSize: FONT_SIZE.sm,
     fontFamily: FONTS.bodySemiBold,
     color: COLORS.pebble,
   },
+  filteredBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 3,
+    backgroundColor: COLORS.primarySoft,
+    paddingHorizontal: SPACING.sm + 2,
+    paddingVertical: SPACING.xs,
+    borderRadius: RADIUS.full,
+  },
+  filteredText: {
+    fontSize: 10,
+    fontFamily: FONTS.bodySemiBold,
+    color: COLORS.primary,
+  },
 
-  // History cards
+  // History cards — Premium with timeline
   historyCard: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+  },
+  timelineConnector: {
+    alignItems: 'center',
+    width: 24,
+    paddingTop: SPACING.base + 4,
+    marginRight: SPACING.sm,
+  },
+  timelineDot: {
+    width: 12,
+    height: 12,
+    borderRadius: 6,
+    borderWidth: 2,
+    backgroundColor: COLORS.white,
+    zIndex: 1,
+  },
+  timelineLine: {
+    width: 2,
+    flex: 1,
+    backgroundColor: COLORS.border,
+    marginTop: 4,
+  },
+  cardBody: {
+    flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: COLORS.white,
-    borderRadius: RADIUS.xl,
-    padding: SPACING.base,
+    borderRadius: RADIUS['2xl'],
+    padding: SPACING.base + 2,
     ...SHADOWS.md,
+    borderWidth: 1,
+    borderColor: COLORS.borderLight,
   },
   cardScoreSection: {
     alignItems: 'center',
     marginRight: SPACING.base,
-    width: 58,
+    width: 62,
   },
-  scoreBadge: {
-    width: 52,
-    height: 52,
-    borderRadius: 26,
+  scoreRingOuter: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    borderWidth: 2,
     alignItems: 'center',
     justifyContent: 'center',
-    borderWidth: 2,
+  },
+  scoreBadge: {
+    width: 46,
+    height: 46,
+    borderRadius: 23,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   scoreNumberCard: {
-    fontSize: FONT_SIZE.xl,
+    fontSize: FONT_SIZE.lg,
     fontFamily: FONTS.heading,
     letterSpacing: -0.5,
+  },
+  scoreLabelPill: {
+    marginTop: 4,
+    paddingHorizontal: SPACING.sm,
+    paddingVertical: 2,
+    borderRadius: RADIUS.full,
   },
   scoreLabelCard: {
     fontSize: 9,
     fontFamily: FONTS.heading,
-    marginTop: 3,
     textTransform: 'uppercase',
     letterSpacing: 0.3,
   },
@@ -620,7 +780,8 @@ const styles = StyleSheet.create({
     fontSize: FONT_SIZE.base,
     fontFamily: FONTS.heading,
     color: COLORS.charcoal,
-    marginBottom: 3,
+    marginBottom: 4,
+    letterSpacing: -0.1,
   },
   productBrand: {
     fontSize: FONT_SIZE.sm,
@@ -639,32 +800,34 @@ const styles = StyleSheet.create({
     color: COLORS.pebble,
   },
   chevronContainer: {
-    width: 30,
-    height: 30,
-    borderRadius: 15,
-    backgroundColor: COLORS.linen,
-    alignItems: 'center',
-    justifyContent: 'center',
     marginLeft: SPACING.sm,
   },
+  chevronGradient: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   separator: {
-    height: SPACING.md,
+    height: SPACING.xs,
   },
 
-  // Empty state
+  // Empty state — Premium
   emptyContainer: {
     alignItems: 'center',
     paddingVertical: SPACING['5xl'],
     paddingHorizontal: SPACING.xl,
   },
   emptyIconCircle: {
-    width: 88,
-    height: 88,
-    borderRadius: 44,
+    width: 92,
+    height: 92,
+    borderRadius: 46,
     backgroundColor: COLORS.primarySoft,
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: SPACING.xl,
+    ...SHADOWS.sm,
   },
   emptyTitle: {
     fontSize: FONT_SIZE.xl,
@@ -678,20 +841,21 @@ const styles = StyleSheet.create({
     fontFamily: FONTS.bodyMedium,
     color: COLORS.stone,
     textAlign: 'center',
-    lineHeight: 20,
+    lineHeight: 21,
     paddingHorizontal: SPACING.lg,
     marginBottom: SPACING.xl,
   },
   emptyButton: {
-    borderRadius: RADIUS.lg,
+    borderRadius: RADIUS.xl,
     overflow: 'hidden',
+    ...SHADOWS.glow(COLORS.primary),
   },
   emptyButtonGradient: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: SPACING.xl,
-    paddingVertical: SPACING.md,
-    borderRadius: RADIUS.lg,
+    paddingHorizontal: SPACING.xl + 4,
+    paddingVertical: SPACING.md + 2,
+    borderRadius: RADIUS.xl,
     gap: SPACING.sm,
   },
   emptyButtonText: {
@@ -700,10 +864,16 @@ const styles = StyleSheet.create({
     color: COLORS.white,
   },
   retryButton: {
-    backgroundColor: COLORS.primary,
+    borderRadius: RADIUS.xl,
+    overflow: 'hidden',
+    ...SHADOWS.glow(COLORS.primary),
+  },
+  retryButtonGradient: {
+    flexDirection: 'row',
+    alignItems: 'center',
     paddingHorizontal: SPACING.xl,
-    paddingVertical: SPACING.md,
-    borderRadius: RADIUS.lg,
+    paddingVertical: SPACING.md + 2,
+    borderRadius: RADIUS.xl,
   },
   retryButtonText: {
     fontSize: FONT_SIZE.base,
@@ -711,12 +881,20 @@ const styles = StyleSheet.create({
     color: COLORS.white,
   },
 
-  // Loading state
+  // Loading state — Premium
   loadingContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    gap: SPACING.md,
+    gap: SPACING.lg,
+  },
+  loadingIconWrap: {
+    width: 72,
+    height: 72,
+    borderRadius: 36,
+    backgroundColor: COLORS.primarySoft,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   loadingText: {
     fontSize: FONT_SIZE.sm,
