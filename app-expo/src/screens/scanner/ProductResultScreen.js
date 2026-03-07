@@ -20,7 +20,7 @@ import { FONTS } from '../../utils/typography';
 const { COLORS, SHADOWS, RADIUS, SPACING, FONT_SIZE, getScoreColor, getScoreBg, getScoreLabel } = require('../../utils/colors');
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
-const SCORE_RING_SIZE = 110;
+const SCORE_RING_SIZE = 120;
 const SCORE_RING_BORDER = 5;
 
 const getRiskColor = (risk) => {
@@ -56,20 +56,14 @@ const getRiskIconName = (risk) => {
 };
 
 const getScoreGradient = (score) => {
-  if (score >= 80) return [COLORS.scoreExcellent, '#34D399'];
-  if (score >= 60) return [COLORS.scoreGood, '#6EE7B7'];
-  if (score >= 40) return [COLORS.scoreMediocre, '#FCD34D'];
-  if (score >= 20) return [COLORS.scoreBad, '#FDBA74'];
-  return [COLORS.scoreVeryBad, '#FCA5A5'];
+  if (score >= 80) return ['#059669', '#34D399'];
+  if (score >= 60) return ['#10B981', '#6EE7B7'];
+  if (score >= 40) return ['#D97706', '#FCD34D'];
+  if (score >= 20) return ['#EA580C', '#FDBA74'];
+  return ['#DC2626', '#FCA5A5'];
 };
 
-const DETAIL_ICONS = {
-  protein: 'trending-up',
-  fat: 'disc',
-  fiber: 'layers',
-  additivesPenalty: 'activity',
-  qualityBonus: 'star',
-};
+const AnimatedTouchable = Animated.createAnimatedComponent(TouchableOpacity);
 
 const ProductResultScreen = ({ route, navigation }) => {
   const insets = useSafeAreaInsets();
@@ -83,49 +77,102 @@ const ProductResultScreen = ({ route, navigation }) => {
 
   // Animations
   const fadeIn = useRef(new Animated.Value(0)).current;
-  const slideUp = useRef(new Animated.Value(40)).current;
-  const scoreScale = useRef(new Animated.Value(0.3)).current;
+  const slideUp = useRef(new Animated.Value(50)).current;
+  const scoreScale = useRef(new Animated.Value(0.2)).current;
   const scoreOpacity = useRef(new Animated.Value(0)).current;
   const ringRotate = useRef(new Animated.Value(0)).current;
+  const ringPulse = useRef(new Animated.Value(1)).current;
+  const headerFade = useRef(new Animated.Value(0)).current;
   const [cardsVisible, setCardsVisible] = useState(false);
+  const cardAnims = useRef([...Array(6)].map(() => new Animated.Value(0))).current;
+  const cardSlides = useRef([...Array(6)].map(() => new Animated.Value(30))).current;
+
+  // Button press scales
+  const backScale = useRef(new Animated.Value(1)).current;
+  const shareScale = useRef(new Animated.Value(1)).current;
 
   useEffect(() => {
+    // Header fade
+    Animated.timing(headerFade, {
+      toValue: 1,
+      duration: 400,
+      useNativeDriver: true,
+    }).start();
+
     // Content fade in
     Animated.parallel([
       Animated.timing(fadeIn, {
         toValue: 1,
-        duration: 500,
+        duration: 600,
         useNativeDriver: true,
       }),
-      Animated.timing(slideUp, {
+      Animated.spring(slideUp, {
         toValue: 0,
-        duration: 500,
+        friction: 8,
+        tension: 50,
         useNativeDriver: true,
       }),
     ]).start();
 
     // Score badge entrance with spring
     Animated.sequence([
-      Animated.delay(250),
+      Animated.delay(300),
       Animated.parallel([
         Animated.spring(scoreScale, {
           toValue: 1,
-          friction: 6,
-          tension: 80,
+          friction: 5,
+          tension: 70,
           useNativeDriver: true,
         }),
         Animated.timing(scoreOpacity, {
           toValue: 1,
-          duration: 400,
+          duration: 500,
           useNativeDriver: true,
         }),
         Animated.timing(ringRotate, {
           toValue: 1,
-          duration: 800,
+          duration: 900,
           useNativeDriver: true,
         }),
       ]),
-    ]).start(() => setCardsVisible(true));
+    ]).start(() => {
+      setCardsVisible(true);
+      // Staggered card entrance
+      Animated.stagger(100, cardAnims.map((anim, i) =>
+        Animated.parallel([
+          Animated.timing(anim, {
+            toValue: 1,
+            duration: 400,
+            useNativeDriver: true,
+          }),
+          Animated.spring(cardSlides[i], {
+            toValue: 0,
+            friction: 8,
+            tension: 60,
+            useNativeDriver: true,
+          }),
+        ])
+      )).start();
+    });
+
+    // Continuous subtle ring pulse
+    const pulseLoop = Animated.loop(
+      Animated.sequence([
+        Animated.timing(ringPulse, {
+          toValue: 1.06,
+          duration: 1800,
+          useNativeDriver: true,
+        }),
+        Animated.timing(ringPulse, {
+          toValue: 1,
+          duration: 1800,
+          useNativeDriver: true,
+        }),
+      ])
+    );
+    pulseLoop.start();
+
+    return () => pulseLoop.stop();
   }, []);
 
   const handleShare = async () => {
@@ -137,6 +184,13 @@ const ProductResultScreen = ({ route, navigation }) => {
     } catch (_) {
       // Share cancelled
     }
+  };
+
+  const onButtonPressIn = (scaleRef) => {
+    Animated.spring(scaleRef, { toValue: 0.9, friction: 8, tension: 100, useNativeDriver: true }).start();
+  };
+  const onButtonPressOut = (scaleRef) => {
+    Animated.spring(scaleRef, { toValue: 1, friction: 5, tension: 80, useNativeDriver: true }).start();
   };
 
   const ringRotation = ringRotate.interpolate({
@@ -161,6 +215,20 @@ const ProductResultScreen = ({ route, navigation }) => {
   const moderateCount = ingredients.filter(i => i.risk === 'moderate').length;
   const safeCount = ingredients.filter(i => i.risk !== 'dangerous' && i.risk !== 'moderate').length;
 
+  const renderCard = (content, index) => (
+    <Animated.View
+      key={index}
+      style={{
+        opacity: cardsVisible ? cardAnims[index] || 1 : 0,
+        transform: [{ translateY: cardsVisible ? (cardSlides[index] || 0) : 30 }],
+      }}
+    >
+      {content}
+    </Animated.View>
+  );
+
+  let cardIndex = 0;
+
   return (
     <View style={styles.container}>
       <StatusBar barStyle="light-content" translucent backgroundColor="transparent" />
@@ -173,36 +241,50 @@ const ProductResultScreen = ({ route, navigation }) => {
       >
         {/* Header gradient colored by score */}
         <LinearGradient
-          colors={scoreGradient}
+          colors={[scoreGradient[0], scoreGradient[1], scoreGradient[1] + 'CC']}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
           style={[styles.headerGradient, { paddingTop: insets.top + SPACING.md }]}
         >
+          {/* Decorative circles */}
+          <View style={styles.decorCircle1} />
+          <View style={styles.decorCircle2} />
+
           {/* Nav bar */}
-          <View style={styles.headerNav}>
-            <TouchableOpacity
-              style={styles.backButton}
+          <Animated.View style={[styles.headerNav, { opacity: headerFade }]}>
+            <AnimatedTouchable
+              style={[styles.backButton, { transform: [{ scale: backScale }] }]}
               onPress={() => navigation.goBack()}
-              activeOpacity={0.7}
+              onPressIn={() => onButtonPressIn(backScale)}
+              onPressOut={() => onButtonPressOut(backScale)}
+              activeOpacity={1}
             >
-              <Feather name="chevron-left" size={22} color={COLORS.white} />
-              <Text style={styles.backText}>Retour</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={styles.shareButton}
+              <View style={styles.navButtonGlass}>
+                <Feather name="chevron-left" size={20} color={COLORS.white} />
+                <Text style={styles.backText}>Retour</Text>
+              </View>
+            </AnimatedTouchable>
+            <AnimatedTouchable
+              style={[styles.shareButton, { transform: [{ scale: shareScale }] }]}
               onPress={handleShare}
-              activeOpacity={0.7}
+              onPressIn={() => onButtonPressIn(shareScale)}
+              onPressOut={() => onButtonPressOut(shareScale)}
+              activeOpacity={1}
             >
-              <Feather name="share-2" size={18} color={COLORS.white} />
-            </TouchableOpacity>
-          </View>
+              <View style={styles.navButtonGlassCircle}>
+                <Feather name="share-2" size={17} color={COLORS.white} />
+              </View>
+            </AnimatedTouchable>
+          </Animated.View>
 
           {/* Product image */}
           {product.image && (
-            <Image source={{ uri: product.image }} style={styles.productImage} />
+            <View style={styles.productImageWrap}>
+              <Image source={{ uri: product.image }} style={styles.productImage} />
+            </View>
           )}
 
-          {/* Score ring */}
+          {/* Score ring — Premium */}
           <Animated.View
             style={[
               styles.scoreBadgeContainer,
@@ -212,6 +294,14 @@ const ProductResultScreen = ({ route, navigation }) => {
               },
             ]}
           >
+            {/* Pulsing outer ring */}
+            <Animated.View
+              style={[
+                styles.scoreRingPulse,
+                { transform: [{ scale: ringPulse }] },
+              ]}
+            />
+
             <Animated.View
               style={[
                 styles.scoreRingOuter,
@@ -219,6 +309,7 @@ const ProductResultScreen = ({ route, navigation }) => {
               ]}
             >
               <View style={styles.ringAccent} />
+              <View style={styles.ringAccent2} />
             </Animated.View>
 
             <View style={styles.scoreCircle}>
@@ -231,8 +322,9 @@ const ProductResultScreen = ({ route, navigation }) => {
             </View>
           </Animated.View>
 
-          {/* Score label pill */}
+          {/* Score label pill — Glass */}
           <View style={styles.scoreLabelBadge}>
+            <View style={styles.scoreLabelDot} />
             <Text style={styles.scoreLabelText}>{scoreLabel}</Text>
           </View>
 
@@ -245,11 +337,12 @@ const ProductResultScreen = ({ route, navigation }) => {
           ) : null}
           {product.category ? (
             <View style={styles.categoryBadge}>
+              <Feather name="tag" size={11} color="rgba(255,255,255,0.8)" style={{ marginRight: 4 }} />
               <Text style={styles.categoryText}>{product.category}</Text>
             </View>
           ) : null}
 
-          {/* Quick stats row */}
+          {/* Quick stats row — Glass cards */}
           {(hasIngredients || hasAdditives) && (
             <View style={styles.quickStats}>
               {hasIngredients && (
@@ -265,7 +358,7 @@ const ProductResultScreen = ({ route, navigation }) => {
                 </View>
               )}
               {dangerousCount > 0 && (
-                <View style={styles.quickStat}>
+                <View style={[styles.quickStat, styles.quickStatDanger]}>
                   <Text style={[styles.quickStatValue, { color: '#FEE2E2' }]}>{dangerousCount}</Text>
                   <Text style={styles.quickStatLabel}>A risque</Text>
                 </View>
@@ -285,36 +378,45 @@ const ProductResultScreen = ({ route, navigation }) => {
           ]}
         >
           {/* Score breakdown card */}
-          {hasBreakdown && (
+          {hasBreakdown && renderCard(
             <View style={styles.card}>
               <View style={styles.cardHeader}>
-                <Feather name="bar-chart-2" size={20} color={COLORS.primary} style={{ marginRight: SPACING.sm }} />
+                <View style={styles.cardIconWrap}>
+                  <LinearGradient
+                    colors={COLORS.gradientPrimary}
+                    style={styles.cardIconGradient}
+                  >
+                    <Feather name="bar-chart-2" size={16} color={COLORS.white} />
+                  </LinearGradient>
+                </View>
                 <Text style={styles.cardTitle}>Repartition du score</Text>
               </View>
 
               <View style={styles.breakdownList}>
                 {[
-                  { label: 'Ingredients', weight: '40%', value: ingredientScore ?? 0, maxValue: 40, color: COLORS.scoreExcellent },
-                  { label: 'Additifs', weight: '30%', value: additivesScore ?? 0, maxValue: 30, color: COLORS.scoreMediocre },
-                  { label: 'Nutrition', weight: '30%', value: nutritionScoreDetail ?? 0, maxValue: 30, color: COLORS.info },
+                  { label: 'Ingredients', weight: '40%', value: ingredientScore ?? 0, maxValue: 40, color: COLORS.scoreExcellent, gradient: ['#059669', '#34D399'] },
+                  { label: 'Additifs', weight: '30%', value: additivesScore ?? 0, maxValue: 30, color: COLORS.scoreMediocre, gradient: ['#D97706', '#FCD34D'] },
+                  { label: 'Nutrition', weight: '30%', value: nutritionScoreDetail ?? 0, maxValue: 30, color: COLORS.info, gradient: ['#2563EB', '#60A5FA'] },
                 ].map((item, index) => {
                   const pct = item.maxValue > 0 ? Math.min((item.value / item.maxValue) * 100, 100) : 0;
                   return (
                     <View key={index} style={styles.breakdownItem}>
                       <View style={styles.breakdownLabelRow}>
                         <Text style={styles.breakdownLabel}>{item.label}</Text>
-                        <Text style={[styles.breakdownValue, { color: item.color }]}>
-                          {item.value}/{item.maxValue}
-                        </Text>
+                        <View style={[styles.breakdownValueBadge, { backgroundColor: item.color + '15' }]}>
+                          <Text style={[styles.breakdownValue, { color: item.color }]}>
+                            {item.value}/{item.maxValue}
+                          </Text>
+                        </View>
                       </View>
                       <View style={styles.progressBarBg}>
-                        <View
+                        <LinearGradient
+                          colors={item.gradient}
+                          start={{ x: 0, y: 0 }}
+                          end={{ x: 1, y: 0 }}
                           style={[
                             styles.progressBarFill,
-                            {
-                              width: `${pct}%`,
-                              backgroundColor: item.color,
-                            },
+                            { width: `${Math.max(pct, 2)}%` },
                           ]}
                         />
                       </View>
@@ -323,11 +425,12 @@ const ProductResultScreen = ({ route, navigation }) => {
                   );
                 })}
               </View>
-            </View>
+            </View>,
+            cardIndex++
           )}
 
           {/* Ingredients summary bar */}
-          {hasIngredients && (dangerousCount > 0 || moderateCount > 0) && (
+          {hasIngredients && (dangerousCount > 0 || moderateCount > 0) && renderCard(
             <View style={styles.riskSummaryCard}>
               <View style={styles.riskSummaryRow}>
                 {dangerousCount > 0 && (
@@ -353,14 +456,22 @@ const ProductResultScreen = ({ route, navigation }) => {
                   </Text>
                 </View>
               </View>
-            </View>
+            </View>,
+            cardIndex++
           )}
 
           {/* Ingredients card */}
-          {hasIngredients && (
+          {hasIngredients && renderCard(
             <View style={styles.card}>
               <View style={styles.cardHeader}>
-                <Feather name="droplet" size={20} color={COLORS.primary} style={{ marginRight: SPACING.sm }} />
+                <View style={styles.cardIconWrap}>
+                  <LinearGradient
+                    colors={['#059669', '#34D399']}
+                    style={styles.cardIconGradient}
+                  >
+                    <Feather name="droplet" size={16} color={COLORS.white} />
+                  </LinearGradient>
+                </View>
                 <Text style={styles.cardTitle}>Ingredients</Text>
                 <View style={styles.countBadge}>
                   <Text style={styles.countText}>{ingredients.length}</Text>
@@ -398,14 +509,22 @@ const ProductResultScreen = ({ route, navigation }) => {
                   )}
                 </View>
               ))}
-            </View>
+            </View>,
+            cardIndex++
           )}
 
           {/* Additives card */}
-          {hasAdditives && (
+          {hasAdditives && renderCard(
             <View style={styles.card}>
               <View style={styles.cardHeader}>
-                <Feather name="search" size={20} color={COLORS.primary} style={{ marginRight: SPACING.sm }} />
+                <View style={styles.cardIconWrap}>
+                  <LinearGradient
+                    colors={['#D97706', '#FCD34D']}
+                    style={styles.cardIconGradient}
+                  >
+                    <Feather name="search" size={16} color={COLORS.white} />
+                  </LinearGradient>
+                </View>
                 <Text style={styles.cardTitle}>Additifs</Text>
                 <View style={[styles.countBadge, { backgroundColor: COLORS.warningSoft }]}>
                   <Text style={[styles.countText, { color: COLORS.warning }]}>{additives.length}</Text>
@@ -440,14 +559,22 @@ const ProductResultScreen = ({ route, navigation }) => {
                   </View>
                 </View>
               ))}
-            </View>
+            </View>,
+            cardIndex++
           )}
 
           {/* Score details card */}
-          {hasScoreDetails && (
+          {hasScoreDetails && renderCard(
             <View style={styles.card}>
               <View style={styles.cardHeader}>
-                <Feather name="clipboard" size={20} color={COLORS.primary} style={{ marginRight: SPACING.sm }} />
+                <View style={styles.cardIconWrap}>
+                  <LinearGradient
+                    colors={COLORS.gradientAccent}
+                    style={styles.cardIconGradient}
+                  >
+                    <Feather name="clipboard" size={16} color={COLORS.white} />
+                  </LinearGradient>
+                </View>
                 <Text style={styles.cardTitle}>Details du score</Text>
               </View>
 
@@ -466,11 +593,13 @@ const ProductResultScreen = ({ route, navigation }) => {
                   ]}
                 >
                   <View style={styles.detailLeft}>
-                    <Feather
-                      name={detail.icon}
-                      size={16}
-                      color={COLORS.stone}
-                    />
+                    <View style={styles.detailIconWrap}>
+                      <Feather
+                        name={detail.icon}
+                        size={14}
+                        color={COLORS.stone}
+                      />
+                    </View>
                     <Text style={styles.detailLabel}>{detail.label}</Text>
                   </View>
                   <View
@@ -502,11 +631,12 @@ const ProductResultScreen = ({ route, navigation }) => {
                   </View>
                 </View>
               ))}
-            </View>
+            </View>,
+            cardIndex++
           )}
 
           {/* No data fallback */}
-          {!hasIngredients && !hasAdditives && !hasBreakdown && !hasScoreDetails && (
+          {!hasIngredients && !hasAdditives && !hasBreakdown && !hasScoreDetails && renderCard(
             <View style={styles.noDataCard}>
               <View style={styles.noDataIconCircle}>
                 <Feather name="inbox" size={36} color={COLORS.sand} />
@@ -515,14 +645,19 @@ const ProductResultScreen = ({ route, navigation }) => {
               <Text style={styles.noDataText}>
                 Les details de ce produit ne sont pas encore disponibles dans notre base de donnees.
               </Text>
-            </View>
+            </View>,
+            cardIndex++
           )}
 
-          {/* Barcode info */}
+          {/* Barcode info — Premium */}
           {product.barcode && (
             <View style={styles.barcodeInfo}>
+              <View style={styles.barcodeDivider} />
               <Text style={styles.barcodeLabel}>Code-barres</Text>
-              <Text style={styles.barcodeValue}>{product.barcode}</Text>
+              <View style={styles.barcodeValueWrap}>
+                <Feather name="maximize" size={12} color={COLORS.pebble} style={{ marginRight: 6 }} />
+                <Text style={styles.barcodeValue}>{product.barcode}</Text>
+              </View>
             </View>
           )}
 
@@ -545,16 +680,35 @@ const styles = StyleSheet.create({
     paddingBottom: SPACING['2xl'],
   },
 
-  // Header gradient
+  // Header gradient — Premium
   headerGradient: {
-    paddingBottom: SPACING['3xl'],
+    paddingBottom: SPACING['3xl'] + 8,
     paddingHorizontal: SPACING.xl,
     alignItems: 'center',
-    borderBottomLeftRadius: RADIUS['3xl'],
-    borderBottomRightRadius: RADIUS['3xl'],
+    borderBottomLeftRadius: RADIUS['3xl'] + 4,
+    borderBottomRightRadius: RADIUS['3xl'] + 4,
+    overflow: 'hidden',
+  },
+  decorCircle1: {
+    position: 'absolute',
+    top: -40,
+    right: -40,
+    width: 160,
+    height: 160,
+    borderRadius: 80,
+    backgroundColor: 'rgba(255,255,255,0.06)',
+  },
+  decorCircle2: {
+    position: 'absolute',
+    bottom: 20,
+    left: -30,
+    width: 100,
+    height: 100,
+    borderRadius: 50,
+    backgroundColor: 'rgba(255,255,255,0.04)',
   },
 
-  // Nav
+  // Nav — Premium glass
   headerNav: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -562,63 +716,99 @@ const styles = StyleSheet.create({
     width: '100%',
     marginBottom: SPACING.xl,
   },
-  backButton: {
+  backButton: {},
+  navButtonGlass: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(255,255,255,0.2)',
+    backgroundColor: 'rgba(255,255,255,0.15)',
     paddingHorizontal: SPACING.base,
-    paddingVertical: SPACING.sm,
+    paddingVertical: SPACING.sm + 2,
     borderRadius: RADIUS.full,
-    gap: 2,
+    gap: 3,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.1)',
   },
   backText: {
     fontSize: FONT_SIZE.sm,
     color: COLORS.white,
     fontFamily: FONTS.bodySemiBold,
   },
-  shareButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: 'rgba(255,255,255,0.2)',
+  shareButton: {},
+  navButtonGlassCircle: {
+    width: 42,
+    height: 42,
+    borderRadius: 21,
+    backgroundColor: 'rgba(255,255,255,0.15)',
     alignItems: 'center',
     justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.1)',
   },
 
-  // Product image
-  productImage: { width: 80, height: 80, borderRadius: 16, borderWidth: 3, borderColor: 'rgba(255,255,255,0.4)', marginBottom: 12, alignSelf: 'center' },
+  // Product image — Premium
+  productImageWrap: {
+    marginBottom: SPACING.base,
+    borderRadius: 20,
+    ...SHADOWS.lg,
+  },
+  productImage: {
+    width: 88,
+    height: 88,
+    borderRadius: 20,
+    borderWidth: 3,
+    borderColor: 'rgba(255,255,255,0.35)',
+  },
 
-  // Score badge
+  // Score badge — Premium
   scoreBadgeContainer: {
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: SPACING.base,
+    marginBottom: SPACING.lg,
+  },
+  scoreRingPulse: {
+    position: 'absolute',
+    width: SCORE_RING_SIZE + 36,
+    height: SCORE_RING_SIZE + 36,
+    borderRadius: (SCORE_RING_SIZE + 36) / 2,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.12)',
   },
   scoreRingOuter: {
     position: 'absolute',
-    width: SCORE_RING_SIZE + 22,
-    height: SCORE_RING_SIZE + 22,
-    borderRadius: (SCORE_RING_SIZE + 22) / 2,
+    width: SCORE_RING_SIZE + 24,
+    height: SCORE_RING_SIZE + 24,
+    borderRadius: (SCORE_RING_SIZE + 24) / 2,
     borderWidth: 2,
-    borderColor: 'rgba(255,255,255,0.25)',
+    borderColor: 'rgba(255,255,255,0.2)',
     borderStyle: 'dashed',
   },
   ringAccent: {
     position: 'absolute',
-    top: -4,
+    top: -5,
+    left: '50%',
+    marginLeft: -5,
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+    backgroundColor: COLORS.white,
+    ...SHADOWS.sm,
+  },
+  ringAccent2: {
+    position: 'absolute',
+    bottom: -5,
     left: '50%',
     marginLeft: -4,
     width: 8,
     height: 8,
     borderRadius: 4,
-    backgroundColor: COLORS.white,
+    backgroundColor: 'rgba(255,255,255,0.6)',
   },
   scoreCircle: {
     width: SCORE_RING_SIZE,
     height: SCORE_RING_SIZE,
     borderRadius: SCORE_RING_SIZE / 2,
     borderWidth: SCORE_RING_BORDER,
-    borderColor: 'rgba(255,255,255,0.4)',
+    borderColor: 'rgba(255,255,255,0.35)',
     backgroundColor: 'rgba(255,255,255,0.95)',
     alignItems: 'center',
     justifyContent: 'center',
@@ -628,11 +818,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   scoreNumber: {
-    fontSize: FONT_SIZE['4xl'],
+    fontSize: FONT_SIZE['4xl'] + 2,
     fontFamily: FONTS.heading,
     color: COLORS.charcoal,
-    letterSpacing: -1,
-    lineHeight: FONT_SIZE['4xl'] + 2,
+    letterSpacing: -1.5,
+    lineHeight: FONT_SIZE['4xl'] + 4,
   },
   scoreNumberMuted: {
     color: COLORS.pebble,
@@ -642,46 +832,63 @@ const styles = StyleSheet.create({
     fontSize: FONT_SIZE.xs,
     fontFamily: FONTS.bodySemiBold,
     color: COLORS.pebble,
-    marginTop: -2,
+    marginTop: -1,
+    letterSpacing: 0.5,
   },
 
-  // Score label
+  // Score label — Glass
   scoreLabelBadge: {
-    backgroundColor: 'rgba(255,255,255,0.2)',
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(255,255,255,0.18)',
     paddingHorizontal: SPACING.lg,
-    paddingVertical: SPACING.xs + 2,
+    paddingVertical: SPACING.sm,
     borderRadius: RADIUS.full,
     marginBottom: SPACING.base,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.1)',
+    gap: 6,
+  },
+  scoreLabelDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: COLORS.white,
   },
   scoreLabelText: {
     fontSize: FONT_SIZE.sm,
     fontFamily: FONTS.heading,
     color: COLORS.white,
-    letterSpacing: 0.5,
+    letterSpacing: 0.8,
     textTransform: 'uppercase',
   },
 
   // Product info
   productName: {
-    fontSize: FONT_SIZE['2xl'],
+    fontSize: FONT_SIZE['2xl'] + 2,
     fontFamily: FONTS.heading,
     color: COLORS.white,
     textAlign: 'center',
-    letterSpacing: -0.3,
-    marginBottom: 4,
+    letterSpacing: -0.4,
+    marginBottom: 6,
   },
   productBrand: {
     fontSize: FONT_SIZE.base,
     color: 'rgba(255,255,255,0.75)',
     fontFamily: FONTS.bodyMedium,
     marginBottom: SPACING.sm,
+    letterSpacing: 0.2,
   },
   categoryBadge: {
-    backgroundColor: 'rgba(255,255,255,0.15)',
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(255,255,255,0.12)',
     paddingHorizontal: SPACING.md,
-    paddingVertical: SPACING.xs,
+    paddingVertical: SPACING.xs + 1,
     borderRadius: RADIUS.full,
     marginTop: SPACING.xs,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.08)',
   },
   categoryText: {
     fontSize: FONT_SIZE.xs,
@@ -689,29 +896,37 @@ const styles = StyleSheet.create({
     fontFamily: FONTS.bodySemiBold,
   },
 
-  // Quick stats
+  // Quick stats — Glass
   quickStats: {
     flexDirection: 'row',
-    gap: SPACING.base,
+    gap: SPACING.sm,
     marginTop: SPACING.lg,
   },
   quickStat: {
     alignItems: 'center',
-    backgroundColor: 'rgba(255,255,255,0.15)',
-    paddingHorizontal: SPACING.base,
-    paddingVertical: SPACING.sm,
-    borderRadius: RADIUS.lg,
+    backgroundColor: 'rgba(255,255,255,0.12)',
+    paddingHorizontal: SPACING.lg,
+    paddingVertical: SPACING.md,
+    borderRadius: RADIUS.xl,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.08)',
+    minWidth: 80,
+  },
+  quickStatDanger: {
+    backgroundColor: 'rgba(220, 38, 38, 0.15)',
+    borderColor: 'rgba(220, 38, 38, 0.1)',
   },
   quickStatValue: {
-    fontSize: FONT_SIZE.lg,
+    fontSize: FONT_SIZE.xl,
     fontFamily: FONTS.heading,
     color: COLORS.white,
+    letterSpacing: -0.5,
   },
   quickStatLabel: {
     fontSize: FONT_SIZE.xs,
     fontFamily: FONTS.bodyMedium,
     color: 'rgba(255,255,255,0.7)',
-    marginTop: 1,
+    marginTop: 2,
   },
 
   // Cards container
@@ -720,29 +935,42 @@ const styles = StyleSheet.create({
     marginTop: -SPACING.lg,
   },
 
-  // Card base
+  // Card base — Premium
   card: {
     backgroundColor: COLORS.white,
-    borderRadius: RADIUS['2xl'],
+    borderRadius: RADIUS['2xl'] + 2,
     padding: SPACING.xl,
     marginBottom: SPACING.base,
     ...SHADOWS.md,
+    borderWidth: 1,
+    borderColor: COLORS.borderLight,
   },
   cardHeader: {
     flexDirection: 'row',
     alignItems: 'center',
     marginBottom: SPACING.lg,
   },
+  cardIconWrap: {
+    marginRight: SPACING.sm + 2,
+  },
+  cardIconGradient: {
+    width: 34,
+    height: 34,
+    borderRadius: 17,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   cardTitle: {
     flex: 1,
     fontSize: FONT_SIZE.lg,
     fontFamily: FONTS.heading,
     color: COLORS.charcoal,
+    letterSpacing: -0.2,
   },
   countBadge: {
     backgroundColor: COLORS.primarySoft,
     paddingHorizontal: SPACING.md,
-    paddingVertical: SPACING.xs,
+    paddingVertical: SPACING.xs + 1,
     borderRadius: RADIUS.full,
   },
   countText: {
@@ -751,13 +979,15 @@ const styles = StyleSheet.create({
     color: COLORS.primary,
   },
 
-  // Risk summary
+  // Risk summary — Premium
   riskSummaryCard: {
     backgroundColor: COLORS.white,
-    borderRadius: RADIUS.xl,
+    borderRadius: RADIUS['2xl'],
     padding: SPACING.base,
     marginBottom: SPACING.base,
     ...SHADOWS.sm,
+    borderWidth: 1,
+    borderColor: COLORS.borderLight,
   },
   riskSummaryRow: {
     flexDirection: 'row',
@@ -768,7 +998,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: SPACING.md,
-    paddingVertical: SPACING.sm,
+    paddingVertical: SPACING.sm + 1,
     borderRadius: RADIUS.full,
     gap: 6,
   },
@@ -782,12 +1012,12 @@ const styles = StyleSheet.create({
     fontFamily: FONTS.heading,
   },
 
-  // Score breakdown
+  // Score breakdown — Premium
   breakdownList: {
-    gap: SPACING.lg,
+    gap: SPACING.lg + 2,
   },
   breakdownItem: {
-    gap: SPACING.xs,
+    gap: SPACING.xs + 1,
   },
   breakdownLabelRow: {
     flexDirection: 'row',
@@ -805,26 +1035,32 @@ const styles = StyleSheet.create({
     color: COLORS.pebble,
     marginTop: 2,
   },
+  breakdownValueBadge: {
+    paddingHorizontal: SPACING.sm + 2,
+    paddingVertical: SPACING.xs,
+    borderRadius: RADIUS.sm,
+  },
   progressBarBg: {
-    height: 8,
-    borderRadius: 4,
+    height: 10,
+    borderRadius: 5,
     backgroundColor: COLORS.linen,
     overflow: 'hidden',
   },
   progressBarFill: {
     height: '100%',
-    borderRadius: 4,
+    borderRadius: 5,
   },
   breakdownValue: {
     fontSize: FONT_SIZE.sm,
     fontFamily: FONTS.heading,
+    letterSpacing: 0.2,
   },
 
-  // Ingredients
+  // Ingredients — Premium
   ingredientRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: SPACING.md,
+    paddingVertical: SPACING.md + 2,
     borderBottomWidth: 1,
     borderBottomColor: COLORS.borderLight,
   },
@@ -832,9 +1068,9 @@ const styles = StyleSheet.create({
     borderBottomWidth: 0,
   },
   riskDot: {
-    width: 30,
-    height: 30,
-    borderRadius: 15,
+    width: 34,
+    height: 34,
+    borderRadius: 17,
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: SPACING.md,
@@ -847,7 +1083,7 @@ const styles = StyleSheet.create({
     fontFamily: FONTS.bodySemiBold,
     color: COLORS.charcoal,
     textTransform: 'capitalize',
-    marginBottom: 2,
+    marginBottom: 3,
   },
   ingredientRiskText: {
     fontSize: FONT_SIZE.xs,
@@ -857,10 +1093,10 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: COLORS.warningSoft,
-    paddingHorizontal: SPACING.sm,
-    paddingVertical: SPACING.xs,
-    borderRadius: RADIUS.sm,
-    gap: 3,
+    paddingHorizontal: SPACING.sm + 2,
+    paddingVertical: SPACING.xs + 1,
+    borderRadius: RADIUS.full,
+    gap: 4,
   },
   controversialText: {
     fontSize: FONT_SIZE.xs,
@@ -868,12 +1104,12 @@ const styles = StyleSheet.create({
     fontFamily: FONTS.heading,
   },
 
-  // Additives
+  // Additives — Premium
   additiveRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingVertical: SPACING.md,
+    paddingVertical: SPACING.md + 2,
     borderBottomWidth: 1,
     borderBottomColor: COLORS.borderLight,
   },
@@ -918,12 +1154,12 @@ const styles = StyleSheet.create({
     fontFamily: FONTS.heading,
   },
 
-  // Details
+  // Details — Premium
   detailRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingVertical: SPACING.md,
+    paddingVertical: SPACING.md + 2,
     borderBottomWidth: 1,
     borderBottomColor: COLORS.borderLight,
   },
@@ -932,6 +1168,14 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: SPACING.sm,
   },
+  detailIconWrap: {
+    width: 30,
+    height: 30,
+    borderRadius: 15,
+    backgroundColor: COLORS.linen,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   detailLabel: {
     fontSize: FONT_SIZE.base,
     fontFamily: FONTS.bodyMedium,
@@ -939,29 +1183,32 @@ const styles = StyleSheet.create({
   },
   detailValueBadge: {
     paddingHorizontal: SPACING.md,
-    paddingVertical: SPACING.xs + 1,
-    borderRadius: RADIUS.sm,
-    minWidth: 48,
+    paddingVertical: SPACING.xs + 2,
+    borderRadius: RADIUS.full,
+    minWidth: 52,
     alignItems: 'center',
   },
   detailValue: {
     fontSize: FONT_SIZE.sm,
     fontFamily: FONTS.heading,
+    letterSpacing: 0.3,
   },
 
-  // No data
+  // No data — Premium
   noDataCard: {
     backgroundColor: COLORS.white,
-    borderRadius: RADIUS['2xl'],
-    padding: SPACING['2xl'],
+    borderRadius: RADIUS['2xl'] + 2,
+    padding: SPACING['2xl'] + 4,
     alignItems: 'center',
     marginBottom: SPACING.base,
     ...SHADOWS.sm,
+    borderWidth: 1,
+    borderColor: COLORS.borderLight,
   },
   noDataIconCircle: {
-    width: 72,
-    height: 72,
-    borderRadius: 36,
+    width: 80,
+    height: 80,
+    borderRadius: 40,
     backgroundColor: COLORS.linen,
     alignItems: 'center',
     justifyContent: 'center',
@@ -978,28 +1225,43 @@ const styles = StyleSheet.create({
     fontFamily: FONTS.bodyMedium,
     color: COLORS.stone,
     textAlign: 'center',
-    lineHeight: 20,
+    lineHeight: 21,
   },
 
-  // Barcode footer
+  // Barcode footer — Premium
   barcodeInfo: {
     alignItems: 'center',
-    paddingVertical: SPACING.lg,
+    paddingVertical: SPACING.xl,
     marginTop: SPACING.sm,
+  },
+  barcodeDivider: {
+    width: 40,
+    height: 2,
+    borderRadius: 1,
+    backgroundColor: COLORS.border,
+    marginBottom: SPACING.base,
   },
   barcodeLabel: {
     fontSize: FONT_SIZE.xs,
-    fontFamily: FONTS.bodyMedium,
+    fontFamily: FONTS.bodySemiBold,
     color: COLORS.pebble,
-    marginBottom: 4,
+    marginBottom: 6,
     textTransform: 'uppercase',
-    letterSpacing: 0.5,
+    letterSpacing: 1,
+  },
+  barcodeValueWrap: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: COLORS.linen,
+    paddingHorizontal: SPACING.base,
+    paddingVertical: SPACING.sm,
+    borderRadius: RADIUS.full,
   },
   barcodeValue: {
     fontSize: FONT_SIZE.sm,
     fontFamily: FONTS.bodySemiBold,
     color: COLORS.stone,
-    letterSpacing: 2,
+    letterSpacing: 2.5,
   },
 });
 
