@@ -61,7 +61,7 @@ const StarRating = ({ rating, size = 16, showValue = false, light = false }) => 
       );
     } else {
       stars.push(
-        <Text key={i} style={{ fontSize: size, color: emptyColor, lineHeight: size + 2 }}>★</Text>
+        <Text key={i} style={{ fontSize: size, color: emptyColor, lineHeight: size + 2 }}>☆</Text>
       );
     }
   }

@@ -136,22 +136,7 @@ exports.ask = async (req, res, next) => {
       });
     }
 
-    // -----------------------------------------------------------------------
-    // Mode fallback : si pas de cle API, utiliser les reponses pre-ecrites
-    // -----------------------------------------------------------------------
-    if (!process.env.ANTHROPIC_API_KEY) {
-      const answer = getFallbackAnswer(question.trim(), petContext);
-      return res.json({
-        success: true,
-        answer,
-        disclaimer: DISCLAIMER,
-        mode: 'demo'
-      });
-    }
-
-    // -----------------------------------------------------------------------
-    // Mode normal : appel Claude API
-    // -----------------------------------------------------------------------
+    // Construire le message utilisateur avec contexte animal
     let userMessage = question.trim();
     if (petContext && petContext.species) {
       const parts = [`Mon animal: ${petContext.species}`];
@@ -161,38 +146,125 @@ exports.ask = async (req, res, next) => {
       userMessage = `${parts.join(', ')}. Question: ${userMessage}`;
     }
 
-    const client = new Anthropic({
-      apiKey: process.env.ANTHROPIC_API_KEY
-    });
+    // -----------------------------------------------------------------------
+    // Priorite 1 : Groq API (gratuite avec cle gratuite)
+    // -----------------------------------------------------------------------
+    if (process.env.GROQ_API_KEY) {
+      try {
+        const groqResponse = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${process.env.GROQ_API_KEY}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            model: 'llama-3.3-70b-versatile',
+            messages: [
+              { role: 'system', content: SYSTEM_PROMPT },
+              { role: 'user', content: userMessage }
+            ],
+            max_tokens: 400,
+            temperature: 0.7,
+          }),
+        });
+        const groqData = await groqResponse.json();
+        if (groqData.choices && groqData.choices[0]) {
+          return res.json({
+            success: true,
+            answer: groqData.choices[0].message.content,
+            disclaimer: DISCLAIMER,
+            mode: 'groq'
+          });
+        }
+      } catch (groqErr) {
+        console.log('Groq API error, trying next provider:', groqErr.message);
+      }
+    }
 
-    const message = await client.messages.create({
-      model: 'claude-sonnet-4-20250514',
-      max_tokens: 400,
-      system: SYSTEM_PROMPT,
-      messages: [
-        { role: 'user', content: userMessage }
-      ]
-    });
+    // -----------------------------------------------------------------------
+    // Priorite 2 : HuggingFace Inference API (gratuite avec cle gratuite)
+    // -----------------------------------------------------------------------
+    if (process.env.HF_TOKEN) {
+      try {
+        const hfResponse = await fetch(
+          'https://api-inference.huggingface.co/models/mistralai/Mistral-7B-Instruct-v0.3',
+          {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${process.env.HF_TOKEN}`,
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              inputs: `<s>[INST] ${SYSTEM_PROMPT}\n\n${userMessage} [/INST]`,
+              parameters: { max_new_tokens: 400, temperature: 0.7 },
+            }),
+          }
+        );
+        const hfData = await hfResponse.json();
+        if (Array.isArray(hfData) && hfData[0]?.generated_text) {
+          let answer = hfData[0].generated_text;
+          // Extraire seulement la reponse apres [/INST]
+          const instEnd = answer.lastIndexOf('[/INST]');
+          if (instEnd !== -1) {
+            answer = answer.substring(instEnd + 7).trim();
+          }
+          return res.json({
+            success: true,
+            answer,
+            disclaimer: DISCLAIMER,
+            mode: 'huggingface'
+          });
+        }
+      } catch (hfErr) {
+        console.log('HuggingFace API error, trying next provider:', hfErr.message);
+      }
+    }
 
-    // Extraire la reponse texte
-    const answer = message.content
-      .filter(block => block.type === 'text')
-      .map(block => block.text)
-      .join('\n');
+    // -----------------------------------------------------------------------
+    // Priorite 3 : Anthropic Claude API
+    // -----------------------------------------------------------------------
+    if (process.env.ANTHROPIC_API_KEY) {
+      try {
+        const client = new Anthropic({
+          apiKey: process.env.ANTHROPIC_API_KEY
+        });
 
+        const message = await client.messages.create({
+          model: 'claude-sonnet-4-20250514',
+          max_tokens: 400,
+          system: SYSTEM_PROMPT,
+          messages: [
+            { role: 'user', content: userMessage }
+          ]
+        });
+
+        const answer = message.content
+          .filter(block => block.type === 'text')
+          .map(block => block.text)
+          .join('\n');
+
+        return res.json({
+          success: true,
+          answer,
+          disclaimer: DISCLAIMER,
+          mode: 'claude'
+        });
+      } catch (claudeErr) {
+        console.log('Claude API error, falling back to demo mode:', claudeErr.message);
+      }
+    }
+
+    // -----------------------------------------------------------------------
+    // Fallback : reponses pre-ecrites (toujours gratuit, sans cle)
+    // -----------------------------------------------------------------------
+    const answer = getFallbackAnswer(question.trim(), petContext);
     res.json({
       success: true,
       answer,
-      disclaimer: DISCLAIMER
+      disclaimer: DISCLAIMER,
+      mode: 'demo'
     });
   } catch (error) {
-    // Gerer les erreurs specifiques de l'API Anthropic
-    if (error.status === 401) {
-      return res.status(500).json({
-        success: false,
-        error: 'Erreur de configuration du service IA'
-      });
-    }
     if (error.status === 429) {
       return res.status(503).json({
         success: false,

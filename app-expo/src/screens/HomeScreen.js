@@ -228,18 +228,18 @@ const HomeScreen = ({ navigation }) => {
       onPress: () => navigation.navigate('Scanner'),
     },
     {
-      icon: '🏠',
+      icon: '❤️',
       title: 'Gardiens',
       subtitle: 'Trouver un gardien',
       gradient: ['#059669', '#10B981'],
       onPress: () => navigation.navigate('Garde'),
     },
     {
-      icon: '🐾',
-      title: 'Animaux',
-      subtitle: 'Mes compagnons',
-      gradient: ['#2563EB', '#60A5FA'],
-      onPress: () => navigation.navigate('Profil', { screen: 'MyPets' }),
+      icon: '🤖',
+      title: 'Chat IA',
+      subtitle: 'Poser une question',
+      gradient: ['#7C3AED', '#A78BFA'],
+      onPress: () => navigation.navigate('Chat'),
     },
   ];
 
@@ -398,10 +398,10 @@ const HomeScreen = ({ navigation }) => {
           <Text style={s.sectionTitle}>Acces rapide</Text>
           <View style={s.quickGrid}>
             {[
-              { icon: '📋', label: 'Historique\nscans', onPress: () => navigation.navigate('Scanner', { screen: 'ScanHistory' }) },
-              { icon: '📅', label: 'Reservations', onPress: () => navigation.navigate('Garde') },
-              { icon: '💬', label: 'Messages', onPress: () => navigation.navigate('Garde', { screen: 'Messages' }) },
-              { icon: '⚙️', label: 'Reglages', onPress: () => navigation.navigate('Profil', { screen: 'Settings' }) },
+              { icon: '📷', label: 'Scanner', onPress: () => navigation.navigate('Scanner') },
+              { icon: '❤️', label: 'Gardiens', onPress: () => navigation.navigate('Garde') },
+              { icon: '🤖', label: 'Chat IA', onPress: () => navigation.navigate('Chat') },
+              { icon: '🐾', label: 'Animaux', onPress: () => navigation.navigate('Profil', { screen: 'MyPets' }) },
             ].map((qa, idx) => (
               <PressableCard key={idx} style={s.quickAction} onPress={qa.onPress}>
                 <GlassCard style={s.quickIconWrap}>

@@ -8,6 +8,7 @@ import PetSittersListScreen from '../screens/petsitting/PetSittersListScreen';
 import PetSitterDetailScreen from '../screens/petsitting/PetSitterDetailScreen';
 import BookingScreen from '../screens/petsitting/BookingScreen';
 import MessagesScreen from '../screens/petsitting/MessagesScreen';
+import AIAssistantScreen from '../screens/ai/AIAssistantScreen';
 import ProfileScreen from '../screens/profile/ProfileScreen';
 import MyPetsScreen from '../screens/profile/MyPetsScreen';
 import AddPetScreen from '../screens/profile/AddPetScreen';
@@ -59,6 +60,7 @@ const TAB_CONFIG = {
   Accueil: { emoji: '🏠', label: 'Accueil' },
   Scanner: { emoji: '📷', label: 'Scanner' },
   Garde:   { emoji: '❤️', label: 'Garde' },
+  Chat:    { emoji: '🤖', label: 'Chat IA' },
   Profil:  { emoji: '👤', label: 'Profil' },
 };
 
@@ -99,6 +101,7 @@ const TabNavigator = () => (
     <Tab.Screen name="Accueil" component={HomeScreen} />
     <Tab.Screen name="Scanner" component={ScannerNavigator} />
     <Tab.Screen name="Garde" component={PetSittingNavigator} />
+    <Tab.Screen name="Chat" component={AIAssistantScreen} />
     <Tab.Screen name="Profil" component={ProfileNavigator} />
   </Tab.Navigator>
 );

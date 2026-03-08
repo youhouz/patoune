@@ -34,7 +34,7 @@ const StarRating = ({ value = 0, count, size = 13 }) => {
       );
     } else {
       stars.push(
-        <Text key={i} style={{ fontSize: size, color: colors.border, lineHeight: size + 2 }}>★</Text>
+        <Text key={i} style={{ fontSize: size, color: '#D1D5DB', lineHeight: size + 2 }}>☆</Text>
       );
     }
   }
