@@ -97,6 +97,18 @@ for (const icon of iconsToCopy) {
   }
 }
 
+// Copy PWA files (manifest.json, service-worker.js) to dist/
+const publicDir = path.join(__dirname, '..', 'public');
+const pwaFiles = ['manifest.json', 'service-worker.js'];
+for (const file of pwaFiles) {
+  const src = path.join(publicDir, file);
+  const dest = path.join(distDir, file);
+  if (fs.existsSync(src)) {
+    fs.copyFileSync(src, dest);
+    console.log(`✓ Copied public/${file} → dist/${file}`);
+  }
+}
+
 // ─────────────────────────────────────────────────────────────────────────────
 // Step 4: Inject PWA meta tags into dist/index.html
 // ─────────────────────────────────────────────────────────────────────────────
@@ -127,8 +139,36 @@ const metaTags = `
 
 if (html.includes('</head>')) {
   html = html.replace('</head>', metaTags + '\n  </head>');
+
+  // Inject premium splash screen before <div id="root">
+  const splashHtml = `
+    <!-- Premium splash while JS loads -->
+    <div id="splash-screen" style="position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;background:linear-gradient(155deg,#FF6B35 0%,#FF8F65 50%,#FFB088 100%);z-index:9999;transition:opacity .5s ease">
+      <div style="animation:sf 3s ease-in-out infinite;margin-bottom:16px">
+        <svg width="100" height="100" viewBox="0 0 120 120" fill="none"><path d="M38 108C38 108 36 95 36 80L36 52C36 52 36 40 42 32C48 24 56 20 60 18C60 18 54 14 50 8C48 5 50 2 54 4C58 6 62 10 64 14C68 10 74 6 78 4C82 2 84 5 82 8C78 14 72 18 72 18C80 22 88 30 90 42C92 54 84 68 72 72C64 74 56 72 50 66L50 80C50 95 48 108 48 108Z" fill="#fff"/><circle cx="58" cy="38" r="1.8" fill="#2C2825"/><path d="M62 45L64 48L60 48Z" fill="#FFB088"/><path d="M92 96C92 92 96 88 100 88C104 88 108 92 108 96C108 100 104 104 100 104C96 104 92 100 92 96Z" fill="rgba(255,255,255,.7)"/><circle cx="91" cy="86" r="3" fill="rgba(255,255,255,.7)"/><circle cx="98" cy="82" r="3.2" fill="rgba(255,255,255,.7)"/><circle cx="106" cy="84" r="3" fill="rgba(255,255,255,.7)"/></svg>
+      </div>
+      <h1 style="font-family:Georgia,serif;font-size:36px;font-weight:700;color:#FFF;letter-spacing:3px;margin:0 0 8px;text-transform:lowercase">pépète</h1>
+      <p style="font-size:15px;color:rgba(255,255,255,.8);margin:0;font-weight:500">Le compagnon de vos compagnons</p>
+      <div style="display:flex;gap:8px;margin-top:32px"><span class="sd"></span><span class="sd" style="animation-delay:.2s"></span><span class="sd" style="animation-delay:.4s"></span></div>
+      <style>@keyframes sf{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}.sd{width:8px;height:8px;border-radius:4px;background:rgba(255,255,255,.5);animation:sp 1.4s ease-in-out infinite}@keyframes sp{0%,80%,100%{opacity:.3;transform:scale(1)}40%{opacity:1;transform:scale(1.3)}}</style>
+    </div>
+  `;
+
+  if (html.includes('<div id="root">')) {
+    html = html.replace('<div id="root">', splashHtml + '\n    <div id="root">');
+  }
+
+  // Inject splash-hide + service worker script before </body>
+  const scripts = `
+    <script>
+      window.addEventListener('load',function(){setTimeout(function(){var s=document.getElementById('splash-screen');if(s){s.style.opacity='0';setTimeout(function(){s.remove()},600)}},600)});
+      if('serviceWorker' in navigator){window.addEventListener('load',function(){navigator.serviceWorker.register('/service-worker.js').catch(function(){})})}
+    </script>
+  `;
+  html = html.replace('</body>', scripts + '\n  </body>');
+
   fs.writeFileSync(distHtml, html, 'utf-8');
-  console.log('✓ PWA meta tags injected into dist/index.html');
+  console.log('✓ PWA meta tags + splash screen + service worker injected into dist/index.html');
 } else {
   console.error('ERROR: Could not find </head> in index.html');
   process.exit(1);
