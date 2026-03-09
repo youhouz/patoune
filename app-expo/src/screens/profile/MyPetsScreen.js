@@ -21,8 +21,8 @@ const { SHADOWS, RADIUS, SPACING, FONT_SIZE } = require('../../utils/colors');
 const HEADER_PADDING_TOP = Platform.OS === 'ios' ? 56 : (StatusBar.currentHeight || 24) + 12;
 
 const SPECIES_CONFIG = {
-  chien: { icon: '🐕', label: 'Chien', gradient: ['#FF6B35', '#FF8F65'] },
-  chat: { icon: '🐱', label: 'Chat', gradient: ['#5B5BD6', '#8B8BF5'] },
+  chien: { icon: '🐕', label: 'Chien', gradient: ['#7B8B6F', '#96A88A'] },
+  chat: { icon: '🐱', label: 'Chat', gradient: ['#4ECBA0', '#7DDBB8'] },
   rongeur: { icon: '🐹', label: 'Rongeur', gradient: ['#F59E0B', '#FBBF24'] },
   oiseau: { icon: '🐦', label: 'Oiseau', gradient: ['#3B82F6', '#60A5FA'] },
   reptile: { icon: '🦎', label: 'Reptile', gradient: ['#10B981', '#34D399'] },
@@ -244,7 +244,7 @@ const MyPetsScreen = ({ navigation }) => {
     <View style={styles.emptyContainer}>
       <View style={styles.emptyIconContainer}>
         <LinearGradient
-          colors={['#FF6B35', '#FF8F65']}
+          colors={['#7B8B6F', '#96A88A']}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
           style={styles.emptyIconGradient}
@@ -262,7 +262,7 @@ const MyPetsScreen = ({ navigation }) => {
         activeOpacity={0.8}
       >
         <LinearGradient
-          colors={['#FF6B35', '#FF8F65']}
+          colors={['#7B8B6F', '#96A88A']}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 0 }}
           style={styles.emptyButtonGradient}
@@ -369,7 +369,7 @@ const MyPetsScreen = ({ navigation }) => {
               style={styles.fabTouchable}
             >
               <LinearGradient
-                colors={['#FF6B35', '#FF8F65']}
+                colors={['#7B8B6F', '#96A88A']}
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 1 }}
                 style={styles.fabGradient}
@@ -608,7 +608,7 @@ const styles = StyleSheet.create({
     marginBottom: SPACING.xl,
     borderRadius: 50,
     overflow: 'hidden',
-    ...SHADOWS.glow('#FF6B35'),
+    ...SHADOWS.glow('#7B8B6F'),
   },
   emptyIconGradient: {
     width: 100,
@@ -636,7 +636,7 @@ const styles = StyleSheet.create({
   emptyButton: {
     borderRadius: RADIUS.xl,
     overflow: 'hidden',
-    ...SHADOWS.glow('#FF6B35'),
+    ...SHADOWS.glow('#7B8B6F'),
   },
   emptyButtonGradient: {
     flexDirection: 'row',
@@ -685,7 +685,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
     bottom: Platform.OS === 'ios' ? 32 : 24,
     right: SPACING.lg,
-    ...SHADOWS.glow('#FF6B35'),
+    ...SHADOWS.glow('#7B8B6F'),
   },
   fabTouchable: {
     borderRadius: 30,

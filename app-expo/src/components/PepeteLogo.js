@@ -12,8 +12,8 @@ import Svg, { Path, Circle, G, Defs, LinearGradient as SvgGradient, Stop } from 
 // with a small paw print detail. Works as standalone app icon.
 const PepeteIcon = ({ size = 80, color, gradientColors }) => {
   const useGradient = !!gradientColors;
-  const fill = useGradient ? 'url(#iconGrad)' : (color || '#FF6B35');
-  const accentFill = useGradient ? 'url(#accentGrad)' : (color || '#FF6B35');
+  const fill = useGradient ? 'url(#iconGrad)' : (color || '#7B8B6F');
+  const accentFill = useGradient ? 'url(#accentGrad)' : (color || '#7B8B6F');
 
   return (
     <Svg width={size} height={size} viewBox="0 0 120 120" fill="none">
@@ -63,7 +63,7 @@ const PepeteIcon = ({ size = 80, color, gradientColors }) => {
         {/* Nose */}
         <Path
           d="M62 45 L64 48 L60 48 Z"
-          fill="#FFB088"
+          fill="#A3B296"
         />
 
         {/* Whiskers — left */}
@@ -117,7 +117,7 @@ const PepeteLogo = ({
 }) => {
   const textColor =
     theme === 'light' ? '#FFFFFF' :
-    theme === 'brand' ? '#FF6B35' :
+    theme === 'brand' ? '#7B8B6F' :
     '#2C2825';
 
   const taglineColor =
@@ -131,7 +131,7 @@ const PepeteLogo = ({
 
   const iconGradient = theme === 'light'
     ? ['#FFFFFF', '#F0F0F0']
-    : ['#FF6B35', '#E55A25'];
+    : ['#7B8B6F', '#5E6D53'];
 
   const iconColor = theme === 'light' ? '#FFFFFF' : undefined;
 
@@ -154,7 +154,7 @@ const PepeteLogo = ({
           <Text style={[styles.wordmark, { fontSize: wordmarkSize, color: textColor }]}>
             pépète
           </Text>
-          <View style={[styles.accentDot, { width: dotSize, height: dotSize, backgroundColor: '#FF6B35' }]} />
+          <View style={[styles.accentDot, { width: dotSize, height: dotSize, backgroundColor: '#7B8B6F' }]} />
         </View>
         {tagline && (
           <Text style={[styles.tagline, { fontSize: taglineSize, color: taglineColor }]}>
@@ -176,7 +176,7 @@ const PepeteLogo = ({
         <View style={[styles.accentDot, {
           width: dotSize,
           height: dotSize,
-          backgroundColor: theme === 'light' ? 'rgba(255,255,255,0.8)' : '#FF6B35',
+          backgroundColor: theme === 'light' ? 'rgba(255,255,255,0.8)' : '#7B8B6F',
         }]} />
       </View>
       {tagline && (

@@ -299,7 +299,7 @@ const ProfileScreen = ({ navigation }) => {
   };
 
   const stats = [
-    { label: 'Animaux', value: petsCount, icon: '🐾', color: '#FF6B35' },
+    { label: 'Animaux', value: petsCount, icon: '🐾', color: '#7B8B6F' },
     { label: 'Scans', value: scansCount, icon: '📷', color: '#3B82F6' },
     { label: 'Gardes', value: bookingsCount, icon: '📅', color: '#10B981' },
   ];
@@ -313,7 +313,7 @@ const ProfileScreen = ({ navigation }) => {
           label: 'Mes animaux',
           subtitle: `${petsCount} compagnon${petsCount !== 1 ? 's' : ''} enregistre${petsCount !== 1 ? 's' : ''}`,
           screen: 'MyPets',
-          accentColor: '#FF6B35',
+          accentColor: '#7B8B6F',
           bgColor: colors.primarySoft,
         },
         {
@@ -334,7 +334,7 @@ const ProfileScreen = ({ navigation }) => {
           label: 'Reglages',
           subtitle: 'Compte, preferences, a propos',
           screen: 'Settings',
-          accentColor: '#5B5BD6',
+          accentColor: '#4ECBA0',
           bgColor: colors.accentSoft,
         },
       ],
@@ -375,7 +375,7 @@ const ProfileScreen = ({ navigation }) => {
           }}
         >
           <LinearGradient
-            colors={['#FF6B35', '#FF7E45', '#FF9A60', '#FFB088']}
+            colors={['#7B8B6F', '#8A9A7E', '#96A88A', '#A3B296']}
             start={{ x: 0, y: 0 }}
             end={{ x: 0.8, y: 1 }}
             style={styles.heroGradient}
@@ -659,7 +659,7 @@ const styles = StyleSheet.create({
   avatarInitials: {
     fontFamily: FONTS.brand,
     fontSize: FONT_SIZE['3xl'],
-    color: '#FF6B35',
+    color: '#7B8B6F',
     letterSpacing: 1,
   },
   sitterBadge: {

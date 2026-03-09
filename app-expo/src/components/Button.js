@@ -27,13 +27,13 @@ const Button = ({
         style={[fullWidth && { width: '100%' }, style]}
       >
         <LinearGradient
-          colors={disabled ? ['#CCC', '#BBB'] : ['#FF6B35', '#FF8F65']}
+          colors={disabled ? ['#CCC', '#BBB'] : ['#7B8B6F', '#96A88A']}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 0 }}
           style={[
             styles.button, sizeStyles[size],
             { borderRadius: RADIUS.lg },
-            !disabled && SHADOWS.glow('#FF6B35'),
+            !disabled && SHADOWS.glow('#7B8B6F'),
           ]}
         >
           {loading ? (

@@ -71,7 +71,7 @@ const GuestGateScreen = ({ route }) => {
               activeOpacity={0.85}
             >
               <LinearGradient
-                colors={['#FF6B35', '#FF8F65']}
+                colors={['#7B8B6F', '#96A88A']}
                 start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}
                 style={s.ctaPrimaryGrad}
               >
@@ -179,7 +179,7 @@ const s = StyleSheet.create({
     borderRadius: RADIUS.lg,
     overflow: 'hidden',
     marginBottom: 12,
-    ...SHADOWS.glow('#FF6B35'),
+    ...SHADOWS.glow('#7B8B6F'),
   },
   ctaPrimaryGrad: {
     paddingVertical: 16,

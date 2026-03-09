@@ -22,8 +22,8 @@ const { SHADOWS, RADIUS, SPACING, FONT_SIZE } = require('../../utils/colors');
 const HEADER_PADDING_TOP = Platform.OS === 'ios' ? 56 : (StatusBar.currentHeight || 24) + 12;
 
 const SPECIES = [
-  { key: 'chien', label: 'Chien', icon: '🐕', color: '#FF6B35' },
-  { key: 'chat', label: 'Chat', icon: '🐱', color: '#5B5BD6' },
+  { key: 'chien', label: 'Chien', icon: '🐕', color: '#7B8B6F' },
+  { key: 'chat', label: 'Chat', icon: '🐱', color: '#4ECBA0' },
   { key: 'rongeur', label: 'Rongeur', icon: '🐹', color: '#F59E0B' },
   { key: 'oiseau', label: 'Oiseau', icon: '🐦', color: '#3B82F6' },
   { key: 'reptile', label: 'Reptile', icon: '🦎', color: '#10B981' },
@@ -167,7 +167,7 @@ const AddPetScreen = ({ navigation }) => {
                 {
                   width: `${progress * 100}%`,
                   backgroundColor:
-                    progress === 1 ? '#10B981' : '#FF6B35',
+                    progress === 1 ? '#10B981' : '#7B8B6F',
                 },
               ]}
             />
@@ -197,7 +197,7 @@ const AddPetScreen = ({ navigation }) => {
                 colors={
                   selectedSpecies
                     ? [selectedSpecies.color, selectedSpecies.color + 'CC']
-                    : ['#FF6B35', '#FF8F65']
+                    : ['#7B8B6F', '#96A88A']
                 }
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 1 }}
@@ -501,7 +501,7 @@ const AddPetScreen = ({ navigation }) => {
               colors={
                 loading
                   ? [colors.textLight, colors.textTertiary]
-                  : ['#FF6B35', '#FF8F65']
+                  : ['#7B8B6F', '#96A88A']
               }
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 0 }}
@@ -838,7 +838,7 @@ const styles = StyleSheet.create({
     borderRadius: RADIUS.xl,
     overflow: 'hidden',
     marginTop: SPACING.sm,
-    ...SHADOWS.glow('#FF6B35'),
+    ...SHADOWS.glow('#7B8B6F'),
   },
   submitButtonDisabled: {
     ...SHADOWS.sm,

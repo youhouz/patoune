@@ -441,7 +441,7 @@ const ScannerScreen = ({ navigation }) => {
 
       {/* Premium Header */}
       <LinearGradient
-        colors={['#FF6B35', '#FF7F45', '#FF9560']}
+        colors={['#7B8B6F', '#FF7F45', '#FF9560']}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
         style={[styles.header, { paddingTop: insets.top + SPACING.md }]}
@@ -641,7 +641,7 @@ const ScannerScreen = ({ navigation }) => {
                 activeOpacity={0.8}
               >
                 <LinearGradient
-                  colors={scanning ? [COLORS.textLight, COLORS.textLight] : ['#FF6B35', '#FF8F65']}
+                  colors={scanning ? [COLORS.textLight, COLORS.textLight] : ['#7B8B6F', '#96A88A']}
                   start={{ x: 0, y: 0 }}
                   end={{ x: 1, y: 0 }}
                   style={styles.searchButtonGradient}

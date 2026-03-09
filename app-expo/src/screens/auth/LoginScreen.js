@@ -136,7 +136,7 @@ const LoginScreen = ({ navigation }) => {
 
       {/* Deep luxe gradient background */}
       <LinearGradient
-        colors={['#E55A25', '#FF6B35', '#FF8F65', '#FFB088', '#FFDCC8']}
+        colors={['#5E6D53', '#7B8B6F', '#96A88A', '#A3B296', '#FFDCC8']}
         start={{ x: 0.1, y: 0 }}
         end={{ x: 0.9, y: 1 }}
         style={StyleSheet.absoluteFill}
@@ -262,7 +262,7 @@ const LoginScreen = ({ navigation }) => {
                 activeOpacity={1}
               >
                 <LinearGradient
-                  colors={loading ? ['#D1D5DB', '#C4C9D4'] : ['#E55A25', '#FF6B35', '#FF8F65']}
+                  colors={loading ? ['#D1D5DB', '#C4C9D4'] : ['#5E6D53', '#7B8B6F', '#96A88A']}
                   start={{ x: 0, y: 0 }}
                   end={{ x: 1, y: 0 }}
                   style={styles.premiumBtn}
@@ -529,7 +529,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     ...SHADOWS.lg,
-    shadowColor: '#E55A25',
+    shadowColor: '#5E6D53',
     shadowOpacity: 0.4,
   },
   premiumBtnText: {

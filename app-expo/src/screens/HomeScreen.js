@@ -1,7 +1,7 @@
 import React, { useState, useCallback, useRef, useEffect } from 'react';
 import {
   View, Text, ScrollView, TouchableOpacity, StyleSheet,
-  Platform, StatusBar, Dimensions, RefreshControl, Animated,
+  Platform, StatusBar, Dimensions, RefreshControl, Animated, Image,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useFocusEffect } from '@react-navigation/native';
@@ -9,29 +9,25 @@ import { useAuth } from '../context/AuthContext';
 import { getMyPetsAPI } from '../api/pets';
 import { getScanHistoryAPI } from '../api/products';
 import { getMyBookingsAPI } from '../api/petsitters';
-import { FONTS, TEXT_STYLES } from '../utils/typography';
+import { FONTS } from '../utils/typography';
 const { COLORS, SPACING, RADIUS, SHADOWS, FONT_SIZE, getScoreColor, getScoreLabel } = require('../utils/colors');
 
 const { width } = Dimensions.get('window');
+const CARD_GAP = 14;
+const CARD_WIDTH = (width - SPACING.xl * 2 - CARD_GAP) / 2;
 
-// ─── Animated wrapper with staggered fade-in + slide-up ──────
+// ─── Animated wrapper with staggered fade-in ────────────────
 const AnimatedSection = ({ delay = 0, children, style }) => {
   const fadeAnim = useRef(new Animated.Value(0)).current;
-  const slideAnim = useRef(new Animated.Value(28)).current;
+  const slideAnim = useRef(new Animated.Value(18)).current;
 
   useEffect(() => {
     Animated.parallel([
       Animated.timing(fadeAnim, {
-        toValue: 1,
-        duration: 600,
-        delay,
-        useNativeDriver: true,
+        toValue: 1, duration: 500, delay, useNativeDriver: true,
       }),
       Animated.timing(slideAnim, {
-        toValue: 0,
-        duration: 550,
-        delay,
-        useNativeDriver: true,
+        toValue: 0, duration: 450, delay, useNativeDriver: true,
       }),
     ]).start();
   }, []);
@@ -44,33 +40,15 @@ const AnimatedSection = ({ delay = 0, children, style }) => {
 };
 
 // ─── Pressable card with scale micro-interaction ─────────────
-const PressableCard = ({ onPress, style, children, activeOpacity = 0.92 }) => {
+const PressableCard = ({ onPress, style, children }) => {
   const scaleAnim = useRef(new Animated.Value(1)).current;
-
-  const handlePressIn = () => {
-    Animated.spring(scaleAnim, {
-      toValue: 0.965,
-      friction: 8,
-      tension: 100,
-      useNativeDriver: true,
-    }).start();
-  };
-
-  const handlePressOut = () => {
-    Animated.spring(scaleAnim, {
-      toValue: 1,
-      friction: 5,
-      tension: 40,
-      useNativeDriver: true,
-    }).start();
-  };
 
   return (
     <TouchableOpacity
       onPress={onPress}
-      onPressIn={handlePressIn}
-      onPressOut={handlePressOut}
-      activeOpacity={activeOpacity}
+      onPressIn={() => Animated.spring(scaleAnim, { toValue: 0.96, friction: 8, tension: 100, useNativeDriver: true }).start()}
+      onPressOut={() => Animated.spring(scaleAnim, { toValue: 1, friction: 5, tension: 40, useNativeDriver: true }).start()}
+      activeOpacity={0.92}
       style={{ flex: style?.flex }}
     >
       <Animated.View style={[style, { transform: [{ scale: scaleAnim }] }]}>
@@ -80,95 +58,43 @@ const PressableCard = ({ onPress, style, children, activeOpacity = 0.92 }) => {
   );
 };
 
-// ─── Glass Card wrapper ──────────────────────────────────────
-const GlassCard = ({ children, style }) => (
-  <View style={[s.glassCard, style]}>
-    {children}
+// ─── Feature Card (2x2 grid) ────────────────────────────────
+const FeatureCard = ({ icon, title, subtitle, bgColor, textColor, iconBg, onPress }) => (
+  <PressableCard onPress={onPress} style={[s.featureCard, { backgroundColor: bgColor }]}>  
+    <View style={[s.featureIconWrap, { backgroundColor: iconBg }]}>
+      <Text style={s.featureIcon}>{icon}</Text>
+    </View>
+    <Text style={[s.featureTitle, { color: textColor }]}>{title}</Text>
+    <Text style={[s.featureSubtitle, { color: textColor + 'AA' }]}>{subtitle}</Text>
+  </PressableCard>
+);
+
+// ─── News card ───────────────────────────────────────────────
+const NewsCard = ({ title, category, image, color }) => (
+  <View style={s.newsCard}>
+    <View style={[s.newsImagePlaceholder, { backgroundColor: color + '20' }]}>
+      <Text style={{ fontSize: 40 }}>{image}</Text>
+    </View>
+    <View style={s.newsContent}>
+      <View style={[s.newsCategoryBadge, { backgroundColor: color + '18' }]}>
+        <Text style={[s.newsCategoryText, { color }]}>{category}</Text>
+      </View>
+      <Text style={s.newsTitle} numberOfLines={2}>{title}</Text>
+    </View>
   </View>
 );
 
-// ─── Recent Scan Card ──────────────────────────────────────
-const RecentScanCard = ({ scan, onPress }) => {
-  const score = scan.product?.nutritionScore || 0;
-  const color = getScoreColor(score);
-  return (
-    <PressableCard style={s.scanCard} onPress={onPress}>
-      <View style={[s.scanScoreBadge, { backgroundColor: color + '15' }]}>
-        <Text style={[s.scanScoreText, { color }]}>{score}</Text>
-      </View>
-      <View style={s.scanInfo}>
-        <Text style={s.scanName} numberOfLines={1}>{scan.product?.name || 'Produit'}</Text>
-        <Text style={s.scanBrand} numberOfLines={1}>{scan.product?.brand || ''}</Text>
-      </View>
-      <View style={[s.scanLabel, { backgroundColor: color + '12' }]}>
-        <Text style={[s.scanLabelText, { color }]}>{getScoreLabel(score)}</Text>
-      </View>
-    </PressableCard>
-  );
-};
-
-// ─── Next Booking Card ─────────────────────────────────────
-const NextBookingCard = ({ booking }) => {
-  if (!booking) return null;
-  const start = new Date(booking.startDate);
-  const daysUntil = Math.ceil((start - new Date()) / (1000 * 60 * 60 * 24));
-  const dayLabel = daysUntil <= 0 ? "Aujourd'hui" : daysUntil === 1 ? 'Demain' : `Dans ${daysUntil}j`;
-  const serviceLabels = {
-    garde_domicile: 'Garde a domicile',
-    garde_chez_sitter: 'Chez le gardien',
-    promenade: 'Promenade',
-    visite: 'Visite a domicile',
-    toilettage: 'Toilettage',
-  };
-  return (
-    <PressableCard style={s.bookingCard}>
-      <LinearGradient
-        colors={['#059669', '#10B981']}
-        start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}
-        style={s.bookingGradient}
-      >
-        <View style={s.bookingDecoCircle} />
-        <View style={s.bookingTop}>
-          <View style={s.bookingBadge}>
-            <Text style={s.bookingBadgeText}>{dayLabel}</Text>
-          </View>
-          <Text style={s.bookingPrice}>{booking.totalPrice} EUR</Text>
-        </View>
-        <Text style={s.bookingService}>{serviceLabels[booking.service] || booking.service}</Text>
-        <View style={s.bookingMeta}>
-          <Text style={s.bookingMetaText}>
-            {start.toLocaleDateString('fr-FR', { day: 'numeric', month: 'long' })}
-          </Text>
-          <View style={s.bookingStatusBadge}>
-            <Text style={s.bookingStatusText}>
-              {booking.status === 'confirmed' ? 'Confirme' : 'En attente'}
-            </Text>
-          </View>
-        </View>
-      </LinearGradient>
-    </PressableCard>
-  );
-};
-
-// ─── Pet Mini Card ─────────────────────────────────────────
-const PetMiniCard = ({ pet }) => {
+// ─── Pet Avatar ──────────────────────────────────────────────
+const PetAvatar = ({ pet, size = 52 }) => {
   const speciesEmojis = { chien: '🐕', chat: '🐈', oiseau: '🦜', rongeur: '🐹', reptile: '🦎', poisson: '🐟' };
   return (
-    <View style={s.petMini}>
-      <View style={s.petMiniAvatar}>
-        <LinearGradient
-          colors={[COLORS.primarySoft, '#FFF3EE']}
-          style={s.petMiniAvatarGradient}
-        >
-          <Text style={s.petMiniEmoji}>{speciesEmojis[pet.species] || '🐾'}</Text>
-        </LinearGradient>
-      </View>
-      <Text style={s.petMiniName} numberOfLines={1}>{pet.name}</Text>
+    <View style={[s.petAvatar, { width: size, height: size, borderRadius: size / 2 }]}>
+      <Text style={{ fontSize: size * 0.45 }}>{speciesEmojis[pet.species] || '🐾'}</Text>
     </View>
   );
 };
 
-// ═══════════════════════════════════════════════════════════
+// ═══════════════════════════════════════════════════════════════
 const HomeScreen = ({ navigation }) => {
   const { user } = useAuth();
   const [pets, setPets] = useState([]);
@@ -177,275 +103,236 @@ const HomeScreen = ({ navigation }) => {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
 
-  // Hero entry animation
-  const heroFade = useRef(new Animated.Value(0)).current;
-  const heroSlide = useRef(new Animated.Value(20)).current;
-
-  useEffect(() => {
-    Animated.parallel([
-      Animated.timing(heroFade, { toValue: 1, duration: 500, useNativeDriver: true }),
-      Animated.timing(heroSlide, { toValue: 0, duration: 450, useNativeDriver: true }),
-    ]).start();
-  }, []);
-
   const fetchData = async () => {
-    if (!user) {
-      setLoading(false);
-      return;
-    }
+    if (!user) { setLoading(false); return; }
     try {
       const [petsRes, scansRes, bookingsRes] = await Promise.allSettled([
-        getMyPetsAPI(),
-        getScanHistoryAPI(),
-        getMyBookingsAPI(),
+        getMyPetsAPI(), getScanHistoryAPI(), getMyBookingsAPI(),
       ]);
       if (petsRes.status === 'fulfilled') setPets(petsRes.value.data?.pets || petsRes.value.data || []);
       if (scansRes.status === 'fulfilled') setRecentScans((scansRes.value.data?.history || scansRes.value.data || []).slice(0, 5));
       if (bookingsRes.status === 'fulfilled') {
         const all = bookingsRes.value.data?.bookings || bookingsRes.value.data || [];
-        const upcoming = all
-          .filter(b => b.status === 'confirmed' || b.status === 'pending')
-          .sort((a, b) => new Date(a.startDate) - new Date(b.startDate));
-        setBookings(upcoming);
+        setBookings(all.filter(b => b.status === 'confirmed' || b.status === 'pending').sort((a, b) => new Date(a.startDate) - new Date(b.startDate)));
       }
     } catch (err) {
       console.log('Home fetch error:', err.message);
-    } finally {
-      setLoading(false);
-      setRefreshing(false);
-    }
+    } finally { setLoading(false); setRefreshing(false); }
   };
 
   useFocusEffect(useCallback(() => { fetchData(); }, []));
   const onRefresh = () => { setRefreshing(true); fetchData(); };
 
-  const firstName = user?.name?.split(' ')[0] || '';
   const hour = new Date().getHours();
-  const greetText = hour < 12 ? 'Bonjour' : hour < 18 ? 'Bonne journée' : 'Bonsoir';
+  const greetText = hour < 12 ? 'Bonjour' : hour < 18 ? 'Bon après-midi' : 'Bonsoir';
+  const firstName = user?.name?.split(' ')[0] || '';
 
-  const features = [
-    {
-      icon: '📷',
-      title: 'Scanner',
-      subtitle: 'Analyser un aliment',
-      gradient: ['#FF6B35', '#FF8F65'],
-      onPress: () => navigation.navigate('Scanner'),
-    },
-    {
-      icon: '🏠',
-      title: 'Gardiens',
-      subtitle: 'Trouver un gardien',
-      gradient: ['#059669', '#10B981'],
-      onPress: () => navigation.navigate('Garde'),
-    },
-    {
-      icon: '🤖',
-      title: 'Assistant',
-      subtitle: 'Poser une question',
-      gradient: ['#5B5BD6', '#8B8BF5'],
-      onPress: () => navigation.navigate('Assistant'),
-    },
+  // ── News data ──
+  const newsItems = [
+    { title: '10 aliments dangereux pour votre chat', category: 'Nutrition', image: '🐱', color: '#E67E22' },
+    { title: 'Comment choisir le bon pet-sitter ?', category: 'Garde', image: '🏡', color: COLORS.primary },
+    { title: 'Les bienfaits du jeu pour les chiens', category: 'Bien-être', image: '🎾', color: '#4ECBA0' },
   ];
 
   return (
     <View style={s.container}>
-      <StatusBar barStyle="light-content" />
+      <StatusBar barStyle="dark-content" />
       <ScrollView
         showsVerticalScrollIndicator={false}
         contentContainerStyle={s.scrollContent}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={COLORS.primary} />}
       >
-        {/* ── Hero Header ── */}
-        <Animated.View style={{ opacity: heroFade, transform: [{ translateY: heroSlide }] }}>
-          <LinearGradient
-            colors={COLORS.gradientHero}
-            start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}
-            style={s.hero}
-          >
-            {/* Decorative circles */}
-            <View style={s.heroCircle1} />
-            <View style={s.heroCircle2} />
-            <View style={s.heroCircle3} />
-
-            <View style={s.heroTop}>
-              <View style={s.heroGreetBox}>
-                <Text style={s.greetingOverline}>{greetText}</Text>
-                <Text style={s.userName}>{firstName || 'Bienvenue'}</Text>
-              </View>
-              {user ? (
-                <TouchableOpacity
-                  style={s.avatarBtn}
-                  onPress={() => navigation.navigate('Profil')}
-                  activeOpacity={0.8}
-                >
-                  <LinearGradient
-                    colors={['rgba(255,255,255,0.32)', 'rgba(255,255,255,0.12)']}
-                    style={s.avatarGradient}
-                  >
-                    <Text style={s.avatarText}>{user?.name?.charAt(0)?.toUpperCase() || '?'}</Text>
-                  </LinearGradient>
-                </TouchableOpacity>
-              ) : (
-                <TouchableOpacity
-                  style={s.signUpHeroBtn}
-                  onPress={() => navigation.navigate('AuthStack', { screen: 'Register' })}
-                  activeOpacity={0.8}
-                >
-                  <Text style={s.signUpHeroBtnText}>S'inscrire</Text>
-                </TouchableOpacity>
-              )}
+        {/* ── Header ── */}
+        <AnimatedSection style={s.header}>
+          <View style={s.headerLeft}>
+            <View style={s.headerLogoCircle}>
+              <Text style={s.headerLogoEmoji}>🐾</Text>
             </View>
-
-            {/* Search bar — glass style */}
-            <TouchableOpacity style={s.searchBar} onPress={() => navigation.navigate('Scanner')} activeOpacity={0.8}>
-              <Text style={s.searchIcon}>🔍</Text>
-              <Text style={s.searchPlaceholder}>Rechercher un produit, un gardien...</Text>
+            <View>
+              <Text style={s.headerBrand}>Pépète</Text>
+              <Text style={s.headerGreeting}>{greetText}{firstName ? `, ${firstName}` : ''}</Text>
+            </View>
+          </View>
+          {user ? (
+            <TouchableOpacity style={s.avatarBtn} onPress={() => navigation.navigate('Profil')} activeOpacity={0.8}>
+              <LinearGradient colors={[COLORS.primary, COLORS.primaryLight]} style={s.avatarGradient}>
+                <Text style={s.avatarText}>{user?.name?.charAt(0)?.toUpperCase() || '?'}</Text>
+              </LinearGradient>
+              <View style={s.notificationDot} />
             </TouchableOpacity>
-          </LinearGradient>
-        </Animated.View>
+          ) : (
+            <TouchableOpacity style={s.signUpBtn} onPress={() => navigation.navigate('AuthStack', { screen: 'Register' })} activeOpacity={0.8}>
+              <Text style={s.signUpBtnText}>S'inscrire</Text>
+            </TouchableOpacity>
+          )}
+        </AnimatedSection>
 
-        {/* ── Mes animaux ── */}
+        {/* ── Search bar ── */}
+        <AnimatedSection delay={80} style={s.searchSection}>
+          <TouchableOpacity style={s.searchBar} onPress={() => navigation.navigate('Scanner')} activeOpacity={0.8}>
+            <Text style={s.searchIcon}>🔍</Text>
+            <Text style={s.searchPlaceholder}>Rechercher un produit, un gardien...</Text>
+          </TouchableOpacity>
+        </AnimatedSection>
+
+        {/* ── Feature grid 2x2 ── */}
+        <AnimatedSection delay={160} style={s.featuresSection}>
+          <View style={s.featuresRow}>
+            <FeatureCard
+              icon="📷"
+              title="Scanner Produit"
+              subtitle="Analyser un aliment"
+              bgColor={COLORS.primary}
+              textColor="#FFFFFF"
+              iconBg="rgba(255,255,255,0.22)"
+              onPress={() => navigation.navigate('Scanner')}
+            />
+            <FeatureCard
+              icon="🏡"
+              title="Trouver un Gardien"
+              subtitle="Près de chez vous"
+              bgColor="#FFFFFF"
+              textColor={COLORS.text}
+              iconBg={COLORS.primarySoft}
+              onPress={() => navigation.navigate('Garde')}
+            />
+          </View>
+          <View style={s.featuresRow}>
+            <FeatureCard
+              icon="🤖"
+              title="Question IA"
+              subtitle="Poser une question"
+              bgColor="#FFFFFF"
+              textColor={COLORS.text}
+              iconBg={COLORS.accentSoft}
+              onPress={() => navigation.navigate('Assistant')}
+            />
+            <FeatureCard
+              icon="🐾"
+              title="Mes Animaux"
+              subtitle={pets.length ? `${pets.length} compagnon${pets.length > 1 ? 's' : ''}` : 'Ajouter un animal'}
+              bgColor={COLORS.secondary}
+              textColor="#FFFFFF"
+              iconBg="rgba(255,255,255,0.22)"
+              onPress={() => navigation.navigate('Profil', { screen: 'MyPets' })}
+            />
+          </View>
+        </AnimatedSection>
+
+        {/* ── Mes compagnons (if pets) ── */}
         {pets.length > 0 && (
-          <AnimatedSection delay={100} style={s.petsSection}>
+          <AnimatedSection delay={240} style={s.petsSection}>
             <View style={s.sectionHeader}>
               <Text style={s.sectionTitle}>Mes compagnons</Text>
-              <TouchableOpacity
-                onPress={() => navigation.navigate('Profil', { screen: 'MyPets' })}
-                hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
-              >
-                <Text style={s.seeAll}>Voir tout</Text>
+              <TouchableOpacity onPress={() => navigation.navigate('Profil', { screen: 'MyPets' })} hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}>
+                <Text style={s.seeAll}>Voir tout →</Text>
               </TouchableOpacity>
             </View>
             <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={s.petsScroll}>
-              {pets.map((pet, idx) => <PetMiniCard key={pet._id || idx} pet={pet} />)}
-              <TouchableOpacity style={s.petMiniAdd} onPress={() => navigation.navigate('Profil', { screen: 'AddPet' })}>
-                <View style={s.petMiniAddCircle}><Text style={s.petMiniAddIcon}>+</Text></View>
-                <Text style={s.petMiniAddLabel}>Ajouter</Text>
+              {pets.map((pet, idx) => (
+                <View key={pet._id || idx} style={s.petChip}>
+                  <PetAvatar pet={pet} size={44} />
+                  <Text style={s.petChipName}>{pet.name}</Text>
+                </View>
+              ))}
+              <TouchableOpacity style={s.petAddChip} onPress={() => navigation.navigate('Profil', { screen: 'AddPet' })}>
+                <View style={s.petAddCircle}><Text style={s.petAddIcon}>+</Text></View>
+                <Text style={s.petAddLabel}>Ajouter</Text>
               </TouchableOpacity>
             </ScrollView>
           </AnimatedSection>
         )}
 
-        {/* ── Que faire ? ── */}
-        <AnimatedSection delay={200} style={s.featuresSection}>
-          <Text style={s.sectionTitle}>Que voulez-vous faire ?</Text>
-          <View style={s.featuresGrid}>
-            {features.map((f, idx) => (
-              <PressableCard key={idx} onPress={f.onPress} style={s.featureCardWrapper}>
-                <LinearGradient colors={f.gradient} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={s.featureCard}>
-                  <View style={s.featureDecoCircle} />
-                  <Text style={s.featureIcon}>{f.icon}</Text>
-                  <View>
-                    <Text style={s.featureTitle}>{f.title}</Text>
-                    <Text style={s.featureSubtitle}>{f.subtitle}</Text>
-                  </View>
-                  <View style={s.featureArrow}><Text style={s.featureArrowText}>→</Text></View>
-                </LinearGradient>
-              </PressableCard>
-            ))}
-          </View>
-        </AnimatedSection>
-
-        {/* ── Tableau de bord ── */}
-        <AnimatedSection delay={300} style={s.statsSection}>
-          <Text style={s.sectionTitle}>Mon tableau de bord</Text>
-          <GlassCard style={s.statsCard}>
-            {[
-              { value: recentScans.length, label: 'Produits\nscannes', icon: '📷', color: '#FF6B35' },
-              { value: pets.length, label: 'Animaux\nenregistres', icon: '🐾', color: '#059669' },
-              { value: bookings.length, label: 'Gardes\na venir', icon: '📅', color: '#2563EB' },
-            ].map((stat, idx) => (
-              <React.Fragment key={idx}>
-                <View style={s.stat}>
-                  <View style={[s.statIconWrap, { backgroundColor: stat.color + '10' }]}>
-                    <Text style={s.statIcon}>{stat.icon}</Text>
-                  </View>
-                  <Text style={[s.statValue, { color: stat.color }]}>{loading ? '-' : stat.value}</Text>
-                  <Text style={s.statLabel}>{stat.label}</Text>
-                </View>
-                {idx < 2 && <View style={s.statDivider} />}
-              </React.Fragment>
-            ))}
-          </GlassCard>
-        </AnimatedSection>
-
         {/* ── Prochaine garde ── */}
         {bookings.length > 0 && (
-          <AnimatedSection delay={400} style={s.bookingSection}>
+          <AnimatedSection delay={320} style={s.bookingSection}>
             <View style={s.sectionHeader}>
               <Text style={s.sectionTitle}>Prochaine garde</Text>
-              <TouchableOpacity
-                onPress={() => navigation.navigate('Garde')}
-                hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
-              >
-                <Text style={s.seeAll}>Historique</Text>
+              <TouchableOpacity onPress={() => navigation.navigate('Garde')} hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}>
+                <Text style={s.seeAll}>Voir tout →</Text>
               </TouchableOpacity>
             </View>
-            <NextBookingCard booking={bookings[0]} />
+            <View style={s.bookingCard}>
+              <LinearGradient colors={[COLORS.primary, COLORS.primaryLight]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={s.bookingGradient}>
+                <View style={s.bookingRow}>
+                  <View>
+                    <Text style={s.bookingService}>
+                      {{ garde_domicile: 'Garde à domicile', garde_chez_sitter: 'Chez le gardien', promenade: 'Promenade', visite: 'Visite', toilettage: 'Toilettage' }[bookings[0].service] || bookings[0].service}
+                    </Text>
+                    <Text style={s.bookingDate}>
+                      {new Date(bookings[0].startDate).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long' })}
+                    </Text>
+                  </View>
+                  <View style={s.bookingBadge}>
+                    <Text style={s.bookingBadgeText}>
+                      {Math.max(0, Math.ceil((new Date(bookings[0].startDate) - new Date()) / (1000 * 60 * 60 * 24)))} j
+                    </Text>
+                  </View>
+                </View>
+              </LinearGradient>
+            </View>
           </AnimatedSection>
         )}
 
         {/* ── Derniers scans ── */}
         {recentScans.length > 0 && (
-          <AnimatedSection delay={500} style={s.scansSection}>
+          <AnimatedSection delay={400} style={s.scansSection}>
             <View style={s.sectionHeader}>
               <Text style={s.sectionTitle}>Derniers scans</Text>
-              <TouchableOpacity
-                onPress={() => navigation.navigate('Scanner', { screen: 'ScanHistory' })}
-                hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
-              >
-                <Text style={s.seeAll}>Voir tout</Text>
+              <TouchableOpacity onPress={() => navigation.navigate('Scanner', { screen: 'ScanHistory' })} hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}>
+                <Text style={s.seeAll}>Voir tout →</Text>
               </TouchableOpacity>
             </View>
-            {recentScans.slice(0, 3).map((scan, idx) => (
-              <RecentScanCard
-                key={scan._id || idx}
-                scan={scan}
-                onPress={() => navigation.navigate('Scanner', { screen: 'ProductResult', params: { product: scan.product } })}
-              />
-            ))}
+            {recentScans.slice(0, 3).map((scan, idx) => {
+              const score = scan.product?.nutritionScore || 0;
+              const color = getScoreColor(score);
+              return (
+                <PressableCard
+                  key={scan._id || idx}
+                  style={s.scanCard}
+                  onPress={() => navigation.navigate('Scanner', { screen: 'ProductResult', params: { product: scan.product } })}
+                >
+                  <View style={[s.scanScoreBadge, { backgroundColor: color + '15' }]}>
+                    <Text style={[s.scanScoreText, { color }]}>{score}</Text>
+                  </View>
+                  <View style={s.scanInfo}>
+                    <Text style={s.scanName} numberOfLines={1}>{scan.product?.name || 'Produit'}</Text>
+                    <Text style={s.scanBrand} numberOfLines={1}>{scan.product?.brand || ''}</Text>
+                  </View>
+                  <View style={[s.scanLabel, { backgroundColor: color + '12' }]}>
+                    <Text style={[s.scanLabelText, { color }]}>{getScoreLabel(score)}</Text>
+                  </View>
+                </PressableCard>
+              );
+            })}
           </AnimatedSection>
         )}
 
-        {/* ── Acces rapide ── */}
-        <AnimatedSection delay={550} style={s.quickSection}>
-          <Text style={s.sectionTitle}>Acces rapide</Text>
-          <View style={s.quickGrid}>
-            {[
-              { icon: '�', label: 'Mes\nanimaux', onPress: () => navigation.navigate('Profil', { screen: 'MyPets' }) },
-              { icon: '📅', label: 'Réservations', onPress: () => navigation.navigate('Garde') },
-              { icon: '💬', label: 'Messages', onPress: () => navigation.navigate('Garde', { screen: 'Messages' }) },
-              { icon: '⚙️', label: 'Réglages', onPress: () => navigation.navigate('Profil', { screen: 'Settings' }) },
-            ].map((qa, idx) => (
-              <PressableCard key={idx} style={s.quickAction} onPress={qa.onPress}>
-                <GlassCard style={s.quickIconWrap}>
-                  <Text style={s.quickIcon}>{qa.icon}</Text>
-                </GlassCard>
-                <Text style={s.quickLabel}>{qa.label}</Text>
-              </PressableCard>
-            ))}
+        {/* ── Actualités pour vous ── */}
+        <AnimatedSection delay={480} style={s.newsSection}>
+          <View style={s.sectionHeader}>
+            <Text style={s.sectionTitle}>Actualités pour vous</Text>
           </View>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={s.newsScroll}>
+            {newsItems.map((item, idx) => (
+              <NewsCard key={idx} {...item} />
+            ))}
+          </ScrollView>
         </AnimatedSection>
 
-        {/* ── Banniere Pépète ── */}
-        <AnimatedSection delay={600} style={s.bannerSection}>
-          <PressableCard onPress={() => navigation.navigate('Assistant')} style={s.bannerPressable}>
-            <LinearGradient
-              colors={COLORS.gradientAccent}
-              start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}
-              style={s.bannerGradient}
-            >
-              <View style={s.bannerDecoCircle1} />
-              <View style={s.bannerDecoCircle2} />
-              <View style={s.bannerIconCircle}>
-                <Text style={s.bannerEmoji}>🤖</Text>
-              </View>
-              <View style={s.bannerContent}>
-                <Text style={s.bannerTitle}>Une question sur votre animal ?</Text>
-                <Text style={s.bannerText}>Notre assistant IA répond instantanément à toutes vos questions sur la santé et le bien-être de vos compagnons.</Text>
-                <View style={s.bannerBtn}>
-                  <Text style={s.bannerBtnText}>Poser une question  →</Text>
+        {/* ── AI Banner ── */}
+        <AnimatedSection delay={560} style={s.bannerSection}>
+          <PressableCard onPress={() => navigation.navigate('Assistant')} style={s.bannerCard}>
+            <LinearGradient colors={[COLORS.accent, COLORS.accentLight]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={s.bannerGradient}>
+              <View style={s.bannerRow}>
+                <View style={s.bannerIconCircle}>
+                  <Text style={{ fontSize: 26 }}>🤖</Text>
                 </View>
+                <View style={s.bannerTextWrap}>
+                  <Text style={s.bannerTitle}>Une question ?</Text>
+                  <Text style={s.bannerText}>Notre assistant IA répond instantanément</Text>
+                </View>
+                <Text style={s.bannerArrow}>→</Text>
               </View>
             </LinearGradient>
           </PressableCard>
@@ -457,113 +344,76 @@ const HomeScreen = ({ navigation }) => {
   );
 };
 
+// ═══════════════════════════════════════════════════════════════
 const s = StyleSheet.create({
   container: { flex: 1, backgroundColor: COLORS.background },
   scrollContent: { paddingBottom: 24 },
 
-  // ── Glass Card (shared) ──
-  glassCard: {
-    backgroundColor: COLORS.white,
-    borderRadius: RADIUS['2xl'],
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.8)',
-    ...SHADOWS.md,
-  },
-
-  // ── Hero ──
-  hero: {
-    paddingTop: Platform.OS === 'ios' ? 64 : 54,
+  // ── Header ──
+  header: {
+    flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
+    paddingTop: Platform.OS === 'ios' ? 60 : 48,
     paddingHorizontal: SPACING.xl,
-    paddingBottom: 36,
-    borderBottomLeftRadius: 36,
-    borderBottomRightRadius: 36,
-    overflow: 'hidden',
+    paddingBottom: 8,
   },
-  heroCircle1: {
-    position: 'absolute', top: -60, right: -60,
-    width: 200, height: 200, borderRadius: 100,
-    backgroundColor: 'rgba(255,255,255,0.08)',
-  },
-  heroCircle2: {
-    position: 'absolute', bottom: -70, left: -50,
-    width: 240, height: 240, borderRadius: 120,
-    backgroundColor: 'rgba(255,255,255,0.05)',
-  },
-  heroCircle3: {
-    position: 'absolute', top: 60, left: width * 0.4,
-    width: 100, height: 100, borderRadius: 50,
-    backgroundColor: 'rgba(255,255,255,0.04)',
-  },
-  heroTop: {
-    flexDirection: 'row', justifyContent: 'space-between',
-    alignItems: 'center', marginBottom: 26,
-  },
-  heroGreetBox: {},
-  greetingOverline: {
-    fontFamily: FONTS.bodyMedium,
-    fontSize: FONT_SIZE.sm,
-    color: 'rgba(255,255,255,0.82)',
-    letterSpacing: 0.8,
-    textTransform: 'uppercase',
-    marginBottom: 4,
-  },
-  userName: {
-    fontFamily: FONTS.brand,
-    fontSize: 34,
-    color: '#FFF',
-    letterSpacing: -0.5,
-    lineHeight: 40,
-  },
-  avatarBtn: {
-    width: 56, height: 56, borderRadius: 28,
-    overflow: 'hidden',
-    ...SHADOWS.glow('rgba(255,255,255,0.3)'),
-  },
-  avatarGradient: {
-    flex: 1,
+  headerLeft: { flexDirection: 'row', alignItems: 'center', gap: 12 },
+  headerLogoCircle: {
+    width: 44, height: 44, borderRadius: 22,
+    backgroundColor: COLORS.primarySoft,
     alignItems: 'center', justifyContent: 'center',
-    borderRadius: 28,
-    borderWidth: 2.5, borderColor: 'rgba(255,255,255,0.35)',
+  },
+  headerLogoEmoji: { fontSize: 22 },
+  headerBrand: {
+    fontFamily: FONTS.brand,
+    fontSize: 24,
+    color: COLORS.text,
+    letterSpacing: -0.3,
+  },
+  headerGreeting: {
+    fontFamily: FONTS.body,
+    fontSize: FONT_SIZE.xs,
+    color: COLORS.textSecondary,
+    marginTop: 1,
+  },
+  avatarBtn: { position: 'relative' },
+  avatarGradient: {
+    width: 44, height: 44, borderRadius: 22,
+    alignItems: 'center', justifyContent: 'center',
   },
   avatarText: {
     fontFamily: FONTS.heading,
-    fontSize: 24,
-    color: '#FFF',
+    fontSize: 18, color: '#FFF',
   },
-  signUpHeroBtn: {
-    backgroundColor: 'rgba(255,255,255,0.22)',
+  notificationDot: {
+    position: 'absolute', top: 0, right: 0,
+    width: 12, height: 12, borderRadius: 6,
+    backgroundColor: '#E74C3C',
+    borderWidth: 2, borderColor: COLORS.background,
+  },
+  signUpBtn: {
+    backgroundColor: COLORS.primary,
     borderRadius: RADIUS.full,
-    paddingHorizontal: 18,
-    paddingVertical: 10,
-    borderWidth: 1.5,
-    borderColor: 'rgba(255,255,255,0.3)',
+    paddingHorizontal: 18, paddingVertical: 10,
   },
-  signUpHeroBtnText: {
+  signUpBtnText: {
     fontFamily: FONTS.bodySemiBold,
-    fontSize: FONT_SIZE.sm,
-    color: '#FFF',
+    fontSize: FONT_SIZE.sm, color: '#FFF',
   },
+
+  // ── Search ──
+  searchSection: { paddingHorizontal: SPACING.xl, marginTop: 16 },
   searchBar: {
     flexDirection: 'row', alignItems: 'center',
-    backgroundColor: 'rgba(255,255,255,0.16)',
-    borderRadius: RADIUS.xl, paddingHorizontal: 18, height: 54,
-    borderWidth: 1, borderColor: 'rgba(255,255,255,0.18)',
-    // Glass-morphism effect approximation
-    ...Platform.select({
-      ios: {
-        shadowColor: 'rgba(0,0,0,0.1)',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 1,
-        shadowRadius: 8,
-      },
-      android: { elevation: 2 },
-    }),
+    backgroundColor: COLORS.white,
+    borderRadius: RADIUS.xl, paddingHorizontal: 18, height: 52,
+    borderWidth: 1, borderColor: COLORS.borderLight,
+    ...SHADOWS.sm,
   },
-  searchIcon: { fontSize: 17, marginRight: 12 },
+  searchIcon: { fontSize: 16, marginRight: 12 },
   searchPlaceholder: {
-    fontFamily: FONTS.bodyMedium,
+    fontFamily: FONTS.body,
     fontSize: FONT_SIZE.sm,
-    color: 'rgba(255,255,255,0.72)',
+    color: COLORS.placeholder,
   },
 
   // ── Section header ──
@@ -583,252 +433,186 @@ const s = StyleSheet.create({
     color: COLORS.primary,
   },
 
-  // ── Pets ──
-  petsSection: { paddingLeft: SPACING.xl, marginTop: 28 },
-  petsScroll: { gap: 16, paddingRight: SPACING.xl },
-  petMini: { alignItems: 'center', width: 76 },
-  petMiniAvatar: {
-    width: 66, height: 66, borderRadius: 33,
-    marginBottom: 8,
-    ...SHADOWS.sm,
-  },
-  petMiniAvatarGradient: {
-    width: 66, height: 66, borderRadius: 33,
-    alignItems: 'center', justifyContent: 'center',
-    borderWidth: 2.5, borderColor: COLORS.primary + '20',
-  },
-  petMiniEmoji: { fontSize: 30 },
-  petMiniName: {
-    fontFamily: FONTS.bodySemiBold,
-    fontSize: FONT_SIZE.xs,
-    color: COLORS.text,
-    textAlign: 'center',
-  },
-  petMiniAdd: { alignItems: 'center', width: 76, justifyContent: 'center' },
-  petMiniAddCircle: {
-    width: 66, height: 66, borderRadius: 33,
-    borderWidth: 2, borderColor: COLORS.border, borderStyle: 'dashed',
-    alignItems: 'center', justifyContent: 'center', marginBottom: 8,
-  },
-  petMiniAddIcon: { fontSize: 28, color: COLORS.textTertiary },
-  petMiniAddLabel: {
-    fontFamily: FONTS.bodyMedium,
-    fontSize: FONT_SIZE.xs,
-    color: COLORS.textTertiary,
-  },
-
-  // ── Features ──
-  featuresSection: { paddingHorizontal: SPACING.xl, marginTop: 30 },
-  featuresGrid: { flexDirection: 'row', gap: 12, marginTop: 16 },
-  featureCardWrapper: { flex: 1 },
+  // ── Features 2x2 ──
+  featuresSection: { paddingHorizontal: SPACING.xl, marginTop: 24 },
+  featuresRow: { flexDirection: 'row', gap: CARD_GAP, marginBottom: CARD_GAP },
   featureCard: {
-    borderRadius: RADIUS['2xl'], padding: 18,
-    height: 162, justifyContent: 'space-between',
-    overflow: 'hidden',
-    ...SHADOWS.lg,
+    flex: 1,
+    borderRadius: RADIUS['2xl'],
+    padding: 18,
+    minHeight: 150,
+    justifyContent: 'space-between',
+    ...SHADOWS.md,
   },
-  featureDecoCircle: {
-    position: 'absolute', top: -20, right: -20,
-    width: 80, height: 80, borderRadius: 40,
-    backgroundColor: 'rgba(255,255,255,0.1)',
+  featureIconWrap: {
+    width: 48, height: 48, borderRadius: RADIUS.lg,
+    alignItems: 'center', justifyContent: 'center',
+    marginBottom: 14,
   },
-  featureIcon: { fontSize: 34 },
+  featureIcon: { fontSize: 24 },
   featureTitle: {
     fontFamily: FONTS.heading,
     fontSize: FONT_SIZE.md,
-    color: '#FFF',
+    marginBottom: 4,
   },
   featureSubtitle: {
     fontFamily: FONTS.body,
     fontSize: FONT_SIZE.xs,
-    color: 'rgba(255,255,255,0.8)',
-    marginTop: 3,
-  },
-  featureArrow: {
-    width: 32, height: 32, borderRadius: 16,
-    backgroundColor: 'rgba(255,255,255,0.22)',
-    alignItems: 'center', justifyContent: 'center', alignSelf: 'flex-end',
-  },
-  featureArrowText: {
-    color: '#FFF', fontSize: 16,
-    fontFamily: FONTS.heading,
   },
 
-  // ── Stats ──
-  statsSection: { paddingHorizontal: SPACING.xl, marginTop: 32 },
-  statsCard: {
-    paddingVertical: 24, paddingHorizontal: 10,
-    flexDirection: 'row', justifyContent: 'space-around',
-    marginTop: 16,
+  // ── Pets ──
+  petsSection: { paddingHorizontal: SPACING.xl, marginTop: 28 },
+  petsScroll: { gap: 12, paddingRight: SPACING.xl },
+  petChip: {
+    flexDirection: 'row', alignItems: 'center',
+    backgroundColor: COLORS.white,
+    borderRadius: RADIUS.full,
+    paddingRight: 18, paddingLeft: 4, paddingVertical: 4,
+    borderWidth: 1, borderColor: COLORS.borderLight,
+    ...SHADOWS.sm,
   },
-  stat: { alignItems: 'center', flex: 1 },
-  statDivider: { width: 1, backgroundColor: COLORS.borderLight, marginVertical: 10 },
-  statIconWrap: {
-    width: 54, height: 54, borderRadius: RADIUS.lg,
-    alignItems: 'center', justifyContent: 'center', marginBottom: 12,
+  petAvatar: {
+    backgroundColor: COLORS.primarySoft,
+    alignItems: 'center', justifyContent: 'center',
   },
-  statIcon: { fontSize: 26 },
-  statValue: {
-    fontFamily: FONTS.heading,
-    fontSize: FONT_SIZE['2xl'],
-    letterSpacing: -0.5,
+  petChipName: {
+    fontFamily: FONTS.bodySemiBold,
+    fontSize: FONT_SIZE.sm,
+    color: COLORS.text,
+    marginLeft: 10,
   },
-  statLabel: {
-    fontFamily: FONTS.body,
-    fontSize: FONT_SIZE.xs,
-    color: COLORS.textSecondary,
-    marginTop: 4, textAlign: 'center', lineHeight: 16,
+  petAddChip: {
+    flexDirection: 'row', alignItems: 'center',
+    borderRadius: RADIUS.full,
+    paddingRight: 18, paddingLeft: 4, paddingVertical: 4,
+    borderWidth: 1.5, borderColor: COLORS.border, borderStyle: 'dashed',
+  },
+  petAddCircle: {
+    width: 44, height: 44, borderRadius: 22,
+    alignItems: 'center', justifyContent: 'center',
+  },
+  petAddIcon: { fontSize: 22, color: COLORS.textTertiary },
+  petAddLabel: {
+    fontFamily: FONTS.bodyMedium,
+    fontSize: FONT_SIZE.sm,
+    color: COLORS.textTertiary,
+    marginLeft: 8,
   },
 
   // ── Booking ──
-  bookingSection: { paddingHorizontal: SPACING.xl, marginTop: 32 },
+  bookingSection: { paddingHorizontal: SPACING.xl, marginTop: 28 },
   bookingCard: {
     borderRadius: RADIUS['2xl'], overflow: 'hidden',
-    ...SHADOWS.lg, marginTop: 16,
+    ...SHADOWS.md,
   },
-  bookingGradient: { padding: 22, borderRadius: RADIUS['2xl'], overflow: 'hidden' },
-  bookingDecoCircle: {
-    position: 'absolute', top: -30, right: -30,
-    width: 120, height: 120, borderRadius: 60,
-    backgroundColor: 'rgba(255,255,255,0.06)',
-  },
-  bookingTop: {
-    flexDirection: 'row', justifyContent: 'space-between',
-    alignItems: 'center', marginBottom: 12,
-  },
-  bookingBadge: {
-    backgroundColor: 'rgba(255,255,255,0.22)',
-    borderRadius: RADIUS.full, paddingHorizontal: 16, paddingVertical: 6,
-  },
-  bookingBadgeText: {
-    fontFamily: FONTS.bodySemiBold,
-    color: '#FFF', fontSize: FONT_SIZE.sm,
-  },
-  bookingPrice: {
-    fontFamily: FONTS.heading,
-    color: '#FFF', fontSize: FONT_SIZE['2xl'],
-    letterSpacing: -0.5,
+  bookingGradient: { padding: 20, borderRadius: RADIUS['2xl'] },
+  bookingRow: {
+    flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
   },
   bookingService: {
     fontFamily: FONTS.heading,
-    color: '#FFF', fontSize: FONT_SIZE.lg,
-    marginBottom: 12,
+    color: '#FFF', fontSize: FONT_SIZE.md,
   },
-  bookingMeta: {
-    flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
+  bookingDate: {
+    fontFamily: FONTS.body,
+    color: 'rgba(255,255,255,0.85)', fontSize: FONT_SIZE.sm,
+    marginTop: 4,
   },
-  bookingMetaText: {
-    fontFamily: FONTS.bodyMedium,
-    color: 'rgba(255,255,255,0.88)', fontSize: FONT_SIZE.sm,
+  bookingBadge: {
+    backgroundColor: 'rgba(255,255,255,0.22)',
+    borderRadius: RADIUS.full, paddingHorizontal: 16, paddingVertical: 8,
   },
-  bookingStatusBadge: {
-    backgroundColor: 'rgba(255,255,255,0.18)',
-    borderRadius: RADIUS.full, paddingHorizontal: 14, paddingVertical: 4,
-  },
-  bookingStatusText: {
-    fontFamily: FONTS.bodySemiBold,
-    color: '#FFF', fontSize: FONT_SIZE.xs,
+  bookingBadgeText: {
+    fontFamily: FONTS.heading,
+    color: '#FFF', fontSize: FONT_SIZE.md,
   },
 
   // ── Scans ──
-  scansSection: { paddingHorizontal: SPACING.xl, marginTop: 32 },
+  scansSection: { paddingHorizontal: SPACING.xl, marginTop: 28 },
   scanCard: {
     flexDirection: 'row', alignItems: 'center',
     backgroundColor: COLORS.white,
     borderRadius: RADIUS.xl,
-    padding: 16, marginTop: 10,
+    padding: 14, marginBottom: 10,
     borderWidth: 1, borderColor: COLORS.borderLight,
     ...SHADOWS.sm,
   },
   scanScoreBadge: {
-    width: 50, height: 50, borderRadius: 16,
+    width: 46, height: 46, borderRadius: 14,
     alignItems: 'center', justifyContent: 'center', marginRight: 14,
   },
-  scanScoreText: {
-    fontFamily: FONTS.heading,
-    fontSize: FONT_SIZE.md,
-  },
+  scanScoreText: { fontFamily: FONTS.heading, fontSize: FONT_SIZE.md },
   scanInfo: { flex: 1, marginRight: 10 },
   scanName: {
     fontFamily: FONTS.bodySemiBold,
-    fontSize: FONT_SIZE.sm,
-    color: COLORS.text,
+    fontSize: FONT_SIZE.sm, color: COLORS.text,
   },
   scanBrand: {
     fontFamily: FONTS.body,
-    fontSize: FONT_SIZE.xs,
-    color: COLORS.textSecondary,
-    marginTop: 3,
+    fontSize: FONT_SIZE.xs, color: COLORS.textSecondary,
+    marginTop: 2,
   },
-  scanLabel: {
-    borderRadius: RADIUS.full, paddingHorizontal: 14, paddingVertical: 6,
-  },
-  scanLabelText: {
-    fontFamily: FONTS.bodySemiBold,
-    fontSize: FONT_SIZE.xs,
-  },
+  scanLabel: { borderRadius: RADIUS.full, paddingHorizontal: 12, paddingVertical: 5 },
+  scanLabelText: { fontFamily: FONTS.bodySemiBold, fontSize: FONT_SIZE.xs },
 
-  // ── Quick actions ──
-  quickSection: { paddingHorizontal: SPACING.xl, marginTop: 32 },
-  quickGrid: { flexDirection: 'row', justifyContent: 'space-between', marginTop: 16 },
-  quickAction: { alignItems: 'center', flex: 1 },
-  quickIconWrap: {
-    width: 64, height: 64, borderRadius: RADIUS.xl,
-    alignItems: 'center', justifyContent: 'center',
-    marginBottom: 10,
+  // ── News ──
+  newsSection: { paddingHorizontal: SPACING.xl, marginTop: 28 },
+  newsScroll: { gap: 14 },
+  newsCard: {
+    width: 220,
+    backgroundColor: COLORS.white,
+    borderRadius: RADIUS['2xl'],
+    overflow: 'hidden',
+    borderWidth: 1, borderColor: COLORS.borderLight,
+    ...SHADOWS.sm,
   },
-  quickIcon: { fontSize: 28 },
-  quickLabel: {
-    fontFamily: FONTS.bodyMedium,
+  newsImagePlaceholder: {
+    height: 120, alignItems: 'center', justifyContent: 'center',
+  },
+  newsContent: { padding: 14 },
+  newsCategoryBadge: {
+    alignSelf: 'flex-start',
+    borderRadius: RADIUS.full,
+    paddingHorizontal: 10, paddingVertical: 4,
+    marginBottom: 8,
+  },
+  newsCategoryText: {
+    fontFamily: FONTS.bodySemiBold,
     fontSize: FONT_SIZE.xs - 1,
-    color: COLORS.textSecondary,
-    textAlign: 'center', lineHeight: 16,
+  },
+  newsTitle: {
+    fontFamily: FONTS.heading,
+    fontSize: FONT_SIZE.sm,
+    color: COLORS.text,
+    lineHeight: 20,
   },
 
   // ── Banner ──
-  bannerSection: { paddingHorizontal: SPACING.xl, marginTop: 32 },
-  bannerPressable: {},
+  bannerSection: { paddingHorizontal: SPACING.xl, marginTop: 28 },
+  bannerCard: {},
   bannerGradient: {
-    borderRadius: RADIUS['2xl'], padding: 24,
-    overflow: 'hidden',
-    ...SHADOWS.lg,
+    borderRadius: RADIUS['2xl'], padding: 20,
+    ...SHADOWS.md,
   },
-  bannerDecoCircle1: {
-    position: 'absolute', top: -40, right: -40,
-    width: 140, height: 140, borderRadius: 70,
-    backgroundColor: 'rgba(255,255,255,0.06)',
-  },
-  bannerDecoCircle2: {
-    position: 'absolute', bottom: -50, left: -30,
-    width: 120, height: 120, borderRadius: 60,
-    backgroundColor: 'rgba(255,255,255,0.04)',
-  },
+  bannerRow: { flexDirection: 'row', alignItems: 'center' },
   bannerIconCircle: {
-    width: 60, height: 60, borderRadius: 30,
-    backgroundColor: 'rgba(255,255,255,0.18)',
-    alignItems: 'center', justifyContent: 'center', marginBottom: 16,
+    width: 52, height: 52, borderRadius: 26,
+    backgroundColor: 'rgba(255,255,255,0.25)',
+    alignItems: 'center', justifyContent: 'center',
   },
-  bannerEmoji: { fontSize: 30 },
-  bannerContent: {},
+  bannerTextWrap: { flex: 1, marginLeft: 16 },
   bannerTitle: {
     fontFamily: FONTS.heading,
-    fontSize: FONT_SIZE.lg,
-    color: '#FFF', marginBottom: 8, lineHeight: 26,
+    fontSize: FONT_SIZE.md, color: '#FFF',
   },
   bannerText: {
     fontFamily: FONTS.body,
-    fontSize: FONT_SIZE.sm,
-    color: 'rgba(255,255,255,0.82)', lineHeight: 22, marginBottom: 18,
+    fontSize: FONT_SIZE.xs, color: 'rgba(255,255,255,0.85)',
+    marginTop: 2,
   },
-  bannerBtn: {
-    alignSelf: 'flex-start',
-    backgroundColor: 'rgba(255,255,255,0.2)',
-    borderRadius: RADIUS.full, paddingHorizontal: 22, paddingVertical: 10,
-    borderWidth: 1, borderColor: 'rgba(255,255,255,0.15)',
-  },
-  bannerBtnText: {
-    fontFamily: FONTS.bodySemiBold,
-    color: '#FFF', fontSize: FONT_SIZE.sm,
+  bannerArrow: {
+    fontFamily: FONTS.heading,
+    fontSize: 22, color: '#FFF', marginLeft: 8,
   },
 });
 

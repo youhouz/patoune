@@ -229,7 +229,7 @@ const SettingsScreen = ({ navigation }) => {
       <View
         style={[
           styles.settingIconContainer,
-          { backgroundColor: (accentColor || '#FF6B35') + '15' },
+          { backgroundColor: (accentColor || '#7B8B6F') + '15' },
         ]}
       >
         <Text style={styles.settingIcon}>{icon}</Text>
@@ -245,9 +245,9 @@ const SettingsScreen = ({ navigation }) => {
         onValueChange={onValueChange}
         trackColor={{
           false: colors.border,
-          true: (accentColor || '#FF6B35') + '70',
+          true: (accentColor || '#7B8B6F') + '70',
         }}
-        thumbColor={value ? accentColor || '#FF6B35' : '#f4f3f4'}
+        thumbColor={value ? accentColor || '#7B8B6F' : '#f4f3f4'}
         ios_backgroundColor={colors.border}
       />
     </View>
@@ -277,7 +277,7 @@ const SettingsScreen = ({ navigation }) => {
 
       {/* Premium Gradient Header */}
       <LinearGradient
-        colors={['#FF6B35', '#FF7E45', '#FF9A60']}
+        colors={['#7B8B6F', '#8A9A7E', '#96A88A']}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
         style={styles.header}
@@ -329,7 +329,7 @@ const SettingsScreen = ({ navigation }) => {
               <View style={styles.accountHeader}>
                 <View style={styles.accountAvatar}>
                   <LinearGradient
-                    colors={['#FF6B35', '#FF8F65', '#FFB088']}
+                    colors={['#7B8B6F', '#96A88A', '#A3B296']}
                     start={{ x: 0, y: 0 }}
                     end={{ x: 1, y: 1 }}
                     style={styles.accountAvatarGradient}
@@ -416,7 +416,7 @@ const SettingsScreen = ({ navigation }) => {
                   colors={
                     loading
                       ? [colors.textLight, colors.textTertiary]
-                      : ['#FF6B35', '#FF8F65']
+                      : ['#7B8B6F', '#96A88A']
                   }
                   start={{ x: 0, y: 0 }}
                   end={{ x: 1, y: 0 }}
@@ -445,7 +445,7 @@ const SettingsScreen = ({ navigation }) => {
                 description: 'Recevoir les notifications sur votre appareil',
                 value: notifPush,
                 onValueChange: setNotifPush,
-                accentColor: '#FF6B35',
+                accentColor: '#7B8B6F',
               })}
               {renderSettingRow({
                 icon: '📷',
@@ -469,7 +469,7 @@ const SettingsScreen = ({ navigation }) => {
                 description: 'Nouveaux messages de gardiens',
                 value: notifMessages,
                 onValueChange: setNotifMessages,
-                accentColor: '#5B5BD6',
+                accentColor: '#4ECBA0',
                 isLast: true,
               })}
             </View>
@@ -796,7 +796,7 @@ const styles = StyleSheet.create({
     borderRadius: RADIUS.xl + 2,
     overflow: 'hidden',
     marginTop: SPACING.base + 2,
-    ...SHADOWS.glow('#FF6B35'),
+    ...SHADOWS.glow('#7B8B6F'),
   },
   saveGradient: {
     flexDirection: 'row',

@@ -1,43 +1,43 @@
-// Pépète Design System — v2.0
-// Brand: warm orange + clean white, Revolut-inspired, accessible for all ages
+// Pépète Design System — v3.0
+// Brand: nature-inspired sage green + warm brown, organic & modern
 
 const COLORS = {
-  // Brand Primary — Warm Orange
-  primary: '#FF6B35',
-  primaryLight: '#FF8F65',
-  primaryDark: '#E55A25',
-  primarySoft: '#FFF3EE',
-  primaryGlow: 'rgba(255, 107, 53, 0.15)',
+  // Brand Primary — Sage Green
+  primary: '#7B8B6F',
+  primaryLight: '#96A88A',
+  primaryDark: '#5E6D53',
+  primarySoft: '#F0F3ED',
+  primaryGlow: 'rgba(123, 139, 111, 0.15)',
 
-  // Brand Secondary — Nature Green
-  secondary: '#2ECC71',
-  secondaryLight: '#58D68D',
-  secondaryDark: '#27AE60',
-  secondarySoft: '#EAFAF1',
+  // Brand Secondary — Warm Brown
+  secondary: '#8B7355',
+  secondaryLight: '#A68E6F',
+  secondaryDark: '#6B5740',
+  secondarySoft: '#F5F0EB',
 
-  // Accent — Indigo
-  accent: '#5B5BD6',
-  accentLight: '#8B8BF5',
-  accentSoft: '#EFEFFF',
+  // Accent — Mint Teal
+  accent: '#4ECBA0',
+  accentLight: '#7DDBB8',
+  accentSoft: '#E8F8F0',
 
   // Backgrounds
   white: '#FFFFFF',
-  background: '#F5F7FA',
+  background: '#F8F6F2',
   surface: '#FFFFFF',
   surfaceElevated: '#FFFFFF',
   card: '#FFFFFF',
-  border: '#E8EAF0',
-  borderLight: '#F0F2F7',
-  divider: '#ECEDF0',
+  border: '#E8E4DD',
+  borderLight: '#F0EDE7',
+  divider: '#EBE7E1',
 
   // Text — high contrast for readability
-  text: '#111827',
-  textPrimary: '#111827',
-  textSecondary: '#4B5563',
+  text: '#2D2D2D',
+  textPrimary: '#2D2D2D',
+  textSecondary: '#6B6B6B',
   textTertiary: '#9CA3AF',
   textLight: '#C4C9D4',
   textInverse: '#FFFFFF',
-  placeholder: '#B0B7C3',
+  placeholder: '#B0B0A8',
 
   // Nutrition Scores
   scoreExcellent: '#059669',
@@ -62,11 +62,11 @@ const COLORS = {
   info: '#2563EB',
   infoSoft: '#EFF6FF',
 
-  // Semantic aliases — v2.0 scanner/history screen compatibility
-  cream: '#FDFAF7',
-  linen: '#F5F0EB',
-  charcoal: '#111827',
-  stone: '#4B5563',
+  // Semantic aliases — v3.0 nature palette
+  cream: '#F8F6F2',
+  linen: '#F0EDE7',
+  charcoal: '#2D2D2D',
+  stone: '#6B6B6B',
   pebble: '#9CA3AF',
   sand: '#C4C9D4',
 
@@ -77,13 +77,13 @@ const COLORS = {
   overlayLight: 'rgba(0, 0, 0, 0.25)',
 
   // Gradients (arrays for LinearGradient)
-  gradientPrimary: ['#FF6B35', '#FF8F65'],
-  gradientWarm: ['#FF6B35', '#FBBF24'],
+  gradientPrimary: ['#7B8B6F', '#96A88A'],
+  gradientWarm: ['#8B7355', '#A68E6F'],
   gradientSuccess: ['#059669', '#10B981'],
-  gradientAccent: ['#5B5BD6', '#8B8BF5'],
-  gradientDark: ['#111827', '#1F2937'],
-  gradientCharcoal: ['#111827', '#1F2937'],
-  gradientHero: ['#FF6B35', '#FF8065', '#FFB088'],
+  gradientAccent: ['#4ECBA0', '#7DDBB8'],
+  gradientDark: ['#2D2D2D', '#3D3D3D'],
+  gradientCharcoal: ['#2D2D2D', '#3D3D3D'],
+  gradientHero: ['#7B8B6F', '#8A9A7E', '#A3B296'],
 };
 
 // Spacing — generous for big fingers and readability
@@ -158,7 +158,7 @@ const SHADOWS = {
   },
   glow: function(color) {
     return {
-      shadowColor: color || '#FF6B35',
+      shadowColor: color || '#7B8B6F',
       shadowOffset: { width: 0, height: 4 },
       shadowOpacity: 0.35,
       shadowRadius: 14,
