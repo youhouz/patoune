@@ -15,6 +15,14 @@ exports.createReview = async (req, res, next) => {
       });
     }
 
+    const ratingNum = Number(rating);
+    if (!Number.isInteger(ratingNum) || ratingNum < 1 || ratingNum > 5) {
+      return res.status(400).json({
+        success: false,
+        error: 'La note doit etre un entier entre 1 et 5'
+      });
+    }
+
     // Vérifier que la réservation existe et appartient à l'utilisateur
     const booking = await Booking.findById(bookingId);
     if (!booking) {
@@ -31,7 +39,7 @@ exports.createReview = async (req, res, next) => {
       author: req.user.id,
       petsitter,
       booking: bookingId,
-      rating,
+      rating: ratingNum,
       comment: comment || ''
     });
 
@@ -54,11 +62,18 @@ exports.createReview = async (req, res, next) => {
 // @route   GET /api/reviews/petsitter/:id
 exports.getPetSitterReviews = async (req, res, next) => {
   try {
+    const page = Math.max(1, parseInt(req.query.page) || 1);
+    const limit = Math.min(50, Math.max(1, parseInt(req.query.limit) || 20));
+    const skip = (page - 1) * limit;
+
+    const total = await Review.countDocuments({ petsitter: req.params.id });
     const reviews = await Review.find({ petsitter: req.params.id })
       .populate('author', 'name avatar')
-      .sort({ createdAt: -1 });
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit);
 
-    res.json({ success: true, count: reviews.length, reviews });
+    res.json({ success: true, count: reviews.length, total, page, reviews });
   } catch (error) {
     next(error);
   }

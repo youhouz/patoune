@@ -1,5 +1,5 @@
 // ---------------------------------------------------------------------------
-// Patoune v2.0 - ScreenHeader Component
+// Pépète v2.0 - ScreenHeader Component
 // Reusable screen header with SafeArea, back button, title/subtitle,
 // and optional right action area. Supports dark, light, transparent variants.
 // ---------------------------------------------------------------------------

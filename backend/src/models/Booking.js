@@ -46,4 +46,11 @@ const bookingSchema = new mongoose.Schema({
   timestamps: true
 });
 
+bookingSchema.pre('validate', function (next) {
+  if (this.startDate && this.endDate && this.startDate >= this.endDate) {
+    this.invalidate('endDate', 'La date de fin doit etre apres la date de debut');
+  }
+  next();
+});
+
 module.exports = mongoose.model('Booking', bookingSchema);

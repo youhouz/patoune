@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 // ---------------------------------------------------------------------------
-// Patoune v2.0 — Post-build script
+// Pépète v2.0 — Post-build script
 // Run after: npx expo export --platform web
 //
 // This script does 4 things:
@@ -109,17 +109,17 @@ html = html.replace(/<meta name="description"[^>]*>\n?/g, '');
 const metaTags = `
     <!-- PWA Meta Tags (injected by post-build script) -->
     <meta name="theme-color" content="#C4704B" />
-    <meta name="description" content="Patoune - Le compagnon de vos compagnons. Scanner produits, garde animaux, assistant IA." />
+    <meta name="description" content="Pépète - Le compagnon de vos compagnons. Scanner produits, garde animaux, assistant IA." />
     <link rel="manifest" href="/manifest.json" />
 
     <!-- PWA Meta Tags -->
     <meta name="mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-    <meta name="apple-mobile-web-app-title" content="Patoune" />
+    <meta name="apple-mobile-web-app-title" content="Pépète" />
     <link rel="apple-touch-icon" href="/assets/icon.png" />
 
     <!-- Open Graph -->
-    <meta property="og:title" content="Patoune" />
+    <meta property="og:title" content="Pépète" />
     <meta property="og:description" content="Le compagnon de vos compagnons" />
     <meta property="og:type" content="website" />
     <meta property="og:image" content="/assets/icon.png" />

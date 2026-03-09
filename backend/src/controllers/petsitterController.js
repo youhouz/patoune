@@ -29,7 +29,12 @@ exports.searchPetSitters = async (req, res, next) => {
 
     // Si coordonnées fournies, utiliser $geoNear pour obtenir la distance
     if (lat && lng) {
-      const maxDistanceMeters = parseInt(radius) * 1000;
+      const parsedLat = parseFloat(lat);
+      const parsedLng = parseFloat(lng);
+      if (isNaN(parsedLat) || isNaN(parsedLng) || parsedLat < -90 || parsedLat > 90 || parsedLng < -180 || parsedLng > 180) {
+        return res.status(400).json({ success: false, error: 'Coordonnées géographiques invalides' });
+      }
+      const maxDistanceMeters = Math.min(parseInt(radius) || 10, 100) * 1000;
       const pipeline = [];
 
       // Étape $geoNear (doit être la première étape du pipeline)
@@ -37,7 +42,7 @@ exports.searchPetSitters = async (req, res, next) => {
         $geoNear: {
           near: {
             type: 'Point',
-            coordinates: [parseFloat(lng), parseFloat(lat)]
+            coordinates: [parsedLng, parsedLat]
           },
           distanceField: 'distance',
           maxDistance: maxDistanceMeters,

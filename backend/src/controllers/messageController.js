@@ -10,6 +10,14 @@ const getConversationId = (userId1, userId2) => {
 exports.sendMessage = async (req, res, next) => {
   try {
     const { receiver, content } = req.body;
+
+    if (!receiver || !content || !content.trim()) {
+      return res.status(400).json({ success: false, error: 'Destinataire et contenu requis' });
+    }
+    if (receiver === req.user.id) {
+      return res.status(400).json({ success: false, error: 'Impossible de s\'envoyer un message a soi-meme' });
+    }
+
     const conversation = getConversationId(req.user.id, receiver);
 
     const message = await Message.create({
@@ -32,10 +40,16 @@ exports.sendMessage = async (req, res, next) => {
 exports.getConversation = async (req, res, next) => {
   try {
     const conversation = getConversationId(req.user.id, req.params.userId);
+    const page = Math.max(1, parseInt(req.query.page) || 1);
+    const limit = Math.min(100, Math.max(1, parseInt(req.query.limit) || 50));
+    const skip = (page - 1) * limit;
 
+    const total = await Message.countDocuments({ conversation });
     const messages = await Message.find({ conversation })
       .populate('sender', 'name avatar')
-      .sort({ createdAt: 1 });
+      .sort({ createdAt: 1 })
+      .skip(skip)
+      .limit(limit);
 
     // Marquer comme lus
     await Message.updateMany(
@@ -43,7 +57,7 @@ exports.getConversation = async (req, res, next) => {
       { read: true }
     );
 
-    res.json({ success: true, count: messages.length, messages });
+    res.json({ success: true, count: messages.length, total, page, messages });
   } catch (error) {
     next(error);
   }

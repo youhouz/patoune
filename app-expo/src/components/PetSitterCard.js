@@ -49,6 +49,7 @@ const StarRating = ({ value = 0, count, size = 13 }) => {
 };
 
 const PetSitterCard = ({ petsitter, onPress }) => {
+  if (!petsitter) return null;
   const { user, bio, pricePerDay, rating, reviewCount, acceptedAnimals, services } = petsitter;
 
   return (

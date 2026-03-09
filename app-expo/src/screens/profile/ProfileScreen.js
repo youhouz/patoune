@@ -9,7 +9,6 @@ import {
   StatusBar,
   Animated,
   ActivityIndicator,
-  Alert,
   RefreshControl,
   Dimensions,
 } from 'react-native';
@@ -19,6 +18,8 @@ import { useAuth } from '../../context/AuthContext';
 import { getMyPetsAPI } from '../../api/pets';
 import { getScanHistoryAPI } from '../../api/products';
 import { getMyBookingsAPI } from '../../api/petsitters';
+import PepeteLogo from '../../components/PepeteLogo';
+import { showAlert } from '../../utils/alert';
 import { FONTS, TEXT_STYLES } from '../../utils/typography';
 const colors = require('../../utils/colors');
 const { SHADOWS, RADIUS, SPACING, FONT_SIZE } = require('../../utils/colors');
@@ -269,13 +270,7 @@ const ProfileScreen = ({ navigation }) => {
   };
 
   const handleLogout = () => {
-    if (Platform.OS === 'web') {
-      if (window.confirm('Voulez-vous vraiment vous deconnecter ?')) {
-        logout();
-      }
-      return;
-    }
-    Alert.alert(
+    showAlert(
       'Deconnexion',
       'Voulez-vous vraiment vous deconnecter ?',
       [
@@ -532,10 +527,7 @@ const ProfileScreen = ({ navigation }) => {
         {/* Premium App footer */}
         <View style={styles.footer}>
           <View style={styles.footerDivider} />
-          <View style={styles.footerBadge}>
-            <Text style={styles.footerPaw}>🐾</Text>
-            <Text style={styles.footerText}>patoune</Text>
-          </View>
+          <PepeteLogo size={44} variant="full" theme="dark" />
           <Text style={styles.footerVersion}>v2.0.0 — Le meilleur pour vos animaux</Text>
         </View>
 

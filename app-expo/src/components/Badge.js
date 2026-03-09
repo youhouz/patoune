@@ -1,5 +1,5 @@
 // ---------------------------------------------------------------------------
-// Patoune v2.0 - Badge Component
+// Pépète v2.0 - Badge Component
 // Status badge / pill for tags, roles, animal types, and verification.
 // Compact, accessible, with optional Feather icon.
 // ---------------------------------------------------------------------------

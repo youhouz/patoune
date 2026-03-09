@@ -1,5 +1,5 @@
 /**
- * Patoune - Seed Premium
+ * Pépète - Seed Premium
  * Donnees realistes et riches pour demo
  * Usage: node seed.js
  */
@@ -720,7 +720,7 @@ const seed = async () => {
 
   // ═══════════════════════════════════════
   console.log('\n' + '='.repeat(50));
-  console.log('   PATOUNE - SEED PREMIUM TERMINE !');
+  console.log('   PEPETE - SEED PREMIUM TERMINE !');
   console.log('='.repeat(50));
   console.log('\n📱 Comptes de test:');
   console.log('   marie@test.com / password123 (proprietaire, 3 animaux)');

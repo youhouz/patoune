@@ -6,6 +6,8 @@ require('dotenv').config();
 const connectDB = require('../src/config/db');
 
 const app = express();
+const REQUIRED_ENV_VARS = ['MONGODB_URI', 'JWT_SECRET'];
+const missingVars = REQUIRED_ENV_VARS.filter((name) => !process.env[name]);
 
 // CORS : restreindre les origines en production
 const allowedOrigins = process.env.CORS_ORIGINS
@@ -19,6 +21,47 @@ const corsOptions = allowedOrigins.includes('*')
 app.use(helmet());
 app.use(cors(corsOptions));
 app.use(express.json({ limit: '1mb' }));
+
+app.get('/api/health', async (req, res) => {
+  const hasConfig = missingVars.length === 0;
+
+  if (!hasConfig) {
+    return res.status(503).json({
+      success: false,
+      service: 'pepete-api',
+      error: `Configuration manquante: ${missingVars.join(', ')}`,
+      timestamp: new Date().toISOString()
+    });
+  }
+
+  try {
+    await connectDB();
+    return res.json({
+      success: true,
+      service: 'pepete-api',
+      database: 'connected',
+      timestamp: new Date().toISOString()
+    });
+  } catch (err) {
+    return res.status(503).json({
+      success: false,
+      service: 'pepete-api',
+      database: 'disconnected',
+      timestamp: new Date().toISOString()
+    });
+  }
+});
+
+app.use((req, res, next) => {
+  if (missingVars.length > 0) {
+    return res.status(500).json({
+      success: false,
+      error: `Configuration serveur incomplete: ${missingVars.join(', ')}`
+    });
+  }
+
+  next();
+});
 
 // Middleware: connexion DB avant chaque requete
 app.use(async (req, res, next) => {
@@ -44,10 +87,10 @@ app.use('/api/ai', require('../src/routes/ai'));
 
 // Route de test
 app.get('/', (req, res) => {
-  res.json({ message: 'Patoune API v1.0' });
+  res.json({ message: 'Pépète API v1.0' });
 });
 app.get('/api', (req, res) => {
-  res.json({ message: 'Patoune API v1.0' });
+  res.json({ message: 'Pépète API v1.0' });
 });
 
 // Error handler

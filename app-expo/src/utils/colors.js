@@ -1,4 +1,4 @@
-// Patoune Design System — v2.0
+// Pépète Design System — v2.0
 // Brand: warm orange + clean white, Revolut-inspired, accessible for all ages
 
 const COLORS = {
@@ -82,6 +82,7 @@ const COLORS = {
   gradientSuccess: ['#059669', '#10B981'],
   gradientAccent: ['#5B5BD6', '#8B8BF5'],
   gradientDark: ['#111827', '#1F2937'],
+  gradientCharcoal: ['#111827', '#1F2937'],
   gradientHero: ['#FF6B35', '#FF8065', '#FFB088'],
 };
 

@@ -35,4 +35,27 @@ const protect = async (req, res, next) => {
   }
 };
 
-module.exports = { protect };
+// Like protect but does not block unauthenticated requests.
+// Sets req.user when a valid token is provided, otherwise continues with req.user = undefined.
+const optionalAuth = async (req, res, next) => {
+  let token;
+
+  if (req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
+    token = req.headers.authorization.split(' ')[1];
+  }
+
+  if (!token) {
+    return next();
+  }
+
+  try {
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    req.user = await User.findById(decoded.id).select('-password');
+  } catch (_) {
+    // Invalid token — continue as guest
+  }
+
+  next();
+};
+
+module.exports = { protect, optionalAuth };

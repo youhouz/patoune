@@ -4,6 +4,24 @@ const Booking = require('../models/Booking');
 // @route   POST /api/bookings
 exports.createBooking = async (req, res, next) => {
   try {
+    const { startDate, endDate, service, pet, sitter, totalPrice } = req.body;
+
+    if (!startDate || !endDate || !service || !pet || !sitter) {
+      return res.status(400).json({ success: false, error: 'Champs obligatoires manquants (startDate, endDate, service, pet, sitter)' });
+    }
+
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+    if (isNaN(start.getTime()) || isNaN(end.getTime())) {
+      return res.status(400).json({ success: false, error: 'Dates invalides' });
+    }
+    if (start >= end) {
+      return res.status(400).json({ success: false, error: 'La date de debut doit etre avant la date de fin' });
+    }
+    if (start < new Date()) {
+      return res.status(400).json({ success: false, error: 'La date de debut ne peut pas etre dans le passe' });
+    }
+
     req.body.owner = req.user.id;
     const booking = await Booking.create(req.body);
 

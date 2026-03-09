@@ -1,25 +1,26 @@
 const Anthropic = require('@anthropic-ai/sdk');
 
-// Rate limiting en memoire : 10 requetes par utilisateur par heure
+// Rate limiting en memoire : 10 requetes par utilisateur/IP par heure
 const rateLimitMap = new Map();
 const RATE_LIMIT_MAX = 10;
+const RATE_LIMIT_GUEST_MAX = 5; // Guests get fewer requests
 const RATE_LIMIT_WINDOW = 60 * 60 * 1000; // 1 heure en ms
 
-function checkRateLimit(userId) {
+function checkRateLimit(key, isGuest) {
   const now = Date.now();
-  const userKey = userId.toString();
+  const max = isGuest ? RATE_LIMIT_GUEST_MAX : RATE_LIMIT_MAX;
 
-  if (!rateLimitMap.has(userKey)) {
-    rateLimitMap.set(userKey, []);
+  if (!rateLimitMap.has(key)) {
+    rateLimitMap.set(key, []);
   }
 
-  const timestamps = rateLimitMap.get(userKey);
+  const timestamps = rateLimitMap.get(key);
 
   // Nettoyer les entrees expirees
   const valid = timestamps.filter(ts => now - ts < RATE_LIMIT_WINDOW);
-  rateLimitMap.set(userKey, valid);
+  rateLimitMap.set(key, valid);
 
-  if (valid.length >= RATE_LIMIT_MAX) {
+  if (valid.length >= max) {
     return false;
   }
 
@@ -27,7 +28,7 @@ function checkRateLimit(userId) {
   return true;
 }
 
-const SYSTEM_PROMPT = `Tu es Patoune Assistant, un assistant IA specialise dans les soins aux animaux de compagnie. Tu reponds en francais. Tu donnes des conseils generaux sur la sante, la nutrition et le bien-etre des animaux. IMPORTANT: Tu n'es PAS veterinaire. Pour tout probleme de sante, il faut consulter un veterinaire. Ne pose jamais de diagnostic. Ne prescris jamais de medicament. Tu peux conseiller sur: alimentation, exercice, hygiene, comportement, premiers gestes d'urgence (tout en insistant sur l'urgence veterinaire). Reste concis (max 200 mots). Sois chaleureux et bienveillant.`;
+const SYSTEM_PROMPT = `Tu es Pépète Assistant, un assistant IA specialise dans les soins aux animaux de compagnie. Tu reponds en francais. Tu donnes des conseils generaux sur la sante, la nutrition et le bien-etre des animaux. IMPORTANT: Tu n'es PAS veterinaire. Pour tout probleme de sante, il faut consulter un veterinaire. Ne pose jamais de diagnostic. Ne prescris jamais de medicament. Tu peux conseiller sur: alimentation, exercice, hygiene, comportement, premiers gestes d'urgence (tout en insistant sur l'urgence veterinaire). Reste concis (max 200 mots). Sois chaleureux et bienveillant.`;
 
 const DISCLAIMER = "Rappel : Je suis un assistant IA, pas un veterinaire. Pour toute urgence ou probleme de sante, consultez un professionnel.";
 
@@ -73,7 +74,7 @@ const FALLBACK_RESPONSES = [
 ];
 
 const FALLBACK_DEFAULT = (ctx) =>
-  `${ctx}Merci pour votre question ! Je suis Patoune Assistant, specialise dans les soins aux animaux de compagnie.\n\nJe peux vous aider sur de nombreux sujets :\n- **Alimentation** : choix de croquettes, regime adapte, quantites\n- **Sante** : premiers gestes, prevention, hygiene\n- **Comportement** : education, socialisation, problemes courants\n- **Bien-etre** : exercice, jeux, toilettage\n\nN'hesitez pas a me poser une question precise et je ferai de mon mieux pour vous orienter. Pour tout probleme de sante, je vous recommande toujours de consulter un veterinaire.`;
+  `${ctx}Merci pour votre question ! Je suis Pépète Assistant, specialise dans les soins aux animaux de compagnie.\n\nJe peux vous aider sur de nombreux sujets :\n- **Alimentation** : choix de croquettes, regime adapte, quantites\n- **Sante** : premiers gestes, prevention, hygiene\n- **Comportement** : education, socialisation, problemes courants\n- **Bien-etre** : exercice, jeux, toilettage\n\nN'hesitez pas a me poser une question precise et je ferai de mon mieux pour vous orienter. Pour tout probleme de sante, je vous recommande toujours de consulter un veterinaire.`;
 
 function getFallbackAnswer(question, petContext) {
   const q = question.toLowerCase();
@@ -128,11 +129,15 @@ exports.ask = async (req, res, next) => {
       });
     }
 
-    // Verifier le rate limit
-    if (!checkRateLimit(req.user.id)) {
+    // Verifier le rate limit (user ID ou IP pour les invites)
+    const isGuest = !req.user;
+    const rateLimitKey = req.user ? req.user.id.toString() : (req.ip || 'unknown');
+    if (!checkRateLimit(rateLimitKey, isGuest)) {
       return res.status(429).json({
         success: false,
-        error: 'Limite atteinte : 10 questions par heure maximum. Reessayez plus tard.'
+        error: isGuest
+          ? 'Limite atteinte pour les invites : 5 questions par heure. Creez un compte pour en poser plus !'
+          : 'Limite atteinte : 10 questions par heure maximum. Reessayez plus tard.'
       });
     }
 

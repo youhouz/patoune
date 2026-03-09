@@ -1,5 +1,5 @@
 // ---------------------------------------------------------------------------
-// Patoune v2.0 - Card Component
+// Pépète v2.0 - Card Component
 // Clean container with warm shadows (charcoal-tinted, never pure black).
 // Three variants: elevated, outlined, flat. Pressable when onPress is set.
 // ---------------------------------------------------------------------------

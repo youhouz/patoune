@@ -1,12 +1,12 @@
 // ---------------------------------------------------------------------------
-// Patoune v2.0 — Service Worker
-// Strategy: Cache Shell (app shell) + Network First (API calls)
+// Pépète v2.2 — Service Worker
+// Strategies: Shell cache + Network First (API) + Stale While Revalidate (assets)
 // ---------------------------------------------------------------------------
 
-const CACHE_NAME = 'patoune-v2.1.0';
-const SHELL_CACHE = 'patoune-shell-v2.1.0';
+const CACHE_VERSION = 'v2.2.0';
+const CACHE_NAME = `pepete-${CACHE_VERSION}`;
+const SHELL_CACHE = `pepete-shell-${CACHE_VERSION}`;
 
-// App shell files to pre-cache
 const SHELL_FILES = [
   '/',
   '/index.html',
@@ -16,88 +16,87 @@ const SHELL_FILES = [
 // Install: pre-cache app shell
 // ---------------------------------------------------------------------------
 self.addEventListener('install', (event) => {
-  console.log('[SW] Install');
   event.waitUntil(
     caches.open(SHELL_CACHE)
-      .then((cache) => {
-        console.log('[SW] Pre-caching shell');
-        return cache.addAll(SHELL_FILES);
-      })
+      .then((cache) => cache.addAll(SHELL_FILES))
       .then(() => self.skipWaiting())
-      .catch((err) => {
-        console.log('[SW] Pre-cache failed (non-critical):', err);
-        return self.skipWaiting();
-      })
+      .catch(() => self.skipWaiting())
   );
 });
 
 // ---------------------------------------------------------------------------
-// Activate: clean old caches
+// Activate: clean old caches & claim clients
 // ---------------------------------------------------------------------------
 self.addEventListener('activate', (event) => {
-  console.log('[SW] Activate');
   event.waitUntil(
-    caches.keys().then((cacheNames) => {
-      return Promise.all(
-        cacheNames
-          .filter((name) => name !== CACHE_NAME && name !== SHELL_CACHE)
-          .map((name) => {
-            console.log('[SW] Deleting old cache:', name);
-            return caches.delete(name);
-          })
-      );
-    }).then(() => self.clients.claim())
-      .then(() => {
-        // Notify all clients to reload when new SW activates
-        self.clients.matchAll({ type: 'window' }).then((clients) => {
-          clients.forEach((client) => client.navigate(client.url));
-        });
-      })
+    caches.keys()
+      .then((names) =>
+        Promise.all(
+          names
+            .filter((n) => n !== CACHE_NAME && n !== SHELL_CACHE)
+            .map((n) => caches.delete(n))
+        )
+      )
+      .then(() => self.clients.claim())
   );
 });
 
 // ---------------------------------------------------------------------------
-// Fetch: Network first for API, cache first for static
+// Fetch handler
 // ---------------------------------------------------------------------------
 self.addEventListener('fetch', (event) => {
   const { request } = event;
   const url = new URL(request.url);
 
-  // Skip non-GET requests
   if (request.method !== 'GET') return;
 
-  // Skip cross-origin requests (except Google Fonts)
-  if (url.origin !== self.location.origin && !url.hostname.includes('fonts.g')) {
-    return;
-  }
+  // Skip cross-origin except Google Fonts
+  if (url.origin !== self.location.origin && !url.hostname.includes('fonts.g')) return;
 
-  // API calls: network only
+  // API calls → network only, offline fallback
   if (url.pathname.startsWith('/api/')) {
     event.respondWith(
-      fetch(request).catch(() => {
-        return new Response(
-          JSON.stringify({ error: 'Vous etes hors ligne' }),
+      fetch(request).catch(() =>
+        new Response(
+          JSON.stringify({ error: 'Vous etes hors ligne. Reconnectez-vous pour continuer.' }),
           { status: 503, headers: { 'Content-Type': 'application/json' } }
-        );
-      })
+        )
+      )
     );
     return;
   }
 
-  // Static assets: stale-while-revalidate
+  // Navigation requests → network first, cache fallback
+  if (request.mode === 'navigate') {
+    event.respondWith(
+      fetch(request)
+        .then((response) => {
+          const clone = response.clone();
+          caches.open(SHELL_CACHE).then((cache) => cache.put(request, clone));
+          return response;
+        })
+        .catch(() => caches.match('/index.html') || caches.match(request))
+    );
+    return;
+  }
+
+  // Static assets → stale while revalidate
   event.respondWith(
-    caches.match(request).then((cachedResponse) => {
-      const fetchPromise = fetch(request)
-        .then((networkResponse) => {
-          if (networkResponse && networkResponse.status === 200) {
-            const clone = networkResponse.clone();
+    caches.match(request).then((cached) => {
+      const networkFetch = fetch(request)
+        .then((response) => {
+          if (response && response.status === 200) {
+            const clone = response.clone();
             caches.open(CACHE_NAME).then((cache) => cache.put(request, clone));
           }
-          return networkResponse;
+          return response;
         })
-        .catch(() => cachedResponse || new Response('Offline', { status: 503 }));
+        .catch(() => cached);
 
-      return cachedResponse || fetchPromise;
+      return cached || networkFetch;
+    })
+  );
+});
     })
   );
 });

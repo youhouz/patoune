@@ -1,16 +1,14 @@
 const express = require('express');
 const router = express.Router();
-const { body } = require('express-validator');
 const { register, login, getMe } = require('../controllers/authController');
 const { protect } = require('../middleware/auth');
+const { registerValidation, loginValidation } = require('../utils/validators');
+const rateLimit = require('../middleware/rateLimit');
 
-router.post('/register', [
-  body('name').notEmpty().withMessage('Le nom est requis'),
-  body('email').isEmail().withMessage('Email invalide'),
-  body('password').isLength({ min: 6 }).withMessage('Le mot de passe doit faire au moins 6 caractères')
-], register);
+const authLimiter = rateLimit({ windowMs: 15 * 60 * 1000, max: 10 });
 
-router.post('/login', login);
+router.post('/register', authLimiter, registerValidation, register);
+router.post('/login', authLimiter, loginValidation, login);
 router.get('/me', protect, getMe);
 
 module.exports = router;

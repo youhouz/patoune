@@ -1,5 +1,5 @@
 /**
- * Calcul du score Patoune pour les produits animaux (0-100)
+ * Calcul du score Pépète pour les produits animaux (0-100)
  * Inspiré de Yuka, adapté pour les produits animaliers
  *
  * Le score prend en compte :

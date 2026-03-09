@@ -13,20 +13,41 @@ export const AuthProvider = ({ children }) => {
     checkAuth();
   }, []);
 
+  const clearStoredAuth = async () => {
+    await AsyncStorage.multiRemove(['token', 'user', 'userRole']);
+    setToken(null);
+    setUser(null);
+  };
+
   const checkAuth = async () => {
     try {
       const storedToken = await AsyncStorage.getItem('token');
       const storedUser = await AsyncStorage.getItem('user');
 
-      if (storedToken && storedUser) {
-        setToken(storedToken);
-        setUser(JSON.parse(storedUser));
-        setLoading(false);
+      if (!storedToken) {
         return;
       }
 
+      setToken(storedToken);
+
+      if (storedUser) {
+        setUser(JSON.parse(storedUser));
+      }
+
+      // Always refresh the profile to prevent stale or invalid sessions.
+      const response = await getMeAPI();
+      const me = response.data?.user;
+      if (me) {
+        setUser(me);
+        await AsyncStorage.setItem('user', JSON.stringify(me));
+        return;
+      }
+
+      await clearStoredAuth();
+
     } catch (error) {
       console.log('Erreur verification auth:', error);
+      await clearStoredAuth();
     } finally {
       setLoading(false);
     }
@@ -45,7 +66,7 @@ export const AuthProvider = ({ children }) => {
 
       return { success: true };
     } catch (error) {
-      const message = error.response?.data?.error || 'Erreur de connexion. Verifie que tu es sur le meme reseau Wi-Fi que le serveur.';
+      const message = error.userMessage || error.response?.data?.error || 'Erreur de connexion. Verifie que tu es sur le meme reseau Wi-Fi que le serveur.';
       return { success: false, error: message };
     }
   };
@@ -68,17 +89,13 @@ export const AuthProvider = ({ children }) => {
 
       return { success: true };
     } catch (error) {
-      const message = error.response?.data?.error || "Erreur d'inscription";
+      const message = error.userMessage || error.response?.data?.error || "Erreur d'inscription";
       return { success: false, error: message };
     }
   };
 
   const logout = async () => {
-    await AsyncStorage.removeItem('token');
-    await AsyncStorage.removeItem('user');
-    await AsyncStorage.removeItem('userRole');
-    setToken(null);
-    setUser(null);
+    await clearStoredAuth();
   };
 
   const updateUser = async (userData) => {

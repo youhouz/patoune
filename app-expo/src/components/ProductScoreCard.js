@@ -4,6 +4,7 @@ const colors = require('../utils/colors');
 const { SHADOWS, RADIUS, getScoreColor, getScoreBg, getScoreLabel } = require('../utils/colors');
 
 const ProductScoreCard = ({ product, onPress, compact = false }) => {
+  if (!product) return null;
   const score = product.nutritionScore || 0;
   const scoreColor = getScoreColor(score);
   const scoreBg = getScoreBg(score);

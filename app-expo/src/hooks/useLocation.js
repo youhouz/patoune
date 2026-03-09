@@ -1,5 +1,5 @@
 // ---------------------------------------------------------------------------
-// Patoune v2.0 - useLocation Hook
+// Pépète v2.0 - useLocation Hook
 // Custom hook for geolocation with web browser fallback.
 // Returns current location, reverse-geocoded city name, and request handler.
 // ---------------------------------------------------------------------------
@@ -16,7 +16,7 @@ const reverseGeocodeWeb = async (latitude, longitude) => {
   try {
     const res = await fetch(
       `https://nominatim.openstreetmap.org/reverse?lat=${latitude}&lon=${longitude}&format=json&accept-language=fr`,
-      { headers: { 'User-Agent': 'Patoune/2.0' } }
+      { headers: { 'User-Agent': 'Pépète/2.0' } }
     );
     const data = await res.json();
     return data.address?.city || data.address?.town || data.address?.village || data.address?.municipality || null;

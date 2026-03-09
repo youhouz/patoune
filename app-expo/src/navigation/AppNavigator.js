@@ -8,6 +8,7 @@ import AuthNavigator from './AuthNavigator';
 import TabNavigator from './TabNavigator';
 import OnboardingScreen from '../screens/OnboardingScreen';
 import PWAInstallBanner from '../components/PWAInstallBanner';
+import PepeteLogo from '../components/PepeteLogo';
 
 const ONBOARDING_KEY = 'onboarding_completed';
 
@@ -56,11 +57,7 @@ const SplashLoader = () => {
       <View style={styles.circle2} />
 
       <Animated.View style={[styles.logoWrap, { transform: [{ scale: logoScale }], opacity: logoOpacity }]}>
-        <View style={styles.pawCircle}>
-          <Text style={styles.pawEmoji}>🐾</Text>
-        </View>
-        <Text style={styles.splashLogo}>patoune</Text>
-        <Text style={styles.splashTagline}>Le meilleur pour vos animaux</Text>
+        <PepeteLogo size={100} theme="light" tagline="Le meilleur pour vos animaux" />
       </Animated.View>
 
       <View style={styles.dotsRow}>
@@ -90,15 +87,16 @@ const AppNavigator = () => {
 
   if (loading || showOnboarding === null) return <SplashLoader />;
 
-  // Show onboarding for first-time visitors (not logged in)
+  // Show onboarding for first-time visitors
   if (showOnboarding && !user) {
     return <OnboardingScreen onComplete={handleOnboardingComplete} />;
   }
 
+  // Always show the full app — guest mode lets users explore Scanner & AI
   return (
     <View style={{ flex: 1 }}>
       <NavigationContainer>
-        {user ? <TabNavigator /> : <AuthNavigator />}
+        <TabNavigator />
       </NavigationContainer>
       {/* PWA install banner — only shows on web when conditions are met */}
       <PWAInstallBanner />
@@ -132,34 +130,6 @@ const styles = StyleSheet.create({
   },
   logoWrap: {
     alignItems: 'center',
-  },
-  pawCircle: {
-    width: 96,
-    height: 96,
-    borderRadius: 48,
-    backgroundColor: 'rgba(255,255,255,0.2)',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 20,
-    borderWidth: 2,
-    borderColor: 'rgba(255,255,255,0.3)',
-  },
-  pawEmoji: {
-    fontSize: 48,
-  },
-  splashLogo: {
-    fontSize: 48,
-    fontWeight: '900',
-    color: '#FFF',
-    letterSpacing: 2,
-    textTransform: 'lowercase',
-    marginBottom: 8,
-  },
-  splashTagline: {
-    fontSize: 15,
-    color: 'rgba(255,255,255,0.85)',
-    fontWeight: '500',
-    letterSpacing: 0.3,
   },
   dotsRow: {
     flexDirection: 'row',

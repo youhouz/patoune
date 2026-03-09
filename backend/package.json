@@ -1,7 +1,7 @@
 {
-  "name": "patoune-backend",
+  "name": "pepete-backend",
   "version": "1.0.0",
-  "description": "Backend API pour Patoune - Scanner & Garde Animaux",
+  "description": "Backend API pour Pépète - Scanner & Garde Animaux",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",

@@ -4,6 +4,7 @@ import {
   Platform, Animated, StatusBar
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
+import PepeteLogo, { PepeteIcon } from '../components/PepeteLogo';
 const colors = require('../utils/colors');
 const { RADIUS, SHADOWS } = require('../utils/colors');
 
@@ -11,8 +12,9 @@ const { width, height } = Dimensions.get('window');
 
 const SLIDES = [
   {
-    icon: '🐾',
-    title: 'Bienvenue sur\nPatoune',
+    icon: null,
+    customIcon: true,
+    title: 'Bienvenue sur\nPépète',
     subtitle: 'Le compagnon de vos compagnons',
     desc: 'Tout ce dont vous avez besoin pour prendre soin de vos animaux, au meme endroit.',
     bg: ['#E55A25', '#FF6B35', '#FF8F65'],
@@ -181,12 +183,18 @@ const OnboardingScreen = ({ onComplete }) => {
         ]}>
           {/* Icon with glass circle */}
           <View style={styles.iconOuter}>
-            <LinearGradient
-              colors={['rgba(255,255,255,0.25)', 'rgba(255,255,255,0.08)']}
-              style={styles.iconCircle}
-            >
-              <Text style={styles.iconEmoji}>{slide.icon}</Text>
-            </LinearGradient>
+            {slide.customIcon ? (
+              <View style={[styles.iconCircle, { backgroundColor: 'rgba(255,255,255,0.15)' }]}>
+                <PepeteIcon size={72} color="#FFFFFF" />
+              </View>
+            ) : (
+              <LinearGradient
+                colors={['rgba(255,255,255,0.25)', 'rgba(255,255,255,0.08)']}
+                style={styles.iconCircle}
+              >
+                <Text style={styles.iconEmoji}>{slide.icon}</Text>
+              </LinearGradient>
+            )}
           </View>
 
           <Text style={styles.title}>{slide.title}</Text>
@@ -269,7 +277,7 @@ const OnboardingScreen = ({ onComplete }) => {
 
         {Platform.OS === 'web' && (
           <Text style={styles.pwaHint}>
-            Ajoutez Patoune a votre ecran d'accueil pour un acces rapide
+            Ajoutez Pépète a votre ecran d'accueil pour un acces rapide
           </Text>
         )}
       </Animated.View>

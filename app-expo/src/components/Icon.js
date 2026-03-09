@@ -1,5 +1,5 @@
 // ---------------------------------------------------------------------------
-// Patoune v2.0 - Icon Component
+// Pépète v2.0 - Icon Component
 // Unified wrapper around Feather and Ionicons from @expo/vector-icons.
 // Keeps icon usage consistent and makes swapping libraries trivial.
 // ---------------------------------------------------------------------------

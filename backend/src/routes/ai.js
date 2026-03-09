@@ -1,9 +1,9 @@
 const express = require('express');
 const router = express.Router();
 const { ask } = require('../controllers/aiController');
-const { protect } = require('../middleware/auth');
+const { optionalAuth } = require('../middleware/auth');
 
-// POST /api/ai/ask - Poser une question à l'assistant IA (authentifié)
-router.post('/ask', protect, ask);
+// POST /api/ai/ask - Accessible sans inscription (mode invité)
+router.post('/ask', optionalAuth, ask);
 
 module.exports = router;

@@ -148,7 +148,7 @@ function formatProduct(offProduct, barcode, source) {
     _source: source,
   };
 
-  // Calculer le score Patoune
+  // Calculer le score Pépète
   const scoreResult = calculateScore(productData);
   productData.nutritionScore = scoreResult.score;
   productData.scoreDetails = scoreResult.details;

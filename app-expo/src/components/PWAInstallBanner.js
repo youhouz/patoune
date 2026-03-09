@@ -1,23 +1,24 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, Platform, Animated } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 const colors = require('../utils/colors');
-const { RADIUS, SHADOWS } = require('../utils/colors');
+const { RADIUS, SHADOWS, SPACING } = require('../utils/colors');
 
 const PWA_DISMISSED_KEY = 'pwa_install_dismissed';
 
 const PWAInstallBanner = () => {
   const [deferredPrompt, setDeferredPrompt] = useState(null);
   const [showBanner, setShowBanner] = useState(false);
-  const slideAnim = useState(() => new Animated.Value(100))[0];
+  const slideAnim = useRef(new Animated.Value(120)).current;
+  const fadeAnim = useRef(new Animated.Value(0)).current;
+  const pulseAnim = useRef(new Animated.Value(1)).current;
 
   useEffect(() => {
     if (Platform.OS !== 'web') return;
 
-    // Check if already in standalone (installed) mode
+    // Already installed
     if (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) return;
 
-    // Check if user already dismissed
     AsyncStorage.getItem(PWA_DISMISSED_KEY).then((val) => {
       if (val) return;
 
@@ -25,12 +26,20 @@ const PWAInstallBanner = () => {
         e.preventDefault();
         setDeferredPrompt(e);
         setShowBanner(true);
-        Animated.spring(slideAnim, {
-          toValue: 0,
-          tension: 60,
-          friction: 10,
-          useNativeDriver: true,
-        }).start();
+
+        // Entrance animation
+        Animated.parallel([
+          Animated.spring(slideAnim, { toValue: 0, tension: 50, friction: 9, useNativeDriver: true }),
+          Animated.timing(fadeAnim, { toValue: 1, duration: 350, useNativeDriver: true }),
+        ]).start();
+
+        // Subtle pulse to draw attention to install button
+        Animated.loop(
+          Animated.sequence([
+            Animated.timing(pulseAnim, { toValue: 1.04, duration: 1200, useNativeDriver: true }),
+            Animated.timing(pulseAnim, { toValue: 1, duration: 1200, useNativeDriver: true }),
+          ])
+        ).start();
       };
 
       window.addEventListener('beforeinstallprompt', handler);
@@ -49,11 +58,10 @@ const PWAInstallBanner = () => {
   };
 
   const handleDismiss = () => {
-    Animated.timing(slideAnim, {
-      toValue: 150,
-      duration: 250,
-      useNativeDriver: true,
-    }).start(() => {
+    Animated.parallel([
+      Animated.timing(slideAnim, { toValue: 150, duration: 220, useNativeDriver: true }),
+      Animated.timing(fadeAnim, { toValue: 0, duration: 200, useNativeDriver: true }),
+    ]).start(() => {
       setShowBanner(false);
       AsyncStorage.setItem(PWA_DISMISSED_KEY, 'true');
     });
@@ -62,21 +70,43 @@ const PWAInstallBanner = () => {
   if (!showBanner || Platform.OS !== 'web') return null;
 
   return (
-    <Animated.View style={[styles.container, { transform: [{ translateY: slideAnim }] }]}>
+    <Animated.View style={[styles.container, { opacity: fadeAnim, transform: [{ translateY: slideAnim }] }]}>
       <View style={styles.banner}>
-        <View style={styles.iconWrap}>
-          <Text style={styles.icon}>🐾</Text>
-        </View>
-        <View style={styles.textWrap}>
-          <Text style={styles.title}>Installer Patoune</Text>
-          <Text style={styles.subtitle}>Acces rapide depuis ton ecran d'accueil</Text>
-        </View>
-        <TouchableOpacity style={styles.installBtn} onPress={handleInstall} activeOpacity={0.8}>
-          <Text style={styles.installText}>Installer</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.closeBtn} onPress={handleDismiss} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
+        {/* Close button - top right */}
+        <TouchableOpacity
+          style={styles.closeBtn}
+          onPress={handleDismiss}
+          hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+        >
           <Text style={styles.closeText}>✕</Text>
         </TouchableOpacity>
+
+        {/* Top row: icon + text */}
+        <View style={styles.topRow}>
+          <View style={styles.iconWrap}>
+            <Text style={styles.icon}>🐾</Text>
+          </View>
+          <View style={styles.textWrap}>
+            <Text style={styles.title}>Installer Pépète</Text>
+            <Text style={styles.subtitle}>
+              Accédez à Pépète directement depuis votre écran d'accueil, comme une vraie application.
+            </Text>
+          </View>
+        </View>
+
+        {/* Install CTA */}
+        <Animated.View style={{ transform: [{ scale: pulseAnim }] }}>
+          <TouchableOpacity style={styles.installBtn} onPress={handleInstall} activeOpacity={0.85}>
+            <Text style={styles.installText}>Ajouter à l'écran d'accueil</Text>
+          </TouchableOpacity>
+        </Animated.View>
+
+        {/* Hints */}
+        <View style={styles.hintsRow}>
+          <View style={styles.hint}><Text style={styles.hintIcon}>⚡</Text><Text style={styles.hintText}>Rapide</Text></View>
+          <View style={styles.hint}><Text style={styles.hintIcon}>📴</Text><Text style={styles.hintText}>Hors-ligne</Text></View>
+          <View style={styles.hint}><Text style={styles.hintIcon}>🔒</Text><Text style={styles.hintText}>Sécurisé</Text></View>
+        </View>
       </View>
     </Animated.View>
   );
@@ -88,63 +118,99 @@ const styles = StyleSheet.create({
     bottom: 0,
     left: 0,
     right: 0,
-    paddingHorizontal: 16,
-    paddingBottom: Platform.OS === 'ios' ? 34 : 16,
+    paddingHorizontal: SPACING.base,
+    paddingBottom: Platform.OS === 'ios' ? 34 : SPACING.base,
     zIndex: 1000,
   },
   banner: {
+    backgroundColor: colors.white,
+    borderRadius: RADIUS['2xl'],
+    padding: SPACING.lg,
+    paddingTop: SPACING.xl,
+    ...SHADOWS.xl,
+    borderWidth: 1,
+    borderColor: colors.borderLight,
+  },
+  closeBtn: {
+    position: 'absolute',
+    top: 12,
+    right: 14,
+    zIndex: 2,
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: colors.background,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  closeText: {
+    fontSize: 13,
+    color: colors.textTertiary,
+    fontWeight: '700',
+  },
+  topRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: colors.white,
-    borderRadius: RADIUS.lg,
-    padding: 14,
-    ...SHADOWS.lg,
-    borderWidth: 1,
-    borderColor: colors.border,
+    marginBottom: SPACING.base,
   },
   iconWrap: {
-    width: 44,
-    height: 44,
-    borderRadius: 12,
+    width: 52,
+    height: 52,
+    borderRadius: 16,
     backgroundColor: colors.primarySoft,
     alignItems: 'center',
     justifyContent: 'center',
-    marginRight: 12,
+    marginRight: SPACING.md,
+    borderWidth: 1,
+    borderColor: colors.primary + '15',
   },
   icon: {
-    fontSize: 24,
+    fontSize: 28,
   },
   textWrap: {
     flex: 1,
   },
   title: {
-    fontSize: 15,
-    fontWeight: '700',
+    fontSize: 17,
+    fontWeight: '800',
     color: colors.text,
+    letterSpacing: -0.2,
+    marginBottom: 3,
   },
   subtitle: {
     fontSize: 13,
     color: colors.textSecondary,
-    marginTop: 2,
+    lineHeight: 18,
   },
   installBtn: {
     backgroundColor: colors.primary,
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-    borderRadius: RADIUS.sm,
-    marginLeft: 10,
+    borderRadius: RADIUS.md,
+    paddingVertical: 14,
+    alignItems: 'center',
+    ...SHADOWS.glow(colors.primary),
   },
   installText: {
     color: '#FFF',
-    fontWeight: '700',
-    fontSize: 14,
-  },
-  closeBtn: {
-    marginLeft: 8,
-    padding: 4,
-  },
-  closeText: {
+    fontWeight: '800',
     fontSize: 16,
+    letterSpacing: 0.2,
+  },
+  hintsRow: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    marginTop: SPACING.md,
+    gap: SPACING.lg,
+  },
+  hint: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  hintIcon: {
+    fontSize: 12,
+  },
+  hintText: {
+    fontSize: 12,
     color: colors.textTertiary,
     fontWeight: '600',
   },

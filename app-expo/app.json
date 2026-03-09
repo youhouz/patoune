@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "Patoune",
-    "slug": "patoune",
+    "name": "Pépète",
+    "slug": "pepete",
     "version": "2.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
@@ -14,10 +14,10 @@
     },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.patoune.app",
+      "bundleIdentifier": "com.pepete.app",
       "infoPlist": {
-        "NSCameraUsageDescription": "Patoune utilise la camera pour scanner les codes-barres des produits pour animaux",
-        "NSLocationWhenInUseUsageDescription": "Patoune utilise ta position pour trouver des gardiens pres de chez toi"
+        "NSCameraUsageDescription": "Pépète utilise la camera pour scanner les codes-barres des produits pour animaux",
+        "NSLocationWhenInUseUsageDescription": "Pépète utilise ta position pour trouver des gardiens pres de chez toi"
       }
     },
     "android": {
@@ -26,13 +26,13 @@
         "backgroundColor": "#C4704B"
       },
       "edgeToEdgeEnabled": true,
-      "package": "com.patoune.app",
+      "package": "com.pepete.app",
       "permissions": ["CAMERA", "ACCESS_FINE_LOCATION", "ACCESS_COARSE_LOCATION"]
     },
     "web": {
       "favicon": "./assets/favicon.png",
-      "name": "Patoune",
-      "shortName": "Patoune",
+      "name": "Pépète",
+      "shortName": "Pépète",
       "description": "Le compagnon de vos compagnons - Scanner produits, garde animaux, assistant IA",
       "lang": "fr",
       "themeColor": "#C4704B",
@@ -46,13 +46,13 @@
       [
         "expo-camera",
         {
-          "cameraPermission": "Patoune utilise la camera pour scanner les codes-barres des produits pour animaux"
+          "cameraPermission": "Pépète utilise la camera pour scanner les codes-barres des produits pour animaux"
         }
       ],
       [
         "expo-location",
         {
-          "locationWhenInUsePermission": "Patoune utilise ta position pour trouver des gardiens pres de chez toi"
+          "locationWhenInUsePermission": "Pépète utilise ta position pour trouver des gardiens pres de chez toi"
         }
       ]
     ]

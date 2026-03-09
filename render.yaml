@@ -1,6 +1,6 @@
 services:
   - type: web
-    name: patoune-api
+    name: pepete-api
     runtime: node
     region: frankfurt
     plan: free

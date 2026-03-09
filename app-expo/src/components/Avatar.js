@@ -1,5 +1,5 @@
 // ---------------------------------------------------------------------------
-// Patoune v2.0 - Avatar Component
+// Pépète v2.0 - Avatar Component
 // Displays user avatar with image, initials fallback, verified badge,
 // and online indicator. Gradient color is deterministic from first letter.
 // ---------------------------------------------------------------------------

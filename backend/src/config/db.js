@@ -3,6 +3,10 @@ const mongoose = require('mongoose');
 let cachedPromise = null;
 
 const connectDB = async () => {
+  if (!process.env.MONGODB_URI) {
+    throw new Error('MONGODB_URI non configure');
+  }
+
   if (mongoose.connection.readyState === 1) {
     return mongoose.connection;
   }

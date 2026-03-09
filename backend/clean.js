@@ -1,5 +1,5 @@
 /**
- * Patoune - Clean Database
+ * Pépète - Clean Database
  * Supprime toutes les donnees de seed/demo pour le lancement en production
  * Usage: node clean.js
  */

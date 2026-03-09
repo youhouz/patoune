@@ -7,6 +7,7 @@ import {
 import { LinearGradient } from 'expo-linear-gradient';
 import { useAuth } from '../../context/AuthContext';
 import { showAlert } from '../../utils/alert';
+import PepeteLogo from '../../components/PepeteLogo';
 const colors = require('../../utils/colors');
 const { SHADOWS, RADIUS, SPACING, FONT_SIZE } = require('../../utils/colors');
 
@@ -166,16 +167,7 @@ const LoginScreen = ({ navigation }) => {
               transform: [{ scale: heroScale }, { translateY: heroSlide }],
             },
           ]}>
-            <View style={styles.logoBadge}>
-              <LinearGradient
-                colors={['rgba(255,255,255,0.3)', 'rgba(255,255,255,0.1)']}
-                style={styles.logoBadgeGradient}
-              >
-                <Text style={styles.pawEmoji}>🐾</Text>
-              </LinearGradient>
-            </View>
-            <Text style={styles.brandName}>patoune</Text>
-            <Text style={styles.tagline}>Le meilleur pour vos animaux</Text>
+            <PepeteLogo size={96} theme="light" tagline="Le meilleur pour vos animaux" />
             <View style={styles.taglineDivider} />
           </Animated.View>
 
@@ -430,41 +422,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 32,
   },
-  logoBadge: {
-    marginBottom: 18,
-    ...SHADOWS.lg,
-    shadowColor: 'rgba(0,0,0,0.2)',
-  },
-  logoBadgeGradient: {
-    width: 96,
-    height: 96,
-    borderRadius: 30,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 2,
-    borderColor: 'rgba(255,255,255,0.3)',
-  },
-  pawEmoji: {
-    fontSize: 44,
-  },
-  brandName: {
-    fontSize: 48,
-    fontWeight: '900',
-    color: '#FFF',
-    letterSpacing: 4,
-    textTransform: 'lowercase',
-    textShadowColor: 'rgba(0,0,0,0.15)',
-    textShadowOffset: { width: 0, height: 3 },
-    textShadowRadius: 10,
-  },
-  tagline: {
-    fontSize: 16,
-    color: 'rgba(255,255,255,0.9)',
-    marginTop: 8,
-    fontWeight: '600',
-    letterSpacing: 1.5,
-    textTransform: 'uppercase',
-  },
+
   taglineDivider: {
     width: 48,
     height: 3,

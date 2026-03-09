@@ -1,5 +1,5 @@
 // ---------------------------------------------------------------------------
-// Patoune v2.0 - Typography System
+// Pépète v2.0 - Typography System
 // Fonts: Playfair Display (brand/display) + DM Sans (UI/body)
 // ---------------------------------------------------------------------------
 

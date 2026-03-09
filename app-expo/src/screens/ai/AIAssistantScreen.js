@@ -1,5 +1,5 @@
 // ---------------------------------------------------------------------------
-// Patoune v2.0 - AI Assistant Screen
+// Pépète v2.0 - AI Assistant Screen
 // Q&A interface for pet-related questions. Session-only conversation.
 // Not a persistent chat -- each session starts fresh.
 // ---------------------------------------------------------------------------
@@ -255,9 +255,13 @@ const AIAssistantScreen = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [petsLoading, setPetsLoading] = useState(true);
 
-  // Fetch user's pets on screen focus
+  // Fetch user's pets on screen focus (only if logged in)
   useFocusEffect(
     useCallback(() => {
+      if (!user) {
+        setPetsLoading(false);
+        return;
+      }
       const fetchPets = async () => {
         setPetsLoading(true);
         try {
@@ -340,7 +344,7 @@ const AIAssistantScreen = () => {
     <View style={styles.container}>
       <ScreenHeader
         variant="light"
-        title="Assistant Patoune"
+        title="Assistant Pépète"
         subtitle="Posez vos questions"
       />
 

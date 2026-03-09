@@ -1,8 +1,16 @@
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { Platform } from 'react-native';
 
-const API_URL = 'http://10.0.2.2:5000/api'; // Android emulator
-// const API_URL = 'http://localhost:5000/api'; // iOS simulator
+const getFallbackApiUrl = () => {
+  if (Platform.OS === 'android') {
+    return 'http://10.0.2.2:5000/api';
+  }
+
+  return 'http://localhost:5000/api';
+};
+
+const API_URL = (process.env.EXPO_PUBLIC_API_URL || process.env.API_URL || getFallbackApiUrl()).replace(/\/+$/, '');
 
 const api = axios.create({
   baseURL: API_URL,
@@ -32,6 +40,11 @@ api.interceptors.response.use(
       await AsyncStorage.removeItem('token');
       await AsyncStorage.removeItem('user');
     }
+
+    if (!error.response) {
+      error.userMessage = 'Impossible de joindre le serveur. Verifie API_URL et la connexion reseau.';
+    }
+
     return Promise.reject(error);
   }
 );

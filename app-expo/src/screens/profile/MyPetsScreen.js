@@ -254,7 +254,7 @@ const MyPetsScreen = ({ navigation }) => {
       </View>
       <Text style={styles.emptyTitle}>Aucun animal</Text>
       <Text style={styles.emptySubtitle}>
-        Ajoutez votre premier compagnon{'\n'}pour commencer l'aventure Patoune
+        Ajoutez votre premier compagnon{'\n'}pour commencer l'aventure Pépète
       </Text>
       <TouchableOpacity
         style={styles.emptyButton}

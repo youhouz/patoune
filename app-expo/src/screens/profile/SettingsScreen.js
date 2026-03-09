@@ -19,6 +19,7 @@ import { useAuth } from '../../context/AuthContext';
 import { showAlert } from '../../utils/alert';
 import api from '../../api/client';
 import { FONTS, TEXT_STYLES } from '../../utils/typography';
+import PepeteLogo from '../../components/PepeteLogo';
 const colors = require('../../utils/colors');
 const { SHADOWS, RADIUS, SPACING, FONT_SIZE } = require('../../utils/colors');
 
@@ -480,18 +481,9 @@ const SettingsScreen = ({ navigation }) => {
             <View style={styles.sectionCard}>
               {/* Premium app branding row */}
               <View style={styles.aboutBranding}>
-                <View style={styles.aboutLogoContainer}>
-                  <LinearGradient
-                    colors={['#FF6B35', '#FF8F65', '#FFB088']}
-                    start={{ x: 0, y: 0 }}
-                    end={{ x: 1, y: 1 }}
-                    style={styles.aboutLogoGradient}
-                  >
-                    <Text style={styles.aboutLogoIcon}>🐾</Text>
-                  </LinearGradient>
-                </View>
+                <PepeteLogo size={48} variant="icon" theme="brand" />
                 <View style={styles.aboutBrandInfo}>
-                  <Text style={styles.aboutAppName}>Patoune</Text>
+                  <Text style={styles.aboutAppName}>Pépète</Text>
                   <Text style={styles.aboutTagline}>
                     Le compagnon de vos compagnons
                   </Text>
@@ -548,7 +540,7 @@ const SettingsScreen = ({ navigation }) => {
               Fait avec amour pour vos compagnons
             </Text>
             <Text style={styles.footerCopy}>
-              Patoune v{APP_VERSION}
+              Pépète v{APP_VERSION}
             </Text>
           </AnimatedSection>
 

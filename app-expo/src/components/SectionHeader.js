@@ -1,5 +1,5 @@
 // ---------------------------------------------------------------------------
-// Patoune v2.0 - SectionHeader Component
+// Pépète v2.0 - SectionHeader Component
 // Section title with optional "Voir tout" link and count badge.
 // Uses Playfair Display (brand font) for the title.
 // ---------------------------------------------------------------------------

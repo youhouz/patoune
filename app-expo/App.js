@@ -1,5 +1,5 @@
 // ---------------------------------------------------------------------------
-// Patoune v2.0 - Root App Entry
+// Pépète v2.0 - Root App Entry
 // Loads custom fonts (DM Sans + Playfair Display), holds the splash screen
 // visible until everything is ready, then renders the app.
 // ---------------------------------------------------------------------------

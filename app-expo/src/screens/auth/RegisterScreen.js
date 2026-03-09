@@ -15,7 +15,7 @@ const { width } = Dimensions.get('window');
 const STEPS = [
   { title: 'Tes infos', subtitle: 'Dis-nous qui tu es', icon: '👤' },
   { title: 'Ton adresse', subtitle: 'Pour trouver des services pres de chez toi', icon: '📍' },
-  { title: 'Ton role', subtitle: 'Comment utilises-tu Patoune ?', icon: '🎭' },
+  { title: 'Ton role', subtitle: 'Comment utilises-tu Pépète ?', icon: '🎭' },
   { title: 'Bienvenue !', subtitle: 'Tout est pret', icon: '🎉' },
 ];
 
@@ -330,7 +330,7 @@ const RegisterScreen = ({ navigation }) => {
       >
         <Text style={styles.checkIcon}>{'\u2713'}</Text>
       </LinearGradient>
-      <Text style={styles.welcomeTitle}>Bienvenue sur Patoune !</Text>
+      <Text style={styles.welcomeTitle}>Bienvenue sur Pépète !</Text>
       <Text style={styles.welcomeSub}>Tout est pret. Voici un resume de votre profil :</Text>
 
       <View style={styles.summaryCard}>

@@ -1,5 +1,6 @@
 node_modules/
 .env
+.env.local
 uploads/
 *.log
 dist/
@@ -21,3 +22,9 @@ app-expo/web-build/
 .DS_Store
 Thumbs.db
 .claude/
+
+# Misc
+*.tgz
+.vercel
+.cache/
+coverage/

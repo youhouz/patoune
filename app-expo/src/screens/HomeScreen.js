@@ -189,6 +189,10 @@ const HomeScreen = ({ navigation }) => {
   }, []);
 
   const fetchData = async () => {
+    if (!user) {
+      setLoading(false);
+      return;
+    }
     try {
       const [petsRes, scansRes, bookingsRes] = await Promise.allSettled([
         getMyPetsAPI(),
@@ -215,9 +219,9 @@ const HomeScreen = ({ navigation }) => {
   useFocusEffect(useCallback(() => { fetchData(); }, []));
   const onRefresh = () => { setRefreshing(true); fetchData(); };
 
-  const firstName = user?.name?.split(' ')[0] || 'ami';
+  const firstName = user?.name?.split(' ')[0] || '';
   const hour = new Date().getHours();
-  const greetText = hour < 12 ? 'Bonjour' : hour < 18 ? 'Bonne journee' : 'Bonsoir';
+  const greetText = hour < 12 ? 'Bonjour' : hour < 18 ? 'Bonne journée' : 'Bonsoir';
 
   const features = [
     {
@@ -235,11 +239,11 @@ const HomeScreen = ({ navigation }) => {
       onPress: () => navigation.navigate('Garde'),
     },
     {
-      icon: '🐾',
-      title: 'Animaux',
-      subtitle: 'Mes compagnons',
-      gradient: ['#2563EB', '#60A5FA'],
-      onPress: () => navigation.navigate('Profil', { screen: 'MyPets' }),
+      icon: '🤖',
+      title: 'Assistant',
+      subtitle: 'Poser une question',
+      gradient: ['#5B5BD6', '#8B8BF5'],
+      onPress: () => navigation.navigate('Assistant'),
     },
   ];
 
@@ -266,20 +270,30 @@ const HomeScreen = ({ navigation }) => {
             <View style={s.heroTop}>
               <View style={s.heroGreetBox}>
                 <Text style={s.greetingOverline}>{greetText}</Text>
-                <Text style={s.userName}>{firstName}</Text>
+                <Text style={s.userName}>{firstName || 'Bienvenue'}</Text>
               </View>
-              <TouchableOpacity
-                style={s.avatarBtn}
-                onPress={() => navigation.navigate('Profil')}
-                activeOpacity={0.8}
-              >
-                <LinearGradient
-                  colors={['rgba(255,255,255,0.32)', 'rgba(255,255,255,0.12)']}
-                  style={s.avatarGradient}
+              {user ? (
+                <TouchableOpacity
+                  style={s.avatarBtn}
+                  onPress={() => navigation.navigate('Profil')}
+                  activeOpacity={0.8}
                 >
-                  <Text style={s.avatarText}>{user?.name?.charAt(0)?.toUpperCase() || '?'}</Text>
-                </LinearGradient>
-              </TouchableOpacity>
+                  <LinearGradient
+                    colors={['rgba(255,255,255,0.32)', 'rgba(255,255,255,0.12)']}
+                    style={s.avatarGradient}
+                  >
+                    <Text style={s.avatarText}>{user?.name?.charAt(0)?.toUpperCase() || '?'}</Text>
+                  </LinearGradient>
+                </TouchableOpacity>
+              ) : (
+                <TouchableOpacity
+                  style={s.signUpHeroBtn}
+                  onPress={() => navigation.navigate('AuthStack', { screen: 'Register' })}
+                  activeOpacity={0.8}
+                >
+                  <Text style={s.signUpHeroBtnText}>S'inscrire</Text>
+                </TouchableOpacity>
+              )}
             </View>
 
             {/* Search bar — glass style */}
@@ -398,10 +412,10 @@ const HomeScreen = ({ navigation }) => {
           <Text style={s.sectionTitle}>Acces rapide</Text>
           <View style={s.quickGrid}>
             {[
-              { icon: '📋', label: 'Historique\nscans', onPress: () => navigation.navigate('Scanner', { screen: 'ScanHistory' }) },
-              { icon: '📅', label: 'Reservations', onPress: () => navigation.navigate('Garde') },
+              { icon: '�', label: 'Mes\nanimaux', onPress: () => navigation.navigate('Profil', { screen: 'MyPets' }) },
+              { icon: '📅', label: 'Réservations', onPress: () => navigation.navigate('Garde') },
               { icon: '💬', label: 'Messages', onPress: () => navigation.navigate('Garde', { screen: 'Messages' }) },
-              { icon: '⚙️', label: 'Reglages', onPress: () => navigation.navigate('Profil', { screen: 'Settings' }) },
+              { icon: '⚙️', label: 'Réglages', onPress: () => navigation.navigate('Profil', { screen: 'Settings' }) },
             ].map((qa, idx) => (
               <PressableCard key={idx} style={s.quickAction} onPress={qa.onPress}>
                 <GlassCard style={s.quickIconWrap}>
@@ -413,9 +427,9 @@ const HomeScreen = ({ navigation }) => {
           </View>
         </AnimatedSection>
 
-        {/* ── Banniere Patoune ── */}
+        {/* ── Banniere Pépète ── */}
         <AnimatedSection delay={600} style={s.bannerSection}>
-          <PressableCard onPress={() => navigation.navigate('Scanner')} style={s.bannerPressable}>
+          <PressableCard onPress={() => navigation.navigate('Assistant')} style={s.bannerPressable}>
             <LinearGradient
               colors={COLORS.gradientAccent}
               start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}
@@ -424,13 +438,13 @@ const HomeScreen = ({ navigation }) => {
               <View style={s.bannerDecoCircle1} />
               <View style={s.bannerDecoCircle2} />
               <View style={s.bannerIconCircle}>
-                <Text style={s.bannerEmoji}>🔬</Text>
+                <Text style={s.bannerEmoji}>🤖</Text>
               </View>
               <View style={s.bannerContent}>
-                <Text style={s.bannerTitle}>Controlez ce que mange votre animal</Text>
-                <Text style={s.bannerText}>Scannez les emballages pour connaitre la qualite de chaque produit.</Text>
+                <Text style={s.bannerTitle}>Une question sur votre animal ?</Text>
+                <Text style={s.bannerText}>Notre assistant IA répond instantanément à toutes vos questions sur la santé et le bien-être de vos compagnons.</Text>
                 <View style={s.bannerBtn}>
-                  <Text style={s.bannerBtnText}>Scanner maintenant  →</Text>
+                  <Text style={s.bannerBtnText}>Poser une question  →</Text>
                 </View>
               </View>
             </LinearGradient>
@@ -514,6 +528,19 @@ const s = StyleSheet.create({
   avatarText: {
     fontFamily: FONTS.heading,
     fontSize: 24,
+    color: '#FFF',
+  },
+  signUpHeroBtn: {
+    backgroundColor: 'rgba(255,255,255,0.22)',
+    borderRadius: RADIUS.full,
+    paddingHorizontal: 18,
+    paddingVertical: 10,
+    borderWidth: 1.5,
+    borderColor: 'rgba(255,255,255,0.3)',
+  },
+  signUpHeroBtnText: {
+    fontFamily: FONTS.bodySemiBold,
+    fontSize: FONT_SIZE.sm,
     color: '#FFF',
   },
   searchBar: {

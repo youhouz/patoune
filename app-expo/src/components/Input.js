@@ -1,5 +1,5 @@
 // ---------------------------------------------------------------------------
-// Patoune v2.0 - Input Component
+// Pépète v2.0 - Input Component
 // Reusable text input with floating label, icon, focus animation,
 // and error state. Terracotta focus ring, DM Sans typography.
 // ---------------------------------------------------------------------------

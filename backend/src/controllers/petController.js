@@ -1,4 +1,5 @@
 const Pet = require('../models/Pet');
+const { validationResult } = require('express-validator');
 
 // @desc    Obtenir mes animaux
 // @route   GET /api/pets
@@ -19,6 +20,9 @@ exports.getPet = async (req, res, next) => {
     if (!pet) {
       return res.status(404).json({ success: false, error: 'Animal non trouvé' });
     }
+    if (pet.owner.toString() !== req.user.id) {
+      return res.status(403).json({ success: false, error: 'Non autorisé' });
+    }
     res.json({ success: true, pet });
   } catch (error) {
     next(error);
@@ -29,6 +33,10 @@ exports.getPet = async (req, res, next) => {
 // @route   POST /api/pets
 exports.addPet = async (req, res, next) => {
   try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ success: false, errors: errors.array() });
+    }
     req.body.owner = req.user.id;
     const pet = await Pet.create(req.body);
     res.status(201).json({ success: true, pet });
