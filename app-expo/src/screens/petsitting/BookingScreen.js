@@ -469,7 +469,7 @@ const BookingScreen = ({ route, navigation }) => {
           {/* Summary */}
           <View style={styles.summaryCard}>
             <LinearGradient
-              colors={['rgba(255,107,53,0.08)', 'rgba(255,107,53,0.02)']}
+              colors={['rgba(123,139,111,0.08)', 'rgba(123,139,111,0.02)']}
               style={styles.summaryGradient}
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 1 }}

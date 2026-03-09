@@ -441,7 +441,7 @@ const ScannerScreen = ({ navigation }) => {
 
       {/* Premium Header */}
       <LinearGradient
-        colors={['#7B8B6F', '#FF7F45', '#FF9560']}
+        colors={['#7B8B6F', '#8A9A7E', '#96A88A']}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
         style={[styles.header, { paddingTop: insets.top + SPACING.md }]}

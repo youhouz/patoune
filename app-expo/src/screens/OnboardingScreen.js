@@ -4,6 +4,7 @@ import {
   Platform, Animated, StatusBar
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import PepeteLogo, { PepeteIcon } from '../components/PepeteLogo';
 const colors = require('../utils/colors');
 const { RADIUS, SHADOWS } = require('../utils/colors');
@@ -35,7 +36,7 @@ const SLIDES = [
     title: 'Trouvez un\ngardien',
     subtitle: 'Des gardiens de confiance pres de chez vous',
     desc: 'Reservez un gardien certifie pour votre animal quand vous en avez besoin. Messagerie integree.',
-    bg: ['#4A4AD0', '#4ECBA0', '#7DDBB8'],
+    bg: ['#3D7A5F', '#4ECBA0', '#7DDBB8'],
     featureIcon: '🛡️',
     featureText: 'Gardiens verifies et certifies',
   },
@@ -44,13 +45,14 @@ const SLIDES = [
     title: 'Assistant\nIA',
     subtitle: 'Posez vos questions',
     desc: 'Un assistant intelligent pour repondre a toutes vos questions sur la sante et le bien-etre de vos animaux.',
-    bg: ['#C44A1A', '#5E6D53', '#96A88A'],
+    bg: ['#5E6D53', '#5E6D53', '#96A88A'],
     featureIcon: '🧠',
     featureText: 'Reponses instantanees 24/7',
   },
 ];
 
 const OnboardingScreen = ({ onComplete }) => {
+  const insets = useSafeAreaInsets();
   const [currentSlide, setCurrentSlide] = useState(0);
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const scaleAnim = useRef(new Animated.Value(0.85)).current;
@@ -164,7 +166,7 @@ const OnboardingScreen = ({ onComplete }) => {
 
       {/* Skip button */}
       {!isLast && (
-        <TouchableOpacity style={styles.skipBtn} onPress={handleSkip} activeOpacity={0.7}>
+        <TouchableOpacity style={[styles.skipBtn, { top: insets.top + 12 }]} onPress={handleSkip} activeOpacity={0.7}>
           <View style={styles.skipInner}>
             <Text style={styles.skipText}>Passer</Text>
             <Text style={styles.skipArrow}>{' \u203A'}</Text>
@@ -218,6 +220,7 @@ const OnboardingScreen = ({ onComplete }) => {
       {/* Bottom section */}
       <Animated.View style={[
         styles.bottom,
+        { paddingBottom: Math.max(insets.bottom, 20) },
         {
           opacity: ctaFade,
           transform: [{ translateY: ctaSlide }],
@@ -322,7 +325,7 @@ const styles = StyleSheet.create({
   // Skip
   skipBtn: {
     position: 'absolute',
-    top: Platform.OS === 'ios' ? 58 : 44,
+    top: 12, // dynamic insets applied via style prop
     right: 24,
     zIndex: 10,
   },
@@ -435,7 +438,7 @@ const styles = StyleSheet.create({
   // Bottom
   bottom: {
     paddingHorizontal: 24,
-    paddingBottom: Platform.OS === 'ios' ? 44 : 32,
+    paddingBottom: 32, // dynamic handled by insets if needed
     alignItems: 'center',
   },
   dotsRow: {

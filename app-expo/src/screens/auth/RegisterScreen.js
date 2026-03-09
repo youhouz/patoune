@@ -5,6 +5,7 @@ import {
   Animated, Dimensions, ActivityIndicator
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAuth } from '../../context/AuthContext';
 import { showAlert } from '../../utils/alert';
 const colors = require('../../utils/colors');
@@ -269,7 +270,7 @@ const RegisterScreen = ({ navigation }) => {
       />
       <View style={styles.infoCard}>
         <LinearGradient
-          colors={['#EFF6FF', '#F0F4FF']}
+          colors={['#EFF6FF', '#F0F3ED']}
           style={styles.infoCardGradient}
         >
           <Text style={styles.infoIcon}>{'💡'}</Text>
@@ -294,7 +295,7 @@ const RegisterScreen = ({ navigation }) => {
           >
             {isActive && (
               <LinearGradient
-                colors={['rgba(255,107,53,0.08)', 'rgba(255,107,53,0.03)']}
+                colors={['rgba(123,139,111,0.08)', 'rgba(123,139,111,0.03)']}
                 style={StyleSheet.absoluteFill}
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 1 }}
@@ -357,6 +358,7 @@ const RegisterScreen = ({ navigation }) => {
   const stepContent = [renderStep0, renderStep1, renderStep2, renderStep3];
   const isLastStep = step === 3;
 
+  const insets = useSafeAreaInsets();
   return (
     <View style={styles.container}>
       <StatusBar barStyle="light-content" />
@@ -367,7 +369,7 @@ const RegisterScreen = ({ navigation }) => {
           colors={['#5E6D53', '#7B8B6F', '#96A88A']}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
-          style={styles.headerGradient}
+          style={[styles.headerGradient, { paddingTop: insets.top + 12 }]}
         >
           {/* Decorative orbs in header */}
           <View style={styles.headerOrb1} />
@@ -490,11 +492,11 @@ const RegisterScreen = ({ navigation }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#FAFBFC',
+    backgroundColor: '#F8F6F2',
   },
   // Header
   headerGradient: {
-    paddingTop: Platform.OS === 'ios' ? 60 : 48,
+    paddingTop: 12, // dynamic insets applied via style prop
     paddingBottom: 48,
     paddingHorizontal: 24,
     overflow: 'hidden',
@@ -567,7 +569,7 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     height: 28,
-    backgroundColor: '#FAFBFC',
+    backgroundColor: '#F8F6F2',
     borderTopLeftRadius: 28,
     borderTopRightRadius: 28,
   },
@@ -682,7 +684,7 @@ const styles = StyleSheet.create({
     marginRight: 12,
   },
   inputIconWrapActive: {
-    backgroundColor: '#FFE8DB',
+    backgroundColor: '#E8EDE5',
   },
   inputIcon: {
     fontSize: 18,
@@ -775,7 +777,7 @@ const styles = StyleSheet.create({
     marginRight: 16,
   },
   roleIconWrapActive: {
-    backgroundColor: '#FFE0CC',
+    backgroundColor: '#DCE3D7',
   },
   roleIcon: {
     fontSize: 26,
@@ -900,7 +902,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
     paddingBottom: Platform.OS === 'ios' ? 36 : 24,
     paddingTop: 14,
-    backgroundColor: '#FAFBFC',
+    backgroundColor: '#F8F6F2',
     borderTopWidth: 1,
     borderTopColor: colors.borderLight,
   },

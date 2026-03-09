@@ -5,6 +5,7 @@ import {
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useFocusEffect } from '@react-navigation/native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAuth } from '../context/AuthContext';
 import { getMyPetsAPI } from '../api/pets';
 import { getScanHistoryAPI } from '../api/products';
@@ -96,6 +97,7 @@ const PetAvatar = ({ pet, size = 52 }) => {
 
 // ═══════════════════════════════════════════════════════════════
 const HomeScreen = ({ navigation }) => {
+  const insets = useSafeAreaInsets();
   const { user } = useAuth();
   const [pets, setPets] = useState([]);
   const [recentScans, setRecentScans] = useState([]);
@@ -143,7 +145,7 @@ const HomeScreen = ({ navigation }) => {
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={COLORS.primary} />}
       >
         {/* ── Header ── */}
-        <AnimatedSection style={s.header}>
+        <AnimatedSection style={[s.header, { paddingTop: insets.top + 12 }]}>
           <View style={s.headerLeft}>
             <View style={s.headerLogoCircle}>
               <Text style={s.headerLogoEmoji}>🐾</Text>
@@ -352,7 +354,7 @@ const s = StyleSheet.create({
   // ── Header ──
   header: {
     flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
-    paddingTop: Platform.OS === 'ios' ? 60 : 48,
+    paddingTop: 12, // dynamic insets applied in component
     paddingHorizontal: SPACING.xl,
     paddingBottom: 8,
   },

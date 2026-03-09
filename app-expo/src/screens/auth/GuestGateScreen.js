@@ -3,6 +3,7 @@ import {
   View, Text, TouchableOpacity, StyleSheet, Platform, Animated, ScrollView,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 const colors = require('../../utils/colors');
 const { RADIUS, SHADOWS, SPACING, FONT_SIZE } = require('../../utils/colors');
@@ -16,6 +17,7 @@ const FEATURES = [
 
 const GuestGateScreen = ({ route }) => {
   const navigation = useNavigation();
+  const insets = useSafeAreaInsets();
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const slideAnim = useRef(new Animated.Value(30)).current;
 
@@ -35,7 +37,7 @@ const GuestGateScreen = ({ route }) => {
             <LinearGradient
               colors={colors.gradientHero}
               start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}
-              style={s.heroGrad}
+              style={[s.heroGrad, { paddingTop: insets.top + 20 }]}
             >
               <View style={s.heroOrb1} />
               <View style={s.heroOrb2} />
@@ -105,7 +107,7 @@ const s = StyleSheet.create({
 
   hero: { marginBottom: 28 },
   heroGrad: {
-    paddingTop: Platform.OS === 'ios' ? 70 : 56,
+    paddingTop: 20, // dynamic insets applied via style prop
     paddingBottom: 40,
     paddingHorizontal: SPACING.xl,
     borderBottomLeftRadius: 36,

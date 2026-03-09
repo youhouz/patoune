@@ -5,6 +5,7 @@ import {
   Animated, StatusBar, Dimensions, ActivityIndicator
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAuth } from '../../context/AuthContext';
 import { showAlert } from '../../utils/alert';
 import PepeteLogo from '../../components/PepeteLogo';
@@ -14,6 +15,7 @@ const { SHADOWS, RADIUS, SPACING, FONT_SIZE } = require('../../utils/colors');
 const { width, height } = Dimensions.get('window');
 
 const LoginScreen = ({ navigation }) => {
+  const insets = useSafeAreaInsets();
   const { login } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -136,7 +138,7 @@ const LoginScreen = ({ navigation }) => {
 
       {/* Deep luxe gradient background */}
       <LinearGradient
-        colors={['#5E6D53', '#7B8B6F', '#96A88A', '#A3B296', '#FFDCC8']}
+        colors={['#5E6D53', '#7B8B6F', '#96A88A', '#A3B296', '#D4DFD0']}
         start={{ x: 0.1, y: 0 }}
         end={{ x: 0.9, y: 1 }}
         style={StyleSheet.absoluteFill}
@@ -155,7 +157,7 @@ const LoginScreen = ({ navigation }) => {
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       >
         <ScrollView
-          contentContainerStyle={styles.scroll}
+          contentContainerStyle={[styles.scroll, { paddingTop: insets.top + 16 }]}
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
         >
@@ -283,10 +285,10 @@ const LoginScreen = ({ navigation }) => {
             <Animated.View style={[styles.trustBar, { opacity: trustFade }]}>
               <View style={styles.trustAvatars}>
                 {[
-                  { emoji: '🐕', bg: '#FFD4BC' },
+                  { emoji: '🐕', bg: '#D0DAC9' },
                   { emoji: '🐈', bg: '#C8F7DC' },
-                  { emoji: '🐾', bg: '#D4DAFF' },
-                  { emoji: '🦮', bg: '#FFEAA7' },
+                  { emoji: '🐾', bg: '#D4E8DF' },
+                  { emoji: '🦮', bg: '#E8EDE5' },
                 ].map((item, i) => (
                   <View
                     key={i}
@@ -413,7 +415,7 @@ const styles = StyleSheet.create({
   scroll: {
     flexGrow: 1,
     paddingHorizontal: 24,
-    paddingTop: Platform.OS === 'ios' ? 76 : 56,
+    paddingTop: 16, // dynamic insets applied via style prop
     paddingBottom: 48,
     justifyContent: 'center',
   },
@@ -480,7 +482,7 @@ const styles = StyleSheet.create({
   inputWrapper: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#FAFBFC',
+    backgroundColor: '#F8F6F2',
     borderRadius: RADIUS.lg,
     borderWidth: 1.5,
     borderColor: 'rgba(232,234,240,0.8)',
@@ -500,7 +502,7 @@ const styles = StyleSheet.create({
     marginRight: 12,
   },
   inputIconWrapFocused: {
-    backgroundColor: '#FFE8DB',
+    backgroundColor: '#E8EDE5',
   },
   inputIcon: {
     fontSize: 18,

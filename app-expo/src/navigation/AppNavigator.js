@@ -49,7 +49,7 @@ const SplashLoader = () => {
   }, []);
 
   return (
-    <LinearGradient colors={['#7B8B6F', '#FF7B45', '#A3B296']} style={styles.splash}>
+    <LinearGradient colors={['#7B8B6F', '#8A9A7E', '#A3B296']} style={styles.splash}>
       <StatusBar barStyle="light-content" />
 
       {/* Decorative circles */}
