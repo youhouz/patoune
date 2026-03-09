@@ -19,6 +19,7 @@ import {
   PlayfairDisplay_700Bold,
 } from '@expo-google-fonts/playfair-display';
 
+import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { AuthProvider } from './src/context/AuthContext';
 import AppNavigator from './src/navigation/AppNavigator';
 import { COLORS } from './src/utils/colors';
@@ -87,12 +88,14 @@ export default function App() {
 
   // App is ready - render the full application
   return (
-    <View style={styles.root} onLayout={onLayoutRootView}>
-      <AuthProvider>
-        <StatusBar style="dark" />
-        <AppNavigator />
-      </AuthProvider>
-    </View>
+    <SafeAreaProvider>
+      <View style={styles.root} onLayout={onLayoutRootView}>
+        <AuthProvider>
+          <StatusBar style="dark" />
+          <AppNavigator />
+        </AuthProvider>
+      </View>
+    </SafeAreaProvider>
   );
 }
 

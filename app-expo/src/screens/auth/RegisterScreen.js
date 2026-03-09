@@ -427,12 +427,15 @@ const RegisterScreen = ({ navigation }) => {
 
       <KeyboardAvoidingView
         style={styles.formWrapper}
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        keyboardVerticalOffset={0}
       >
         <ScrollView
           contentContainerStyle={styles.scroll}
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
+          bounces={true}
+          overScrollMode="always"
         >
           <Animated.View style={{
             transform: [{ translateX: slideAnim }],
@@ -497,7 +500,7 @@ const styles = StyleSheet.create({
   // Header
   headerGradient: {
     paddingTop: 12, // dynamic insets applied via style prop
-    paddingBottom: 48,
+    paddingBottom: 36,
     paddingHorizontal: 24,
     overflow: 'hidden',
   },
@@ -568,10 +571,10 @@ const styles = StyleSheet.create({
     bottom: -1,
     left: 0,
     right: 0,
-    height: 28,
+    height: 20,
     backgroundColor: '#F8F6F2',
-    borderTopLeftRadius: 28,
-    borderTopRightRadius: 28,
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
   },
   // Progress indicator
   progressContainer: {
@@ -645,12 +648,13 @@ const styles = StyleSheet.create({
   },
   scroll: {
     paddingHorizontal: 24,
-    paddingTop: 20,
-    paddingBottom: 24,
+    paddingTop: 16,
+    paddingBottom: 32,
+    flexGrow: 1,
   },
   // Input fields
   fieldGroup: {
-    marginBottom: 20,
+    marginBottom: 16,
   },
   label: {
     fontSize: 12,
@@ -669,7 +673,7 @@ const styles = StyleSheet.create({
     borderWidth: 1.5,
     borderColor: colors.border,
     paddingHorizontal: 6,
-    height: 64,
+    height: 56,
   },
   inputFocused: {
     backgroundColor: '#FFF',
