@@ -2,7 +2,7 @@ import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Platform } from 'react-native';
 
-const DEFAULT_PROD_API_URL = 'https://backend-woad-tau-80.vercel.app/api';
+const DEFAULT_PROD_API_URL = 'https://pepete-fr.vercel.app/api';
 
 const getFallbackApiUrl = () => {
   if (Platform.OS === 'web') {
