@@ -41,7 +41,7 @@ const AnimatedSection = ({ delay = 0, children, style }) => {
 };
 
 // ─── Pressable card with scale micro-interaction ─────────────
-const PressableCard = ({ onPress, style, children }) => {
+const PressableCard = ({ onPress, style, children, wrapStyle }) => {
   const scaleAnim = useRef(new Animated.Value(1)).current;
 
   return (
@@ -50,7 +50,7 @@ const PressableCard = ({ onPress, style, children }) => {
       onPressIn={() => Animated.spring(scaleAnim, { toValue: 0.96, friction: 8, tension: 100, useNativeDriver: true }).start()}
       onPressOut={() => Animated.spring(scaleAnim, { toValue: 1, friction: 5, tension: 40, useNativeDriver: true }).start()}
       activeOpacity={0.92}
-      style={{ flex: style?.flex }}
+      style={wrapStyle}
     >
       <Animated.View style={[style, { transform: [{ scale: scaleAnim }] }]}>
         {children}
@@ -61,7 +61,7 @@ const PressableCard = ({ onPress, style, children }) => {
 
 // ─── Feature Card (2x2 grid) ────────────────────────────────
 const FeatureCard = ({ icon, title, subtitle, bgColor, textColor, iconBg, onPress }) => (
-  <PressableCard onPress={onPress} style={[s.featureCard, { backgroundColor: bgColor }]}>  
+  <PressableCard onPress={onPress} wrapStyle={{ flex: 1 }} style={[s.featureCard, { backgroundColor: bgColor }]}>  
     <View style={[s.featureIconWrap, { backgroundColor: iconBg }]}>
       <Text style={s.featureIcon}>{icon}</Text>
     </View>
@@ -403,7 +403,7 @@ const s = StyleSheet.create({
   },
 
   // ── Search ──
-  searchSection: { paddingHorizontal: SPACING.xl, marginTop: 16 },
+  searchSection: { paddingHorizontal: SPACING.xl, marginTop: 12 },
   searchBar: {
     flexDirection: 'row', alignItems: 'center',
     backgroundColor: COLORS.white,
@@ -436,20 +436,20 @@ const s = StyleSheet.create({
   },
 
   // ── Features 2x2 ──
-  featuresSection: { paddingHorizontal: SPACING.xl, marginTop: 24 },
-  featuresRow: { flexDirection: 'row', gap: CARD_GAP, marginBottom: CARD_GAP },
+  featuresSection: { paddingHorizontal: SPACING.xl, marginTop: 20 },
+  featuresRow: { flexDirection: 'row', gap: CARD_GAP, marginBottom: CARD_GAP, alignItems: 'stretch' },
   featureCard: {
     flex: 1,
     borderRadius: RADIUS['2xl'],
-    padding: 18,
-    minHeight: 150,
-    justifyContent: 'space-between',
+    padding: 16,
+    minHeight: 140,
+    justifyContent: 'flex-end',
     ...SHADOWS.md,
   },
   featureIconWrap: {
-    width: 48, height: 48, borderRadius: RADIUS.lg,
+    width: 44, height: 44, borderRadius: RADIUS.lg,
     alignItems: 'center', justifyContent: 'center',
-    marginBottom: 14,
+    marginBottom: 12,
   },
   featureIcon: { fontSize: 24 },
   featureTitle: {
@@ -463,7 +463,7 @@ const s = StyleSheet.create({
   },
 
   // ── Pets ──
-  petsSection: { paddingHorizontal: SPACING.xl, marginTop: 28 },
+  petsSection: { paddingHorizontal: SPACING.xl, marginTop: 20 },
   petsScroll: { gap: 12, paddingRight: SPACING.xl },
   petChip: {
     flexDirection: 'row', alignItems: 'center',
@@ -502,7 +502,7 @@ const s = StyleSheet.create({
   },
 
   // ── Booking ──
-  bookingSection: { paddingHorizontal: SPACING.xl, marginTop: 28 },
+  bookingSection: { paddingHorizontal: SPACING.xl, marginTop: 20 },
   bookingCard: {
     borderRadius: RADIUS['2xl'], overflow: 'hidden',
     ...SHADOWS.md,
@@ -530,7 +530,7 @@ const s = StyleSheet.create({
   },
 
   // ── Scans ──
-  scansSection: { paddingHorizontal: SPACING.xl, marginTop: 28 },
+  scansSection: { paddingHorizontal: SPACING.xl, marginTop: 20 },
   scanCard: {
     flexDirection: 'row', alignItems: 'center',
     backgroundColor: COLORS.white,
@@ -558,7 +558,7 @@ const s = StyleSheet.create({
   scanLabelText: { fontFamily: FONTS.bodySemiBold, fontSize: FONT_SIZE.xs },
 
   // ── News ──
-  newsSection: { paddingHorizontal: SPACING.xl, marginTop: 28 },
+  newsSection: { paddingHorizontal: SPACING.xl, marginTop: 20 },
   newsScroll: { gap: 14 },
   newsCard: {
     width: 220,
@@ -590,7 +590,7 @@ const s = StyleSheet.create({
   },
 
   // ── Banner ──
-  bannerSection: { paddingHorizontal: SPACING.xl, marginTop: 28 },
+  bannerSection: { paddingHorizontal: SPACING.xl, marginTop: 20 },
   bannerCard: {},
   bannerGradient: {
     borderRadius: RADIUS['2xl'], padding: 20,

@@ -6,49 +6,86 @@ const { RADIUS, SHADOWS, SPACING } = require('../utils/colors');
 
 const PWA_DISMISSED_KEY = 'pwa_install_dismissed';
 
+const isIOSSafari = () => {
+  if (typeof window === 'undefined' || typeof navigator === 'undefined') return false;
+  const ua = navigator.userAgent || '';
+  return /iPad|iPhone|iPod/.test(ua) && !ua.includes('CriOS') && !ua.includes('FxiOS');
+};
+
+const isStandalone = () => {
+  if (typeof window === 'undefined') return false;
+  return window.matchMedia && window.matchMedia('(display-mode: standalone)').matches
+    || (typeof navigator !== 'undefined' && navigator.standalone);
+};
+
 const PWAInstallBanner = () => {
   const [deferredPrompt, setDeferredPrompt] = useState(null);
   const [showBanner, setShowBanner] = useState(false);
+  const [isIOS, setIsIOS] = useState(false);
   const slideAnim = useRef(new Animated.Value(120)).current;
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const pulseAnim = useRef(new Animated.Value(1)).current;
 
+  const showBannerAnimation = () => {
+    setShowBanner(true);
+    Animated.parallel([
+      Animated.spring(slideAnim, { toValue: 0, tension: 50, friction: 9, useNativeDriver: true }),
+      Animated.timing(fadeAnim, { toValue: 1, duration: 350, useNativeDriver: true }),
+    ]).start();
+    Animated.loop(
+      Animated.sequence([
+        Animated.timing(pulseAnim, { toValue: 1.04, duration: 1200, useNativeDriver: true }),
+        Animated.timing(pulseAnim, { toValue: 1, duration: 1200, useNativeDriver: true }),
+      ])
+    ).start();
+  };
+
   useEffect(() => {
     if (Platform.OS !== 'web') return;
-
-    // Already installed
-    if (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) return;
+    if (isStandalone()) return;
 
     AsyncStorage.getItem(PWA_DISMISSED_KEY).then((val) => {
       if (val) return;
 
+      // iOS Safari: no beforeinstallprompt, show manual instructions
+      if (isIOSSafari()) {
+        setIsIOS(true);
+        setTimeout(() => showBannerAnimation(), 2000);
+        return;
+      }
+
       const handler = (e) => {
         e.preventDefault();
         setDeferredPrompt(e);
-        setShowBanner(true);
-
-        // Entrance animation
-        Animated.parallel([
-          Animated.spring(slideAnim, { toValue: 0, tension: 50, friction: 9, useNativeDriver: true }),
-          Animated.timing(fadeAnim, { toValue: 1, duration: 350, useNativeDriver: true }),
-        ]).start();
-
-        // Subtle pulse to draw attention to install button
-        Animated.loop(
-          Animated.sequence([
-            Animated.timing(pulseAnim, { toValue: 1.04, duration: 1200, useNativeDriver: true }),
-            Animated.timing(pulseAnim, { toValue: 1, duration: 1200, useNativeDriver: true }),
-          ])
-        ).start();
+        showBannerAnimation();
       };
 
       window.addEventListener('beforeinstallprompt', handler);
-      return () => window.removeEventListener('beforeinstallprompt', handler);
+
+      // Fallback: show banner after 3s even without beforeinstallprompt (Android browsers that don't fire it)
+      const fallbackTimer = setTimeout(() => {
+        if (!deferredPrompt) {
+          showBannerAnimation();
+        }
+      }, 3000);
+
+      return () => {
+        window.removeEventListener('beforeinstallprompt', handler);
+        clearTimeout(fallbackTimer);
+      };
     });
   }, []);
 
   const handleInstall = async () => {
-    if (!deferredPrompt) return;
+    if (isIOS) {
+      // Can't programmatically install on iOS, just dismiss
+      handleDismiss();
+      return;
+    }
+    if (!deferredPrompt) {
+      handleDismiss();
+      return;
+    }
     deferredPrompt.prompt();
     const result = await deferredPrompt.userChoice;
     if (result.outcome === 'accepted') {
@@ -89,7 +126,9 @@ const PWAInstallBanner = () => {
           <View style={styles.textWrap}>
             <Text style={styles.title}>Installer Pépète</Text>
             <Text style={styles.subtitle}>
-              Accédez à Pépète directement depuis votre écran d'accueil, comme une vraie application.
+              {isIOS
+                ? 'Appuyez sur le bouton partager ⬆️ puis "Sur l\'écran d\'accueil" pour installer.'
+                : 'Accédez à Pépète directement depuis votre écran d\'accueil, comme une vraie application.'}
             </Text>
           </View>
         </View>
@@ -97,7 +136,9 @@ const PWAInstallBanner = () => {
         {/* Install CTA */}
         <Animated.View style={{ transform: [{ scale: pulseAnim }] }}>
           <TouchableOpacity style={styles.installBtn} onPress={handleInstall} activeOpacity={0.85}>
-            <Text style={styles.installText}>Ajouter à l'écran d'accueil</Text>
+            <Text style={styles.installText}>
+              {isIOS ? 'Compris !' : 'Ajouter à l\'écran d\'accueil'}
+            </Text>
           </TouchableOpacity>
         </Animated.View>
 
@@ -119,7 +160,7 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     paddingHorizontal: SPACING.base,
-    paddingBottom: Platform.OS === 'ios' ? 34 : SPACING.base,
+    paddingBottom: Platform.OS === 'ios' ? 34 : Platform.OS === 'web' ? 80 : SPACING.base,
     zIndex: 1000,
   },
   banner: {

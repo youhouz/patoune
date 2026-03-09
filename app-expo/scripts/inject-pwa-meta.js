@@ -120,7 +120,7 @@ html = html.replace(/<meta name="description"[^>]*>\n?/g, '');
 
 const metaTags = `
     <!-- PWA Meta Tags (injected by post-build script) -->
-    <meta name="theme-color" content="#C4704B" />
+    <meta name="theme-color" content="#7B8B6F" />
     <meta name="description" content="Pépète - Le compagnon de vos compagnons. Scanner produits, garde animaux, assistant IA." />
     <link rel="manifest" href="/manifest.json" />
 
