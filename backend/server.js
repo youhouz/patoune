@@ -47,11 +47,17 @@ const io = new Server(server, {
 app.use(helmet());
 app.use(cors(corsOptions));
 app.use(express.json({ limit: '1mb' }));
+
+// Forest Admin
+const setupForestAdmin = require('./src/admin/forest');
+setupForestAdmin(app);
+
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // Routes
 app.use('/api/auth', require('./src/routes/auth'));
 app.use('/api/users', require('./src/routes/users'));
+app.use('/api/admin', require('./src/routes/admin'));
 app.use('/api/pets', require('./src/routes/pets'));
 app.use('/api/products', require('./src/routes/products'));
 app.use('/api/petsitters', require('./src/routes/petsitters'));
