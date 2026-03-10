@@ -89,7 +89,17 @@ export const AuthProvider = ({ children }) => {
 
       return { success: true };
     } catch (error) {
-      const message = error.userMessage || error.response?.data?.error || "Erreur d'inscription";
+      console.error('Register failed:', error.response?.data || error.message);
+      let message = "Erreur d'inscription";
+      
+      if (error.response?.data?.error) {
+          message = error.response.data.error;
+      } else if (error.response?.data?.errors?.length > 0) {
+          message = error.response.data.errors.map(e => e.msg).join(', ');
+      } else if (error.userMessage) {
+          message = error.userMessage;
+      }
+
       return { success: false, error: message };
     }
   };
