@@ -1,48 +1,48 @@
-// Pépète Design System — v3.0
-// Brand: nature-inspired sage green + warm brown, organic & modern
+// Pépète Design System — v4.0 (San Francisco Agency Edition)
+// Brand: Ultra-modern, high-contrast, minimalist, vibrant gradient
 
 const COLORS = {
-  // Brand Primary — Sage Green
-  primary: '#7B8B6F',
-  primaryLight: '#96A88A',
-  primaryDark: '#5E6D53',
-  primarySoft: '#F0F3ED',
-  primaryGlow: 'rgba(123, 139, 111, 0.15)',
+  // Brand Primary — Electric Indigo
+  primary: '#4F46E5', // Indigo 600
+  primaryLight: '#818CF8', // Indigo 400
+  primaryDark: '#3730A3', // Indigo 800
+  primarySoft: '#EEF2FF', // Indigo 50
+  primaryGlow: 'rgba(79, 70, 229, 0.25)',
 
-  // Brand Secondary — Warm Brown
-  secondary: '#8B7355',
-  secondaryLight: '#A68E6F',
-  secondaryDark: '#6B5740',
-  secondarySoft: '#F5F0EB',
+  // Brand Secondary — Rose/Coral
+  secondary: '#F43F5E', // Rose 500
+  secondaryLight: '#FB7185', // Rose 400
+  secondaryDark: '#BE123C', // Rose 700
+  secondarySoft: '#FFF1F2', // Rose 50
 
-  // Accent — Mint Teal
-  accent: '#4ECBA0',
-  accentLight: '#7DDBB8',
-  accentSoft: '#E8F8F0',
+  // Accent — Emerald 
+  accent: '#10B981',
+  accentLight: '#34D399',
+  accentSoft: '#D1FAE5',
 
-  // Backgrounds
+  // Backgrounds - Ultra clean Minimalist
   white: '#FFFFFF',
-  background: '#F8F6F2',
+  background: '#F8FAFC', // Slate 50
   surface: '#FFFFFF',
   surfaceElevated: '#FFFFFF',
   card: '#FFFFFF',
-  border: '#E8E4DD',
-  borderLight: '#F0EDE7',
-  divider: '#EBE7E1',
+  border: '#E2E8F0', // Slate 200
+  borderLight: '#F1F5F9', // Slate 100
+  divider: '#F1F5F9',
 
-  // Text — high contrast for readability
-  text: '#2D2D2D',
-  textPrimary: '#2D2D2D',
-  textSecondary: '#6B6B6B',
-  textTertiary: '#9CA3AF',
-  textLight: '#C4C9D4',
+  // Text — High contrast slate/black
+  text: '#0F172A', // Slate 900
+  textPrimary: '#0F172A',
+  textSecondary: '#475569', // Slate 600
+  textTertiary: '#94A3B8', // Slate 400
+  textLight: '#CBD5E1', // Slate 300
   textInverse: '#FFFFFF',
-  placeholder: '#B0B0A8',
+  placeholder: '#A1A1AA', // Zinc 400
 
-  // Nutrition Scores
+  // Nutrition Scores - Modern styling
   scoreExcellent: '#059669',
   scoreGood: '#10B981',
-  scoreMediocre: '#D97706',
+  scoreMediocre: '#F59E0B',
   scoreBad: '#EA580C',
   scoreVeryBad: '#DC2626',
 
@@ -53,115 +53,115 @@ const COLORS = {
   scoreVeryBadBg: '#FEF2F2',
 
   // Functional Colors
-  success: '#059669',
-  successSoft: '#ECFDF5',
-  warning: '#D97706',
-  warningSoft: '#FFFBEB',
-  error: '#DC2626',
-  errorSoft: '#FEF2F2',
-  info: '#2563EB',
-  infoSoft: '#EFF6FF',
+  success: '#10B981',
+  successSoft: '#D1FAE5',
+  warning: '#F59E0B',
+  warningSoft: '#FEF3C7',
+  error: '#EF4444',
+  errorSoft: '#FEE2E2',
+  info: '#3B82F6',
+  infoSoft: '#DBEAFE',
 
-  // Semantic aliases — v3.0 nature palette
-  cream: '#F8F6F2',
-  linen: '#F0EDE7',
-  charcoal: '#2D2D2D',
-  stone: '#6B6B6B',
-  pebble: '#9CA3AF',
-  sand: '#C4C9D4',
+  // Semantic aliases — Tech minimalist
+  cream: '#F8FAFC',
+  linen: '#F1F5F9',
+  charcoal: '#0F172A',
+  stone: '#475569',
+  pebble: '#94A3B8',
+  sand: '#CBD5E1',
 
   // Shadows & Overlays
-  shadow: 'rgba(0, 0, 0, 0.04)',
-  shadowMedium: 'rgba(0, 0, 0, 0.08)',
-  overlay: 'rgba(0, 0, 0, 0.5)',
-  overlayLight: 'rgba(0, 0, 0, 0.25)',
+  shadow: 'rgba(15, 23, 42, 0.04)',
+  shadowMedium: 'rgba(15, 23, 42, 0.08)',
+  overlay: 'rgba(15, 23, 42, 0.6)',
+  overlayLight: 'rgba(15, 23, 42, 0.3)',
 
-  // Gradients (arrays for LinearGradient)
-  gradientPrimary: ['#7B8B6F', '#96A88A'],
-  gradientWarm: ['#8B7355', '#A68E6F'],
-  gradientSuccess: ['#059669', '#10B981'],
-  gradientAccent: ['#4ECBA0', '#7DDBB8'],
-  gradientDark: ['#2D2D2D', '#3D3D3D'],
-  gradientCharcoal: ['#2D2D2D', '#3D3D3D'],
-  gradientHero: ['#7B8B6F', '#8A9A7E', '#A3B296'],
+  // Gradients for modern glow
+  gradientPrimary: ['#4F46E5', '#6366F1'],
+  gradientWarm: ['#F43F5E', '#FB7185'],
+  gradientSuccess: ['#10B981', '#34D399'],
+  gradientAccent: ['#06B6D4', '#22D3EE'],
+  gradientDark: ['#0F172A', '#1E293B'],
+  gradientCharcoal: ['#0F172A', '#1E293B'],
+  gradientHero: ['#4F46E5', '#818CF8', '#C7D2FE'],
 };
 
-// Spacing — generous for big fingers and readability
+// Spacing — crisp, geometric rhythm
 const SPACING = {
   xs: 4,
   sm: 8,
   md: 12,
   base: 16,
-  lg: 20,
+  lg: 24,
+  xl: 32,
+  '2xl': 40,
+  '3xl': 48,
+  '4xl': 64,
+  '5xl': 80,
+};
+
+// Border Radius - Apple-like rounded corners (squircle feel)
+const RADIUS = {
+  xs: 6,
+  sm: 8,
+  md: 12,
+  lg: 16,
   xl: 24,
   '2xl': 32,
   '3xl': 40,
-  '4xl': 48,
-  '5xl': 64,
+  full: 9999,
 };
 
-// Border Radius
-const RADIUS = {
-  xs: 6,
-  sm: 10,
-  md: 14,
-  lg: 18,
-  xl: 22,
-  '2xl': 28,
-  '3xl': 36,
-  full: 999,
-};
-
-// Font Sizes — increased for children & grandmothers
+// Font Sizes
 const FONT_SIZE = {
   xs: 12,
   sm: 14,
   base: 16,
-  md: 17,
-  lg: 19,
-  xl: 22,
-  '2xl': 26,
-  '3xl': 30,
-  '4xl': 36,
-  '5xl': 44,
+  md: 18,
+  lg: 20,
+  xl: 24,
+  '2xl': 30,
+  '3xl': 36,
+  '4xl': 48,
+  '5xl': 60,
 };
 
-// Shadows
+// Modern, diffusion-like shadows
 const SHADOWS = {
   sm: {
-    shadowColor: '#111827',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
+    shadowColor: '#0F172A',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.04,
     shadowRadius: 4,
     elevation: 2,
   },
   md: {
-    shadowColor: '#111827',
-    shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.07,
-    shadowRadius: 10,
+    shadowColor: '#0F172A',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.06,
+    shadowRadius: 12,
     elevation: 4,
   },
   lg: {
-    shadowColor: '#111827',
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.09,
-    shadowRadius: 20,
+    shadowColor: '#0F172A',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.08,
+    shadowRadius: 24,
     elevation: 8,
   },
   xl: {
-    shadowColor: '#111827',
-    shadowOffset: { width: 0, height: 10 },
-    shadowOpacity: 0.12,
-    shadowRadius: 30,
-    elevation: 14,
+    shadowColor: '#0F172A',
+    shadowOffset: { width: 0, height: 16 },
+    shadowOpacity: 0.1,
+    shadowRadius: 32,
+    elevation: 12,
   },
   glow: function(color) {
     return {
-      shadowColor: color || '#7B8B6F',
-      shadowOffset: { width: 0, height: 4 },
-      shadowOpacity: 0.35,
-      shadowRadius: 14,
+      shadowColor: color || '#4F46E5',
+      shadowOffset: { width: 0, height: 8 },
+      shadowOpacity: 0.25,
+      shadowRadius: 20,
       elevation: 10,
     };
   },
@@ -189,7 +189,7 @@ const getScoreLabel = function(score) {
   if (score >= 60) return 'Bon';
   if (score >= 40) return 'Moyen';
   if (score >= 20) return 'Mauvais';
-  return 'A eviter';
+  return 'À éviter';
 };
 
 // CommonJS exports — backward compatible with all existing require() calls

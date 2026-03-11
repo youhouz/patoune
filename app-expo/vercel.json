@@ -1,4 +1,5 @@
 {
+  "name": "pepete-front",
   "version": 2,
   "buildCommand": "npx expo export --platform web && node scripts/inject-pwa-meta.js",
   "outputDirectory": "dist",

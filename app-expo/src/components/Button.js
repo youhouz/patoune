@@ -1,6 +1,7 @@
 import React from 'react';
 import { TouchableOpacity, Text, StyleSheet, ActivityIndicator, View } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
+import { FONTS } from '../utils/typography';
 const colors = require('../utils/colors');
 const { SHADOWS, RADIUS } = require('../utils/colors');
 
@@ -9,35 +10,35 @@ const Button = ({
   variant = 'primary', disabled, icon, size = 'md',
   fullWidth = true
 }) => {
-  // Generous touch targets — accessible for all ages
+  // Ultra-modern SF Agency sizing
   const sizeStyles = {
-    sm: { paddingVertical: 12, paddingHorizontal: 18, minHeight: 46 },
-    md: { paddingVertical: 15, paddingHorizontal: 26, minHeight: 54 },
-    lg: { paddingVertical: 19, paddingHorizontal: 32, minHeight: 62 },
+    sm: { paddingVertical: 12, paddingHorizontal: 16, minHeight: 44 },
+    md: { paddingVertical: 16, paddingHorizontal: 24, minHeight: 56 },
+    lg: { paddingVertical: 20, paddingHorizontal: 32, minHeight: 64 },
   };
 
-  const fontSizes = { sm: 15, md: 17, lg: 19 };
+  const fontSizes = { sm: 14, md: 16, lg: 18 };
 
   if (variant === 'primary') {
     return (
       <TouchableOpacity
         onPress={onPress}
         disabled={loading || disabled}
-        activeOpacity={0.85}
+        activeOpacity={0.8}
         style={[fullWidth && { width: '100%' }, style]}
       >
         <LinearGradient
-          colors={disabled ? ['#CCC', '#BBB'] : ['#7B8B6F', '#96A88A']}
+          colors={disabled ? ['#E2E8F0', '#CBD5E1'] : colors.gradientPrimary}
           start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 0 }}
+          end={{ x: 1, y: 1 }}
           style={[
             styles.button, sizeStyles[size],
-            { borderRadius: RADIUS.lg },
-            !disabled && SHADOWS.glow('#7B8B6F'),
+            { borderRadius: RADIUS.full }, // Pill-shaped buttons are very modern
+            !disabled && SHADOWS.glow(colors.primary),
           ]}
         >
           {loading ? (
-            <ActivityIndicator color="#FFF" size="small" />
+            <ActivityIndicator color={colors.white} size="small" />
           ) : (
             <View style={styles.content}>
               {icon && <Text style={[styles.icon, { fontSize: fontSizes[size] }]}>{icon}</Text>}
@@ -54,8 +55,8 @@ const Button = ({
   const variantStyles = {
     outline: {
       bg: 'transparent',
-      border: colors.primary,
-      textColor: colors.primary,
+      border: colors.border,
+      textColor: colors.textPrimary,
     },
     secondary: {
       bg: colors.primarySoft,
@@ -65,7 +66,7 @@ const Button = ({
     ghost: {
       bg: 'transparent',
       border: 'transparent',
-      textColor: colors.primary,
+      textColor: colors.textSecondary,
     },
     danger: {
       bg: colors.errorSoft,
@@ -82,9 +83,9 @@ const Button = ({
         styles.button, sizeStyles[size],
         {
           backgroundColor: v.bg,
-          borderWidth: variant === 'outline' ? 2 : 0,
+          borderWidth: variant === 'outline' ? 1.5 : 0,
           borderColor: v.border,
-          borderRadius: RADIUS.lg,
+          borderRadius: RADIUS.full, // Pill-shaped buttons
         },
         disabled && styles.disabled,
         fullWidth && { width: '100%' },
@@ -122,11 +123,11 @@ const styles = StyleSheet.create({
     lineHeight: undefined,
   },
   text: {
-    fontWeight: '700',
-    letterSpacing: 0.2,
+    fontFamily: FONTS.bodySemiBold,
+    letterSpacing: -0.2, // Tighter tracking for modern look
   },
   primaryText: {
-    color: '#FFF',
+    color: '#FFFFFF',
   },
   disabled: {
     opacity: 0.5,

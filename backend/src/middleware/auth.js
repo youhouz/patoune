@@ -58,4 +58,18 @@ const optionalAuth = async (req, res, next) => {
   next();
 };
 
-module.exports = { protect, optionalAuth };
+
+
+const authorize = (...roles) => {
+  return (req, res, next) => {
+    if (!req.user || !roles.includes(req.user.role)) {
+      return res.status(403).json({
+        success: false,
+        error: `Le rôle ${req.user ? req.user.role : 'invité'} n'est pas autorisé à accéder à cette route`
+      });
+    }
+    next();
+  };
+};
+
+module.exports = { protect, optionalAuth, authorize };

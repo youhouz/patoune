@@ -40,7 +40,7 @@ const userSchema = new mongoose.Schema({
   },
   role: {
     type: String,
-    enum: ['user', 'guardian', 'both'],
+    enum: ['user', 'guardian', 'both', 'admin'],
     default: 'user'
   },
   address: {

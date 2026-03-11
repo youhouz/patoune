@@ -1,13 +1,11 @@
 // ---------------------------------------------------------------------------
-// Pépète v2.0 - Card Component
-// Clean container with warm shadows (charcoal-tinted, never pure black).
-// Three variants: elevated, outlined, flat. Pressable when onPress is set.
+// Pépète v4.0 - Card Component (San Francisco Agency Edition)
+// Ultra-clean containers with soft diffusion shadows.
 // ---------------------------------------------------------------------------
 
 import React from 'react';
 import { View, StyleSheet, TouchableOpacity } from 'react-native';
 import { COLORS, SHADOWS, RADIUS, SPACING } from '../utils/colors';
-
 
 // ---------------------------------------------------------------------------
 // Variant configurations
@@ -17,32 +15,22 @@ const VARIANT_STYLES = {
     backgroundColor: COLORS.card,
     borderWidth: 0,
     borderColor: 'transparent',
-    ...SHADOWS.md,
+    ...SHADOWS.lg, // Upgraded shadow for a floating tech feel
   },
   outlined: {
     backgroundColor: COLORS.card,
-    borderWidth: 1,
+    borderWidth: 1.5, // Slightly bolder borders
     borderColor: COLORS.border,
-    // No shadow for outlined - the border provides definition
   },
   flat: {
-    backgroundColor: COLORS.linen,
+    backgroundColor: COLORS.background, // Match minimalist background
     borderWidth: 0,
     borderColor: 'transparent',
-    // No shadow - flat sits flush with the background
   },
 };
 
-
 /**
  * Card container component.
- *
- * @param {object}   props
- * @param {React.ReactNode} props.children
- * @param {'elevated'|'outlined'|'flat'} [props.variant='elevated']
- * @param {function} [props.onPress]     - Makes the card pressable
- * @param {boolean}  [props.noPadding]   - Remove inner padding
- * @param {object}   [props.style]       - Style override
  */
 const Card = ({
   children,
@@ -60,13 +48,12 @@ const Card = ({
     style,
   ];
 
-  // Pressable card (e.g. pet sitter listing, product result)
   if (onPress) {
     return (
       <TouchableOpacity
         style={cardStyle}
         onPress={onPress}
-        activeOpacity={0.7}
+        activeOpacity={0.8} // Smoother generic opacity
         accessibilityRole="button"
       >
         {children}
@@ -74,19 +61,17 @@ const Card = ({
     );
   }
 
-  // Static card
   return <View style={cardStyle}>{children}</View>;
 };
-
 
 // ---------------------------------------------------------------------------
 // Styles
 // ---------------------------------------------------------------------------
 const styles = StyleSheet.create({
   card: {
-    borderRadius: RADIUS.lg,
-    padding: SPACING.base,
-    marginVertical: SPACING.sm,
+    borderRadius: RADIUS.xl, // Squircular, very modern feel
+    padding: SPACING.lg, // Generous padding
+    marginVertical: SPACING.md,
     overflow: 'hidden',
   },
   noPadding: {

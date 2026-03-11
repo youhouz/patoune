@@ -1,7 +1,6 @@
 // ---------------------------------------------------------------------------
-// Pépète v2.0 - Input Component
-// Reusable text input with floating label, icon, focus animation,
-// and error state. Terracotta focus ring, DM Sans typography.
+// Pépète v4.0 - Input Component (San Francisco Agency Edition)
+// Fluid, high-end floating inputs with beautiful focus states.
 // ---------------------------------------------------------------------------
 
 import React, { useState, useRef, useEffect } from 'react';
@@ -17,27 +16,8 @@ import { Feather } from '@expo/vector-icons';
 import { COLORS, RADIUS, SPACING } from '../utils/colors';
 import { FONTS } from '../utils/typography';
 
-
 /**
- * Reusable text input with label, icon, focus animation, and error state.
- *
- * @param {object}  props
- * @param {string}  [props.label]             - Label text above the input
- * @param {string}  [props.placeholder]       - Placeholder text
- * @param {string}  [props.value]             - Controlled value
- * @param {function} [props.onChangeText]     - Change handler
- * @param {string}  [props.icon]              - Feather icon name (left side)
- * @param {string}  [props.error]             - Error message (shows red border + message)
- * @param {boolean} [props.secureTextEntry]   - Password mode
- * @param {string}  [props.keyboardType]      - Keyboard type
- * @param {boolean} [props.multiline=false]   - Multiline / textarea mode
- * @param {boolean} [props.editable=true]     - Whether input is editable
- * @param {number}  [props.maxLength]         - Max character length
- * @param {string}  [props.autoCapitalize]    - Auto-capitalize setting
- * @param {function} [props.onFocus]          - Focus callback
- * @param {function} [props.onBlur]           - Blur callback
- * @param {object}  [props.style]             - Container style override
- * @param {object}  [props.inputStyle]        - TextInput style override
+ * Reusable ultra-modern text input.
  */
 const Input = ({
   label,
@@ -67,12 +47,11 @@ const Input = ({
   useEffect(() => {
     Animated.timing(focusAnim, {
       toValue: isFocused ? 1 : 0,
-      duration: 200,
+      duration: 300, // Slightly slower curve for luxury feel
       useNativeDriver: false,
     }).start();
   }, [isFocused, focusAnim]);
 
-  // Interpolate border color: rest -> focused (terracotta) or error (red)
   const borderColor = error
     ? COLORS.error
     : focusAnim.interpolate({
@@ -80,10 +59,9 @@ const Input = ({
         outputRange: [COLORS.border, COLORS.primary],
       });
 
-  // Interpolate subtle background shift on focus
   const backgroundColor = focusAnim.interpolate({
     inputRange: [0, 1],
-    outputRange: [COLORS.white, COLORS.primarySoft],
+    outputRange: [COLORS.background, COLORS.white], // Elegant BG shift
   });
 
   const handleFocus = (e) => {
@@ -96,7 +74,6 @@ const Input = ({
     onBlurProp?.(e);
   };
 
-  // Determine if we should show a password toggle
   const isPassword = secureTextEntry;
   const effectiveSecure = isPassword && !isPasswordVisible;
 
@@ -122,6 +99,11 @@ const Input = ({
           {
             borderColor,
             backgroundColor: error ? COLORS.errorSoft : backgroundColor,
+            shadowColor: isFocused ? COLORS.primary : 'transparent',
+            shadowOffset: { width: 0, height: 4 },
+            shadowOpacity: isFocused ? 0.15 : 0,
+            shadowRadius: 10,
+            elevation: isFocused ? 4 : 0,
           },
           multiline && styles.inputWrapperMultiline,
         ]}
@@ -136,7 +118,7 @@ const Input = ({
                 ? COLORS.error
                 : isFocused
                 ? COLORS.primary
-                : COLORS.pebble
+                : COLORS.placeholder
             }
             style={styles.iconLeft}
           />
@@ -174,7 +156,7 @@ const Input = ({
           <Feather
             name={isPasswordVisible ? 'eye-off' : 'eye'}
             size={18}
-            color={COLORS.pebble}
+            color={COLORS.placeholder}
             style={styles.iconRight}
             onPress={() => setIsPasswordVisible((prev) => !prev)}
             suppressHighlighting
@@ -193,21 +175,21 @@ const Input = ({
   );
 };
 
-
 // ---------------------------------------------------------------------------
 // Styles
 // ---------------------------------------------------------------------------
 const styles = StyleSheet.create({
   container: {
-    marginBottom: SPACING.base,
+    marginBottom: SPACING.lg,
   },
 
   // Label
   label: {
-    fontFamily: FONTS.bodyMedium,
+    fontFamily: FONTS.bodySemiBold,
     fontSize: 14,
-    color: COLORS.stone,
-    marginBottom: 6,
+    color: COLORS.textSecondary,
+    marginBottom: 8,
+    letterSpacing: -0.2, // Tech branding
   },
   labelFocused: {
     color: COLORS.primary,
@@ -216,18 +198,18 @@ const styles = StyleSheet.create({
     color: COLORS.error,
   },
 
-  // Input wrapper (the visible "box")
+  // Input wrapper
   inputWrapper: {
     flexDirection: 'row',
     alignItems: 'center',
     borderWidth: 1.5,
-    borderRadius: RADIUS.md,
+    borderRadius: RADIUS.lg,
     paddingHorizontal: SPACING.base,
-    minHeight: 52,
+    minHeight: 56, // Taller, highly clickable inputs
   },
   inputWrapperMultiline: {
     alignItems: 'flex-start',
-    minHeight: 100,
+    minHeight: 120,
     paddingVertical: SPACING.md,
   },
 
@@ -237,41 +219,37 @@ const styles = StyleSheet.create({
   },
   iconRight: {
     marginLeft: SPACING.sm,
-    padding: 4,
+    padding: 6,
   },
 
   // TextInput itself
   input: {
     flex: 1,
-    fontFamily: FONTS.body,
-    fontSize: 15,
+    fontFamily: FONTS.bodyMedium,
+    fontSize: 16, // Larger legibility
     color: COLORS.text,
     paddingVertical: Platform.OS === 'web' ? 14 : 0,
   },
-  inputWithIcon: {
-    // Icon takes care of left spacing via its marginRight
-  },
-  inputWithToggle: {
-    // Toggle icon takes care of right spacing via its marginLeft
-  },
+  inputWithIcon: {},
+  inputWithToggle: {},
   inputMultiline: {
-    paddingTop: Platform.OS === 'web' ? 0 : 4,
-    minHeight: 80,
+    paddingTop: Platform.OS === 'web' ? 0 : 6,
+    minHeight: 100,
   },
   inputDisabled: {
     color: COLORS.pebble,
-    opacity: 0.7,
+    opacity: 0.6,
   },
 
   // Error state
   errorRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginTop: 6,
-    gap: 4,
+    marginTop: 8,
+    gap: 6,
   },
   errorText: {
-    fontFamily: FONTS.body,
+    fontFamily: FONTS.bodyMedium,
     fontSize: 13,
     color: COLORS.error,
   },

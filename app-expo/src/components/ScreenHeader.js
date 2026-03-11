@@ -1,7 +1,5 @@
 // ---------------------------------------------------------------------------
-// Pépète v2.0 - ScreenHeader Component
-// Reusable screen header with SafeArea, back button, title/subtitle,
-// and optional right action area. Supports dark, light, transparent variants.
+// Pépète v4.0 - ScreenHeader Component (San Francisco Agency Edition)
 // ---------------------------------------------------------------------------
 
 import React from 'react';
@@ -17,52 +15,35 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Icon from './Icon';
 import { COLORS, RADIUS, SPACING } from '../utils/colors';
-import { FONTS, TEXT_STYLES } from '../utils/typography';
+import { FONTS } from '../utils/typography';
 
-
-// ---------------------------------------------------------------------------
-// Variant configurations
-// ---------------------------------------------------------------------------
 const VARIANTS = {
   dark: {
-    gradientColors: COLORS.gradientCharcoal,
+    gradientColors: COLORS.gradientDark,
     titleColor: COLORS.textInverse,
-    subtitleColor: 'rgba(255,255,255,0.65)',
+    subtitleColor: 'rgba(255,255,255,0.7)',
     iconColor: COLORS.textInverse,
     statusBarStyle: 'light-content',
     useGradient: true,
   },
   light: {
-    backgroundColor: COLORS.cream,
-    titleColor: COLORS.charcoal,
+    backgroundColor: COLORS.background, // Match minimalist background
+    titleColor: COLORS.text,
     subtitleColor: COLORS.textSecondary,
-    iconColor: COLORS.charcoal,
+    iconColor: COLORS.text,
     statusBarStyle: 'dark-content',
     useGradient: false,
   },
   transparent: {
     backgroundColor: 'transparent',
-    titleColor: COLORS.charcoal,
+    titleColor: COLORS.text,
     subtitleColor: COLORS.textSecondary,
-    iconColor: COLORS.charcoal,
+    iconColor: COLORS.text,
     statusBarStyle: 'dark-content',
     useGradient: false,
   },
 };
 
-
-/**
- * Reusable screen header with SafeArea padding, back navigation,
- * title/subtitle, and an optional right-side action slot.
- *
- * @param {object}  props
- * @param {string}  props.title                         - Header title
- * @param {string}  [props.subtitle]                    - Subtitle text below the title
- * @param {function} [props.onBack]                     - Back button handler (hidden if undefined)
- * @param {React.ReactNode} [props.rightAction]         - Element rendered on the right side
- * @param {'dark'|'light'|'transparent'} [props.variant='light'] - Visual variant
- * @param {object}  [props.style]                       - Additional container style
- */
 const ScreenHeader = ({
   title,
   subtitle,
@@ -77,60 +58,37 @@ const ScreenHeader = ({
   const topPadding = Math.max(insets.top, Platform.OS === 'android' ? StatusBar.currentHeight || 0 : 0);
 
   const content = (
-    <View style={[styles.inner, { paddingTop: topPadding + 12 }, style]}>
+    <View style={[styles.inner, { paddingTop: topPadding + 16 }, style]}>
       <StatusBar barStyle={config.statusBarStyle} />
 
-      {/* Row: Back | Title area | Right action */}
       <View style={styles.row}>
-        {/* Back button */}
         {onBack ? (
           <TouchableOpacity
             style={styles.backButton}
             onPress={onBack}
             activeOpacity={0.7}
-            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+            hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
             accessibilityRole="button"
-            accessibilityLabel="Retour"
           >
-            <Icon
-              name="chevron-left"
-              size={24}
-              color={config.iconColor}
-            />
+            <Icon name="chevron-left" size={24} color={config.iconColor} />
           </TouchableOpacity>
         ) : (
           <View style={styles.backPlaceholder} />
         )}
 
-        {/* Title block */}
         <View style={styles.titleBlock}>
-          <Text
-            style={[
-              styles.title,
-              { color: config.titleColor },
-            ]}
-            numberOfLines={1}
-          >
+          <Text style={[styles.title, { color: config.titleColor }]} numberOfLines={1}>
             {title}
           </Text>
           {subtitle ? (
-            <Text
-              style={[
-                styles.subtitle,
-                { color: config.subtitleColor },
-              ]}
-              numberOfLines={1}
-            >
+            <Text style={[styles.subtitle, { color: config.subtitleColor }]} numberOfLines={1}>
               {subtitle}
             </Text>
           ) : null}
         </View>
 
-        {/* Right action area */}
         {rightAction ? (
-          <View style={styles.rightAction}>
-            {rightAction}
-          </View>
+          <View style={styles.rightAction}>{rightAction}</View>
         ) : (
           <View style={styles.backPlaceholder} />
         )}
@@ -138,7 +96,6 @@ const ScreenHeader = ({
     </View>
   );
 
-  // Dark variant uses a gradient background
   if (config.useGradient) {
     return (
       <LinearGradient
@@ -152,7 +109,6 @@ const ScreenHeader = ({
     );
   }
 
-  // Light and transparent variants use a flat background color
   return (
     <View style={[styles.container, { backgroundColor: config.backgroundColor }]}>
       {content}
@@ -160,54 +116,49 @@ const ScreenHeader = ({
   );
 };
 
-
-// ---------------------------------------------------------------------------
-// Styles
-// ---------------------------------------------------------------------------
 const styles = StyleSheet.create({
-  container: {
-    // Container fills the gradient or background
-  },
+  container: {},
   inner: {
-    paddingHorizontal: SPACING.base,
-    paddingBottom: SPACING.md,
+    paddingHorizontal: SPACING.lg,
+    paddingBottom: SPACING.lg,
   },
   row: {
     flexDirection: 'row',
     alignItems: 'center',
-    minHeight: 44,
+    minHeight: 48,
   },
   backButton: {
-    width: 40,
-    height: 40,
-    borderRadius: RADIUS.md,
+    width: 44,
+    height: 44,
+    borderRadius: RADIUS.full, // Circular icons for high end modern UI
+    backgroundColor: 'rgba(15, 23, 42, 0.05)',
     alignItems: 'center',
     justifyContent: 'center',
   },
   backPlaceholder: {
-    width: 40,
+    width: 44,
   },
   titleBlock: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    paddingHorizontal: SPACING.sm,
+    paddingHorizontal: SPACING.base,
   },
   title: {
     fontFamily: FONTS.heading,
     fontSize: 18,
-    letterSpacing: -0.2,
+    letterSpacing: -0.3, // Modern kerning
     textAlign: 'center',
   },
   subtitle: {
-    fontFamily: FONTS.body,
+    fontFamily: FONTS.bodyMedium,
     fontSize: 13,
-    marginTop: 2,
+    marginTop: 4,
     textAlign: 'center',
   },
   rightAction: {
-    width: 40,
-    height: 40,
+    width: 44,
+    height: 44,
     alignItems: 'center',
     justifyContent: 'center',
   },

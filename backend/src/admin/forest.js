@@ -2,13 +2,24 @@ const { createAgent } = require('@forestadmin/agent');
 const { createMongooseDataSource } = require('@forestadmin/datasource-mongoose');
 const mongoose = require('mongoose');
 
+let agent = null;
+
 const setupForestAdmin = (app) => {
   if (!process.env.FOREST_AUTH_SECRET || !process.env.FOREST_ENV_SECRET) {
-    console.log('⚠️  Forest Admin ignoré : clés manquantes (FOREST_AUTH_SECRET, FOREST_ENV_SECRET).');
-    return;
+    console.log('⚠️ Forest Admin ignoré : clés manquantes.');
+    return null;
   }
 
-  const agent = createAgent({
+  if (agent) return agent;
+
+  // Pre-load modèles
+  require('../models/User');
+  require('../models/Pet');
+  require('../models/PetSitter');
+  require('../models/Product');
+  require('../models/Booking');
+
+  agent = createAgent({
     authSecret: process.env.FOREST_AUTH_SECRET,
     envSecret: process.env.FOREST_ENV_SECRET,
     isProduction: process.env.NODE_ENV === 'production',
@@ -17,11 +28,7 @@ const setupForestAdmin = (app) => {
   agent.addDataSource(createMongooseDataSource(mongoose));
   agent.mountOnExpress(app);
   
-  agent.start().then(() => {
-    console.log('🌲 Forest Admin démarré avec succès !');
-  }).catch((err) => {
-    console.error('❌ Erreur lors du lancement de Forest Admin:', err);
-  });
+  return agent;
 };
 
 module.exports = setupForestAdmin;
