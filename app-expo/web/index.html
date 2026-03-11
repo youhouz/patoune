@@ -33,13 +33,26 @@
     <style>
       /* Reset + PWA base */
       *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-      html, body, #root {
+      html {
         width: 100%; height: 100%;
-        background-color: #F8F6F2;
-        overflow: hidden;
+        background-color: #E8E6E1;
         -webkit-font-smoothing: antialiased;
         -moz-osx-font-smoothing: grayscale;
-        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+      }
+      body {
+        width: 100%; height: 100%;
+        margin: 0;
+        display: flex;
+        justify-content: center;
+        background-color: #E8E6E1;
+      }
+      #root {
+        width: 100%; height: 100%;
+        max-width: 768px;
+        position: relative;
+        background-color: #F8F6F2;
+        overflow: hidden;
+        box-shadow: 0 0 30px rgba(0,0,0,0.05);
       }
 
       /* Remove tap highlight */

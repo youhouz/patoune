@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import {
   View, Text, StyleSheet, Dimensions, TouchableOpacity,
-  Platform, Animated, StatusBar
+  Platform, Animated, StatusBar, ScrollView
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -164,6 +164,11 @@ const OnboardingScreen = ({ onComplete }) => {
         <View style={[styles.orb, styles.orb3]} />
       </View>
 
+      <ScrollView contentContainerStyle={{ flexGrow: 1, justifyContent: 'space-between' }} bounces={false} showsVerticalScrollIndicator={false}>
+        <View style={{ height: insets.top + (isLast ? 0 : 50) }} />
+
+        {/* Skip button is absolute, but inside ScrollView it might scroll, better leave it outside */}
+
       {/* Skip button */}
       {!isLast && (
         <TouchableOpacity style={[styles.skipBtn, { top: insets.top + 12 }]} onPress={handleSkip} activeOpacity={0.7}>
@@ -284,6 +289,7 @@ const OnboardingScreen = ({ onComplete }) => {
           </Text>
         )}
       </Animated.View>
+      </ScrollView>
     </View>
   );
 };
@@ -351,7 +357,8 @@ const styles = StyleSheet.create({
   },
   // Content
   contentArea: {
-    flex: 1,
+    flexGrow: 1,
+    paddingVertical: 40,
     justifyContent: 'center',
   },
   content: {
@@ -506,11 +513,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     marginTop: 22,
-    paddingHorizontal: 8,
+    flexWrap: 'nowrap',
   },
   trustItem: {
     alignItems: 'center',
-    flex: 1,
+    paddingHorizontal: 12,
   },
   trustNumber: {
     fontSize: 16,
