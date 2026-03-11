@@ -2,42 +2,42 @@
 // Brand: Ultra-modern, high-contrast, minimalist, vibrant gradient
 
 const COLORS = {
-  // Brand Primary — Electric Indigo
-  primary: '#4F46E5', // Indigo 600
-  primaryLight: '#818CF8', // Indigo 400
-  primaryDark: '#3730A3', // Indigo 800
-  primarySoft: '#EEF2FF', // Indigo 50
-  primaryGlow: 'rgba(79, 70, 229, 0.25)',
+  // Brand Primary — Olive Sauge (Nature/Animal)
+  primary: '#7B8B6F', // Olive green
+  primaryLight: '#96A88A', // Light sage
+  primaryDark: '#5A6B4F', // Deep olive
+  primarySoft: '#EFF3EC', // Soft sage tint
+  primaryGlow: 'rgba(123, 139, 111, 0.25)',
 
-  // Brand Secondary — Rose/Coral
-  secondary: '#F43F5E', // Rose 500
-  secondaryLight: '#FB7185', // Rose 400
-  secondaryDark: '#BE123C', // Rose 700
-  secondarySoft: '#FFF1F2', // Rose 50
+  // Brand Secondary — Terracotta chaud
+  secondary: '#C4704B', // Warm terracotta
+  secondaryLight: '#D4896A', // Light terracotta
+  secondaryDark: '#A45A38', // Deep terracotta
+  secondarySoft: '#FDF2ED', // Soft peach tint
 
-  // Accent — Emerald 
+  // Accent — Emerald
   accent: '#10B981',
   accentLight: '#34D399',
   accentSoft: '#D1FAE5',
 
-  // Backgrounds - Ultra clean Minimalist
+  // Backgrounds - Warm cream
   white: '#FFFFFF',
-  background: '#F8FAFC', // Slate 50
+  background: '#F8F6F2', // Warm cream
   surface: '#FFFFFF',
   surfaceElevated: '#FFFFFF',
   card: '#FFFFFF',
-  border: '#E2E8F0', // Slate 200
-  borderLight: '#F1F5F9', // Slate 100
-  divider: '#F1F5F9',
+  border: '#E8E4DD', // Warm border
+  borderLight: '#F3F0EB', // Light warm border
+  divider: '#F3F0EB',
 
-  // Text — High contrast slate/black
-  text: '#0F172A', // Slate 900
-  textPrimary: '#0F172A',
-  textSecondary: '#475569', // Slate 600
-  textTertiary: '#94A3B8', // Slate 400
-  textLight: '#CBD5E1', // Slate 300
+  // Text — Warm dark tones
+  text: '#2C2825', // Warm charcoal
+  textPrimary: '#2C2825',
+  textSecondary: '#6B6560', // Warm grey
+  textTertiary: '#A09A94', // Medium warm grey
+  textLight: '#C8C2BC', // Light warm grey
   textInverse: '#FFFFFF',
-  placeholder: '#A1A1AA', // Zinc 400
+  placeholder: '#A09A94',
 
   // Nutrition Scores - Modern styling
   scoreExcellent: '#059669',
@@ -62,28 +62,28 @@ const COLORS = {
   info: '#3B82F6',
   infoSoft: '#DBEAFE',
 
-  // Semantic aliases — Tech minimalist
-  cream: '#F8FAFC',
-  linen: '#F1F5F9',
-  charcoal: '#0F172A',
-  stone: '#475569',
-  pebble: '#94A3B8',
-  sand: '#CBD5E1',
+  // Semantic aliases — Warm nature
+  cream: '#F8F6F2',
+  linen: '#F3F0EB',
+  charcoal: '#2C2825',
+  stone: '#6B6560',
+  pebble: '#A09A94',
+  sand: '#C8C2BC',
 
   // Shadows & Overlays
-  shadow: 'rgba(15, 23, 42, 0.04)',
-  shadowMedium: 'rgba(15, 23, 42, 0.08)',
-  overlay: 'rgba(15, 23, 42, 0.6)',
-  overlayLight: 'rgba(15, 23, 42, 0.3)',
+  shadow: 'rgba(44, 40, 37, 0.04)',
+  shadowMedium: 'rgba(44, 40, 37, 0.08)',
+  overlay: 'rgba(44, 40, 37, 0.6)',
+  overlayLight: 'rgba(44, 40, 37, 0.3)',
 
-  // Gradients for modern glow
-  gradientPrimary: ['#4F46E5', '#6366F1'],
-  gradientWarm: ['#F43F5E', '#FB7185'],
+  // Gradients — Nature & warmth
+  gradientPrimary: ['#7B8B6F', '#96A88A'],
+  gradientWarm: ['#C4704B', '#D4896A'],
   gradientSuccess: ['#10B981', '#34D399'],
-  gradientAccent: ['#06B6D4', '#22D3EE'],
-  gradientDark: ['#0F172A', '#1E293B'],
-  gradientCharcoal: ['#0F172A', '#1E293B'],
-  gradientHero: ['#4F46E5', '#818CF8', '#C7D2FE'],
+  gradientAccent: ['#7B8B6F', '#A3B296'],
+  gradientDark: ['#2C2825', '#4A4540'],
+  gradientCharcoal: ['#2C2825', '#4A4540'],
+  gradientHero: ['#7B8B6F', '#96A88A', '#C5D1BC'],
 };
 
 // Spacing — crisp, geometric rhythm
@@ -129,28 +129,28 @@ const FONT_SIZE = {
 // Modern, diffusion-like shadows
 const SHADOWS = {
   sm: {
-    shadowColor: '#0F172A',
+    shadowColor: '#2C2825',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.04,
     shadowRadius: 4,
     elevation: 2,
   },
   md: {
-    shadowColor: '#0F172A',
+    shadowColor: '#2C2825',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.06,
     shadowRadius: 12,
     elevation: 4,
   },
   lg: {
-    shadowColor: '#0F172A',
+    shadowColor: '#2C2825',
     shadowOffset: { width: 0, height: 8 },
     shadowOpacity: 0.08,
     shadowRadius: 24,
     elevation: 8,
   },
   xl: {
-    shadowColor: '#0F172A',
+    shadowColor: '#2C2825',
     shadowOffset: { width: 0, height: 16 },
     shadowOpacity: 0.1,
     shadowRadius: 32,
@@ -158,7 +158,7 @@ const SHADOWS = {
   },
   glow: function(color) {
     return {
-      shadowColor: color || '#4F46E5',
+      shadowColor: color || '#7B8B6F',
       shadowOffset: { width: 0, height: 8 },
       shadowOpacity: 0.25,
       shadowRadius: 20,
