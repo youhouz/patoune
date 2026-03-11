@@ -97,6 +97,20 @@ for (const icon of iconsToCopy) {
   }
 }
 
+// Copy public/assets files (og-image, etc.) to dist/assets/
+const publicAssetsDir = path.join(__dirname, '..', 'public', 'assets');
+const publicAssetsToCopy = ['og-image.png'];
+for (const file of publicAssetsToCopy) {
+  const src = path.join(publicAssetsDir, file);
+  const dest = path.join(assetsDir, file);
+  if (fs.existsSync(src)) {
+    fs.copyFileSync(src, dest);
+    console.log(`✓ Copied public/assets/${file} → dist/assets/${file}`);
+  } else {
+    console.warn(`⚠ Source asset not found: public/assets/${file}`);
+  }
+}
+
 // Copy PWA files (manifest.json, service-worker.js) to dist/
 const publicDir = path.join(__dirname, '..', 'public');
 const pwaFiles = ['manifest.json', 'service-worker.js'];
@@ -131,10 +145,22 @@ const metaTags = `
     <link rel="apple-touch-icon" href="/assets/icon.png" />
 
     <!-- Open Graph -->
-    <meta property="og:title" content="Pépète" />
-    <meta property="og:description" content="Le compagnon de vos compagnons" />
+    <meta property="og:title" content="Pépète — Le compagnon de vos compagnons" />
+    <meta property="og:description" content="Scanner produits, garde animaux, assistant IA. Tout pour le bien-être de vos animaux." />
     <meta property="og:type" content="website" />
-    <meta property="og:image" content="/assets/icon.png" />
+    <meta property="og:url" content="https://pepete-front.vercel.app" />
+    <meta property="og:site_name" content="Pépète" />
+    <meta property="og:image" content="https://pepete-front.vercel.app/assets/og-image.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:type" content="image/png" />
+    <meta property="og:locale" content="fr_FR" />
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Pépète — Le compagnon de vos compagnons" />
+    <meta name="twitter:description" content="Scanner produits, garde animaux, assistant IA. Tout pour le bien-être de vos animaux." />
+    <meta name="twitter:image" content="https://pepete-front.vercel.app/assets/og-image.png" />
 `;
 
 if (html.includes('</head>')) {
