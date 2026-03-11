@@ -1,7 +1,7 @@
 import React, { useState, useCallback, useRef, useEffect } from 'react';
 import {
   View, Text, ScrollView, TouchableOpacity, StyleSheet,
-  Platform, StatusBar, Dimensions, RefreshControl, Animated, Image,
+  Platform, StatusBar, Dimensions, RefreshControl, Animated, Image, Modal, Alert,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useFocusEffect } from '@react-navigation/native';
@@ -71,18 +71,20 @@ const FeatureCard = ({ icon, title, subtitle, bgColor, textColor, iconBg, onPres
 );
 
 // ─── News card ───────────────────────────────────────────────
-const NewsCard = ({ title, category, image, color }) => (
-  <View style={s.newsCard}>
-    <View style={[s.newsImagePlaceholder, { backgroundColor: color + '20' }]}>
-      <Text style={{ fontSize: 40 }}>{image}</Text>
-    </View>
-    <View style={s.newsContent}>
-      <View style={[s.newsCategoryBadge, { backgroundColor: color + '18' }]}>
-        <Text style={[s.newsCategoryText, { color }]}>{category}</Text>
+const NewsCard = ({ title, category, image, color, onPress }) => (
+  <PressableCard onPress={onPress}>
+    <View style={s.newsCard}>
+      <View style={[s.newsImagePlaceholder, { backgroundColor: color + '20' }]}>
+        <Text style={{ fontSize: 40 }}>{image}</Text>
       </View>
-      <Text style={s.newsTitle} numberOfLines={2}>{title}</Text>
+      <View style={s.newsContent}>
+        <View style={[s.newsCategoryBadge, { backgroundColor: color + '18' }]}>
+          <Text style={[s.newsCategoryText, { color }]}>{category}</Text>
+        </View>
+        <Text style={s.newsTitle} numberOfLines={2}>{title}</Text>
+      </View>
     </View>
-  </View>
+  </PressableCard>
 );
 
 // ─── Pet Avatar ──────────────────────────────────────────────
@@ -104,6 +106,7 @@ const HomeScreen = ({ navigation }) => {
   const [bookings, setBookings] = useState([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [selectedNews, setSelectedNews] = useState(null);
 
   const fetchData = async () => {
     if (!user) { setLoading(false); return; }
@@ -131,9 +134,33 @@ const HomeScreen = ({ navigation }) => {
 
   // ── News data ──
   const newsItems = [
-    { title: '10 aliments dangereux pour votre chat', category: 'Nutrition', image: '🐱', color: '#E67E22' },
-    { title: 'Comment choisir le bon pet-sitter ?', category: 'Garde', image: '🏡', color: COLORS.primary },
-    { title: 'Les bienfaits du jeu pour les chiens', category: 'Bien-être', image: '🎾', color: '#4ECBA0' },
+    {
+      title: '10 aliments dangereux pour votre chat',
+      category: 'Nutrition',
+      image: '🐱',
+      color: '#E67E22',
+      date: 'Aujourd\'hui',
+      author: 'Dr. Martin',
+      content: "Certains aliments que nous consommons tous les jours peuvent être extrêmement toxiques pour les chats.\n\nLe chocolat, particulièrement le chocolat noir, contient de la théobromine, qui peut provoquer des troubles cardiaques et nerveux.\n\nLes oignons et l'ail sont également dangereux car ils peuvent endommager les globules rouges. Attention aussi aux produits laitiers, car beaucoup de chats adultes sont intolérants au lactose.\n\nEn cas d'ingestion, contactez immédiatement votre clinique vétérinaire pour une prise en charge rapide."
+    },
+    {
+      title: 'Comment choisir le bon pet-sitter ?',
+      category: 'Garde',
+      image: '🏡',
+      color: COLORS.primary,
+      date: 'Hier',
+      author: 'Equipe Pépète',
+      content: "Confier son animal n'est jamais une étape facile. Commencez par organiser une rencontre avant la garde pour voir comment le pet-sitter interagit avec votre compagnon.\n\nPosez des questions sur son expérience, demandez quelles sont ses procédures en cas d'urgence et s'il a l'habitude de gérer la race ou l'espèce de l'animal en question.\n\nSur Pépète, tenez compte de la certification et lisez toujours les avis des autres propriétaires pour vous assurer un départ serein."
+    },
+    {
+      title: 'Les bienfaits du jeu pour les chiens',
+      category: 'Bien-être',
+      image: '🎾',
+      color: '#4ECBA0',
+      date: 'Il y a 3 jours',
+      author: 'Sophie L.',
+      content: "Le jeu ne sert pas qu'à divertir votre chien : c'est un élément fondamental de son équilibre physique et psychologique.\n\nDes jeux interactifs, comme la balle ou le cache-cache, stimulent ses capacités cognitives et renforcent votre lien affectif avec lui.\n\nIl est recommandé d'accorder au minimum 30 minutes de jeu par jour, en variant les exercices pour éviter l'ennui et réduire le stress ou l'anxiété de votre animal."
+    },
   ];
 
   return (
@@ -217,6 +244,26 @@ const HomeScreen = ({ navigation }) => {
               textColor="#FFFFFF"
               iconBg="rgba(255,255,255,0.22)"
               onPress={() => navigation.navigate('Profil', { screen: 'MyPets' })}
+            />
+          </View>
+          <View style={s.featuresRow}>
+            <FeatureCard
+              icon="⚕️"
+              title="Vétérinaire"
+              subtitle="Bientôt"
+              bgColor="#F2F2F2"
+              textColor="#909090"
+              iconBg="#E6E6E6"
+              onPress={() => Alert.alert('Bientôt disponible', 'Cette fonctionnalité sera bientôt disponible !')}
+            />
+            <FeatureCard
+              icon="🛍️"
+              title="Shopping"
+              subtitle="Bientôt"
+              bgColor="#F2F2F2"
+              textColor="#909090"
+              iconBg="#E6E6E6"
+              onPress={() => Alert.alert('Bientôt disponible', 'La boutique arrive très prochainement !')}
             />
           </View>
         </AnimatedSection>
@@ -317,7 +364,7 @@ const HomeScreen = ({ navigation }) => {
           </View>
           <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={s.newsScroll}>
             {newsItems.map((item, idx) => (
-              <NewsCard key={idx} {...item} />
+              <NewsCard key={idx} {...item} onPress={() => setSelectedNews(item)} />
             ))}
           </ScrollView>
         </AnimatedSection>
@@ -342,6 +389,44 @@ const HomeScreen = ({ navigation }) => {
 
         <View style={{ height: 40 }} />
       </ScrollView>
+
+      {/* ── News Reader Modal ── */}
+      <Modal visible={!!selectedNews} animationType="slide" transparent={false} onRequestClose={() => setSelectedNews(null)}>
+        <View style={s.newsModalContainer}>
+          {/* Header image with gradient overlay */}
+          <View style={[s.newsModalHeader, { backgroundColor: selectedNews?.color + '20' }]}>
+            <LinearGradient colors={['rgba(0,0,0,0.4)', 'transparent']} style={StyleSheet.absoluteFill} />
+            <Text style={{ fontSize: 90, alignSelf: 'center', marginTop: 40 }}>{selectedNews?.image}</Text>
+            
+            <TouchableOpacity style={[s.newsModalClose, { top: insets.top + 10 }]} onPress={() => setSelectedNews(null)}>
+              <Text style={s.newsModalCloseText}>✕</Text>
+            </TouchableOpacity>
+          </View>
+
+          {/* Draggable-like content area */}
+          <View style={s.newsModalContentWrap}>
+            <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={s.newsModalScroll}>
+              <View style={s.newsModalBadgeRow}>
+                <View style={[s.newsCategoryBadge, { backgroundColor: selectedNews?.color + '20' }]}>
+                  <Text style={[s.newsCategoryText, { color: selectedNews?.color }]}>{selectedNews?.category}</Text>
+                </View>
+                <Text style={s.newsModalDate}>{selectedNews?.date}</Text>
+              </View>
+
+              <Text style={s.newsModalTitle}>{selectedNews?.title}</Text>
+              
+              <View style={s.newsModalAuthorRow}>
+                <View style={s.newsModalAuthorBadge}><Text>✍️</Text></View>
+                <Text style={s.newsModalAuthorName}>{selectedNews?.author}</Text>
+              </View>
+
+              <Text style={s.newsModalBody}>{selectedNews?.content}</Text>
+              <View style={{ height: 60 }} />
+            </ScrollView>
+          </View>
+        </View>
+      </Modal>
+
     </View>
   );
 };
@@ -616,6 +701,31 @@ const s = StyleSheet.create({
     fontFamily: FONTS.heading,
     fontSize: 22, color: '#FFF', marginLeft: 8,
   },
+
+  // ── News Modal ──
+  newsModalContainer: { flex: 1, backgroundColor: '#FFF' },
+  newsModalHeader: { height: 260, justifyContent: 'center', alignItems: 'center' },
+  newsModalClose: {
+    position: 'absolute', right: 20,
+    width: 40, height: 40, borderRadius: 20,
+    backgroundColor: 'rgba(0,0,0,0.3)',
+    alignItems: 'center', justifyContent: 'center'
+  },
+  newsModalCloseText: { color: '#FFF', fontSize: 20, fontWeight: 'bold' },
+  newsModalContentWrap: {
+    flex: 1, backgroundColor: '#FFF',
+    borderTopLeftRadius: RADIUS.xl, borderTopRightRadius: RADIUS.xl,
+    marginTop: -30, paddingTop: 24, paddingHorizontal: SPACING.xl,
+  },
+  newsModalScroll: { paddingBottom: 40 },
+  newsModalBadgeRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 },
+  newsModalDate: { color: COLORS.textSecondary, fontFamily: FONTS.body, fontSize: 13 },
+  newsModalTitle: { fontFamily: FONTS.brand, fontSize: 26, color: COLORS.text, marginBottom: 16, lineHeight: 32 },
+  newsModalAuthorRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 24, paddingBottom: 24, borderBottomWidth: 1, borderBottomColor: '#F0F0F0' },
+  newsModalAuthorBadge: { width: 36, height: 36, borderRadius: 18, backgroundColor: '#F4F4F4', alignItems: 'center', justifyContent: 'center', marginRight: 12 },
+  newsModalAuthorName: { fontFamily: FONTS.heading, fontSize: 15, color: COLORS.textSecondary },
+  newsModalBody: { fontFamily: FONTS.body, fontSize: 16, color: COLORS.text, lineHeight: 26 },
+
 });
 
 export default HomeScreen;
