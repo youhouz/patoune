@@ -44,7 +44,7 @@ const ScannerScreen = ({ navigation }) => {
   const [permission, requestPermission] = useCameraPermissions();
   const [barcode, setBarcode] = useState('');
   const [scanning, setScanning] = useState(false);
-  const [manualMode, setManualMode] = useState(Platform.OS === 'web');
+  const [manualMode, setManualMode] = useState(false);
   const [scanned, setScanned] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
 
@@ -539,15 +539,8 @@ const ScannerScreen = ({ navigation }) => {
               style={[
                 styles.toggleOption,
                 !manualMode && styles.toggleOptionActive,
-                Platform.OS === 'web' && manualMode && styles.toggleOptionDisabled,
               ]}
-              onPress={() => {
-                if (Platform.OS === 'web') {
-                  showError('Le scan camera necessite l\'app mobile. Utilisez la saisie manuelle.');
-                  return;
-                }
-                setManualMode(false);
-              }}
+              onPress={() => setManualMode(false)}
               activeOpacity={0.7}
             >
               {!manualMode && (

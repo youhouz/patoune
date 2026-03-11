@@ -1,6 +1,6 @@
 import React, { useState, useCallback, useRef, useEffect } from 'react';
 import {
-  View, Text, ScrollView, TouchableOpacity, StyleSheet,
+  View, Text, ScrollView, TouchableOpacity, StyleSheet, TextInput,
   Platform, StatusBar, Dimensions, RefreshControl, Animated, Image, Modal, Alert,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -107,6 +107,8 @@ const HomeScreen = ({ navigation }) => {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [selectedNews, setSelectedNews] = useState(null);
+  const [searchModalVisible, setSearchModalVisible] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
 
   const fetchData = async () => {
     if (!user) { setLoading(false); return; }
@@ -198,7 +200,7 @@ const HomeScreen = ({ navigation }) => {
 
         {/* ── Search bar ── */}
         <AnimatedSection delay={80} style={s.searchSection}>
-          <TouchableOpacity style={s.searchBar} onPress={() => navigation.navigate('Scanner')} activeOpacity={0.8}>
+          <TouchableOpacity style={s.searchBar} onPress={() => setSearchModalVisible(true)} activeOpacity={0.8}>
             <Text style={s.searchIcon}>🔍</Text>
             <Text style={s.searchPlaceholder}>Rechercher un produit, un gardien...</Text>
           </TouchableOpacity>
@@ -424,6 +426,59 @@ const HomeScreen = ({ navigation }) => {
               <View style={{ height: 60 }} />
             </ScrollView>
           </View>
+        </View>
+      </Modal>
+
+      {/* ── Global Search Modal ── */}
+      <Modal visible={searchModalVisible} animationType="fade" transparent={false} onRequestClose={() => setSearchModalVisible(false)}>
+        <View style={[s.searchModalContainer, { paddingTop: insets.top + 10 }]}>
+          <View style={s.searchModalHeader}>
+            <TouchableOpacity onPress={() => setSearchModalVisible(false)} style={s.searchModalBack}>
+              <Text style={{ fontSize: 24, color: COLORS.text }}>←</Text>
+            </TouchableOpacity>
+            <View style={s.searchModalInputWrap}>
+              <Text style={s.searchIcon}>🔍</Text>
+              <TextInput
+                style={s.searchModalInput}
+                placeholder="Rechercher sur Pépète..."
+                autoFocus={true}
+                value={searchQuery}
+                onChangeText={setSearchQuery}
+                placeholderTextColor={COLORS.textTertiary}
+              />
+              {searchQuery.length > 0 && (
+                <TouchableOpacity onPress={() => setSearchQuery('')}>
+                  <Text style={{ fontSize: 18, color: COLORS.textLight }}>✕</Text>
+                </TouchableOpacity>
+              )}
+            </View>
+          </View>
+          
+          <ScrollView contentContainerStyle={s.searchModalBody} keyboardShouldPersistTaps="handled">
+            <Text style={s.searchSectionTitle}>Suggestions rapides</Text>
+            <TouchableOpacity style={s.searchSuggestion} onPress={() => { setSearchModalVisible(false); navigation.navigate('Scanner'); }}>
+              <Text style={s.searchSuggestionEmoji}>📷</Text>
+              <Text style={s.searchSuggestionText}>Scanner un produit</Text>
+              <Text style={s.searchSuggestionArrow}>→</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={s.searchSuggestion} onPress={() => { setSearchModalVisible(false); navigation.navigate('Garde'); }}>
+              <Text style={s.searchSuggestionEmoji}>🏡</Text>
+              <Text style={s.searchSuggestionText}>Trouver un pet-sitter</Text>
+              <Text style={s.searchSuggestionArrow}>→</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={s.searchSuggestion} onPress={() => { setSearchModalVisible(false); navigation.navigate('Assistant'); }}>
+              <Text style={s.searchSuggestionEmoji}>🤖</Text>
+              <Text style={s.searchSuggestionText}>Poser une question à l'IA</Text>
+              <Text style={s.searchSuggestionArrow}>→</Text>
+            </TouchableOpacity>
+
+            {searchQuery.length > 2 && (
+               <View style={s.searchModalPlaceholder}>
+                 <Text style={s.searchModalPlaceholderEmoji}>🚧</Text>
+                 <Text style={s.searchModalPlaceholderText}>Recherche globale de contenus bientôt disponible ! (Résultats pour "{searchQuery}")</Text>
+               </View>
+            )}
+          </ScrollView>
         </View>
       </Modal>
 
@@ -725,6 +780,22 @@ const s = StyleSheet.create({
   newsModalAuthorBadge: { width: 36, height: 36, borderRadius: 18, backgroundColor: '#F4F4F4', alignItems: 'center', justifyContent: 'center', marginRight: 12 },
   newsModalAuthorName: { fontFamily: FONTS.heading, fontSize: 15, color: COLORS.textSecondary },
   newsModalBody: { fontFamily: FONTS.body, fontSize: 16, color: COLORS.text, lineHeight: 26 },
+
+  // ── Search Modal ──
+  searchModalContainer: { flex: 1, backgroundColor: COLORS.background },
+  searchModalHeader: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: SPACING.xl, paddingBottom: 16, borderBottomWidth: 1, borderBottomColor: COLORS.borderLight },
+  searchModalBack: { marginRight: 16 },
+  searchModalInputWrap: { flex: 1, flexDirection: 'row', alignItems: 'center', backgroundColor: '#FFF', borderRadius: RADIUS.lg, paddingHorizontal: 16, height: 48, ...SHADOWS.sm },
+  searchModalInput: { flex: 1, fontFamily: FONTS.body, fontSize: 16, color: COLORS.text },
+  searchModalBody: { padding: SPACING.xl },
+  searchSectionTitle: { fontFamily: FONTS.heading, fontSize: 16, color: COLORS.textSecondary, marginBottom: 16 },
+  searchSuggestion: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#FFF', padding: 16, borderRadius: RADIUS.lg, marginBottom: 12, ...SHADOWS.sm },
+  searchSuggestionEmoji: { fontSize: 22, marginRight: 16 },
+  searchSuggestionText: { flex: 1, fontFamily: FONTS.bodySemiBold, fontSize: 16, color: COLORS.text },
+  searchSuggestionArrow: { fontFamily: FONTS.heading, fontSize: 18, color: COLORS.textLight },
+  searchModalPlaceholder: { alignItems: 'center', marginTop: 40, padding: 20 },
+  searchModalPlaceholderEmoji: { fontSize: 40, marginBottom: 12 },
+  searchModalPlaceholderText: { fontFamily: FONTS.body, fontSize: 15, color: COLORS.textSecondary, textAlign: 'center', lineHeight: 22 },
 
 });
 
