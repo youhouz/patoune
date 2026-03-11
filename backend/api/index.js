@@ -17,7 +17,6 @@ app.use(helmet());
 app.use(cors(corsOptions));
 app.use(express.json({ limit: '1mb' }));
 
-// Middleware interne (Express handle)
 app.use(async (req, res, next) => {
   try {
     await connectDB();
@@ -50,20 +49,23 @@ app.use(require('../src/middleware/errorHandler'));
 let isForestStarted = false;
 
 module.exports = async (req, res) => {
-  // Toujours s'assurer d'être connecté à la bdd avant de lancer l'agent Forest
   await connectDB();
   
+  // Correction Vercel Serverless (Serverless functions restart from cold start)
   if (agent && !isForestStarted) {
     try {
-      console.log('Démarrage de Forest Admin...');
-      await agent.start();
+      console.log('Démarrage synchrone de Forest Admin pour Vercel...');
+      await agent.start(); // Il FAUT attendre l'initialisation complète pour les requêtes /forest
       isForestStarted = true;
-      console.log('Forest Admin démarré avec succès');
     } catch (e) {
-      console.error('Erreur Forest:', e);
+      console.error('Erreur lancement Forest:', e);
     }
   }
 
-  // Passer la requête à l'application web Express
+  // Permet de loguer quand la frame passe sur Vercel
+  if(req.url.startsWith('/forest')) {
+     console.log('Appel spécifique vers Forest API sur : ', req.url);
+  }
+
   return app(req, res);
 };

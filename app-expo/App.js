@@ -107,6 +107,15 @@ const styles = StyleSheet.create({
   root: {
     flex: 1,
     backgroundColor: COLORS.background,
+    ...Platform.select({
+      web: {
+        maxWidth: 768,
+        width: '100%',
+        marginHorizontal: 'auto',
+        overflow: 'hidden',
+        boxShadow: '0px 0px 30px rgba(0,0,0,0.05)',
+      }
+    })
   },
   errorContainer: {
     flex: 1,

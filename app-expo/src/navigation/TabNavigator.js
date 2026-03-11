@@ -84,31 +84,32 @@ const TAB_CONFIG = {
   Profil:    { emoji: '👤', label: 'Profil' },
 };
 
-// Premium pill tab with glow effect on active
-const TabIcon = ({ routeName, focused }) => (
-  <View style={styles.tabItem}>
-    <View style={[styles.iconPill, focused && styles.iconPillActive]}>
-      <Text style={[styles.tabEmoji, focused && styles.tabEmojiActive]}>
-        {TAB_CONFIG[routeName]?.emoji || '•'}
-      </Text>
-    </View>
-    <Text style={[styles.tabLabel, focused && styles.tabLabelActive]}>
-      {TAB_CONFIG[routeName]?.label}
-    </Text>
-  </View>
-);
-
 const TabNavigator = () => (
   <Tab.Navigator
     screenOptions={({ route }) => ({
       headerShown: false,
-      tabBarIcon: ({ focused }) => <TabIcon routeName={route.name} focused={focused} />,
-      tabBarLabel: () => null,
+      tabBarIcon: ({ focused }) => (
+        <View style={[styles.iconPill, focused && styles.iconPillActive]}>
+          <Text style={[styles.tabEmoji, focused && styles.tabEmojiActive]}>
+            {TAB_CONFIG[route.name]?.emoji || '•'}
+          </Text>
+        </View>
+      ),
+      tabBarLabel: ({ focused }) => (
+        <Text style={[styles.tabLabel, focused && styles.tabLabelActive]}>
+          {TAB_CONFIG[route.name]?.label}
+        </Text>
+      ),
+      tabBarItemStyle: {
+        flexDirection: 'column',
+        justifyContent: 'center',
+        alignItems: 'center',
+      },
       tabBarActiveTintColor: colors.primary,
       tabBarInactiveTintColor: colors.textLight,
       tabBarStyle: {
-        height: Platform.OS === 'ios' ? 88 : Platform.OS === 'web' ? 68 : 70,
-        paddingBottom: Platform.OS === 'ios' ? 24 : Platform.OS === 'web' ? 8 : 6,
+        height: Platform.OS === 'ios' ? 88 : Platform.OS === 'web' ? 76 : 70,
+        paddingBottom: Platform.OS === 'ios' ? 24 : Platform.OS === 'web' ? 12 : 8,
         paddingTop: 8,
         backgroundColor: colors.white,
         borderTopWidth: 0,
