@@ -3,12 +3,17 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createStackNavigator } from '@react-navigation/stack';
 import { View, Text, StyleSheet, Platform } from 'react-native';
 import { Feather } from '@expo/vector-icons';
+import { useAuth } from '../context/AuthContext';
 import HomeScreen from '../screens/HomeScreen';
 import ScannerNavigator from './ScannerNavigator';
 import PetSittersListScreen from '../screens/petsitting/PetSittersListScreen';
 import PetSitterDetailScreen from '../screens/petsitting/PetSitterDetailScreen';
 import BookingScreen from '../screens/petsitting/BookingScreen';
 import MessagesScreen from '../screens/petsitting/MessagesScreen';
+import AIAssistantScreen from '../screens/ai/AIAssistantScreen';
+import GuestGateScreen from '../screens/auth/GuestGateScreen';
+import LoginScreen from '../screens/auth/LoginScreen';
+import RegisterScreen from '../screens/auth/RegisterScreen';
 import ProfileScreen from '../screens/profile/ProfileScreen';
 import MyPetsScreen from '../screens/profile/MyPetsScreen';
 import AddPetScreen from '../screens/profile/AddPetScreen';
@@ -37,30 +42,47 @@ const stackScreenOptions = {
   cardStyle: { backgroundColor: colors.background },
 };
 
-const PetSittingNavigator = () => (
-  <PetSittingStack.Navigator screenOptions={stackScreenOptions}>
-    <PetSittingStack.Screen name="PetSittersList" component={PetSittersListScreen} options={{ headerShown: false }} />
-    <PetSittingStack.Screen name="PetSitterDetail" component={PetSitterDetailScreen} options={{ headerShown: false }} />
-    <PetSittingStack.Screen name="Booking" component={BookingScreen} options={{ title: 'Réserver' }} />
-    <PetSittingStack.Screen name="Messages" component={MessagesScreen} options={{ title: 'Messages' }} />
-  </PetSittingStack.Navigator>
-);
+const PetSittingNavigator = () => {
+  const { user } = useAuth();
+  if (!user) return <GuestGateScreen />;
+  return (
+    <PetSittingStack.Navigator screenOptions={stackScreenOptions}>
+      <PetSittingStack.Screen name="PetSittersList" component={PetSittersListScreen} options={{ headerShown: false }} />
+      <PetSittingStack.Screen name="PetSitterDetail" component={PetSitterDetailScreen} options={{ headerShown: false }} />
+      <PetSittingStack.Screen name="Booking" component={BookingScreen} options={{ title: 'Réserver' }} />
+      <PetSittingStack.Screen name="Messages" component={MessagesScreen} options={{ title: 'Messages' }} />
+    </PetSittingStack.Navigator>
+  );
+};
 
-const ProfileNavigator = () => (
-  <ProfileStack.Navigator screenOptions={stackScreenOptions}>
-    <ProfileStack.Screen name="ProfileMain" component={ProfileScreen} options={{ headerShown: false }} />
-    <ProfileStack.Screen name="MyPets" component={MyPetsScreen} options={{ title: 'Mes Animaux' }} />
-    <ProfileStack.Screen name="AddPet" component={AddPetScreen} options={{ title: 'Nouvel Animal' }} />
-    <ProfileStack.Screen name="Settings" component={SettingsScreen} options={{ title: 'Réglages' }} />
-  </ProfileStack.Navigator>
+const ProfileNavigator = () => {
+  const { user } = useAuth();
+  if (!user) return <GuestGateScreen />;
+  return (
+    <ProfileStack.Navigator screenOptions={stackScreenOptions}>
+      <ProfileStack.Screen name="ProfileMain" component={ProfileScreen} options={{ headerShown: false }} />
+      <ProfileStack.Screen name="MyPets" component={MyPetsScreen} options={{ title: 'Mes Animaux' }} />
+      <ProfileStack.Screen name="AddPet" component={AddPetScreen} options={{ title: 'Nouvel Animal' }} />
+      <ProfileStack.Screen name="Settings" component={SettingsScreen} options={{ title: 'Réglages' }} />
+    </ProfileStack.Navigator>
+  );
+};
+
+const AuthStack = createStackNavigator();
+const AuthNavigatorStack = () => (
+  <AuthStack.Navigator screenOptions={{ headerShown: false }}>
+    <AuthStack.Screen name="Login" component={LoginScreen} />
+    <AuthStack.Screen name="Register" component={RegisterScreen} />
+  </AuthStack.Navigator>
 );
 
 // Tab configuration with Feather icon and label
 const TAB_CONFIG = {
-  Accueil: { icon: 'home', label: 'Accueil' },
-  Scanner: { icon: 'camera', label: 'Scanner' },
-  Garde:   { icon: 'heart', label: 'Garde' },
-  Profil:  { icon: 'user', label: 'Profil' },
+  Accueil:   { icon: 'home', label: 'Accueil' },
+  Scanner:   { icon: 'maximize', label: 'Scanner' },
+  Garde:     { icon: 'users', label: 'Garde' },
+  Assistant: { icon: 'message-circle', label: 'IA' },
+  Profil:    { icon: 'user', label: 'Profil' },
 };
 
 const TabIcon = ({ routeName, focused }) => {
@@ -103,7 +125,14 @@ const TabNavigator = () => (
     <Tab.Screen name="Accueil" component={HomeScreen} />
     <Tab.Screen name="Scanner" component={ScannerNavigator} />
     <Tab.Screen name="Garde" component={PetSittingNavigator} />
+    <Tab.Screen name="Assistant" component={AIAssistantScreen} />
     <Tab.Screen name="Profil" component={ProfileNavigator} />
+    {/* Hidden screen for auth flows */}
+    <Tab.Screen
+      name="AuthStack"
+      component={AuthNavigatorStack}
+      options={{ tabBarButton: () => null, tabBarStyle: { display: 'none' } }}
+    />
   </Tab.Navigator>
 );
 

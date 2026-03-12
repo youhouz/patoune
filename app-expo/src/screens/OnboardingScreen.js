@@ -158,7 +158,7 @@ const OnboardingScreen = ({ onComplete }) => {
       />
 
       {/* Animated floating orbs */}
-      <View style={styles.orbContainer}>
+      <View style={styles.orbContainer} pointerEvents="none">
         <Animated.View style={[styles.orb, styles.orb1, { transform: [{ translateY: orbTranslate1 }] }]} />
         <Animated.View style={[styles.orb, styles.orb2, { transform: [{ translateY: orbTranslate2 }] }]} />
         <View style={[styles.orb, styles.orb3]} />

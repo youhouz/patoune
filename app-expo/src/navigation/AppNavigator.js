@@ -1,11 +1,15 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { NavigationContainer } from '@react-navigation/native';
-import { View, Text, StyleSheet, StatusBar, Animated } from 'react-native';
+import { View, Text, StyleSheet, StatusBar, Animated, Platform } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useAuth } from '../context/AuthContext';
 import { PawIcon } from '../components/Logo';
-import AuthNavigator from './AuthNavigator';
 import TabNavigator from './TabNavigator';
+import OnboardingScreen from '../screens/OnboardingScreen';
+import PWAInstallBanner from '../components/PWAInstallBanner';
+
+const ONBOARDING_KEY = 'onboarding_v3';
 
 // ─── Animated Splash Screen ──────────────────────────────
 const SplashLoader = () => {
@@ -71,13 +75,56 @@ const SplashLoader = () => {
 // ─── App Navigator ───────────────────────────────────────
 const AppNavigator = () => {
   const { user, loading } = useAuth();
+  const [showOnboarding, setShowOnboarding] = useState(null);
+  const navigationRef = useRef(null);
 
-  if (loading) return <SplashLoader />;
+  useEffect(() => {
+    if (loading) return;
+    // On web: show onboarding whenever user is not logged in
+    // (prevents localStorage key from blocking the welcome slides)
+    if (Platform.OS === 'web') {
+      setShowOnboarding(!user);
+    } else {
+      AsyncStorage.getItem(ONBOARDING_KEY).then((val) => {
+        setShowOnboarding(!val);
+      });
+    }
+  }, [loading, user]);
 
+  const handleOnboardingComplete = async () => {
+    if (Platform.OS !== 'web') {
+      await AsyncStorage.setItem(ONBOARDING_KEY, 'true');
+    }
+    setShowOnboarding(false);
+  };
+
+  // Show splash while loading auth state or checking onboarding flag
+  if (loading || showOnboarding === null) return <SplashLoader />;
+
+  // Unauthenticated visitors see the onboarding slider first
+  if (showOnboarding && !user) {
+    return <OnboardingScreen onComplete={handleOnboardingComplete} />;
+  }
+
+  // Full app — Scanner & AI are accessible without login (guest mode)
   return (
-    <NavigationContainer>
-      {user ? <TabNavigator /> : <AuthNavigator />}
-    </NavigationContainer>
+    <View style={{ flex: 1 }}>
+      <NavigationContainer
+        ref={navigationRef}
+        onReady={() => {
+          // On web, always reset to Accueil to ignore any saved /login URL
+          if (Platform.OS === 'web') {
+            navigationRef.current?.resetRoot({
+              index: 0,
+              routes: [{ name: 'Accueil' }],
+            });
+          }
+        }}
+      >
+        <TabNavigator />
+      </NavigationContainer>
+      <PWAInstallBanner />
+    </View>
   );
 };
 
