@@ -69,13 +69,13 @@ const RegisterScreen = ({ navigation }) => {
       <StatusBar barStyle="dark-content" />
       <ScrollView
         style={{ flex: 1 }}
-        contentContainerStyle={s.scroll}
+        contentContainerStyle={[s.scroll, { flexGrow: 1 }]}
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
       >
         {/* ── Blobs décoratifs ── */}
-        <View style={s.blob1} />
-        <View style={s.blob2} />
+        <View style={s.blob1} pointerEvents="none" />
+        <View style={s.blob2} pointerEvents="none" />
 
         {/* ── En-tête ── */}
         <View style={[s.header, { maxWidth: maxW, alignSelf: 'center', width: '100%' }]}>
