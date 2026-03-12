@@ -172,6 +172,7 @@ const HomeScreen = ({ navigation }) => {
     <View style={s.container}>
       <StatusBar barStyle="light-content" />
       <ScrollView
+        style={{ flex: 1 }}
         showsVerticalScrollIndicator={false}
         contentContainerStyle={s.scrollContent}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={COLORS.primary} />}

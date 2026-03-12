@@ -19,7 +19,6 @@ import MyPetsScreen from '../screens/profile/MyPetsScreen';
 import AddPetScreen from '../screens/profile/AddPetScreen';
 import SettingsScreen from '../screens/profile/SettingsScreen';
 const colors = require('../utils/colors');
-const { SHADOWS } = require('../utils/colors');
 
 const Tab = createBottomTabNavigator();
 const PetSittingStack = createStackNavigator();
@@ -118,7 +117,11 @@ const TabNavigator = () => (
         backgroundColor: colors.white,
         borderTopWidth: 1,
         borderTopColor: colors.borderLight,
-        ...SHADOWS.lg,
+        shadowColor: '#2C3E2F',
+        shadowOffset: { width: 0, height: -4 },
+        shadowOpacity: 0.06,
+        shadowRadius: 12,
+        elevation: 8,
       },
     })}
   >
