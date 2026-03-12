@@ -6,103 +6,24 @@ import {
   ScrollView,
   TouchableOpacity,
   StyleSheet,
+  Alert,
   Switch,
   Platform,
   StatusBar,
   KeyboardAvoidingView,
   ActivityIndicator,
   Animated,
-  Dimensions,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
+import { Feather } from '@expo/vector-icons';
 import { useAuth } from '../../context/AuthContext';
-import { showAlert } from '../../utils/alert';
+import { PawIcon } from '../../components/Logo';
 import api from '../../api/client';
-import { FONTS, TEXT_STYLES } from '../../utils/typography';
-import PepeteLogo from '../../components/PepeteLogo';
 const colors = require('../../utils/colors');
 const { SHADOWS, RADIUS, SPACING, FONT_SIZE } = require('../../utils/colors');
 
 const HEADER_PADDING_TOP = Platform.OS === 'ios' ? 56 : (StatusBar.currentHeight || 24) + 12;
 const APP_VERSION = '1.0.0';
-const { width: SCREEN_WIDTH } = Dimensions.get('window');
-
-// Animated section wrapper with staggered entry
-const AnimatedSection = ({ children, index, style }) => {
-  const fade = useRef(new Animated.Value(0)).current;
-  const slide = useRef(new Animated.Value(25)).current;
-
-  useEffect(() => {
-    const delay = 150 + index * 130;
-    Animated.parallel([
-      Animated.timing(fade, {
-        toValue: 1,
-        duration: 450,
-        delay,
-        useNativeDriver: true,
-      }),
-      Animated.spring(slide, {
-        toValue: 0,
-        tension: 55,
-        friction: 9,
-        delay,
-        useNativeDriver: true,
-      }),
-    ]).start();
-  }, []);
-
-  return (
-    <Animated.View
-      style={[
-        style,
-        { opacity: fade, transform: [{ translateY: slide }] },
-      ]}
-    >
-      {children}
-    </Animated.View>
-  );
-};
-
-// Pressable card with scale micro-interaction
-const PressableCard = ({ children, onPress, style }) => {
-  const scale = useRef(new Animated.Value(1)).current;
-
-  const onPressIn = () => {
-    Animated.spring(scale, {
-      toValue: 0.97,
-      tension: 100,
-      friction: 8,
-      useNativeDriver: true,
-    }).start();
-  };
-
-  const onPressOut = () => {
-    Animated.spring(scale, {
-      toValue: 1,
-      tension: 60,
-      friction: 6,
-      useNativeDriver: true,
-    }).start();
-  };
-
-  if (!onPress) {
-    return <View style={style}>{children}</View>;
-  }
-
-  return (
-    <Animated.View style={{ transform: [{ scale }] }}>
-      <TouchableOpacity
-        style={style}
-        onPress={onPress}
-        onPressIn={onPressIn}
-        onPressOut={onPressOut}
-        activeOpacity={1}
-      >
-        {children}
-      </TouchableOpacity>
-    </Animated.View>
-  );
-};
 
 const SettingsScreen = ({ navigation }) => {
   const { user, updateUser, logout } = useAuth();
@@ -118,22 +39,21 @@ const SettingsScreen = ({ navigation }) => {
   const [notifBookings, setNotifBookings] = useState(true);
   const [notifMessages, setNotifMessages] = useState(true);
 
-  // Header animation
-  const headerFade = useRef(new Animated.Value(0)).current;
-  const headerSlide = useRef(new Animated.Value(-15)).current;
-  const backScale = useRef(new Animated.Value(1)).current;
+  // Animation
+  const fadeAnim = useRef(new Animated.Value(0)).current;
+  const slideAnim = useRef(new Animated.Value(20)).current;
 
   useEffect(() => {
     Animated.parallel([
-      Animated.timing(headerFade, {
+      Animated.timing(fadeAnim, {
         toValue: 1,
-        duration: 400,
+        duration: 500,
         useNativeDriver: true,
       }),
-      Animated.spring(headerSlide, {
+      Animated.spring(slideAnim, {
         toValue: 0,
-        tension: 60,
-        friction: 9,
+        tension: 50,
+        friction: 8,
         useNativeDriver: true,
       }),
     ]).start();
@@ -144,7 +64,7 @@ const SettingsScreen = ({ navigation }) => {
 
   const handleSave = async () => {
     if (!name.trim()) {
-      showAlert('Champ requis', 'Le nom ne peut pas etre vide');
+      Alert.alert('Champ requis', 'Le nom ne peut pas être vide');
       return;
     }
 
@@ -155,28 +75,22 @@ const SettingsScreen = ({ navigation }) => {
         phone: phone.trim(),
       });
       updateUser(response.data.user);
-      showAlert('Succes', 'Votre profil a ete mis a jour');
+      Alert.alert('Succès', 'Votre profil a été mis à jour');
     } catch (error) {
-      showAlert('Erreur', 'Impossible de mettre a jour le profil. Reessayez.');
+      Alert.alert('Erreur', 'Impossible de mettre à jour le profil. Réessayez.');
     } finally {
       setSaving(false);
     }
   };
 
   const handleLogout = () => {
-    if (Platform.OS === 'web') {
-      if (window.confirm('Voulez-vous vraiment vous deconnecter ?')) {
-        logout();
-      }
-      return;
-    }
-    showAlert(
-      'Deconnexion',
-      'Etes-vous sur de vouloir vous deconnecter ?',
+    Alert.alert(
+      'Déconnexion',
+      'Êtes-vous sûr de vouloir vous déconnecter ?',
       [
         { text: 'Annuler', style: 'cancel' },
         {
-          text: 'Se deconnecter',
+          text: 'Se déconnecter',
           style: 'destructive',
           onPress: logout,
         },
@@ -190,24 +104,6 @@ const SettingsScreen = ({ navigation }) => {
     const parts = n.trim().split(/\s+/);
     if (parts.length >= 2) return (parts[0][0] + parts[1][0]).toUpperCase();
     return n.substring(0, 2).toUpperCase() || '?';
-  };
-
-  const handleBackPressIn = () => {
-    Animated.spring(backScale, {
-      toValue: 0.88,
-      tension: 100,
-      friction: 8,
-      useNativeDriver: true,
-    }).start();
-  };
-
-  const handleBackPressOut = () => {
-    Animated.spring(backScale, {
-      toValue: 1,
-      tension: 60,
-      friction: 6,
-      useNativeDriver: true,
-    }).start();
   };
 
   // Grouped setting row renderer
@@ -229,10 +125,10 @@ const SettingsScreen = ({ navigation }) => {
       <View
         style={[
           styles.settingIconContainer,
-          { backgroundColor: (accentColor || '#7B8B6F') + '15' },
+          { backgroundColor: (accentColor || '#6B8F71') + '15' },
         ]}
       >
-        <Text style={styles.settingIcon}>{icon}</Text>
+        <Feather name={icon} size={18} color={accentColor || '#6B8F71'} />
       </View>
       <View style={styles.settingInfo}>
         <Text style={styles.settingLabel}>{label}</Text>
@@ -245,9 +141,9 @@ const SettingsScreen = ({ navigation }) => {
         onValueChange={onValueChange}
         trackColor={{
           false: colors.border,
-          true: (accentColor || '#7B8B6F') + '70',
+          true: (accentColor || '#6B8F71') + '70',
         }}
-        thumbColor={value ? accentColor || '#7B8B6F' : '#f4f3f4'}
+        thumbColor={value ? accentColor || '#6B8F71' : '#f4f3f4'}
         ios_backgroundColor={colors.border}
       />
     </View>
@@ -261,55 +157,28 @@ const SettingsScreen = ({ navigation }) => {
         !isLast && styles.settingRowBorder,
       ]}
     >
-      <View style={styles.infoIconContainer}>
-        <Text style={styles.infoIcon}>{icon}</Text>
-      </View>
+      <Feather name={icon} size={16} color={colors.textTertiary} style={{ marginRight: SPACING.md, width: 24, textAlign: 'center' }} />
       <Text style={styles.infoLabel}>{label}</Text>
-      <View style={styles.infoValueBadge}>
-        <Text style={styles.infoValue}>{value}</Text>
-      </View>
+      <Text style={styles.infoValue}>{value}</Text>
     </View>
   );
 
   return (
     <View style={styles.container}>
-      <StatusBar barStyle="light-content" translucent backgroundColor="transparent" />
+      <StatusBar barStyle="dark-content" backgroundColor={colors.background} />
 
-      {/* Premium Gradient Header */}
-      <LinearGradient
-        colors={['#7B8B6F', '#8A9A7E', '#96A88A']}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1 }}
-        style={styles.header}
-      >
-        {/* Decorative elements */}
-        <View style={styles.headerDecorCircle1} />
-        <View style={styles.headerDecorCircle2} />
-
-        <Animated.View
-          style={[
-            styles.headerInner,
-            {
-              opacity: headerFade,
-              transform: [{ translateY: headerSlide }],
-            },
-          ]}
+      {/* Header */}
+      <View style={styles.header}>
+        <TouchableOpacity
+          style={styles.backButton}
+          onPress={() => navigation.goBack()}
+          activeOpacity={0.7}
         >
-          <Animated.View style={{ transform: [{ scale: backScale }] }}>
-            <TouchableOpacity
-              style={styles.backButton}
-              onPress={() => navigation.goBack()}
-              onPressIn={handleBackPressIn}
-              onPressOut={handleBackPressOut}
-              activeOpacity={1}
-            >
-              <Text style={styles.backArrow}>‹</Text>
-            </TouchableOpacity>
-          </Animated.View>
-          <Text style={styles.headerTitle}>Reglages</Text>
-          <View style={styles.headerSpacer} />
-        </Animated.View>
-      </LinearGradient>
+          <Feather name="chevron-left" size={24} color={colors.text} />
+        </TouchableOpacity>
+        <Text style={styles.headerTitle}>Réglages</Text>
+        <View style={styles.headerSpacer} />
+      </View>
 
       <KeyboardAvoidingView
         style={styles.keyboardView}
@@ -321,47 +190,50 @@ const SettingsScreen = ({ navigation }) => {
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
         >
-          {/* Section: Account */}
-          <AnimatedSection index={0} style={styles.section}>
-            <Text style={styles.sectionTitle}>Compte</Text>
-            <View style={styles.sectionCard}>
-              {/* Premium mini profile header */}
-              <View style={styles.accountHeader}>
-                <View style={styles.accountAvatar}>
-                  <LinearGradient
-                    colors={['#7B8B6F', '#96A88A', '#A3B296']}
-                    start={{ x: 0, y: 0 }}
-                    end={{ x: 1, y: 1 }}
-                    style={styles.accountAvatarGradient}
-                  >
-                    <Text style={styles.accountAvatarText}>
-                      {getInitials()}
-                    </Text>
-                  </LinearGradient>
-                </View>
-                <View style={styles.accountInfo}>
-                  <Text style={styles.accountName}>
-                    {user?.name || 'Utilisateur'}
-                  </Text>
-                  <Text style={styles.accountEmail}>
-                    {user?.email || ''}
-                  </Text>
-                </View>
-                {user?.isPetSitter && (
-                  <View style={styles.sitterTag}>
-                    <Text style={styles.sitterTagIcon}>✓</Text>
-                    <Text style={styles.sitterTagText}>Gardien</Text>
+          <Animated.View
+            style={{
+              opacity: fadeAnim,
+              transform: [{ translateY: slideAnim }],
+            }}
+          >
+            {/* Section: Account */}
+            <View style={styles.section}>
+              <Text style={styles.sectionTitle}>Compte</Text>
+              <View style={styles.sectionCard}>
+                {/* Mini profile header */}
+                <View style={styles.accountHeader}>
+                  <View style={styles.accountAvatar}>
+                    <LinearGradient
+                      colors={['#527A56', '#6B8F71']}
+                      start={{ x: 0, y: 0 }}
+                      end={{ x: 1, y: 1 }}
+                      style={styles.accountAvatarGradient}
+                    >
+                      <Text style={styles.accountAvatarText}>
+                        {getInitials()}
+                      </Text>
+                    </LinearGradient>
                   </View>
-                )}
-              </View>
+                  <View style={styles.accountInfo}>
+                    <Text style={styles.accountName}>
+                      {user?.name || 'Utilisateur'}
+                    </Text>
+                    <Text style={styles.accountEmail}>
+                      {user?.email || ''}
+                    </Text>
+                  </View>
+                  {user?.isPetSitter && (
+                    <View style={styles.sitterTag}>
+                      <Text style={styles.sitterTagText}>Gardien</Text>
+                    </View>
+                  )}
+                </View>
 
-              <View style={styles.accountDivider} />
+                <View style={styles.accountDivider} />
 
-              {/* Editable fields */}
-              <View style={styles.field}>
-                <Text style={styles.label}>Nom complet</Text>
-                <View style={styles.inputWrapper}>
-                  <Text style={styles.inputIcon}>👤</Text>
+                {/* Editable fields */}
+                <View style={styles.field}>
+                  <Text style={styles.label}>Nom complet</Text>
                   <TextInput
                     style={styles.input}
                     value={name}
@@ -371,27 +243,24 @@ const SettingsScreen = ({ navigation }) => {
                     autoCapitalize="words"
                   />
                 </View>
-              </View>
 
-              {/* Email (read-only) */}
-              <View style={styles.field}>
-                <Text style={styles.label}>Adresse email</Text>
-                <View style={styles.readOnlyField}>
-                  <Text style={styles.readOnlyIcon}>✉️</Text>
-                  <Text style={styles.readOnlyText} numberOfLines={1}>
-                    {user?.email || ''}
-                  </Text>
-                  <View style={styles.verifiedBadge}>
-                    <Text style={styles.verifiedIcon}>✓</Text>
+                {/* Email (read-only) */}
+                <View style={styles.field}>
+                  <Text style={styles.label}>Adresse email</Text>
+                  <View style={styles.readOnlyField}>
+                    <Feather name="mail" size={14} color={colors.textSecondary} style={{ marginRight: SPACING.sm }} />
+                    <Text style={styles.readOnlyText} numberOfLines={1}>
+                      {user?.email || ''}
+                    </Text>
+                    <View style={styles.verifiedBadge}>
+                      <Feather name="check" size={11} color={colors.white} />
+                    </View>
                   </View>
                 </View>
-              </View>
 
-              {/* Phone */}
-              <View style={styles.fieldLast}>
-                <Text style={styles.label}>Telephone</Text>
-                <View style={styles.inputWrapper}>
-                  <Text style={styles.inputIcon}>📱</Text>
+                {/* Phone */}
+                <View style={styles.fieldLast}>
+                  <Text style={styles.label}>Telephone</Text>
                   <TextInput
                     style={styles.input}
                     value={phone}
@@ -402,149 +271,156 @@ const SettingsScreen = ({ navigation }) => {
                   />
                 </View>
               </View>
-            </View>
 
-            {/* Save Button (only shows when changes exist) */}
-            {hasChanges && (
-              <TouchableOpacity
-                style={styles.saveButton}
-                onPress={handleSave}
-                activeOpacity={0.85}
-                disabled={loading}
-              >
-                <LinearGradient
-                  colors={
-                    loading
-                      ? [colors.textLight, colors.textTertiary]
-                      : ['#7B8B6F', '#96A88A']
-                  }
-                  start={{ x: 0, y: 0 }}
-                  end={{ x: 1, y: 0 }}
-                  style={styles.saveGradient}
+              {/* Save Button (only shows when changes exist) */}
+              {hasChanges && (
+                <TouchableOpacity
+                  style={styles.saveButton}
+                  onPress={handleSave}
+                  activeOpacity={0.85}
+                  disabled={loading}
                 >
-                  {loading ? (
-                    <ActivityIndicator size="small" color={colors.white} />
-                  ) : (
-                    <>
-                      <Text style={styles.saveIcon}>💾</Text>
-                      <Text style={styles.saveText}>Sauvegarder</Text>
-                    </>
-                  )}
-                </LinearGradient>
-              </TouchableOpacity>
-            )}
-          </AnimatedSection>
-
-          {/* Section: Notifications */}
-          <AnimatedSection index={1} style={styles.section}>
-            <Text style={styles.sectionTitle}>Notifications</Text>
-            <View style={styles.sectionCard}>
-              {renderSettingRow({
-                icon: '🔔',
-                label: 'Notifications push',
-                description: 'Recevoir les notifications sur votre appareil',
-                value: notifPush,
-                onValueChange: setNotifPush,
-                accentColor: '#7B8B6F',
-              })}
-              {renderSettingRow({
-                icon: '📷',
-                label: 'Alertes de scans',
-                description: 'Resultats de vos scans de produits',
-                value: notifScans,
-                onValueChange: setNotifScans,
-                accentColor: '#3B82F6',
-              })}
-              {renderSettingRow({
-                icon: '📅',
-                label: 'Rappels de gardes',
-                description: 'Rappels pour vos reservations',
-                value: notifBookings,
-                onValueChange: setNotifBookings,
-                accentColor: '#10B981',
-              })}
-              {renderSettingRow({
-                icon: '💬',
-                label: 'Messages',
-                description: 'Nouveaux messages de gardiens',
-                value: notifMessages,
-                onValueChange: setNotifMessages,
-                accentColor: '#4ECBA0',
-                isLast: true,
-              })}
+                  <LinearGradient
+                    colors={
+                      loading
+                        ? [colors.textLight, colors.textTertiary]
+                        : ['#527A56', '#6B8F71']
+                    }
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 0 }}
+                    style={styles.saveGradient}
+                  >
+                    {loading ? (
+                      <ActivityIndicator size="small" color={colors.white} />
+                    ) : (
+                      <>
+                        <Feather name="save" size={16} color={colors.white} />
+                        <Text style={styles.saveText}>Sauvegarder</Text>
+                      </>
+                    )}
+                  </LinearGradient>
+                </TouchableOpacity>
+              )}
             </View>
-          </AnimatedSection>
 
-          {/* Section: About */}
-          <AnimatedSection index={2} style={styles.section}>
-            <Text style={styles.sectionTitle}>A propos</Text>
-            <View style={styles.sectionCard}>
-              {/* Premium app branding row */}
-              <View style={styles.aboutBranding}>
-                <PepeteLogo size={48} variant="icon" theme="brand" />
-                <View style={styles.aboutBrandInfo}>
-                  <Text style={styles.aboutAppName}>Pépète</Text>
-                  <Text style={styles.aboutTagline}>
-                    Le compagnon de vos compagnons
+            {/* Section: Notifications */}
+            <View style={styles.section}>
+              <Text style={styles.sectionTitle}>Notifications</Text>
+              <View style={styles.sectionCard}>
+                {renderSettingRow({
+                  icon: 'bell',
+                  label: 'Notifications push',
+                  description: 'Recevoir les notifications sur votre appareil',
+                  value: notifPush,
+                  onValueChange: setNotifPush,
+                  accentColor: '#6B8F71',
+                })}
+                {renderSettingRow({
+                  icon: 'camera',
+                  label: 'Alertes de scans',
+                  description: 'Résultats de vos scans de produits',
+                  value: notifScans,
+                  onValueChange: setNotifScans,
+                  accentColor: '#527A56',
+                })}
+                {renderSettingRow({
+                  icon: 'calendar',
+                  label: 'Rappels de gardes',
+                  description: 'Rappels pour vos réservations',
+                  value: notifBookings,
+                  onValueChange: setNotifBookings,
+                  accentColor: '#C4956A',
+                })}
+                {renderSettingRow({
+                  icon: 'message-circle',
+                  label: 'Messages',
+                  description: 'Nouveaux messages de gardiens',
+                  value: notifMessages,
+                  onValueChange: setNotifMessages,
+                  accentColor: '#8CB092',
+                  isLast: true,
+                })}
+              </View>
+            </View>
+
+            {/* Section: About */}
+            <View style={styles.section}>
+              <Text style={styles.sectionTitle}>A propos</Text>
+              <View style={styles.sectionCard}>
+                {/* App branding row */}
+                <View style={styles.aboutBranding}>
+                  <View style={styles.aboutLogoContainer}>
+                    <LinearGradient
+                      colors={['#527A56', '#6B8F71']}
+                      start={{ x: 0, y: 0 }}
+                      end={{ x: 1, y: 1 }}
+                      style={styles.aboutLogoGradient}
+                    >
+                      <PawIcon size={24} color="#FFF" />
+                    </LinearGradient>
+                  </View>
+                  <View style={styles.aboutBrandInfo}>
+                    <Text style={styles.aboutAppName}>Patoune</Text>
+                    <Text style={styles.aboutTagline}>
+                      Le compagnon de vos compagnons
+                    </Text>
+                  </View>
+                </View>
+
+                <View style={styles.aboutDivider} />
+
+                {renderInfoRow({
+                  icon: 'smartphone',
+                  label: 'Version',
+                  value: `v${APP_VERSION}`,
+                })}
+                {renderInfoRow({
+                  icon: 'package',
+                  label: 'Build',
+                  value: 'Expo',
+                })}
+                {renderInfoRow({
+                  icon: 'monitor',
+                  label: 'Plateforme',
+                  value: `${Platform.OS === 'ios' ? 'iOS' : 'Android'} ${Platform.Version}`,
+                  isLast: true,
+                })}
+              </View>
+            </View>
+
+            {/* Section: Danger Zone */}
+            <View style={styles.section}>
+              <Text style={styles.sectionTitle}>Zone de danger</Text>
+              <TouchableOpacity
+                style={styles.logoutCard}
+                onPress={handleLogout}
+                activeOpacity={0.6}
+              >
+                <View style={styles.logoutIconContainer}>
+                  <Feather name="log-out" size={20} color={colors.error} />
+                </View>
+                <View style={styles.logoutInfo}>
+                  <Text style={styles.logoutTitle}>Se déconnecter</Text>
+                  <Text style={styles.logoutSubtitle}>
+                    Déconnectez-vous de votre compte
                   </Text>
                 </View>
-              </View>
-
-              <View style={styles.aboutDivider} />
-
-              {renderInfoRow({
-                icon: '📱',
-                label: 'Version',
-                value: `v${APP_VERSION}`,
-              })}
-              {renderInfoRow({
-                icon: '🏷️',
-                label: 'Build',
-                value: 'Expo',
-              })}
-              {renderInfoRow({
-                icon: '📲',
-                label: 'Plateforme',
-                value: `${Platform.OS === 'ios' ? 'iOS' : 'Android'} ${Platform.Version}`,
-                isLast: true,
-              })}
+                <Feather name="chevron-right" size={18} color={colors.error} style={{ opacity: 0.5 }} />
+              </TouchableOpacity>
             </View>
-          </AnimatedSection>
 
-          {/* Section: Danger Zone */}
-          <AnimatedSection index={3} style={styles.section}>
-            <Text style={styles.sectionTitle}>Zone de danger</Text>
-            <PressableCard
-              style={styles.logoutCard}
-              onPress={handleLogout}
-            >
-              <View style={styles.logoutIconContainer}>
-                <Text style={styles.logoutIcon}>🚪</Text>
-              </View>
-              <View style={styles.logoutInfo}>
-                <Text style={styles.logoutTitle}>Se deconnecter</Text>
-                <Text style={styles.logoutSubtitle}>
-                  Deconnectez-vous de votre compte
-                </Text>
-              </View>
-              <View style={styles.logoutChevronContainer}>
-                <Text style={styles.logoutArrow}>›</Text>
-              </View>
-            </PressableCard>
-          </AnimatedSection>
+            {/* Footer */}
+            <View style={styles.footer}>
+              <Text style={styles.footerHeart}>
+                Fait avec amour pour vos compagnons
+              </Text>
+              <Text style={styles.footerCopy}>
+                Patoune v{APP_VERSION}
+              </Text>
+            </View>
 
-          {/* Premium Footer */}
-          <AnimatedSection index={4} style={styles.footer}>
-            <View style={styles.footerDivider} />
-            <Text style={styles.footerHeart}>
-              Fait avec amour pour vos compagnons
-            </Text>
-            <Text style={styles.footerCopy}>
-              Pépète v{APP_VERSION}
-            </Text>
-          </AnimatedSection>
-
-          <View style={styles.bottomSpacer} />
+            <View style={styles.bottomSpacer} />
+          </Animated.View>
         </ScrollView>
       </KeyboardAvoidingView>
     </View>
@@ -564,194 +440,139 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     paddingHorizontal: SPACING.lg,
-    paddingTop: SPACING.xl,
+    paddingTop: SPACING.lg,
     paddingBottom: SPACING['3xl'],
   },
 
-  // Premium Gradient Header
+  // Header
   header: {
-    paddingTop: HEADER_PADDING_TOP,
-    paddingBottom: SPACING.base + 4,
-    paddingHorizontal: SPACING.lg,
-    overflow: 'hidden',
-    borderBottomLeftRadius: RADIUS['2xl'],
-    borderBottomRightRadius: RADIUS['2xl'],
-  },
-  headerDecorCircle1: {
-    position: 'absolute',
-    top: -30,
-    right: -30,
-    width: 120,
-    height: 120,
-    borderRadius: 60,
-    backgroundColor: 'rgba(255, 255, 255, 0.06)',
-  },
-  headerDecorCircle2: {
-    position: 'absolute',
-    bottom: -20,
-    left: -20,
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    backgroundColor: 'rgba(255, 255, 255, 0.04)',
-  },
-  headerInner: {
     flexDirection: 'row',
     alignItems: 'center',
+    paddingTop: HEADER_PADDING_TOP,
+    paddingBottom: SPACING.base,
+    paddingHorizontal: SPACING.lg,
+    backgroundColor: colors.background,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border,
   },
   backButton: {
-    width: 40,
-    height: 40,
-    borderRadius: RADIUS.lg,
-    backgroundColor: 'rgba(255, 255, 255, 0.20)',
+    width: 36,
+    height: 36,
+    borderRadius: RADIUS.md,
+    backgroundColor: colors.white,
     alignItems: 'center',
     justifyContent: 'center',
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.15)',
-  },
-  backArrow: {
-    fontSize: 28,
-    color: colors.white,
-    fontWeight: '600',
-    marginTop: -2,
+    ...SHADOWS.sm,
   },
   headerTitle: {
     flex: 1,
-    fontFamily: FONTS.brand,
-    fontSize: FONT_SIZE.xl + 2,
-    color: colors.white,
+    fontSize: FONT_SIZE.xl,
+    fontWeight: '800',
+    color: colors.text,
     textAlign: 'center',
-    letterSpacing: 0.3,
-    textShadowColor: 'rgba(0, 0, 0, 0.1)',
-    textShadowOffset: { width: 0, height: 1 },
-    textShadowRadius: 3,
+    letterSpacing: 0.2,
   },
   headerSpacer: {
-    width: 40,
+    width: 36,
   },
 
-  // Sections — more breathing room
+  // Sections
   section: {
-    marginBottom: SPACING.xl + 4,
+    marginBottom: SPACING.xl,
   },
   sectionTitle: {
-    fontFamily: FONTS.bodySemiBold,
-    fontSize: FONT_SIZE.xs + 1,
-    color: colors.textTertiary,
+    fontSize: FONT_SIZE.sm,
+    fontWeight: '700',
+    color: colors.textSecondary,
     textTransform: 'uppercase',
-    letterSpacing: 1.2,
-    marginBottom: SPACING.md + 2,
+    letterSpacing: 0.8,
+    marginBottom: SPACING.md,
     marginLeft: SPACING.xs,
   },
   sectionCard: {
     backgroundColor: colors.white,
-    borderRadius: RADIUS.xl + 2,
-    padding: SPACING.base + 4,
-    ...SHADOWS.lg,
-    borderWidth: 1,
-    borderColor: 'rgba(0, 0, 0, 0.02)',
+    borderRadius: RADIUS.xl,
+    padding: SPACING.base,
+    ...SHADOWS.md,
   },
 
-  // Account header — premium styling
+  // Account header
   accountHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: SPACING.base + 2,
+    marginBottom: SPACING.base,
   },
   accountAvatar: {
-    borderRadius: 26,
+    borderRadius: 22,
     overflow: 'hidden',
-    ...SHADOWS.md,
   },
   accountAvatarGradient: {
-    width: 52,
-    height: 52,
-    borderRadius: 26,
+    width: 44,
+    height: 44,
+    borderRadius: 22,
     alignItems: 'center',
     justifyContent: 'center',
   },
   accountAvatarText: {
-    fontFamily: FONTS.brand,
-    fontSize: FONT_SIZE.lg,
+    fontSize: FONT_SIZE.md,
+    fontWeight: '800',
     color: colors.white,
     letterSpacing: 0.5,
   },
   accountInfo: {
     flex: 1,
-    marginLeft: SPACING.md + 2,
+    marginLeft: SPACING.md,
   },
   accountName: {
-    fontFamily: FONTS.heading,
-    fontSize: FONT_SIZE.base + 1,
+    fontSize: FONT_SIZE.base,
+    fontWeight: '700',
     color: colors.text,
-    marginBottom: 2,
+    marginBottom: 1,
   },
   accountEmail: {
-    fontFamily: FONTS.body,
     fontSize: FONT_SIZE.sm,
     color: colors.textSecondary,
+    fontWeight: '400',
   },
   sitterTag: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#10B98112',
+    backgroundColor: '#527A5615',
     paddingHorizontal: SPACING.md,
-    paddingVertical: SPACING.xs + 1,
+    paddingVertical: SPACING.xs,
     borderRadius: RADIUS.full,
-    gap: 4,
-    borderWidth: 1,
-    borderColor: '#10B98120',
-  },
-  sitterTagIcon: {
-    fontSize: 10,
-    color: '#10B981',
-    fontWeight: '800',
   },
   sitterTagText: {
-    fontFamily: FONTS.bodySemiBold,
     fontSize: FONT_SIZE.xs,
-    color: '#10B981',
+    fontWeight: '700',
+    color: '#527A56',
   },
   accountDivider: {
     height: 1,
-    backgroundColor: colors.borderLight,
-    marginBottom: SPACING.base + 2,
+    backgroundColor: colors.border,
+    marginBottom: SPACING.base,
   },
 
-  // Fields — refined inputs
+  // Fields
   field: {
-    marginBottom: SPACING.lg + 2,
+    marginBottom: SPACING.lg,
   },
   fieldLast: {
     marginBottom: 0,
   },
   label: {
-    fontFamily: FONTS.bodyMedium,
     fontSize: FONT_SIZE.sm,
-    color: colors.textSecondary,
-    marginBottom: SPACING.sm + 1,
-    letterSpacing: 0.2,
-  },
-  inputWrapper: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: colors.background,
-    borderRadius: RADIUS.lg + 2,
-    borderWidth: 1.5,
-    borderColor: colors.borderLight,
-    paddingHorizontal: SPACING.base,
-    overflow: 'hidden',
-  },
-  inputIcon: {
-    fontSize: 15,
-    marginRight: SPACING.sm,
+    fontWeight: '600',
+    color: colors.text,
+    marginBottom: SPACING.sm,
   },
   input: {
-    flex: 1,
-    fontFamily: FONTS.body,
-    paddingVertical: SPACING.md + 3,
+    backgroundColor: colors.background,
+    borderRadius: RADIUS.lg,
+    paddingHorizontal: SPACING.base,
+    paddingVertical: SPACING.md + 2,
     fontSize: FONT_SIZE.base,
     color: colors.text,
+    borderWidth: 1.5,
+    borderColor: colors.border,
   },
 
   // Read-only email field
@@ -759,59 +580,46 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: colors.background,
-    borderRadius: RADIUS.lg + 2,
+    borderRadius: RADIUS.lg,
     paddingHorizontal: SPACING.base,
-    paddingVertical: SPACING.md + 3,
+    paddingVertical: SPACING.md + 2,
     borderWidth: 1.5,
-    borderColor: colors.borderLight,
+    borderColor: colors.border,
     opacity: 0.7,
-  },
-  readOnlyIcon: {
-    fontSize: 15,
-    marginRight: SPACING.sm,
   },
   readOnlyText: {
     flex: 1,
-    fontFamily: FONTS.body,
     fontSize: FONT_SIZE.base,
     color: colors.textSecondary,
+    fontWeight: '400',
   },
   verifiedBadge: {
-    width: 24,
-    height: 24,
-    borderRadius: 12,
-    backgroundColor: '#10B981',
+    width: 22,
+    height: 22,
+    borderRadius: 11,
+    backgroundColor: '#527A56',
     alignItems: 'center',
     justifyContent: 'center',
-    ...SHADOWS.sm,
-  },
-  verifiedIcon: {
-    fontSize: 12,
-    color: colors.white,
-    fontWeight: '800',
   },
 
   // Save Button
   saveButton: {
-    borderRadius: RADIUS.xl + 2,
+    borderRadius: RADIUS.xl,
     overflow: 'hidden',
-    marginTop: SPACING.base + 2,
-    ...SHADOWS.glow('#7B8B6F'),
+    marginTop: SPACING.base,
+    ...SHADOWS.glow('#527A56'),
   },
   saveGradient: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: SPACING.base + 2,
-    borderRadius: RADIUS.xl + 2,
+    paddingVertical: SPACING.base,
+    borderRadius: RADIUS.xl,
     gap: SPACING.sm,
   },
-  saveIcon: {
-    fontSize: 17,
-  },
   saveText: {
-    fontFamily: FONTS.heading,
     fontSize: FONT_SIZE.md,
+    fontWeight: '700',
     color: colors.white,
     letterSpacing: 0.3,
   },
@@ -820,194 +628,142 @@ const styles = StyleSheet.create({
   settingRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: SPACING.md + 2,
+    paddingVertical: SPACING.md,
   },
   settingRowBorder: {
     borderBottomWidth: 1,
     borderBottomColor: colors.borderLight,
   },
   settingIconContainer: {
-    width: 44,
-    height: 44,
-    borderRadius: RADIUS.lg,
+    width: 40,
+    height: 40,
+    borderRadius: RADIUS.md,
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: SPACING.md,
-  },
-  settingIcon: {
-    fontSize: 20,
   },
   settingInfo: {
     flex: 1,
     marginRight: SPACING.sm,
   },
   settingLabel: {
-    fontFamily: FONTS.heading,
     fontSize: FONT_SIZE.base,
+    fontWeight: '600',
     color: colors.text,
-    marginBottom: 2,
+    marginBottom: 1,
   },
   settingDescription: {
-    fontFamily: FONTS.body,
     fontSize: FONT_SIZE.xs,
     color: colors.textTertiary,
+    fontWeight: '400',
   },
 
-  // Info Rows (non-interactive) — premium badges
+  // Info Rows (non-interactive)
   infoRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: SPACING.md + 2,
-  },
-  infoIconContainer: {
-    width: 32,
-    height: 32,
-    borderRadius: RADIUS.sm,
-    backgroundColor: colors.primarySoft,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: SPACING.md,
-  },
-  infoIcon: {
-    fontSize: 15,
+    paddingVertical: SPACING.md,
   },
   infoLabel: {
     flex: 1,
-    fontFamily: FONTS.bodyMedium,
     fontSize: FONT_SIZE.sm,
+    fontWeight: '500',
     color: colors.textSecondary,
   },
-  infoValueBadge: {
-    backgroundColor: colors.background,
-    paddingHorizontal: SPACING.md,
-    paddingVertical: SPACING.xs,
-    borderRadius: RADIUS.full,
-    borderWidth: 1,
-    borderColor: colors.borderLight,
-  },
   infoValue: {
-    fontFamily: FONTS.bodySemiBold,
-    fontSize: FONT_SIZE.xs + 1,
+    fontSize: FONT_SIZE.sm,
+    fontWeight: '600',
     color: colors.text,
   },
 
-  // About Section — premium branding
+  // About Section
   aboutBranding: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: SPACING.base + 2,
+    marginBottom: SPACING.base,
   },
   aboutLogoContainer: {
-    borderRadius: RADIUS.lg + 2,
+    borderRadius: RADIUS.lg,
     overflow: 'hidden',
-    ...SHADOWS.md,
   },
   aboutLogoGradient: {
-    width: 52,
-    height: 52,
-    borderRadius: RADIUS.lg + 2,
+    width: 48,
+    height: 48,
+    borderRadius: RADIUS.lg,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  aboutLogoIcon: {
-    fontSize: 26,
-  },
   aboutBrandInfo: {
-    marginLeft: SPACING.md + 2,
+    marginLeft: SPACING.md,
   },
   aboutAppName: {
-    fontFamily: FONTS.brand,
-    fontSize: FONT_SIZE.xl,
+    fontSize: FONT_SIZE.lg,
+    fontWeight: '800',
     color: colors.text,
-    letterSpacing: 0.5,
+    letterSpacing: 0.3,
   },
   aboutTagline: {
-    fontFamily: FONTS.body,
     fontSize: FONT_SIZE.xs,
     color: colors.textSecondary,
-    marginTop: 2,
+    fontWeight: '500',
+    marginTop: 1,
   },
   aboutDivider: {
     height: 1,
-    backgroundColor: colors.borderLight,
-    marginBottom: SPACING.sm + 2,
+    backgroundColor: colors.border,
+    marginBottom: SPACING.sm,
   },
 
-  // Logout — premium card
+  // Logout
   logoutCard: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: colors.white,
-    borderRadius: RADIUS.xl + 2,
-    padding: SPACING.base + 4,
-    borderWidth: 1.5,
-    borderColor: 'rgba(239, 68, 68, 0.10)',
-    ...SHADOWS.md,
+    borderRadius: RADIUS.xl,
+    padding: SPACING.base,
+    borderWidth: 1,
+    borderColor: 'rgba(239, 68, 68, 0.12)',
+    ...SHADOWS.sm,
   },
   logoutIconContainer: {
-    width: 48,
-    height: 48,
-    borderRadius: RADIUS.lg + 2,
+    width: 44,
+    height: 44,
+    borderRadius: RADIUS.lg,
     backgroundColor: colors.errorSoft,
     alignItems: 'center',
     justifyContent: 'center',
-  },
-  logoutIcon: {
-    fontSize: 22,
   },
   logoutInfo: {
     flex: 1,
-    marginLeft: SPACING.md + 2,
+    marginLeft: SPACING.md,
   },
   logoutTitle: {
-    fontFamily: FONTS.heading,
     fontSize: FONT_SIZE.base,
+    fontWeight: '700',
     color: colors.error,
-    marginBottom: 2,
+    marginBottom: 1,
   },
   logoutSubtitle: {
-    fontFamily: FONTS.body,
     fontSize: FONT_SIZE.xs,
     color: colors.textTertiary,
-  },
-  logoutChevronContainer: {
-    width: 34,
-    height: 34,
-    borderRadius: RADIUS.full,
-    backgroundColor: colors.errorSoft,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  logoutArrow: {
-    fontSize: 22,
-    color: colors.error,
-    fontWeight: '600',
-    opacity: 0.6,
-    marginTop: -1,
+    fontWeight: '400',
   },
 
-  // Premium Footer
+  // Footer
   footer: {
     alignItems: 'center',
-    marginTop: SPACING.md,
-  },
-  footerDivider: {
-    width: 40,
-    height: 3,
-    borderRadius: 1.5,
-    backgroundColor: colors.borderLight,
-    marginBottom: SPACING.lg,
+    marginTop: SPACING.lg,
   },
   footerHeart: {
-    fontFamily: FONTS.body,
     fontSize: FONT_SIZE.sm,
     color: colors.textTertiary,
-    marginBottom: SPACING.xs + 2,
+    fontWeight: '400',
+    marginBottom: SPACING.xs,
   },
   footerCopy: {
-    fontFamily: FONTS.bodyMedium,
     fontSize: FONT_SIZE.xs,
     color: colors.textLight,
+    fontWeight: '500',
   },
 
   bottomSpacer: {

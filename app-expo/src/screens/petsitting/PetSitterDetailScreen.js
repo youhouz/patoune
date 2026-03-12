@@ -13,14 +13,12 @@ const { SHADOWS, RADIUS, SPACING, FONT_SIZE } = require('../../utils/colors');
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
-const ANIMAL_EMOJI_MAP = {
-  chien: '🐕',
-  chat: '🐈',
-  rongeur: '🐹',
-  oiseau: '🐦',
-  reptile: '🦎',
-  poisson: '🐟',
-  autre: '🐾',
+const ANIMAL_ICON_MAP = {
+  chien: 'gitlab',
+  chat: 'github',
+  rongeur: 'mouse-pointer',
+  oiseau: 'feather',
+  reptile: 'zap',
 };
 
 const SERVICE_ICONS = {
@@ -41,41 +39,30 @@ const AVAILABILITY_DAYS = [
   { key: 'dim', label: 'D' },
 ];
 
-/* ---------- Star Rating (Unicode — renders filled on all platforms) ---------- */
+/* ---------- Star Rating ---------- */
 const StarRating = ({ rating, size = 16, showValue = false, light = false }) => {
-  const val = rating || 0;
   const stars = [];
-  const fullStars = Math.floor(val);
-  const hasHalf = val - fullStars >= 0.25;
+  const fullStars = Math.floor(rating || 0);
+  const hasHalf = (rating || 0) - fullStars >= 0.5;
   const emptyColor = light ? 'rgba(255,255,255,0.3)' : colors.border;
   for (let i = 0; i < 5; i++) {
-    if (i < fullStars) {
-      stars.push(
-        <Text key={i} style={{ fontSize: size, color: '#F59E0B', lineHeight: size + 2 }}>★</Text>
-      );
-    } else if (i === fullStars && hasHalf) {
-      stars.push(
-        <View key={i} style={{ width: size * 0.75, overflow: 'hidden' }}>
-          <Text style={{ fontSize: size, color: '#F59E0B', lineHeight: size + 2 }}>★</Text>
-        </View>
-      );
+    if (i < fullStars || (i === fullStars && hasHalf)) {
+      stars.push(<Feather key={i} name="star" size={size} color="#C4956A" />);
     } else {
-      stars.push(
-        <Text key={i} style={{ fontSize: size, color: emptyColor, lineHeight: size + 2 }}>★</Text>
-      );
+      stars.push(<Feather key={i} name="star" size={size} color={emptyColor} />);
     }
   }
   return (
-    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 1 }}>
+    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 2 }}>
       {stars}
       {showValue && (
         <Text style={{
           fontSize: size - 2,
           fontFamily: FONTS.heading,
-          color: '#F59E0B',
+          color: '#C4956A',
           marginLeft: 4,
         }}>
-          {val.toFixed(1)}
+          {(rating || 0).toFixed(1)}
         </Text>
       )}
     </View>
@@ -88,7 +75,7 @@ const RatingBar = ({ stars, count, total }) => {
   return (
     <View style={styles.ratingBarRow}>
       <Text style={styles.ratingBarLabel}>{stars}</Text>
-      <Text style={{ fontSize: 10, color: '#F59E0B' }}>★</Text>
+      <Feather name="star" size={10} color="#C4956A" />
       <View style={styles.ratingBarTrack}>
         <View style={[styles.ratingBarFill, { width: `${percentage}%` }]} />
       </View>
@@ -245,7 +232,7 @@ const PetSitterDetailScreen = ({ route, navigation }) => {
             {/* Verified Badge */}
             {petsitter.verified && (
               <View style={styles.heroVerifiedBadge}>
-                <Feather name="check-circle" size={12} color="#34D399" />
+                <Feather name="check-circle" size={12} color="#6B8F71" />
                 <Text style={styles.heroVerifiedBadgeText}>Profil verifie</Text>
               </View>
             )}
@@ -350,7 +337,7 @@ const PetSitterDetailScreen = ({ route, navigation }) => {
                         ) : null}
                       </View>
                       <View style={styles.serviceCheckmark}>
-                        <Feather name="check" size={12} color="#10B981" />
+                        <Feather name="check" size={12} color="#527A56" />
                       </View>
                     </View>
                   );
@@ -365,9 +352,11 @@ const PetSitterDetailScreen = ({ route, navigation }) => {
               <View style={styles.animalChips}>
                 {petsitter.acceptedAnimals.map((animal, idx) => (
                   <View key={idx} style={styles.animalChip}>
-                    <Text style={{ fontSize: 18 }}>
-                      {ANIMAL_EMOJI_MAP[animal.toLowerCase()] || '🐾'}
-                    </Text>
+                    <Feather
+                      name={ANIMAL_ICON_MAP[animal.toLowerCase()] || 'heart'}
+                      size={18}
+                      color={colors.primary}
+                    />
                     <Text style={styles.animalChipText}>
                       {animal.charAt(0).toUpperCase() + animal.slice(1)}
                     </Text>
@@ -594,14 +583,14 @@ const styles = StyleSheet.create({
     marginBottom: SPACING.base,
   },
   heroAvatar: {
-    width: 110,
-    height: 110,
-    borderRadius: 55,
+    width: 100,
+    height: 100,
+    borderRadius: 50,
     backgroundColor: 'rgba(255,255,255,0.2)',
     alignItems: 'center',
     justifyContent: 'center',
-    borderWidth: 4,
-    borderColor: 'rgba(255,255,255,0.4)',
+    borderWidth: 3,
+    borderColor: 'rgba(255,255,255,0.35)',
   },
   heroAvatarLetter: {
     fontSize: FONT_SIZE['4xl'],
@@ -615,7 +604,7 @@ const styles = StyleSheet.create({
     width: 28,
     height: 28,
     borderRadius: RADIUS.full,
-    backgroundColor: '#10B981',
+    backgroundColor: '#527A56',
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 3,
@@ -654,7 +643,7 @@ const styles = StyleSheet.create({
   heroVerifiedBadgeText: {
     fontSize: FONT_SIZE.sm,
     fontFamily: FONTS.bodySemiBold,
-    color: '#34D399',
+    color: '#6B8F71',
   },
   statsRow: {
     flexDirection: 'row',
@@ -698,10 +687,11 @@ const styles = StyleSheet.create({
     backgroundColor: colors.white,
     marginHorizontal: SPACING.base,
     marginTop: SPACING.base,
-    borderRadius: RADIUS['2xl'],
-    padding: SPACING.xl,
-    ...SHADOWS.lg,
-    borderWidth: 0,
+    borderRadius: RADIUS.xl,
+    padding: SPACING.lg,
+    ...SHADOWS.md,
+    borderWidth: 1,
+    borderColor: colors.borderLight,
   },
   sectionHeader: {
     flexDirection: 'row',
@@ -789,7 +779,7 @@ const styles = StyleSheet.create({
     width: 26,
     height: 26,
     borderRadius: RADIUS.full,
-    backgroundColor: '#ECFDF5',
+    backgroundColor: '#EFF5F0',
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -835,8 +825,8 @@ const styles = StyleSheet.create({
     borderColor: colors.border,
   },
   availabilityDayActive: {
-    backgroundColor: '#ECFDF5',
-    borderColor: '#10B981',
+    backgroundColor: '#EFF5F0',
+    borderColor: '#527A56',
   },
   availabilityDayText: {
     fontSize: FONT_SIZE.sm,
@@ -844,7 +834,7 @@ const styles = StyleSheet.create({
     color: colors.textTertiary,
   },
   availabilityDayTextActive: {
-    color: '#10B981',
+    color: '#527A56',
   },
   availabilityHint: {
     fontSize: FONT_SIZE.xs,
@@ -922,7 +912,7 @@ const styles = StyleSheet.create({
   },
   ratingBarFill: {
     height: '100%',
-    backgroundColor: '#F59E0B',
+    backgroundColor: '#C4956A',
     borderRadius: RADIUS.full,
   },
   ratingBarCount: {

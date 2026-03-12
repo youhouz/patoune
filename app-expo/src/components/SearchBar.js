@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, TextInput, TouchableOpacity, StyleSheet } from 'react-native';
+import { Feather } from '@expo/vector-icons';
 const colors = require('../utils/colors');
 const { RADIUS, SHADOWS } = require('../utils/colors');
 
@@ -12,7 +13,7 @@ const SearchBar = ({ value, onChangeText, placeholder = 'Rechercher...', onClear
       focused && styles.focused,
       style,
     ]}>
-      <Text style={styles.icon}>🔍</Text>
+      <Feather name="search" size={16} color={focused ? colors.primary : colors.textTertiary} style={{ marginRight: 10 }} />
       <TextInput
         style={styles.input}
         value={value}
@@ -31,7 +32,7 @@ const SearchBar = ({ value, onChangeText, placeholder = 'Rechercher...', onClear
           }}
           hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
         >
-          <Text style={styles.clearIcon}>✕</Text>
+          <Feather name="x" size={14} color={colors.textTertiary} />
         </TouchableOpacity>
       ) : null}
     </View>
@@ -55,21 +56,11 @@ const styles = StyleSheet.create({
     backgroundColor: colors.primarySoft,
     ...SHADOWS.md,
   },
-  icon: {
-    fontSize: 16,
-    marginRight: 10,
-  },
   input: {
     flex: 1,
     fontSize: 15,
     color: colors.text,
     paddingVertical: 0,
-  },
-  clearIcon: {
-    fontSize: 14,
-    color: colors.textTertiary,
-    fontWeight: '600',
-    padding: 4,
   },
 });
 

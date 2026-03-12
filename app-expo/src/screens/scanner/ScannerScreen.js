@@ -4,11 +4,11 @@ import {
   Text,
   TouchableOpacity,
   StyleSheet,
+  Alert,
   TextInput,
   Animated,
   Platform,
   StatusBar,
-  Dimensions,
   ActivityIndicator,
   KeyboardAvoidingView,
   ScrollView,
@@ -19,28 +19,28 @@ import { CameraView, useCameraPermissions } from 'expo-camera';
 import { Feather } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { scanProductAPI } from '../../api/products';
-import { showAlert } from '../../utils/alert';
+import useResponsive from '../../hooks/useResponsive';
 import { FONTS } from '../../utils/typography';
 const { COLORS, SPACING, RADIUS, FONT_SIZE, SHADOWS } = require('../../utils/colors');
 
-const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
-const SCAN_FRAME_SIZE = SCREEN_WIDTH * 0.58;
-const CORNER_SIZE = 32;
-const CORNER_WIDTH = 3;
+const CORNER_SIZE = 28;
+const CORNER_WIDTH = 3.5;
 
 const DEMO_PRODUCTS = [
-  { barcode: '5425039484051', name: 'Poulet & Dinde', brand: 'Edgard Cooper', icon: 'heart', score: 85 },
-  { barcode: '7613033831287', name: 'Friskies Light Chien', brand: 'Purina', icon: 'heart', score: 55 },
-  { barcode: '5010394133852', name: 'Biscotti Multi Mix', brand: 'Pedigree', icon: 'heart', score: 40 },
-  { barcode: '3222270550673', name: 'Mousselines Chat', brand: 'Gourmet', icon: 'gitlab', score: 60 },
-  { barcode: '5998749108536', name: 'Friandises Saumon', brand: 'Whiskas', icon: 'gitlab', score: 35 },
-  { barcode: '5998749117750', name: 'Catisfactions', brand: 'Catisfactions', icon: 'gitlab', score: 45 },
+  { barcode: '8710255130002', name: 'Orijen Original', brand: 'Orijen', icon: 'heart', score: 95 },
+  { barcode: '3017620422003', name: 'Royal Canin Maxi', brand: 'Royal Canin', icon: 'heart', score: 62 },
+  { barcode: '3564700266236', name: 'Pedigree Vital', brand: 'Pedigree', icon: 'heart', score: 31 },
+  { barcode: '4260215761024', name: 'Applaws Chat', brand: 'Applaws', icon: 'gitlab', score: 93 },
+  { barcode: '5410340620007', name: 'Whiskas Poisson', brand: 'Whiskas', icon: 'gitlab', score: 22 },
+  { barcode: '4047059414422', name: 'Kong Classic M', brand: 'Kong', icon: 'gift', score: 92 },
 ];
-
-const AnimatedTouchable = Animated.createAnimatedComponent(TouchableOpacity);
 
 const ScannerScreen = ({ navigation }) => {
   const insets = useSafeAreaInsets();
+  const { width, isTablet, contentWidth, hPadding } = useResponsive();
+  const SCAN_FRAME_SIZE = Math.min(width * 0.62, isTablet ? 380 : width * 0.62);
+  const CAMERA_HEIGHT = Math.min(width * 0.78, isTablet ? 460 : width * 0.78);
+  const DEMO_CARD_WIDTH = (contentWidth - hPadding * 2 - SPACING.md * 2) / 3;
   const [permission, requestPermission] = useCameraPermissions();
   const [barcode, setBarcode] = useState('');
   const [scanning, setScanning] = useState(false);
@@ -52,49 +52,34 @@ const ScannerScreen = ({ navigation }) => {
   const cornerPulse = useRef(new Animated.Value(1)).current;
   const scanLineAnim = useRef(new Animated.Value(0)).current;
   const fadeIn = useRef(new Animated.Value(0)).current;
-  const slideUp = useRef(new Animated.Value(40)).current;
+  const slideUp = useRef(new Animated.Value(30)).current;
   const flashAnim = useRef(new Animated.Value(0)).current;
   const errorOpacity = useRef(new Animated.Value(0)).current;
-  const headerScale = useRef(new Animated.Value(0.95)).current;
-  const glowAnim = useRef(new Animated.Value(0)).current;
-  const shimmerAnim = useRef(new Animated.Value(0)).current;
-
-  // Demo card press scales
-  const demoScales = useRef(DEMO_PRODUCTS.map(() => new Animated.Value(1))).current;
 
   useEffect(() => {
-    Animated.stagger(80, [
-      Animated.spring(headerScale, {
+    Animated.parallel([
+      Animated.timing(fadeIn, {
         toValue: 1,
-        friction: 8,
-        tension: 60,
+        duration: 600,
         useNativeDriver: true,
       }),
-      Animated.parallel([
-        Animated.timing(fadeIn, {
-          toValue: 1,
-          duration: 700,
-          useNativeDriver: true,
-        }),
-        Animated.spring(slideUp, {
-          toValue: 0,
-          friction: 8,
-          tension: 50,
-          useNativeDriver: true,
-        }),
-      ]),
+      Animated.timing(slideUp, {
+        toValue: 0,
+        duration: 600,
+        useNativeDriver: true,
+      }),
     ]).start();
 
     const pulseLoop = Animated.loop(
       Animated.sequence([
         Animated.timing(cornerPulse, {
-          toValue: 1.04,
-          duration: 1600,
+          toValue: 1.06,
+          duration: 1400,
           useNativeDriver: true,
         }),
         Animated.timing(cornerPulse, {
           toValue: 1,
-          duration: 1600,
+          duration: 1400,
           useNativeDriver: true,
         }),
       ])
@@ -105,48 +90,21 @@ const ScannerScreen = ({ navigation }) => {
       Animated.sequence([
         Animated.timing(scanLineAnim, {
           toValue: 1,
-          duration: 2400,
+          duration: 2800,
           useNativeDriver: true,
         }),
         Animated.timing(scanLineAnim, {
           toValue: 0,
-          duration: 2400,
+          duration: 2800,
           useNativeDriver: true,
         }),
       ])
     );
     scanLoop.start();
 
-    const glowLoop = Animated.loop(
-      Animated.sequence([
-        Animated.timing(glowAnim, {
-          toValue: 1,
-          duration: 2000,
-          useNativeDriver: true,
-        }),
-        Animated.timing(glowAnim, {
-          toValue: 0,
-          duration: 2000,
-          useNativeDriver: true,
-        }),
-      ])
-    );
-    glowLoop.start();
-
-    const shimmerLoop = Animated.loop(
-      Animated.timing(shimmerAnim, {
-        toValue: 1,
-        duration: 3000,
-        useNativeDriver: true,
-      })
-    );
-    shimmerLoop.start();
-
     return () => {
       pulseLoop.stop();
       scanLoop.stop();
-      glowLoop.stop();
-      shimmerLoop.stop();
     };
   }, []);
 
@@ -203,15 +161,19 @@ const ScannerScreen = ({ navigation }) => {
       }
     } catch (error) {
       if (error.response?.status === 404) {
-        if (Platform.OS === 'web') {
-          showError('Produit non trouve dans notre base de donnees');
-        } else {
-          showAlert(
-            'Produit non trouve',
-            "Ce produit n'est pas encore dans notre base de donnees.",
-            [{ text: 'OK' }]
-          );
-        }
+        Alert.alert(
+          'Produit non trouve',
+          "Ce produit n'est pas encore dans notre base de donnees. Voulez-vous contribuer en l'ajoutant ?",
+          [
+            { text: 'Non merci', style: 'cancel' },
+            {
+              text: 'Contribuer',
+              onPress: () => {
+                // TODO: navigate to add product screen
+              },
+            },
+          ]
+        );
       } else if (error.message === 'Network Error') {
         showError('Pas de connexion internet');
       } else {
@@ -242,36 +204,13 @@ const ScannerScreen = ({ navigation }) => {
     handleBarcodeScan(trimmed);
   };
 
-  const onDemoPressIn = (index) => {
-    Animated.spring(demoScales[index], {
-      toValue: 0.93,
-      friction: 8,
-      tension: 100,
-      useNativeDriver: true,
-    }).start();
-  };
-
-  const onDemoPressOut = (index) => {
-    Animated.spring(demoScales[index], {
-      toValue: 1,
-      friction: 5,
-      tension: 80,
-      useNativeDriver: true,
-    }).start();
-  };
-
   const scanLineTranslate = scanLineAnim.interpolate({
     inputRange: [0, 1],
-    outputRange: [0, SCAN_FRAME_SIZE - 4],
+    outputRange: [0, SCAN_FRAME_SIZE - 4],  // reactively sized
   });
 
-  const glowOpacity = glowAnim.interpolate({
-    inputRange: [0, 1],
-    outputRange: [0.4, 0.9],
-  });
-
-  // Loading permission state (skip on web — no camera permissions needed)
-  if (!permission && Platform.OS !== 'web') {
+  // Loading permission state
+  if (!permission) {
     return (
       <View style={[styles.container, styles.centered]}>
         <StatusBar barStyle="dark-content" translucent backgroundColor="transparent" />
@@ -284,18 +223,11 @@ const ScannerScreen = ({ navigation }) => {
   const renderPermissionRequest = () => (
     <View style={styles.permissionContainer}>
       <View style={styles.permIconCircle}>
-        <LinearGradient
-          colors={COLORS.gradientPrimary}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
-          style={styles.permIconGradient}
-        >
-          <Feather name="camera" size={32} color={COLORS.white} />
-        </LinearGradient>
+        <Feather name="camera" size={36} color={COLORS.primary} />
       </View>
       <Text style={styles.permTitle}>Acces camera requis</Text>
       <Text style={styles.permDescription}>
-        Pour scanner les codes-barres des produits, Pépète a besoin d'acceder a votre camera.
+        Pour scanner les codes-barres des produits, Patoune a besoin d'acceder a votre camera.
       </Text>
       <TouchableOpacity
         style={styles.permButton}
@@ -308,7 +240,6 @@ const ScannerScreen = ({ navigation }) => {
           end={{ x: 1, y: 0 }}
           style={styles.permButtonGradient}
         >
-          <Feather name="unlock" size={16} color={COLORS.white} style={{ marginRight: 8 }} />
           <Text style={styles.permButtonText}>Autoriser la camera</Text>
         </LinearGradient>
       </TouchableOpacity>
@@ -325,23 +256,16 @@ const ScannerScreen = ({ navigation }) => {
   const renderScanFrame = () => (
     <View style={styles.scanOverlay}>
       <View style={styles.overlayTop} />
-      <View style={styles.overlayMiddleRow}>
+      <View style={[styles.overlayMiddleRow, { height: SCAN_FRAME_SIZE }]}>
         <View style={styles.overlaySide} />
-        <View style={styles.scanFrameWrapper}>
+        <View style={[styles.scanFrameWrapper, { width: SCAN_FRAME_SIZE, height: SCAN_FRAME_SIZE }]}>
           <Animated.View
             style={[
               styles.scanFrame,
+              { width: SCAN_FRAME_SIZE, height: SCAN_FRAME_SIZE },
               { transform: [{ scale: cornerPulse }] },
             ]}
           >
-            {/* Glow behind corners */}
-            <Animated.View
-              style={[
-                styles.cornerGlow,
-                { opacity: glowOpacity },
-              ]}
-            />
-
             <View style={[styles.corner, styles.cornerTL]} />
             <View style={[styles.corner, styles.cornerTR]} />
             <View style={[styles.corner, styles.cornerBL]} />
@@ -354,20 +278,11 @@ const ScannerScreen = ({ navigation }) => {
               ]}
             >
               <LinearGradient
-                colors={['transparent', COLORS.primary + '60', COLORS.primary, COLORS.primary + '60', 'transparent']}
+                colors={['transparent', COLORS.primary + '90', COLORS.primary, COLORS.primary + '90', 'transparent']}
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 0 }}
                 style={styles.scanLineGradient}
               />
-              {/* Scan line glow */}
-              <View style={styles.scanLineGlowWrap}>
-                <LinearGradient
-                  colors={['transparent', COLORS.primary + '20', 'transparent']}
-                  start={{ x: 0, y: 0 }}
-                  end={{ x: 0, y: 1 }}
-                  style={styles.scanLineGlowEffect}
-                />
-              </View>
             </Animated.View>
           </Animated.View>
         </View>
@@ -376,18 +291,13 @@ const ScannerScreen = ({ navigation }) => {
       <View style={styles.overlayBottom}>
         {scanned ? (
           <View style={styles.scanningIndicator}>
-            <View style={styles.scanningGlass}>
-              <ActivityIndicator size="small" color={COLORS.white} />
-              <Text style={styles.scanningText}>Analyse en cours...</Text>
-            </View>
+            <ActivityIndicator size="small" color={COLORS.white} />
+            <Text style={styles.scanningText}>Analyse en cours...</Text>
           </View>
         ) : (
           <View style={styles.hintContainer}>
-            <View style={styles.hintGlass}>
-              <Feather name="maximize" size={14} color="rgba(255,255,255,0.8)" style={{ marginRight: 8 }} />
-              <Text style={styles.scanHint}>Placez le code-barres dans le cadre</Text>
-            </View>
-            <Text style={styles.scanSubHint}>Detection automatique</Text>
+            <Text style={styles.scanHint}>Placez le code-barres dans le cadre</Text>
+            <Text style={styles.scanSubHint}>La detection est automatique</Text>
           </View>
         )}
       </View>
@@ -439,30 +349,14 @@ const ScannerScreen = ({ navigation }) => {
     >
       <StatusBar barStyle="light-content" translucent backgroundColor="transparent" />
 
-      {/* Premium Header */}
+      {/* Header */}
       <LinearGradient
-        colors={['#7B8B6F', '#8A9A7E', '#96A88A']}
+        colors={COLORS.gradientPrimary}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
         style={[styles.header, { paddingTop: insets.top + SPACING.md }]}
       >
-        {/* Decorative shimmer overlay */}
-        <Animated.View
-          pointerEvents="none"
-          style={[
-            styles.headerShimmer,
-            {
-              opacity: 0.06,
-              transform: [{
-                translateX: shimmerAnim.interpolate({
-                  inputRange: [0, 1],
-                  outputRange: [-SCREEN_WIDTH, SCREEN_WIDTH],
-                }),
-              }],
-            },
-          ]}
-        />
-        <Animated.View style={[styles.headerContent, { transform: [{ scale: headerScale }] }]}>
+        <View style={styles.headerContent}>
           <View>
             <Text style={styles.headerTitle}>Scanner</Text>
             <Text style={styles.headerSubtitle}>Analysez un produit</Text>
@@ -472,12 +366,10 @@ const ScannerScreen = ({ navigation }) => {
             onPress={() => navigation.navigate('ScanHistory')}
             activeOpacity={0.8}
           >
-            <View style={styles.historyButtonInner}>
-              <Feather name="clock" size={15} color={COLORS.white} />
-              <Text style={styles.historyText}>Historique</Text>
-            </View>
+            <Feather name="clipboard" size={16} color={COLORS.white} />
+            <Text style={styles.historyText}>Historique</Text>
           </TouchableOpacity>
-        </Animated.View>
+        </View>
       </LinearGradient>
 
       <Animated.ScrollView
@@ -490,31 +382,22 @@ const ScannerScreen = ({ navigation }) => {
         ]}
         showsVerticalScrollIndicator={false}
         bounces={true}
-        contentContainerStyle={{ paddingBottom: SPACING['3xl'] + 20 }}
+        contentContainerStyle={{ paddingBottom: SPACING['3xl'] }}
       >
         {/* Error toast */}
         {errorMessage !== '' && (
           <Animated.View style={[styles.errorToast, { opacity: errorOpacity }]}>
-            <LinearGradient
-              colors={['#DC2626', '#EF4444']}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 0 }}
-              style={styles.errorToastGradient}
-            >
-              <View style={styles.errorToastIconContainer}>
-                <Feather name="alert-triangle" size={13} color={COLORS.white} />
-              </View>
-              <Text style={styles.errorToastText}>{errorMessage}</Text>
-            </LinearGradient>
+            <View style={styles.errorToastIconContainer}>
+              <Feather name="alert-triangle" size={13} color={COLORS.white} />
+            </View>
+            <Text style={styles.errorToastText}>{errorMessage}</Text>
           </Animated.View>
         )}
 
         {/* Camera / Manual zone */}
-        <View style={styles.cameraContainer}>
-          <View style={styles.cameraArea}>
-            {/* Subtle border glow */}
-            <View style={styles.cameraBorderGlow} />
-            {!manualMode && permission?.granted ? (
+        <View style={[styles.cameraContainer, { paddingHorizontal: hPadding }]}>
+          <View style={[styles.cameraArea, { height: CAMERA_HEIGHT }]}>
+            {!manualMode && permission.granted ? (
               <CameraView
                 style={StyleSheet.absoluteFillObject}
                 barcodeScannerSettings={{
@@ -524,7 +407,7 @@ const ScannerScreen = ({ navigation }) => {
               >
                 {renderScanFrame()}
               </CameraView>
-            ) : !manualMode && !permission?.granted ? (
+            ) : !manualMode && !permission.granted ? (
               renderPermissionRequest()
             ) : (
               renderManualMode()
@@ -533,7 +416,7 @@ const ScannerScreen = ({ navigation }) => {
         </View>
 
         {/* Mode toggle */}
-        <View style={styles.toggleSection}>
+        <View style={[styles.toggleSection, { paddingHorizontal: hPadding }]}>
           <View style={styles.toggleContainer}>
             <TouchableOpacity
               style={[
@@ -543,14 +426,6 @@ const ScannerScreen = ({ navigation }) => {
               onPress={() => setManualMode(false)}
               activeOpacity={0.7}
             >
-              {!manualMode && (
-                <LinearGradient
-                  colors={[COLORS.primarySoft, '#FFF0E8']}
-                  start={{ x: 0, y: 0 }}
-                  end={{ x: 1, y: 1 }}
-                  style={StyleSheet.absoluteFill}
-                />
-              )}
               <Feather name="camera" size={16} color={!manualMode ? COLORS.primary : COLORS.stone} />
               <Text
                 style={[
@@ -569,14 +444,6 @@ const ScannerScreen = ({ navigation }) => {
               onPress={() => setManualMode(true)}
               activeOpacity={0.7}
             >
-              {manualMode && (
-                <LinearGradient
-                  colors={[COLORS.primarySoft, '#FFF0E8']}
-                  start={{ x: 0, y: 0 }}
-                  end={{ x: 1, y: 1 }}
-                  style={StyleSheet.absoluteFill}
-                />
-              )}
               <Feather name="edit-3" size={16} color={manualMode ? COLORS.primary : COLORS.stone} />
               <Text
                 style={[
@@ -592,12 +459,10 @@ const ScannerScreen = ({ navigation }) => {
 
         {/* Manual input section */}
         {manualMode && (
-          <View style={styles.manualInputSection}>
+          <View style={[styles.manualInputSection, { paddingHorizontal: hPadding }]}>
             <View style={styles.inputWrapper}>
               <View style={styles.inputContainer}>
-                <View style={styles.inputIconWrap}>
-                  <Feather name="hash" size={16} color={COLORS.primary} />
-                </View>
+                <Feather name="search" size={18} color={COLORS.sand} style={{ marginRight: SPACING.sm }} />
                 <TextInput
                   style={styles.input}
                   value={barcode}
@@ -622,7 +487,7 @@ const ScannerScreen = ({ navigation }) => {
                 )}
               </View>
               {barcode.length > 0 && (
-                <Text style={styles.barcodeLength}>{barcode.length}/14 chiffres</Text>
+                <Text style={styles.barcodeLength}>{barcode.length} chiffres</Text>
               )}
               <TouchableOpacity
                 style={[
@@ -634,7 +499,7 @@ const ScannerScreen = ({ navigation }) => {
                 activeOpacity={0.8}
               >
                 <LinearGradient
-                  colors={scanning ? [COLORS.textLight, COLORS.textLight] : ['#7B8B6F', '#96A88A']}
+                  colors={scanning ? [COLORS.textLight, COLORS.textLight] : COLORS.gradientPrimary}
                   start={{ x: 0, y: 0 }}
                   end={{ x: 1, y: 0 }}
                   style={styles.searchButtonGradient}
@@ -642,10 +507,7 @@ const ScannerScreen = ({ navigation }) => {
                   {scanning ? (
                     <ActivityIndicator size="small" color={COLORS.white} />
                   ) : (
-                    <>
-                      <Feather name="search" size={18} color={COLORS.white} style={{ marginRight: 8 }} />
-                      <Text style={styles.searchButtonText}>Rechercher</Text>
-                    </>
+                    <Text style={styles.searchButtonText}>Rechercher</Text>
                   )}
                 </LinearGradient>
               </TouchableOpacity>
@@ -653,16 +515,13 @@ const ScannerScreen = ({ navigation }) => {
           </View>
         )}
 
-        {/* How it works - Premium step cards */}
+        {/* How it works */}
         {!manualMode && (
-          <View style={styles.infoSection}>
+          <View style={[styles.infoSection, { paddingHorizontal: hPadding }]}>
             <Text style={styles.infoTitle}>Comment ca marche ?</Text>
             <View style={styles.stepsRow}>
               {STEP_ICONS.map((step, index) => (
                 <View key={index} style={styles.stepCard}>
-                  <View style={styles.stepNumberBadge}>
-                    <Text style={styles.stepNumber}>{index + 1}</Text>
-                  </View>
                   <View
                     style={[
                       styles.stepIconCircle,
@@ -679,76 +538,43 @@ const ScannerScreen = ({ navigation }) => {
           </View>
         )}
 
-        {/* Demo products for quick testing - Premium cards */}
-        <View style={styles.demoSection}>
-          <View style={styles.demoHeader}>
-            <View>
-              <Text style={styles.demoTitle}>Produits demo</Text>
-              <Text style={styles.demoSubtitle}>Appuyez pour tester le scanner</Text>
-            </View>
-            <View style={styles.demoBadge}>
-              <Text style={styles.demoBadgeText}>{DEMO_PRODUCTS.length}</Text>
-            </View>
-          </View>
+        {/* Demo products for quick testing */}
+        <View style={[styles.demoSection, { paddingHorizontal: hPadding }]}>
+          <Text style={styles.demoTitle}>Produits demo</Text>
+          <Text style={styles.demoSubtitle}>Appuyez pour tester le scanner</Text>
           <View style={styles.demoGrid}>
-            {DEMO_PRODUCTS.map((item, index) => (
-              <AnimatedTouchable
+            {DEMO_PRODUCTS.map((item) => (
+              <TouchableOpacity
                 key={item.barcode}
-                style={[
-                  styles.demoCard,
-                  { transform: [{ scale: demoScales[index] }] },
-                ]}
+                style={[styles.demoCard, { width: DEMO_CARD_WIDTH }]}
                 onPress={() => handleBarcodeScan(item.barcode)}
-                onPressIn={() => onDemoPressIn(index)}
-                onPressOut={() => onDemoPressOut(index)}
                 disabled={scanning}
-                activeOpacity={1}
+                activeOpacity={0.7}
               >
                 <View style={[
-                  styles.demoScoreRing,
-                  {
-                    borderColor: item.score >= 70 ? COLORS.scoreExcellent + '40'
-                      : item.score >= 40 ? COLORS.scoreMediocre + '40'
-                      : COLORS.scoreVeryBad + '40',
-                  }
+                  styles.demoIconCircle,
+                  { backgroundColor: item.score >= 70 ? COLORS.successSoft : item.score >= 40 ? COLORS.warningSoft : COLORS.errorSoft }
                 ]}>
-                  <View style={[
-                    styles.demoIconCircle,
-                    {
-                      backgroundColor: item.score >= 70 ? COLORS.successSoft
-                        : item.score >= 40 ? COLORS.warningSoft
-                        : COLORS.errorSoft,
-                    }
-                  ]}>
-                    <Feather
-                      name={item.icon}
-                      size={16}
-                      color={item.score >= 70 ? COLORS.success : item.score >= 40 ? COLORS.warning : COLORS.error}
-                    />
-                  </View>
+                  <Feather
+                    name={item.icon}
+                    size={18}
+                    color={item.score >= 70 ? COLORS.success : item.score >= 40 ? COLORS.warning : COLORS.error}
+                  />
                 </View>
                 <Text style={styles.demoName} numberOfLines={1}>{item.name}</Text>
-                <Text style={styles.demoBrand} numberOfLines={1}>{item.brand}</Text>
+                <Text style={styles.demoBrand}>{item.brand}</Text>
                 <View style={[
                   styles.demoScoreBadge,
-                  {
-                    backgroundColor: item.score >= 70 ? COLORS.successSoft
-                      : item.score >= 40 ? COLORS.warningSoft
-                      : COLORS.errorSoft,
-                  }
+                  { backgroundColor: item.score >= 70 ? COLORS.successSoft : item.score >= 40 ? COLORS.warningSoft : COLORS.errorSoft }
                 ]}>
                   <Text style={[
                     styles.demoScoreText,
-                    {
-                      color: item.score >= 70 ? COLORS.success
-                        : item.score >= 40 ? COLORS.warning
-                        : COLORS.error,
-                    }
+                    { color: item.score >= 70 ? COLORS.success : item.score >= 40 ? COLORS.warning : COLORS.error }
                   ]}>
                     {item.score}/100
                   </Text>
                 </View>
-              </AnimatedTouchable>
+              </TouchableOpacity>
             ))}
           </View>
         </View>
@@ -773,22 +599,12 @@ const styles = StyleSheet.create({
     fontFamily: FONTS.bodyMedium,
   },
 
-  // Header — Premium
+  // Header
   header: {
-    paddingBottom: SPACING.lg + 4,
+    paddingBottom: SPACING.lg,
     paddingHorizontal: SPACING.xl,
-    borderBottomLeftRadius: RADIUS['3xl'],
-    borderBottomRightRadius: RADIUS['3xl'],
-    overflow: 'hidden',
-  },
-  headerShimmer: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    width: SCREEN_WIDTH * 0.6,
-    height: '100%',
-    backgroundColor: COLORS.white,
-    transform: [{ skewX: '-20deg' }],
+    borderBottomLeftRadius: RADIUS['2xl'],
+    borderBottomRightRadius: RADIUS['2xl'],
   },
   headerContent: {
     flexDirection: 'row',
@@ -803,25 +619,18 @@ const styles = StyleSheet.create({
   },
   headerSubtitle: {
     fontSize: FONT_SIZE.sm,
-    color: 'rgba(255,255,255,0.85)',
-    marginTop: 3,
+    color: 'rgba(255,255,255,0.8)',
+    marginTop: 2,
     fontFamily: FONTS.bodyMedium,
-    letterSpacing: 0.2,
   },
   historyButton: {
-    borderRadius: RADIUS.xl,
-    overflow: 'hidden',
-  },
-  historyButtonInner: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(255,255,255,0.18)',
-    paddingHorizontal: SPACING.md + 2,
-    paddingVertical: SPACING.sm + 2,
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    paddingHorizontal: SPACING.md,
+    paddingVertical: SPACING.sm,
     borderRadius: RADIUS.xl,
     gap: 6,
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.12)',
   },
   historyText: {
     color: COLORS.white,
@@ -834,28 +643,27 @@ const styles = StyleSheet.create({
     flex: 1,
   },
 
-  // Error toast — Premium glass
+  // Error toast
   errorToast: {
-    marginHorizontal: SPACING.xl,
-    marginTop: SPACING.sm,
-    borderRadius: RADIUS.xl,
-    overflow: 'hidden',
-    ...SHADOWS.lg,
-  },
-  errorToastGradient: {
     flexDirection: 'row',
     alignItems: 'center',
+    backgroundColor: COLORS.error,
+    marginHorizontal: SPACING.xl,
+    marginTop: SPACING.sm,
     paddingHorizontal: SPACING.base,
-    paddingVertical: SPACING.md + 2,
+    paddingVertical: SPACING.md,
+    borderRadius: RADIUS.lg,
     gap: SPACING.sm,
+    ...SHADOWS.md,
   },
   errorToastIconContainer: {
-    width: 26,
-    height: 26,
-    borderRadius: 13,
-    backgroundColor: 'rgba(255,255,255,0.2)',
+    width: 22,
+    height: 22,
+    borderRadius: 11,
+    backgroundColor: 'rgba(255,255,255,0.25)',
     alignItems: 'center',
     justifyContent: 'center',
+    overflow: 'hidden',
   },
   errorToastText: {
     flex: 1,
@@ -864,86 +672,50 @@ const styles = StyleSheet.create({
     color: COLORS.white,
   },
 
-  // Camera — Premium container
+  // Camera
   cameraContainer: {
-    paddingHorizontal: SPACING.xl,
     marginTop: -SPACING.md,
   },
   cameraArea: {
-    height: SCREEN_WIDTH * 0.82,
-    borderRadius: RADIUS['3xl'],
+    borderRadius: RADIUS['2xl'],
     overflow: 'hidden',
-    backgroundColor: '#080A14',
-    ...SHADOWS.xl,
-  },
-  cameraBorderGlow: {
-    position: 'absolute',
-    top: -1,
-    left: -1,
-    right: -1,
-    bottom: -1,
-    borderRadius: RADIUS['3xl'] + 1,
-    borderWidth: 1,
-    borderColor: 'rgba(255, 107, 53, 0.15)',
-    zIndex: -1,
+    backgroundColor: '#0D0F1A',
+    ...SHADOWS.lg,
   },
 
-  // Scan overlay — Premium
+  // Scan overlay
   scanOverlay: {
     flex: 1,
   },
   overlayTop: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.6)',
+    backgroundColor: 'rgba(0,0,0,0.55)',
   },
   overlayMiddleRow: {
     flexDirection: 'row',
-    height: SCAN_FRAME_SIZE,
+    // height applied inline via SCAN_FRAME_SIZE
   },
   overlaySide: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.6)',
+    backgroundColor: 'rgba(0,0,0,0.55)',
   },
   scanFrameWrapper: {
-    width: SCAN_FRAME_SIZE,
-    height: SCAN_FRAME_SIZE,
     alignItems: 'center',
     justifyContent: 'center',
+    // width/height applied inline via SCAN_FRAME_SIZE
   },
   scanFrame: {
-    width: SCAN_FRAME_SIZE,
-    height: SCAN_FRAME_SIZE,
-  },
-  cornerGlow: {
-    position: 'absolute',
-    top: -8,
-    left: -8,
-    right: -8,
-    bottom: -8,
-    borderRadius: RADIUS.lg,
-    borderWidth: 1,
-    borderColor: COLORS.primary + '25',
+    // width/height applied inline via SCAN_FRAME_SIZE
   },
   overlayBottom: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.6)',
+    backgroundColor: 'rgba(0,0,0,0.55)',
     alignItems: 'center',
     justifyContent: 'center',
     paddingTop: SPACING.sm,
   },
   hintContainer: {
     alignItems: 'center',
-    gap: 6,
-  },
-  hintGlass: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: 'rgba(255,255,255,0.1)',
-    paddingHorizontal: SPACING.base,
-    paddingVertical: SPACING.sm + 1,
-    borderRadius: RADIUS.full,
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.08)',
   },
   scanHint: {
     color: 'rgba(255,255,255,0.9)',
@@ -952,26 +724,20 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   scanSubHint: {
-    color: 'rgba(255,255,255,0.4)',
+    color: 'rgba(255,255,255,0.5)',
     fontSize: FONT_SIZE.xs,
     fontFamily: FONTS.bodyMedium,
     textAlign: 'center',
-    letterSpacing: 0.5,
-    textTransform: 'uppercase',
+    marginTop: 3,
   },
   scanningIndicator: {
-    alignItems: 'center',
-  },
-  scanningGlass: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 10,
-    backgroundColor: 'rgba(255, 107, 53, 0.25)',
-    paddingHorizontal: SPACING.xl,
-    paddingVertical: SPACING.sm + 3,
+    backgroundColor: 'rgba(196,112,75,0.3)',
+    paddingHorizontal: SPACING.lg,
+    paddingVertical: SPACING.sm + 2,
     borderRadius: RADIUS.full,
-    borderWidth: 1,
-    borderColor: 'rgba(255, 107, 53, 0.2)',
   },
   scanningText: {
     color: COLORS.white,
@@ -979,7 +745,7 @@ const styles = StyleSheet.create({
     fontFamily: FONTS.bodySemiBold,
   },
 
-  // Corner styles — Premium refined
+  // Corner styles
   corner: {
     position: 'absolute',
     width: CORNER_SIZE,
@@ -991,33 +757,33 @@ const styles = StyleSheet.create({
     left: 0,
     borderTopWidth: CORNER_WIDTH,
     borderLeftWidth: CORNER_WIDTH,
-    borderTopLeftRadius: RADIUS.lg,
+    borderTopLeftRadius: RADIUS.md,
   },
   cornerTR: {
     top: 0,
     right: 0,
     borderTopWidth: CORNER_WIDTH,
     borderRightWidth: CORNER_WIDTH,
-    borderTopRightRadius: RADIUS.lg,
+    borderTopRightRadius: RADIUS.md,
   },
   cornerBL: {
     bottom: 0,
     left: 0,
     borderBottomWidth: CORNER_WIDTH,
     borderLeftWidth: CORNER_WIDTH,
-    borderBottomLeftRadius: RADIUS.lg,
+    borderBottomLeftRadius: RADIUS.md,
   },
   cornerBR: {
     bottom: 0,
     right: 0,
     borderBottomWidth: CORNER_WIDTH,
     borderRightWidth: CORNER_WIDTH,
-    borderBottomRightRadius: RADIUS.lg,
+    borderBottomRightRadius: RADIUS.md,
   },
   scanLine: {
     position: 'absolute',
-    left: CORNER_WIDTH + 4,
-    right: CORNER_WIDTH + 4,
+    left: CORNER_WIDTH + 2,
+    right: CORNER_WIDTH + 2,
     height: 2,
     top: 0,
   },
@@ -1025,18 +791,8 @@ const styles = StyleSheet.create({
     flex: 1,
     borderRadius: 1,
   },
-  scanLineGlowWrap: {
-    position: 'absolute',
-    left: 0,
-    right: 0,
-    top: -12,
-    height: 26,
-  },
-  scanLineGlowEffect: {
-    flex: 1,
-  },
 
-  // Permission request — Premium
+  // Permission request
   permissionContainer: {
     flex: 1,
     alignItems: 'center',
@@ -1044,16 +800,13 @@ const styles = StyleSheet.create({
     padding: SPACING['2xl'],
   },
   permIconCircle: {
-    marginBottom: SPACING.lg,
-    borderRadius: 44,
-    ...SHADOWS.glow(COLORS.primary),
-  },
-  permIconGradient: {
-    width: 88,
-    height: 88,
-    borderRadius: 44,
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    backgroundColor: 'rgba(196,112,75,0.15)',
     alignItems: 'center',
     justifyContent: 'center',
+    marginBottom: SPACING.lg,
   },
   permTitle: {
     fontSize: FONT_SIZE.xl,
@@ -1071,16 +824,13 @@ const styles = StyleSheet.create({
     fontFamily: FONTS.body,
   },
   permButton: {
-    borderRadius: RADIUS.xl,
+    borderRadius: RADIUS.lg,
     overflow: 'hidden',
-    ...SHADOWS.glow(COLORS.primary),
   },
   permButtonGradient: {
-    flexDirection: 'row',
-    alignItems: 'center',
     paddingHorizontal: SPACING['2xl'],
-    paddingVertical: SPACING.base,
-    borderRadius: RADIUS.xl,
+    paddingVertical: SPACING.md + 2,
+    borderRadius: RADIUS.lg,
   },
   permButtonText: {
     color: COLORS.white,
@@ -1098,7 +848,7 @@ const styles = StyleSheet.create({
     textDecorationLine: 'underline',
   },
 
-  // Manual mode display — Premium
+  // Manual mode display
   manualModeContainer: {
     flex: 1,
     alignItems: 'center',
@@ -1106,13 +856,12 @@ const styles = StyleSheet.create({
     padding: SPACING['2xl'],
   },
   manualIconGradient: {
-    width: 76,
-    height: 76,
-    borderRadius: 38,
+    width: 72,
+    height: 72,
+    borderRadius: 36,
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: SPACING.lg,
-    ...SHADOWS.glow(COLORS.accent),
+    marginBottom: SPACING.base,
   },
   manualIconText: {
     fontSize: FONT_SIZE.xl,
@@ -1124,7 +873,7 @@ const styles = StyleSheet.create({
     fontSize: FONT_SIZE.xl,
     fontFamily: FONTS.heading,
     color: COLORS.white,
-    marginBottom: 6,
+    marginBottom: 4,
   },
   manualSubtitle: {
     fontSize: FONT_SIZE.sm,
@@ -1132,38 +881,32 @@ const styles = StyleSheet.create({
     fontFamily: FONTS.bodyMedium,
     textAlign: 'center',
     paddingHorizontal: SPACING.lg,
-    lineHeight: 20,
+    lineHeight: 19,
   },
 
-  // Mode toggle — Premium pill
+  // Mode toggle
   toggleSection: {
     paddingHorizontal: SPACING.xl,
-    marginTop: SPACING.lg,
+    marginTop: SPACING.base,
   },
   toggleContainer: {
     flexDirection: 'row',
     backgroundColor: COLORS.white,
-    borderRadius: RADIUS['2xl'],
-    padding: SPACING.xs + 1,
+    borderRadius: RADIUS.xl,
+    padding: SPACING.xs,
     ...SHADOWS.md,
-    borderWidth: 1,
-    borderColor: COLORS.borderLight,
   },
   toggleOption: {
     flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: SPACING.md + 2,
-    borderRadius: RADIUS.xl,
-    gap: 7,
-    overflow: 'hidden',
+    paddingVertical: SPACING.md,
+    borderRadius: RADIUS.lg,
+    gap: 6,
   },
   toggleOptionActive: {
-    ...SHADOWS.sm,
-  },
-  toggleOptionDisabled: {
-    opacity: 0.5,
+    backgroundColor: COLORS.primarySoft,
   },
   toggleText: {
     fontSize: FONT_SIZE.sm,
@@ -1172,13 +915,12 @@ const styles = StyleSheet.create({
   },
   toggleTextActive: {
     color: COLORS.primary,
-    fontFamily: FONTS.heading,
   },
 
-  // Manual input — Premium
+  // Manual input
   manualInputSection: {
     paddingHorizontal: SPACING.xl,
-    marginTop: SPACING.lg,
+    marginTop: SPACING.base,
   },
   inputWrapper: {
     gap: SPACING.sm,
@@ -1187,21 +929,11 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: COLORS.white,
-    borderRadius: RADIUS.xl,
+    borderRadius: RADIUS.lg,
     paddingHorizontal: SPACING.base,
-    paddingVertical: Platform.OS === 'ios' ? 2 : 0,
     borderWidth: 1.5,
     borderColor: COLORS.border,
-    ...SHADOWS.md,
-  },
-  inputIconWrap: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    backgroundColor: COLORS.primarySoft,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: SPACING.sm,
+    ...SHADOWS.sm,
   },
   input: {
     flex: 1,
@@ -1209,16 +941,16 @@ const styles = StyleSheet.create({
     color: COLORS.charcoal,
     paddingVertical: Platform.OS === 'ios' ? SPACING.base : SPACING.md,
     fontFamily: FONTS.bodyMedium,
-    letterSpacing: 2,
+    letterSpacing: 1.5,
   },
   clearButton: {
     padding: SPACING.xs,
   },
   clearCircle: {
-    width: 24,
-    height: 24,
-    borderRadius: 12,
-    backgroundColor: COLORS.borderLight,
+    width: 22,
+    height: 22,
+    borderRadius: 11,
+    backgroundColor: COLORS.border,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -1230,40 +962,36 @@ const styles = StyleSheet.create({
     paddingRight: SPACING.xs,
   },
   searchButton: {
-    borderRadius: RADIUS.xl,
+    borderRadius: RADIUS.lg,
     overflow: 'hidden',
     marginTop: SPACING.xs,
-    ...SHADOWS.glow(COLORS.primary),
   },
   searchButtonDisabled: {
     opacity: 0.6,
   },
   searchButtonGradient: {
-    flexDirection: 'row',
-    paddingVertical: SPACING.base + 2,
+    paddingVertical: SPACING.base,
     alignItems: 'center',
     justifyContent: 'center',
-    borderRadius: RADIUS.xl,
+    borderRadius: RADIUS.lg,
   },
   searchButtonText: {
     color: COLORS.white,
     fontSize: FONT_SIZE.base,
     fontFamily: FONTS.heading,
-    letterSpacing: 0.3,
   },
 
-  // Info section — Premium
+  // Info section
   infoSection: {
     paddingHorizontal: SPACING.xl,
-    marginTop: SPACING['2xl'],
-    paddingBottom: SPACING.lg,
+    marginTop: SPACING.xl,
+    paddingBottom: SPACING['2xl'],
   },
   infoTitle: {
     fontSize: FONT_SIZE.lg,
     fontFamily: FONTS.heading,
     color: COLORS.charcoal,
     marginBottom: SPACING.base,
-    letterSpacing: -0.2,
   },
   stepsRow: {
     flexDirection: 'row',
@@ -1272,88 +1000,48 @@ const styles = StyleSheet.create({
   stepCard: {
     flex: 1,
     backgroundColor: COLORS.white,
-    borderRadius: RADIUS.xl,
+    borderRadius: RADIUS.lg,
     padding: SPACING.base,
     alignItems: 'center',
-    ...SHADOWS.md,
-    borderWidth: 1,
-    borderColor: COLORS.borderLight,
-  },
-  stepNumberBadge: {
-    position: 'absolute',
-    top: -8,
-    right: -4,
-    width: 22,
-    height: 22,
-    borderRadius: 11,
-    backgroundColor: COLORS.primary,
-    alignItems: 'center',
-    justifyContent: 'center',
     ...SHADOWS.sm,
-    zIndex: 1,
-  },
-  stepNumber: {
-    fontSize: 10,
-    fontFamily: FONTS.heading,
-    color: COLORS.white,
   },
   stepIconCircle: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
+    width: 44,
+    height: 44,
+    borderRadius: 22,
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: SPACING.sm + 2,
+    marginBottom: SPACING.sm,
   },
   stepLabel: {
-    fontSize: FONT_SIZE.sm,
+    fontSize: FONT_SIZE.xs,
     fontFamily: FONTS.heading,
     color: COLORS.charcoal,
-    marginBottom: 3,
+    marginBottom: 2,
   },
   stepDesc: {
     fontSize: FONT_SIZE.xs,
     color: COLORS.stone,
     textAlign: 'center',
-    lineHeight: 16,
+    lineHeight: 15,
     fontFamily: FONTS.bodyMedium,
   },
 
-  // Demo products section — Premium
+  // Demo products section
   demoSection: {
-    paddingHorizontal: SPACING.xl,
     marginTop: SPACING.xl,
-  },
-  demoHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: SPACING.base,
   },
   demoTitle: {
     fontSize: FONT_SIZE.lg,
     fontFamily: FONTS.heading,
     color: COLORS.charcoal,
-    letterSpacing: -0.2,
+    marginBottom: SPACING.xs,
   },
   demoSubtitle: {
-    fontSize: FONT_SIZE.xs,
+    fontSize: FONT_SIZE.sm,
     fontFamily: FONTS.bodyMedium,
     color: COLORS.stone,
-    marginTop: 2,
-  },
-  demoBadge: {
-    width: 30,
-    height: 30,
-    borderRadius: 15,
-    backgroundColor: COLORS.primarySoft,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  demoBadgeText: {
-    fontSize: FONT_SIZE.xs,
-    fontFamily: FONTS.heading,
-    color: COLORS.primary,
+    marginBottom: SPACING.base,
   },
   demoGrid: {
     flexDirection: 'row',
@@ -1361,53 +1049,42 @@ const styles = StyleSheet.create({
     gap: SPACING.md,
   },
   demoCard: {
-    width: (SCREEN_WIDTH - SPACING.xl * 2 - SPACING.md * 2) / 3,
+    // width applied inline via DEMO_CARD_WIDTH
     backgroundColor: COLORS.white,
-    borderRadius: RADIUS.xl,
+    borderRadius: RADIUS.lg,
     padding: SPACING.md,
     alignItems: 'center',
-    ...SHADOWS.md,
-    borderWidth: 1,
-    borderColor: COLORS.borderLight,
+    ...SHADOWS.sm,
   },
-  demoScoreRing: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    borderWidth: 2,
+  demoIconCircle: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: SPACING.sm,
-  },
-  demoIconCircle: {
-    width: 34,
-    height: 34,
-    borderRadius: 17,
-    alignItems: 'center',
-    justifyContent: 'center',
   },
   demoName: {
     fontSize: FONT_SIZE.xs,
     fontFamily: FONTS.bodySemiBold,
     color: COLORS.charcoal,
     textAlign: 'center',
-    marginBottom: 3,
+    marginBottom: 2,
   },
   demoBrand: {
-    fontSize: 10,
+    fontSize: FONT_SIZE.xs,
     fontFamily: FONTS.bodyMedium,
     color: COLORS.pebble,
     marginBottom: SPACING.sm,
   },
   demoScoreBadge: {
-    paddingHorizontal: SPACING.sm + 2,
-    paddingVertical: SPACING.xs + 1,
-    borderRadius: RADIUS.full,
+    paddingHorizontal: SPACING.sm,
+    paddingVertical: SPACING.xs,
+    borderRadius: RADIUS.sm,
   },
   demoScoreText: {
     fontSize: FONT_SIZE.xs,
     fontFamily: FONTS.heading,
-    letterSpacing: 0.3,
   },
 });
 

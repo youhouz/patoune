@@ -1,16 +1,11 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { NavigationContainer } from '@react-navigation/native';
-import { View, Text, StyleSheet, StatusBar, Animated, Platform } from 'react-native';
+import { View, Text, StyleSheet, StatusBar, Animated } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useAuth } from '../context/AuthContext';
+import { PawIcon } from '../components/Logo';
 import AuthNavigator from './AuthNavigator';
 import TabNavigator from './TabNavigator';
-import OnboardingScreen from '../screens/OnboardingScreen';
-import PWAInstallBanner from '../components/PWAInstallBanner';
-import PepeteLogo from '../components/PepeteLogo';
-
-const ONBOARDING_KEY = 'onboarding_completed';
 
 // ─── Animated Splash Screen ──────────────────────────────
 const SplashLoader = () => {
@@ -49,7 +44,7 @@ const SplashLoader = () => {
   }, []);
 
   return (
-    <LinearGradient colors={['#7B8B6F', '#8A9A7E', '#A3B296']} style={styles.splash}>
+    <LinearGradient colors={['#527A56', '#6B8F71', '#8CB092']} style={styles.splash}>
       <StatusBar barStyle="light-content" />
 
       {/* Decorative circles */}
@@ -57,7 +52,11 @@ const SplashLoader = () => {
       <View style={styles.circle2} />
 
       <Animated.View style={[styles.logoWrap, { transform: [{ scale: logoScale }], opacity: logoOpacity }]}>
-        <PepeteLogo size={100} theme="light" tagline="Le meilleur pour vos animaux" />
+        <View style={styles.pawCircle}>
+          <PawIcon size={48} color="#FFF" />
+        </View>
+        <Text style={styles.splashLogo}>patoune</Text>
+        <Text style={styles.splashTagline}>Le meilleur pour vos animaux</Text>
       </Animated.View>
 
       <View style={styles.dotsRow}>
@@ -72,35 +71,13 @@ const SplashLoader = () => {
 // ─── App Navigator ───────────────────────────────────────
 const AppNavigator = () => {
   const { user, loading } = useAuth();
-  const [showOnboarding, setShowOnboarding] = useState(null); // null = loading
 
-  useEffect(() => {
-    AsyncStorage.getItem(ONBOARDING_KEY).then((val) => {
-      setShowOnboarding(!val);
-    });
-  }, []);
+  if (loading) return <SplashLoader />;
 
-  const handleOnboardingComplete = async () => {
-    await AsyncStorage.setItem(ONBOARDING_KEY, 'true');
-    setShowOnboarding(false);
-  };
-
-  if (loading || showOnboarding === null) return <SplashLoader />;
-
-  // Show onboarding for first-time visitors
-  if (showOnboarding && !user) {
-    return <OnboardingScreen onComplete={handleOnboardingComplete} />;
-  }
-
-  // Always show the full app — guest mode lets users explore Scanner & AI
   return (
-    <View style={{ flex: 1 }}>
-      <NavigationContainer>
-        <TabNavigator />
-      </NavigationContainer>
-      {/* PWA install banner — only shows on web when conditions are met */}
-      <PWAInstallBanner />
-    </View>
+    <NavigationContainer>
+      {user ? <TabNavigator /> : <AuthNavigator />}
+    </NavigationContainer>
   );
 };
 
@@ -130,6 +107,31 @@ const styles = StyleSheet.create({
   },
   logoWrap: {
     alignItems: 'center',
+  },
+  pawCircle: {
+    width: 96,
+    height: 96,
+    borderRadius: 48,
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 20,
+    borderWidth: 2,
+    borderColor: 'rgba(255,255,255,0.3)',
+  },
+  splashLogo: {
+    fontSize: 48,
+    fontWeight: '900',
+    color: '#FFF',
+    letterSpacing: 2,
+    textTransform: 'lowercase',
+    marginBottom: 8,
+  },
+  splashTagline: {
+    fontSize: 15,
+    color: 'rgba(255,255,255,0.85)',
+    fontWeight: '500',
+    letterSpacing: 0.3,
   },
   dotsRow: {
     flexDirection: 'row',

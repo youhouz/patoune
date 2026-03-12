@@ -6,6 +6,7 @@ import {
   ScrollView,
   TouchableOpacity,
   StyleSheet,
+  Alert,
   Switch,
   Platform,
   StatusBar,
@@ -14,26 +15,27 @@ import {
   Animated,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
+import { Feather } from '@expo/vector-icons';
+import { PawIcon } from '../../components/Logo';
 import { addPetAPI } from '../../api/pets';
-import { showAlert } from '../../utils/alert';
 const colors = require('../../utils/colors');
 const { SHADOWS, RADIUS, SPACING, FONT_SIZE } = require('../../utils/colors');
 
 const HEADER_PADDING_TOP = Platform.OS === 'ios' ? 56 : (StatusBar.currentHeight || 24) + 12;
 
 const SPECIES = [
-  { key: 'chien', label: 'Chien', icon: '🐕', color: '#7B8B6F' },
-  { key: 'chat', label: 'Chat', icon: '🐱', color: '#4ECBA0' },
-  { key: 'rongeur', label: 'Rongeur', icon: '🐹', color: '#F59E0B' },
-  { key: 'oiseau', label: 'Oiseau', icon: '🐦', color: '#3B82F6' },
-  { key: 'reptile', label: 'Reptile', icon: '🦎', color: '#10B981' },
-  { key: 'poisson', label: 'Poisson', icon: '🐟', color: '#0EA5E9' },
-  { key: 'autre', label: 'Autre', icon: '🐾', color: '#6B7280' },
+  { key: 'chien', label: 'Chien', letter: 'C', color: '#6B8F71' },
+  { key: 'chat', label: 'Chat', letter: 'Ch', color: '#527A56' },
+  { key: 'rongeur', label: 'Rongeur', letter: 'R', color: '#C4956A' },
+  { key: 'oiseau', label: 'Oiseau', letter: 'O', color: '#8CB092' },
+  { key: 'reptile', label: 'Reptile', letter: 'Re', color: '#527A56' },
+  { key: 'poisson', label: 'Poisson', letter: 'P', color: '#B8A88A' },
+  { key: 'autre', label: 'Autre', letter: '?', color: '#8A9A8C' },
 ];
 
 const GENDERS = [
-  { key: 'male', label: 'Male', icon: '♂', color: '#3B82F6', bgColor: '#EFF6FF' },
-  { key: 'femelle', label: 'Femelle', icon: '♀', color: '#EC4899', bgColor: '#FDF2F8' },
+  { key: 'male', label: 'Mâle', icon: '♂', color: '#8CB092', bgColor: '#EFF5F0' },
+  { key: 'femelle', label: 'Femelle', icon: '♀', color: '#C4956A', bgColor: '#FDF5ED' },
 ];
 
 const AddPetScreen = ({ navigation }) => {
@@ -77,7 +79,7 @@ const AddPetScreen = ({ navigation }) => {
       newErrors.name = 'Le nom est requis';
     }
     if (!species) {
-      newErrors.species = 'Choisissez une espece';
+      newErrors.species = 'Choisissez une espèce';
     }
     if (!gender) {
       newErrors.gender = 'Choisissez le genre';
@@ -121,16 +123,16 @@ const AddPetScreen = ({ navigation }) => {
         useNativeDriver: true,
       }).start();
 
-      showAlert(
-        'Felicitations ! 🎉',
-        `${name.trim()} a ete ajoute avec succes a votre famille.`,
+      Alert.alert(
+        'Félicitations !',
+        `${name.trim()} a été ajouté avec succès à votre famille.`,
         [{ text: 'Super', onPress: () => navigation.goBack() }]
       );
     } catch (error) {
       const msg =
         error?.response?.data?.error ||
-        "Impossible d'ajouter l'animal. Verifiez votre connexion et reessayez.";
-      showAlert('Erreur', msg);
+        "Impossible d'ajouter l'animal. Vérifiez votre connexion et réessayez.";
+      Alert.alert('Erreur', msg);
     } finally {
       setLoading(false);
     }
@@ -155,7 +157,7 @@ const AddPetScreen = ({ navigation }) => {
           onPress={() => navigation.goBack()}
           activeOpacity={0.7}
         >
-          <Text style={styles.backArrow}>‹</Text>
+          <Feather name="chevron-left" size={24} color={colors.text} />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Nouvel animal</Text>
         {/* Progress indicator */}
@@ -167,7 +169,7 @@ const AddPetScreen = ({ navigation }) => {
                 {
                   width: `${progress * 100}%`,
                   backgroundColor:
-                    progress === 1 ? '#10B981' : '#7B8B6F',
+                    progress === 1 ? '#527A56' : '#6B8F71',
                 },
               ]}
             />
@@ -197,21 +199,21 @@ const AddPetScreen = ({ navigation }) => {
                 colors={
                   selectedSpecies
                     ? [selectedSpecies.color, selectedSpecies.color + 'CC']
-                    : ['#7B8B6F', '#96A88A']
+                    : ['#6B8F71', '#8CB092']
                 }
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 1 }}
                 style={styles.previewGradient}
               >
                 <Text style={styles.previewIcon}>
-                  {selectedSpecies?.icon || '🐾'}
+                  {selectedSpecies?.letter || '?'}
                 </Text>
                 <View style={styles.previewInfo}>
                   <Text style={styles.previewName} numberOfLines={1}>
                     {name || 'Nom de votre animal'}
                   </Text>
                   <Text style={styles.previewSpecies}>
-                    {selectedSpecies?.label || 'Espece'}
+                    {selectedSpecies?.label || 'Espèce'}
                     {breed ? ` - ${breed}` : ''}
                   </Text>
                 </View>
@@ -221,7 +223,7 @@ const AddPetScreen = ({ navigation }) => {
 
           {/* Section: Identity */}
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Identite</Text>
+            <Text style={styles.sectionTitle}>Identité</Text>
             <View style={styles.sectionCard}>
               {/* Name Input */}
               <View style={styles.field}>
@@ -252,7 +254,7 @@ const AddPetScreen = ({ navigation }) => {
               {/* Species Grid */}
               <View style={styles.field}>
                 <Text style={styles.label}>
-                  Espece <Text style={styles.required}>*</Text>
+                  Espèce <Text style={styles.required}>*</Text>
                 </Text>
                 {errors.species && (
                   <Text style={styles.errorText}>{errors.species}</Text>
@@ -276,7 +278,9 @@ const AddPetScreen = ({ navigation }) => {
                         }}
                         activeOpacity={0.7}
                       >
-                        <Text style={styles.speciesEmoji}>{s.icon}</Text>
+                        <View style={[styles.speciesLetterBadge, { backgroundColor: s.color + '20' }]}>
+                          <Text style={[styles.speciesLetter, { color: s.color }]}>{s.letter}</Text>
+                        </View>
                         <Text
                           style={[
                             styles.speciesLabel,
@@ -292,7 +296,7 @@ const AddPetScreen = ({ navigation }) => {
                               { backgroundColor: s.color },
                             ]}
                           >
-                            <Text style={styles.speciesCheckText}>✓</Text>
+                            <Feather name="check" size={10} color="#FFF" />
                           </View>
                         )}
                       </TouchableOpacity>
@@ -354,7 +358,7 @@ const AddPetScreen = ({ navigation }) => {
                               { backgroundColor: g.color },
                             ]}
                           >
-                            <Text style={styles.genderCheckText}>✓</Text>
+                            <Feather name="check" size={11} color="#FFF" />
                           </View>
                         )}
                       </TouchableOpacity>
@@ -367,7 +371,7 @@ const AddPetScreen = ({ navigation }) => {
 
           {/* Section: Characteristics */}
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Caracteristiques</Text>
+            <Text style={styles.sectionTitle}>Caractéristiques</Text>
             <View style={styles.sectionCard}>
               {/* Breed */}
               <View style={styles.field}>
@@ -438,10 +442,10 @@ const AddPetScreen = ({ navigation }) => {
               {/* Vaccinated Switch */}
               <View style={styles.switchRow}>
                 <View style={styles.switchIconContainer}>
-                  <Text style={styles.switchEmoji}>💉</Text>
+                  <Feather name="shield" size={18} color={colors.textTertiary} />
                 </View>
                 <View style={styles.switchInfo}>
-                  <Text style={styles.switchLabel}>Vaccine</Text>
+                  <Text style={styles.switchLabel}>Vacciné</Text>
                   <Text style={styles.switchDescription}>
                     A jour de ses vaccins
                   </Text>
@@ -451,9 +455,9 @@ const AddPetScreen = ({ navigation }) => {
                   onValueChange={setVaccinated}
                   trackColor={{
                     false: colors.border,
-                    true: '#10B98170',
+                    true: '#527A5670',
                   }}
-                  thumbColor={vaccinated ? '#10B981' : '#f4f3f4'}
+                  thumbColor={vaccinated ? '#527A56' : '#f4f3f4'}
                   ios_backgroundColor={colors.border}
                 />
               </View>
@@ -462,10 +466,10 @@ const AddPetScreen = ({ navigation }) => {
 
           {/* Section: Additional Info */}
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Informations complementaires</Text>
+            <Text style={styles.sectionTitle}>Informations complémentaires</Text>
             <View style={styles.sectionCard}>
               <View style={styles.fieldLast}>
-                <Text style={styles.label}>Besoins speciaux</Text>
+                <Text style={styles.label}>Besoins spéciaux</Text>
                 <Text style={styles.labelHint}>
                   Allergies, medicaments, regime alimentaire, habitudes...
                 </Text>
@@ -474,7 +478,7 @@ const AddPetScreen = ({ navigation }) => {
                   style={[styles.input, styles.textArea]}
                   value={specialNeeds}
                   onChangeText={setSpecialNeeds}
-                  placeholder="Decrivez les besoins particuliers de votre animal..."
+                  placeholder="Décrivez les besoins particuliers de votre animal..."
                   placeholderTextColor={colors.placeholder}
                   multiline
                   textAlignVertical="top"
@@ -501,7 +505,7 @@ const AddPetScreen = ({ navigation }) => {
               colors={
                 loading
                   ? [colors.textLight, colors.textTertiary]
-                  : ['#7B8B6F', '#96A88A']
+                  : ['#6B8F71', '#8CB092']
               }
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 0 }}
@@ -511,7 +515,7 @@ const AddPetScreen = ({ navigation }) => {
                 <ActivityIndicator size="small" color={colors.white} />
               ) : (
                 <>
-                  <Text style={styles.submitIcon}>🐾</Text>
+                  <PawIcon size={18} color="#FFF" />
                   <Text style={styles.submitText}>
                     Ajouter {name.trim() || 'mon animal'}
                   </Text>
@@ -564,12 +568,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     ...SHADOWS.sm,
   },
-  backArrow: {
-    fontSize: 26,
-    color: colors.text,
-    fontWeight: '600',
-    marginTop: -2,
-  },
   headerTitle: {
     flex: 1,
     fontSize: FONT_SIZE.xl,
@@ -614,8 +612,12 @@ const styles = StyleSheet.create({
     borderRadius: RADIUS.xl,
   },
   previewIcon: {
-    fontSize: 36,
+    fontSize: 20,
+    fontWeight: '800',
+    color: '#FFF',
     marginRight: SPACING.base,
+    width: 36,
+    textAlign: 'center',
   },
   previewInfo: {
     flex: 1,
@@ -726,8 +728,16 @@ const styles = StyleSheet.create({
     borderColor: colors.border,
     gap: SPACING.xs,
   },
-  speciesEmoji: {
-    fontSize: 18,
+  speciesLetterBadge: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  speciesLetter: {
+    fontSize: 12,
+    fontWeight: '800',
   },
   speciesLabel: {
     fontSize: FONT_SIZE.sm,
@@ -741,11 +751,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     marginLeft: 2,
-  },
-  speciesCheckText: {
-    fontSize: 10,
-    color: colors.white,
-    fontWeight: '800',
   },
 
   // Gender
@@ -781,11 +786,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  genderCheckText: {
-    fontSize: 11,
-    color: colors.white,
-    fontWeight: '800',
-  },
 
   // Inline Row (Age + Weight)
   inlineRow: {
@@ -814,9 +814,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     marginRight: SPACING.md,
   },
-  switchEmoji: {
-    fontSize: 18,
-  },
   switchInfo: {
     flex: 1,
     marginRight: SPACING.base,
@@ -838,7 +835,7 @@ const styles = StyleSheet.create({
     borderRadius: RADIUS.xl,
     overflow: 'hidden',
     marginTop: SPACING.sm,
-    ...SHADOWS.glow('#7B8B6F'),
+    ...SHADOWS.glow('#6B8F71'),
   },
   submitButtonDisabled: {
     ...SHADOWS.sm,
@@ -850,9 +847,6 @@ const styles = StyleSheet.create({
     paddingVertical: SPACING.base + 2,
     borderRadius: RADIUS.xl,
     gap: SPACING.sm,
-  },
-  submitIcon: {
-    fontSize: 18,
   },
   submitText: {
     fontSize: FONT_SIZE.md,

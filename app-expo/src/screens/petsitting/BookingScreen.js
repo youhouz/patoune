@@ -292,7 +292,7 @@ const BookingScreen = ({ route, navigation }) => {
             </View>
             {petsitter.verified && (
               <View style={styles.headerVerifiedBadge}>
-                <Feather name="check" size={14} color="#34D399" />
+                <Feather name="check" size={14} color="#6B8F71" />
               </View>
             )}
           </View>
@@ -408,7 +408,7 @@ const BookingScreen = ({ route, navigation }) => {
               <View style={styles.dateField}>
                 <Text style={styles.dateLabel}>Debut</Text>
                 <View style={[styles.dateInputWrapper, startDate.length === 10 && styles.dateInputWrapperFilled]}>
-                  <Feather name="calendar" size={16} color={startDate.length === 10 ? '#10B981' : colors.textTertiary} style={{ marginRight: SPACING.sm }} />
+                  <Feather name="calendar" size={16} color={startDate.length === 10 ? '#527A56' : colors.textTertiary} style={{ marginRight: SPACING.sm }} />
                   <TextInput
                     style={styles.dateInput}
                     value={startDate}
@@ -428,7 +428,7 @@ const BookingScreen = ({ route, navigation }) => {
               <View style={styles.dateField}>
                 <Text style={styles.dateLabel}>Fin</Text>
                 <View style={[styles.dateInputWrapper, endDate.length === 10 && styles.dateInputWrapperFilled]}>
-                  <Feather name="calendar" size={16} color={endDate.length === 10 ? '#10B981' : colors.textTertiary} style={{ marginRight: SPACING.sm }} />
+                  <Feather name="calendar" size={16} color={endDate.length === 10 ? '#527A56' : colors.textTertiary} style={{ marginRight: SPACING.sm }} />
                   <TextInput
                     style={styles.dateInput}
                     value={endDate}
@@ -443,7 +443,7 @@ const BookingScreen = ({ route, navigation }) => {
             </View>
             {getDays() > 0 && (
               <View style={styles.durationBadge}>
-                <Feather name="clock" size={13} color="#10B981" />
+                <Feather name="clock" size={13} color="#527A56" />
                 <Text style={styles.durationText}>
                   {getDays()} jour{getDays() > 1 ? 's' : ''}
                 </Text>
@@ -957,8 +957,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: SPACING.md,
   },
   dateInputWrapperFilled: {
-    borderColor: '#10B981',
-    backgroundColor: '#ECFDF5',
+    borderColor: '#527A56',
+    backgroundColor: '#EFF5F0',
   },
   dateInput: {
     flex: 1,
@@ -982,7 +982,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignSelf: 'flex-start',
     alignItems: 'center',
-    backgroundColor: '#ECFDF5',
+    backgroundColor: '#EFF5F0',
     paddingHorizontal: SPACING.md,
     paddingVertical: SPACING.xs + 2,
     borderRadius: RADIUS.full,
@@ -992,7 +992,7 @@ const styles = StyleSheet.create({
   durationText: {
     fontSize: FONT_SIZE.sm,
     fontFamily: FONTS.bodySemiBold,
-    color: '#10B981',
+    color: '#527A56',
   },
 
   // Notes

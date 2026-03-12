@@ -499,7 +499,7 @@ const styles = StyleSheet.create({
     width: 8,
     height: 8,
     borderRadius: RADIUS.full,
-    backgroundColor: '#10B981',
+    backgroundColor: '#527A56',
   },
   headerOnlineText: {
     fontSize: FONT_SIZE.xs,

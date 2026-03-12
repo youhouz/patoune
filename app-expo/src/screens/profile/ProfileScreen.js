@@ -9,114 +9,29 @@ import {
   StatusBar,
   Animated,
   ActivityIndicator,
+  Alert,
   RefreshControl,
-  Dimensions,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
+import { Feather } from '@expo/vector-icons';
 import { useFocusEffect } from '@react-navigation/native';
 import { useAuth } from '../../context/AuthContext';
+import { PawIcon } from '../../components/Logo';
 import { getMyPetsAPI } from '../../api/pets';
 import { getScanHistoryAPI } from '../../api/products';
 import { getMyBookingsAPI } from '../../api/petsitters';
-import PepeteLogo from '../../components/PepeteLogo';
-import { showAlert } from '../../utils/alert';
-import { FONTS, TEXT_STYLES } from '../../utils/typography';
 const colors = require('../../utils/colors');
 const { SHADOWS, RADIUS, SPACING, FONT_SIZE } = require('../../utils/colors');
 
 const HEADER_PADDING_TOP = Platform.OS === 'ios' ? 60 : (StatusBar.currentHeight || 24) + 20;
-const { width: SCREEN_WIDTH } = Dimensions.get('window');
-
-// Animated pressable menu item with scale micro-interaction
-const PressableMenuItem = ({ item, onPress, index, parentFade, parentSlide }) => {
-  const scaleAnim = useRef(new Animated.Value(1)).current;
-  const itemFade = useRef(new Animated.Value(0)).current;
-  const itemSlide = useRef(new Animated.Value(30)).current;
-
-  useEffect(() => {
-    const delay = 400 + index * 100;
-    Animated.parallel([
-      Animated.timing(itemFade, {
-        toValue: 1,
-        duration: 500,
-        delay,
-        useNativeDriver: true,
-      }),
-      Animated.spring(itemSlide, {
-        toValue: 0,
-        tension: 60,
-        friction: 9,
-        delay,
-        useNativeDriver: true,
-      }),
-    ]).start();
-  }, []);
-
-  const onPressIn = () => {
-    Animated.spring(scaleAnim, {
-      toValue: 0.97,
-      tension: 100,
-      friction: 8,
-      useNativeDriver: true,
-    }).start();
-  };
-
-  const onPressOut = () => {
-    Animated.spring(scaleAnim, {
-      toValue: 1,
-      tension: 60,
-      friction: 6,
-      useNativeDriver: true,
-    }).start();
-  };
-
-  return (
-    <Animated.View
-      style={{
-        opacity: itemFade,
-        transform: [{ translateY: itemSlide }, { scale: scaleAnim }],
-      }}
-    >
-      <TouchableOpacity
-        style={styles.menuCard}
-        onPress={onPress}
-        onPressIn={onPressIn}
-        onPressOut={onPressOut}
-        activeOpacity={1}
-      >
-        <View style={[styles.menuIconContainer, { backgroundColor: item.bgColor }]}>
-          <Text style={styles.menuIcon}>{item.icon}</Text>
-        </View>
-        <View style={styles.menuTextContainer}>
-          <Text style={styles.menuLabel}>{item.label}</Text>
-          <Text style={styles.menuSubtitle}>{item.subtitle}</Text>
-        </View>
-        <View style={styles.menuArrowContainer}>
-          <Text style={styles.menuArrow}>›</Text>
-        </View>
-      </TouchableOpacity>
-    </Animated.View>
-  );
-};
 
 const ProfileScreen = ({ navigation }) => {
   const { user, logout } = useAuth();
 
-  // Animations — staggered entry
-  const heroFade = useRef(new Animated.Value(0)).current;
-  const heroSlide = useRef(new Animated.Value(50)).current;
-  const heroScale = useRef(new Animated.Value(0.92)).current;
-  const avatarScale = useRef(new Animated.Value(0)).current;
-  const avatarRotate = useRef(new Animated.Value(0)).current;
-  const statAnims = [0, 1, 2].map(() => ({
-    fade: useRef(new Animated.Value(0)).current,
-    slide: useRef(new Animated.Value(20)).current,
-    scale: useRef(new Animated.Value(0.8)).current,
-  }));
-  const sectionFade = useRef(new Animated.Value(0)).current;
-  const sectionSlide = useRef(new Animated.Value(40)).current;
-  const logoutFade = useRef(new Animated.Value(0)).current;
-  const logoutScale = useRef(new Animated.Value(1)).current;
+  // Animations
+  const fadeAnim = useRef(new Animated.Value(0)).current;
+  const slideAnim = useRef(new Animated.Value(40)).current;
+  const heroScale = useRef(new Animated.Value(0.95)).current;
 
   // Real data from API
   const [petsCount, setPetsCount] = useState(0);
@@ -126,95 +41,22 @@ const ProfileScreen = ({ navigation }) => {
   const [refreshing, setRefreshing] = useState(false);
 
   useEffect(() => {
-    // Stage 1: Hero area
     Animated.parallel([
-      Animated.timing(heroFade, {
+      Animated.timing(fadeAnim, {
         toValue: 1,
-        duration: 700,
+        duration: 600,
         useNativeDriver: true,
       }),
-      Animated.spring(heroSlide, {
+      Animated.spring(slideAnim, {
         toValue: 0,
-        tension: 40,
+        tension: 50,
         friction: 8,
         useNativeDriver: true,
       }),
       Animated.spring(heroScale, {
         toValue: 1,
-        tension: 40,
+        tension: 50,
         friction: 7,
-        useNativeDriver: true,
-      }),
-    ]).start();
-
-    // Stage 2: Avatar pop-in
-    Animated.sequence([
-      Animated.delay(250),
-      Animated.parallel([
-        Animated.spring(avatarScale, {
-          toValue: 1,
-          tension: 60,
-          friction: 5,
-          useNativeDriver: true,
-        }),
-        Animated.timing(avatarRotate, {
-          toValue: 1,
-          duration: 600,
-          useNativeDriver: true,
-        }),
-      ]),
-    ]).start();
-
-    // Stage 3: Stat cards stagger
-    statAnims.forEach((anim, i) => {
-      Animated.sequence([
-        Animated.delay(450 + i * 120),
-        Animated.parallel([
-          Animated.timing(anim.fade, {
-            toValue: 1,
-            duration: 400,
-            useNativeDriver: true,
-          }),
-          Animated.spring(anim.slide, {
-            toValue: 0,
-            tension: 60,
-            friction: 8,
-            useNativeDriver: true,
-          }),
-          Animated.spring(anim.scale, {
-            toValue: 1,
-            tension: 50,
-            friction: 6,
-            useNativeDriver: true,
-          }),
-        ]),
-      ]).start();
-    });
-
-    // Stage 4: Menu sections
-    Animated.sequence([
-      Animated.delay(600),
-      Animated.parallel([
-        Animated.timing(sectionFade, {
-          toValue: 1,
-          duration: 500,
-          useNativeDriver: true,
-        }),
-        Animated.spring(sectionSlide, {
-          toValue: 0,
-          tension: 50,
-          friction: 8,
-          useNativeDriver: true,
-        }),
-      ]),
-    ]).start();
-
-    // Stage 5: Logout
-    Animated.sequence([
-      Animated.delay(900),
-      Animated.timing(logoutFade, {
-        toValue: 1,
-        duration: 400,
         useNativeDriver: true,
       }),
     ]).start();
@@ -270,38 +112,20 @@ const ProfileScreen = ({ navigation }) => {
   };
 
   const handleLogout = () => {
-    showAlert(
-      'Deconnexion',
-      'Voulez-vous vraiment vous deconnecter ?',
+    Alert.alert(
+      'Déconnexion',
+      'Voulez-vous vraiment vous déconnecter ?',
       [
         { text: 'Annuler', style: 'cancel' },
-        { text: 'Se deconnecter', style: 'destructive', onPress: logout },
+        { text: 'Se déconnecter', style: 'destructive', onPress: logout },
       ]
     );
   };
 
-  const handleLogoutPressIn = () => {
-    Animated.spring(logoutScale, {
-      toValue: 0.96,
-      tension: 100,
-      friction: 8,
-      useNativeDriver: true,
-    }).start();
-  };
-
-  const handleLogoutPressOut = () => {
-    Animated.spring(logoutScale, {
-      toValue: 1,
-      tension: 60,
-      friction: 6,
-      useNativeDriver: true,
-    }).start();
-  };
-
   const stats = [
-    { label: 'Animaux', value: petsCount, icon: '🐾', color: '#7B8B6F' },
-    { label: 'Scans', value: scansCount, icon: '📷', color: '#3B82F6' },
-    { label: 'Gardes', value: bookingsCount, icon: '📅', color: '#10B981' },
+    { label: 'Animaux', value: petsCount, icon: 'heart', color: '#6B8F71' },
+    { label: 'Scans', value: scansCount, icon: 'camera', color: '#527A56' },
+    { label: 'Gardes', value: bookingsCount, icon: 'calendar', color: '#C4956A' },
   ];
 
   const menuSections = [
@@ -309,45 +133,37 @@ const ProfileScreen = ({ navigation }) => {
       title: 'Mes compagnons',
       items: [
         {
-          icon: '🐾',
+          icon: 'heart',
           label: 'Mes animaux',
-          subtitle: `${petsCount} compagnon${petsCount !== 1 ? 's' : ''} enregistre${petsCount !== 1 ? 's' : ''}`,
+          subtitle: `${petsCount} compagnon${petsCount !== 1 ? 's' : ''} enregistré${petsCount !== 1 ? 's' : ''}`,
           screen: 'MyPets',
-          accentColor: '#7B8B6F',
+          accentColor: '#6B8F71',
           bgColor: colors.primarySoft,
         },
         {
-          icon: '➕',
+          icon: 'plus-circle',
           label: 'Ajouter un animal',
           subtitle: 'Enregistrez un nouveau compagnon',
           screen: 'AddPet',
-          accentColor: '#10B981',
+          accentColor: '#527A56',
           bgColor: colors.secondarySoft,
         },
       ],
     },
     {
-      title: 'Parametres',
+      title: 'Paramètres',
       items: [
         {
-          icon: '⚙️',
-          label: 'Reglages',
-          subtitle: 'Compte, preferences, a propos',
+          icon: 'settings',
+          label: 'Réglages',
+          subtitle: 'Compte, préférences, à propos',
           screen: 'Settings',
-          accentColor: '#4ECBA0',
+          accentColor: '#C4956A',
           bgColor: colors.accentSoft,
         },
       ],
     },
   ];
-
-  const avatarSpin = avatarRotate.interpolate({
-    inputRange: [0, 1],
-    outputRange: ['-8deg', '0deg'],
-  });
-
-  // Running item index across sections for stagger
-  let globalItemIndex = 0;
 
   return (
     <View style={styles.container}>
@@ -367,106 +183,72 @@ const ProfileScreen = ({ navigation }) => {
           />
         }
       >
-        {/* Premium Hero Header with Deep Gradient */}
-        <Animated.View
-          style={{
-            opacity: heroFade,
-            transform: [{ translateY: heroSlide }, { scale: heroScale }],
-          }}
+        {/* Hero Header with Gradient */}
+        <LinearGradient
+          colors={['#527A56', '#6B8F71', '#8CB092']}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={styles.heroGradient}
         >
-          <LinearGradient
-            colors={['#7B8B6F', '#8A9A7E', '#96A88A', '#A3B296']}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 0.8, y: 1 }}
-            style={styles.heroGradient}
+          {/* Decorative circles */}
+          <View style={styles.decorCircle1} />
+          <View style={styles.decorCircle2} />
+
+          <Animated.View
+            style={[
+              styles.heroContent,
+              { transform: [{ scale: heroScale }] },
+            ]}
           >
-            {/* Premium decorative elements */}
-            <View style={styles.decorCircle1} />
-            <View style={styles.decorCircle2} />
-            <View style={styles.decorCircle3} />
-            <View style={styles.decorLine1} />
-            <View style={styles.decorLine2} />
-
-            <View style={styles.heroContent}>
-              {/* Triple-ring Premium Avatar */}
-              <Animated.View
-                style={[
-                  styles.avatarContainer,
-                  {
-                    transform: [
-                      { scale: avatarScale },
-                      { rotate: avatarSpin },
-                    ],
-                  },
-                ]}
-              >
-                <View style={styles.avatarOuterGlow}>
-                  <View style={styles.avatarOuterRing}>
-                    <View style={styles.avatarMiddleRing}>
-                      <View style={styles.avatarInnerRing}>
-                        <View style={styles.avatar}>
-                          <Text style={styles.avatarInitials}>{getInitials()}</Text>
-                        </View>
-                      </View>
-                    </View>
+            {/* Double-ring Avatar */}
+            <View style={styles.avatarContainer}>
+              <View style={styles.avatarOuterRing}>
+                <View style={styles.avatarInnerRing}>
+                  <View style={styles.avatar}>
+                    <Text style={styles.avatarInitials}>{getInitials()}</Text>
                   </View>
                 </View>
-                {user?.isPetSitter && (
-                  <View style={styles.sitterBadge}>
-                    <Text style={styles.sitterBadgeIcon}>✓</Text>
-                    <Text style={styles.sitterBadgeText}>Gardien</Text>
-                  </View>
+              </View>
+              {user?.isPetSitter && (
+                <View style={styles.sitterBadge}>
+                  <Feather name="check" size={10} color="#FFF" />
+                  <Text style={styles.sitterBadgeText}>Gardien</Text>
+                </View>
+              )}
+            </View>
+
+            {/* User Info */}
+            <Text style={styles.userName}>{user?.name || 'Utilisateur'}</Text>
+            <Text style={styles.userEmail}>{user?.email || ''}</Text>
+            {user?.phone ? (
+              <View style={styles.phoneBadge}>
+                <Feather name="phone" size={12} color="rgba(255,255,255,0.9)" />
+                <Text style={styles.phoneText}>{user.phone}</Text>
+              </View>
+            ) : null}
+          </Animated.View>
+
+          {/* Stats Row */}
+          <View style={styles.statsContainer}>
+            {stats.map((stat, index) => (
+              <View key={index} style={styles.statCard}>
+                <Feather name={stat.icon} size={20} color="rgba(255,255,255,0.9)" style={{ marginBottom: SPACING.xs }} />
+                {statsLoading ? (
+                  <ActivityIndicator
+                    size="small"
+                    color="rgba(255,255,255,0.8)"
+                    style={{ marginVertical: 2 }}
+                  />
+                ) : (
+                  <Text style={styles.statValue}>{stat.value}</Text>
                 )}
-              </Animated.View>
+                <Text style={styles.statLabel}>{stat.label}</Text>
+              </View>
+            ))}
+          </View>
+        </LinearGradient>
 
-              {/* User Info with premium typography */}
-              <Text style={styles.userName}>{user?.name || 'Utilisateur'}</Text>
-              <Text style={styles.userEmail}>{user?.email || ''}</Text>
-              {user?.phone ? (
-                <View style={styles.phoneBadge}>
-                  <Text style={styles.phoneIcon}>📱</Text>
-                  <Text style={styles.phoneText}>{user.phone}</Text>
-                </View>
-              ) : null}
-            </View>
-
-            {/* Glass-morphism Stat Cards */}
-            <View style={styles.statsContainer}>
-              {stats.map((stat, index) => (
-                <Animated.View
-                  key={index}
-                  style={[
-                    styles.statCardWrapper,
-                    {
-                      opacity: statAnims[index].fade,
-                      transform: [
-                        { translateY: statAnims[index].slide },
-                        { scale: statAnims[index].scale },
-                      ],
-                    },
-                  ]}
-                >
-                  <View style={styles.statCard}>
-                    <View style={styles.statGlassOverlay} />
-                    <Text style={styles.statIcon}>{stat.icon}</Text>
-                    {statsLoading ? (
-                      <ActivityIndicator
-                        size="small"
-                        color="rgba(255,255,255,0.9)"
-                        style={{ marginVertical: 4 }}
-                      />
-                    ) : (
-                      <Text style={styles.statValue}>{stat.value}</Text>
-                    )}
-                    <Text style={styles.statLabel}>{stat.label}</Text>
-                  </View>
-                </Animated.View>
-              ))}
-            </View>
-          </LinearGradient>
-        </Animated.View>
-
-        {/* Menu Sections with staggered items */}
+        {/* Menu Sections */}
         {menuSections.map((section, sectionIndex) => (
           <Animated.View
             key={sectionIndex}
@@ -474,61 +256,59 @@ const ProfileScreen = ({ navigation }) => {
               styles.menuSection,
               sectionIndex === 0 && { marginTop: -SPACING.xs },
               {
-                opacity: sectionFade,
-                transform: [{ translateY: sectionSlide }],
+                opacity: fadeAnim,
+                transform: [{ translateY: slideAnim }],
               },
             ]}
           >
             <Text style={styles.sectionTitle}>{section.title}</Text>
 
-            {section.items.map((item, itemIndex) => {
-              const currentIndex = globalItemIndex++;
-              return (
-                <PressableMenuItem
-                  key={itemIndex}
-                  item={item}
-                  index={currentIndex}
-                  onPress={() => navigation.navigate(item.screen)}
-                />
-              );
-            })}
+            {section.items.map((item, itemIndex) => (
+              <TouchableOpacity
+                key={itemIndex}
+                style={styles.menuCard}
+                onPress={() => navigation.navigate(item.screen)}
+                activeOpacity={0.6}
+              >
+                <View style={[styles.menuIconContainer, { backgroundColor: item.bgColor }]}>
+                  <Feather name={item.icon} size={22} color={item.accentColor} />
+                </View>
+                <View style={styles.menuTextContainer}>
+                  <Text style={styles.menuLabel}>{item.label}</Text>
+                  <Text style={styles.menuSubtitle}>{item.subtitle}</Text>
+                </View>
+                <View style={styles.menuArrowContainer}>
+                  <Feather name="chevron-right" size={18} color={colors.textTertiary} />
+                </View>
+              </TouchableOpacity>
+            ))}
           </Animated.View>
         ))}
 
-        {/* Premium Logout Button */}
+        {/* Logout Button */}
         <Animated.View
           style={[
             styles.logoutSection,
-            {
-              opacity: logoutFade,
-              transform: [{ scale: logoutScale }],
-            },
+            { opacity: fadeAnim },
           ]}
         >
           <TouchableOpacity
             style={styles.logoutButton}
             onPress={handleLogout}
-            onPressIn={handleLogoutPressIn}
-            onPressOut={handleLogoutPressOut}
-            activeOpacity={1}
-            accessibilityRole="button"
-            accessibilityLabel="Se deconnecter"
+            activeOpacity={0.6}
           >
-            <View style={styles.logoutIconBg}>
-              <Text style={styles.logoutIcon}>🚪</Text>
-            </View>
-            <Text style={styles.logoutText}>Se deconnecter</Text>
-            <View style={styles.logoutChevronContainer}>
-              <Text style={styles.logoutChevron}>›</Text>
-            </View>
+            <Feather name="log-out" size={18} color={colors.error} style={{ marginRight: SPACING.sm }} />
+            <Text style={styles.logoutText}>Se déconnecter</Text>
           </TouchableOpacity>
         </Animated.View>
 
-        {/* Premium App footer */}
+        {/* App footer */}
         <View style={styles.footer}>
-          <View style={styles.footerDivider} />
-          <PepeteLogo size={44} variant="full" theme="dark" />
-          <Text style={styles.footerVersion}>v2.0.0 — Le meilleur pour vos animaux</Text>
+          <View style={styles.footerBadge}>
+            <PawIcon size={16} color={colors.primary} />
+            <Text style={styles.footerText}>patoune</Text>
+          </View>
+          <Text style={styles.footerVersion}>v1.0.0 — Le meilleur pour vos animaux</Text>
         </View>
 
         <View style={styles.bottomSpacer} />
@@ -549,377 +329,248 @@ const styles = StyleSheet.create({
     paddingBottom: SPACING['2xl'],
   },
 
-  // Hero Gradient — deeper, more premium
+  // Hero Gradient
   heroGradient: {
     paddingTop: HEADER_PADDING_TOP,
-    paddingBottom: SPACING['3xl'] + 8,
-    borderBottomLeftRadius: RADIUS['3xl'] + 4,
-    borderBottomRightRadius: RADIUS['3xl'] + 4,
+    paddingBottom: SPACING['3xl'],
+    borderBottomLeftRadius: RADIUS['3xl'],
+    borderBottomRightRadius: RADIUS['3xl'],
     overflow: 'hidden',
   },
   decorCircle1: {
     position: 'absolute',
-    top: -60,
-    right: -50,
-    width: 200,
-    height: 200,
-    borderRadius: 100,
-    backgroundColor: 'rgba(255, 255, 255, 0.06)',
+    top: -40,
+    right: -40,
+    width: 160,
+    height: 160,
+    borderRadius: 80,
+    backgroundColor: 'rgba(255, 255, 255, 0.08)',
   },
   decorCircle2: {
     position: 'absolute',
-    bottom: -30,
-    left: -40,
-    width: 150,
-    height: 150,
-    borderRadius: 75,
-    backgroundColor: 'rgba(255, 255, 255, 0.04)',
-  },
-  decorCircle3: {
-    position: 'absolute',
-    top: 80,
-    left: SCREEN_WIDTH * 0.6,
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    backgroundColor: 'rgba(255, 255, 255, 0.03)',
-  },
-  decorLine1: {
-    position: 'absolute',
-    top: 40,
-    left: 20,
-    width: 60,
-    height: 1.5,
-    backgroundColor: 'rgba(255, 255, 255, 0.08)',
-    borderRadius: 1,
-    transform: [{ rotate: '30deg' }],
-  },
-  decorLine2: {
-    position: 'absolute',
-    bottom: 60,
-    right: 30,
-    width: 40,
-    height: 1.5,
+    bottom: -20,
+    left: -30,
+    width: 120,
+    height: 120,
+    borderRadius: 60,
     backgroundColor: 'rgba(255, 255, 255, 0.06)',
-    borderRadius: 1,
-    transform: [{ rotate: '-20deg' }],
   },
   heroContent: {
     alignItems: 'center',
     paddingHorizontal: SPACING.xl,
-    paddingBottom: SPACING.xl + 4,
+    paddingBottom: SPACING.xl,
   },
 
-  // Premium Triple-ring Avatar
+  // Double-ring Avatar
   avatarContainer: {
     alignItems: 'center',
-    marginBottom: SPACING.base + 4,
-  },
-  avatarOuterGlow: {
-    width: 128,
-    height: 128,
-    borderRadius: 64,
-    backgroundColor: 'rgba(255, 255, 255, 0.08)',
-    alignItems: 'center',
-    justifyContent: 'center',
+    marginBottom: SPACING.base,
   },
   avatarOuterRing: {
-    width: 118,
-    height: 118,
-    borderRadius: 59,
-    backgroundColor: 'rgba(255, 255, 255, 0.12)',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  avatarMiddleRing: {
-    width: 106,
-    height: 106,
-    borderRadius: 53,
-    backgroundColor: 'rgba(255, 255, 255, 0.20)',
+    width: 108,
+    height: 108,
+    borderRadius: 54,
+    backgroundColor: 'rgba(255, 255, 255, 0.15)',
     alignItems: 'center',
     justifyContent: 'center',
   },
   avatarInnerRing: {
-    width: 94,
-    height: 94,
-    borderRadius: 47,
-    backgroundColor: 'rgba(255, 255, 255, 0.30)',
+    width: 96,
+    height: 96,
+    borderRadius: 48,
+    backgroundColor: 'rgba(255, 255, 255, 0.25)',
     alignItems: 'center',
     justifyContent: 'center',
   },
   avatar: {
-    width: 82,
-    height: 82,
-    borderRadius: 41,
-    backgroundColor: 'rgba(255, 255, 255, 0.97)',
+    width: 84,
+    height: 84,
+    borderRadius: 42,
+    backgroundColor: 'rgba(255, 255, 255, 0.95)',
     alignItems: 'center',
     justifyContent: 'center',
-    ...SHADOWS.lg,
   },
   avatarInitials: {
-    fontFamily: FONTS.brand,
     fontSize: FONT_SIZE['3xl'],
-    color: '#7B8B6F',
+    fontWeight: '800',
+    color: '#6B8F71',
     letterSpacing: 1,
   },
   sitterBadge: {
     position: 'absolute',
-    bottom: -8,
+    bottom: -6,
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#10B981',
-    paddingHorizontal: SPACING.md + 2,
-    paddingVertical: SPACING.xs + 2,
+    backgroundColor: '#527A56',
+    paddingHorizontal: SPACING.md,
+    paddingVertical: SPACING.xs + 1,
     borderRadius: RADIUS.full,
-    gap: 5,
+    gap: 4,
     ...SHADOWS.md,
-    borderWidth: 2.5,
-    borderColor: 'rgba(255, 255, 255, 0.9)',
-  },
-  sitterBadgeIcon: {
-    fontSize: 11,
-    color: colors.white,
-    fontWeight: '800',
   },
   sitterBadgeText: {
-    fontFamily: FONTS.bodySemiBold,
     fontSize: FONT_SIZE.xs,
+    fontWeight: '700',
     color: colors.white,
     letterSpacing: 0.5,
   },
 
-  // User Info — premium typography
+  // User Info
   userName: {
-    fontFamily: FONTS.brand,
-    fontSize: FONT_SIZE['2xl'] + 2,
+    fontSize: FONT_SIZE['2xl'],
+    fontWeight: '800',
     color: colors.white,
     marginBottom: SPACING.xs,
-    letterSpacing: 0.2,
-    textShadowColor: 'rgba(0, 0, 0, 0.1)',
-    textShadowOffset: { width: 0, height: 1 },
-    textShadowRadius: 4,
+    letterSpacing: 0.3,
   },
   userEmail: {
-    fontFamily: FONTS.body,
     fontSize: FONT_SIZE.base,
-    color: 'rgba(255, 255, 255, 0.85)',
+    color: 'rgba(255, 255, 255, 0.8)',
+    fontWeight: '400',
   },
   phoneBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginTop: SPACING.sm + 2,
+    marginTop: SPACING.sm,
     backgroundColor: 'rgba(255, 255, 255, 0.15)',
-    paddingHorizontal: SPACING.base,
-    paddingVertical: SPACING.xs + 2,
+    paddingHorizontal: SPACING.md,
+    paddingVertical: SPACING.xs,
     borderRadius: RADIUS.full,
-    gap: 6,
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.10)',
-  },
-  phoneIcon: {
-    fontSize: 13,
+    gap: 4,
   },
   phoneText: {
-    fontFamily: FONTS.bodyMedium,
     fontSize: FONT_SIZE.sm,
-    color: 'rgba(255, 255, 255, 0.95)',
+    color: 'rgba(255, 255, 255, 0.9)',
+    fontWeight: '500',
   },
 
-  // Glass-morphism Stats
+  // Stats
   statsContainer: {
     flexDirection: 'row',
     marginHorizontal: SPACING.lg,
     gap: SPACING.md,
   },
-  statCardWrapper: {
-    flex: 1,
-  },
   statCard: {
-    backgroundColor: 'rgba(255, 255, 255, 0.16)',
-    borderRadius: RADIUS.xl + 2,
-    paddingVertical: SPACING.base + 4,
+    flex: 1,
+    backgroundColor: 'rgba(255, 255, 255, 0.18)',
+    borderRadius: RADIUS.xl,
+    paddingVertical: SPACING.base,
     paddingHorizontal: SPACING.sm,
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.18)',
-    overflow: 'hidden',
-  },
-  statGlassOverlay: {
-    ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(255, 255, 255, 0.05)',
-    borderRadius: RADIUS.xl + 2,
-  },
-  statIcon: {
-    fontSize: 22,
-    marginBottom: SPACING.xs + 2,
+    borderColor: 'rgba(255, 255, 255, 0.12)',
   },
   statValue: {
-    fontFamily: FONTS.brand,
-    fontSize: FONT_SIZE['2xl'],
+    fontSize: FONT_SIZE.xl,
+    fontWeight: '800',
     color: colors.white,
-    textShadowColor: 'rgba(0, 0, 0, 0.1)',
-    textShadowOffset: { width: 0, height: 1 },
-    textShadowRadius: 3,
   },
   statLabel: {
-    fontFamily: FONTS.bodySemiBold,
     fontSize: FONT_SIZE.xs,
-    color: 'rgba(255, 255, 255, 0.85)',
-    marginTop: 3,
-    letterSpacing: 0.5,
-    textTransform: 'uppercase',
+    color: 'rgba(255, 255, 255, 0.8)',
+    fontWeight: '600',
+    marginTop: 2,
+    letterSpacing: 0.3,
   },
 
-  // Menu Sections — more breathing room
+  // Menu Sections
   menuSection: {
     paddingHorizontal: SPACING.lg,
-    paddingTop: SPACING.xl + 4,
+    paddingTop: SPACING.xl,
   },
   sectionTitle: {
-    fontFamily: FONTS.bodySemiBold,
-    fontSize: FONT_SIZE.xs + 1,
-    color: colors.textTertiary,
+    fontSize: FONT_SIZE.sm,
+    fontWeight: '700',
+    color: colors.textSecondary,
     textTransform: 'uppercase',
-    letterSpacing: 1.2,
-    marginBottom: SPACING.md + 2,
+    letterSpacing: 0.8,
+    marginBottom: SPACING.md,
     marginLeft: SPACING.xs,
   },
   menuCard: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: colors.white,
-    borderRadius: RADIUS.xl + 2,
-    padding: SPACING.base + 2,
-    marginBottom: SPACING.md + 2,
-    ...SHADOWS.lg,
-    borderWidth: 1,
-    borderColor: 'rgba(0, 0, 0, 0.02)',
+    borderRadius: RADIUS.xl,
+    padding: SPACING.base,
+    marginBottom: SPACING.md,
+    ...SHADOWS.md,
   },
   menuIconContainer: {
-    width: 52,
-    height: 52,
-    borderRadius: RADIUS.lg + 2,
+    width: 48,
+    height: 48,
+    borderRadius: RADIUS.lg,
     alignItems: 'center',
     justifyContent: 'center',
-  },
-  menuIcon: {
-    fontSize: 24,
   },
   menuTextContainer: {
     flex: 1,
     marginLeft: SPACING.base,
   },
   menuLabel: {
-    fontFamily: FONTS.heading,
-    fontSize: FONT_SIZE.base + 1,
+    fontSize: FONT_SIZE.base,
+    fontWeight: '700',
     color: colors.text,
-    marginBottom: 3,
+    marginBottom: 2,
   },
   menuSubtitle: {
-    fontFamily: FONTS.body,
     fontSize: FONT_SIZE.sm,
     color: colors.textSecondary,
+    fontWeight: '400',
   },
   menuArrowContainer: {
-    width: 36,
-    height: 36,
+    width: 32,
+    height: 32,
     borderRadius: RADIUS.full,
     backgroundColor: colors.background,
     alignItems: 'center',
     justifyContent: 'center',
-    borderWidth: 1,
-    borderColor: colors.borderLight,
-  },
-  menuArrow: {
-    fontSize: 22,
-    color: colors.textTertiary,
-    fontWeight: '600',
-    marginTop: -1,
   },
 
-  // Premium Logout
+  // Logout
   logoutSection: {
     paddingHorizontal: SPACING.lg,
-    marginTop: SPACING.xl + 4,
+    marginTop: SPACING.xl,
   },
   logoutButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: colors.white,
-    borderRadius: RADIUS.xl + 2,
-    paddingVertical: SPACING.base + 2,
-    paddingHorizontal: SPACING.base + 2,
-    borderWidth: 1.5,
-    borderColor: 'rgba(239, 68, 68, 0.10)',
-    ...SHADOWS.md,
-  },
-  logoutIconBg: {
-    width: 44,
-    height: 44,
-    borderRadius: RADIUS.lg,
-    backgroundColor: colors.errorSoft,
-    alignItems: 'center',
     justifyContent: 'center',
-  },
-  logoutIcon: {
-    fontSize: 20,
+    backgroundColor: colors.errorSoft,
+    borderRadius: RADIUS.xl,
+    paddingVertical: SPACING.base,
+    borderWidth: 1,
+    borderColor: 'rgba(239, 68, 68, 0.12)',
   },
   logoutText: {
-    fontFamily: FONTS.heading,
     fontSize: FONT_SIZE.base,
+    fontWeight: '700',
     color: colors.error,
-    flex: 1,
-    marginLeft: SPACING.base,
-  },
-  logoutChevronContainer: {
-    width: 32,
-    height: 32,
-    borderRadius: RADIUS.full,
-    backgroundColor: colors.errorSoft,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  logoutChevron: {
-    fontSize: 20,
-    color: colors.error,
-    fontWeight: '600',
-    marginTop: -1,
-    opacity: 0.6,
   },
 
-  // Premium Footer
+  // Footer
   footer: {
     alignItems: 'center',
-    marginTop: SPACING.xl + 8,
+    marginTop: SPACING.xl,
     paddingVertical: SPACING.md,
-  },
-  footerDivider: {
-    width: 40,
-    height: 3,
-    borderRadius: 1.5,
-    backgroundColor: colors.borderLight,
-    marginBottom: SPACING.lg,
   },
   footerBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
-    marginBottom: 6,
-  },
-  footerPaw: {
-    fontSize: 18,
+    gap: 6,
+    marginBottom: 5,
   },
   footerText: {
-    fontFamily: FONTS.brand,
-    fontSize: 20,
+    fontSize: 18,
     color: colors.text,
-    letterSpacing: 2,
+    fontWeight: '900',
+    letterSpacing: 1.5,
     textTransform: 'lowercase',
   },
   footerVersion: {
-    fontFamily: FONTS.body,
     fontSize: 12,
     color: colors.textLight,
+    fontWeight: '400',
   },
 
   bottomSpacer: {

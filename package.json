@@ -1,0 +1,14 @@
+{
+  "name": "patoune-root",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "postinstall": "cd backend && npm install && cd ../app-expo && npm install --legacy-peer-deps",
+    "start": "concurrently \"npm run server\" \"npm run client\"",
+    "server": "cd backend && npm run dev",
+    "client": "cd app-expo && npx expo start --web"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  }
+}

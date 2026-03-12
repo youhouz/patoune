@@ -6,28 +6,30 @@ import {
   TouchableOpacity,
   StyleSheet,
   ActivityIndicator,
+  Alert,
   Platform,
   StatusBar,
   Animated,
   RefreshControl,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
+import { Feather } from '@expo/vector-icons';
 import { useFocusEffect } from '@react-navigation/native';
+import { PawIcon } from '../../components/Logo';
 import { getMyPetsAPI, deletePetAPI } from '../../api/pets';
-import { showAlert } from '../../utils/alert';
 const colors = require('../../utils/colors');
 const { SHADOWS, RADIUS, SPACING, FONT_SIZE } = require('../../utils/colors');
 
 const HEADER_PADDING_TOP = Platform.OS === 'ios' ? 56 : (StatusBar.currentHeight || 24) + 12;
 
 const SPECIES_CONFIG = {
-  chien: { icon: '🐕', label: 'Chien', gradient: ['#7B8B6F', '#96A88A'] },
-  chat: { icon: '🐱', label: 'Chat', gradient: ['#4ECBA0', '#7DDBB8'] },
-  rongeur: { icon: '🐹', label: 'Rongeur', gradient: ['#F59E0B', '#FBBF24'] },
-  oiseau: { icon: '🐦', label: 'Oiseau', gradient: ['#3B82F6', '#60A5FA'] },
-  reptile: { icon: '🦎', label: 'Reptile', gradient: ['#10B981', '#34D399'] },
-  poisson: { icon: '🐟', label: 'Poisson', gradient: ['#0EA5E9', '#38BDF8'] },
-  autre: { icon: '🐾', label: 'Autre', gradient: ['#6B7280', '#9CA3AF'] },
+  chien: { letter: 'C', label: 'Chien', gradient: ['#527A56', '#6B8F71'] },
+  chat: { letter: 'Ch', label: 'Chat', gradient: ['#6B8F71', '#8CB092'] },
+  rongeur: { letter: 'R', label: 'Rongeur', gradient: ['#C4956A', '#D4AD86'] },
+  oiseau: { letter: 'O', label: 'Oiseau', gradient: ['#8CB092', '#B0BEB2'] },
+  reptile: { letter: 'Re', label: 'Reptile', gradient: ['#3D5E41', '#527A56'] },
+  poisson: { letter: 'P', label: 'Poisson', gradient: ['#B8A88A', '#D4C8AE'] },
+  autre: { letter: '?', label: 'Autre', gradient: ['#8A9A8C', '#B0BEB2'] },
 };
 
 const MyPetsScreen = ({ navigation }) => {
@@ -69,7 +71,7 @@ const MyPetsScreen = ({ navigation }) => {
       }).start();
     } catch (err) {
       console.log('Erreur chargement animaux:', err);
-      setError('Impossible de charger vos animaux. Tirez pour reessayer.');
+      setError('Impossible de charger vos animaux. Tirez pour réessayer.');
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -82,9 +84,9 @@ const MyPetsScreen = ({ navigation }) => {
   }, []);
 
   const handleDelete = (pet) => {
-    showAlert(
+    Alert.alert(
       'Supprimer cet animal',
-      `Etes-vous sur de vouloir supprimer ${pet.name} ?\nCette action est irreversible.`,
+      `Êtes-vous sûr de vouloir supprimer ${pet.name} ?\nCette action est irréversible.`,
       [
         { text: 'Annuler', style: 'cancel' },
         {
@@ -96,7 +98,7 @@ const MyPetsScreen = ({ navigation }) => {
               await deletePetAPI(pet._id);
               setPets((prev) => prev.filter((p) => p._id !== pet._id));
             } catch (err) {
-              showAlert('Erreur', 'Impossible de supprimer cet animal. Reessayez.');
+              Alert.alert('Erreur', 'Impossible de supprimer cet animal. Réessayez.');
             } finally {
               setDeletingId(null);
             }
@@ -142,7 +144,7 @@ const MyPetsScreen = ({ navigation }) => {
               end={{ x: 1, y: 1 }}
               style={styles.speciesIconGradient}
             >
-              <Text style={styles.speciesIcon}>{config.icon}</Text>
+              <Text style={styles.speciesIcon}>{config.letter}</Text>
             </LinearGradient>
           </View>
 
@@ -157,7 +159,7 @@ const MyPetsScreen = ({ navigation }) => {
                     styles.genderBadge,
                     {
                       backgroundColor:
-                        item.gender === 'male' ? '#EFF6FF' : '#FDF2F8',
+                        item.gender === 'male' ? '#EFF5F0' : '#FDF5ED',
                     },
                   ]}
                 >
@@ -165,7 +167,7 @@ const MyPetsScreen = ({ navigation }) => {
                     style={[
                       styles.genderText,
                       {
-                        color: item.gender === 'male' ? '#3B82F6' : '#EC4899',
+                        color: item.gender === 'male' ? '#8CB092' : '#C4956A',
                       },
                     ]}
                   >
@@ -190,7 +192,7 @@ const MyPetsScreen = ({ navigation }) => {
             {isDeleting ? (
               <ActivityIndicator size="small" color={colors.error} />
             ) : (
-              <Text style={styles.deleteIcon}>✕</Text>
+              <Feather name="x" size={13} color={colors.error} />
             )}
           </TouchableOpacity>
         </View>
@@ -199,29 +201,29 @@ const MyPetsScreen = ({ navigation }) => {
         <View style={styles.detailsRow}>
           {getAge(item.age) && (
             <View style={styles.detailChip}>
-              <Text style={styles.detailChipIcon}>🎂</Text>
+              <Feather name="gift" size={12} color={colors.textTertiary} />
               <Text style={styles.detailChipText}>{getAge(item.age)}</Text>
             </View>
           )}
           {item.weight != null && (
             <View style={styles.detailChip}>
-              <Text style={styles.detailChipIcon}>⚖️</Text>
+              <Feather name="activity" size={12} color={colors.textTertiary} />
               <Text style={styles.detailChipText}>{item.weight} kg</Text>
             </View>
           )}
           {item.vaccinated && (
             <View style={[styles.detailChip, styles.vaccinatedChip]}>
-              <Text style={styles.detailChipIcon}>💉</Text>
+              <Feather name="check-circle" size={12} color={colors.success} />
               <Text style={[styles.detailChipText, styles.vaccinatedText]}>
-                Vaccine
+                Vacciné
               </Text>
             </View>
           )}
           {!item.vaccinated && (
             <View style={[styles.detailChip, styles.notVaccinatedChip]}>
-              <Text style={styles.detailChipIcon}>⚠️</Text>
+              <Feather name="alert-triangle" size={12} color={colors.warning} />
               <Text style={[styles.detailChipText, styles.notVaccinatedText]}>
-                Non vaccine
+                Non vacciné
               </Text>
             </View>
           )}
@@ -244,17 +246,17 @@ const MyPetsScreen = ({ navigation }) => {
     <View style={styles.emptyContainer}>
       <View style={styles.emptyIconContainer}>
         <LinearGradient
-          colors={['#7B8B6F', '#96A88A']}
+          colors={['#527A56', '#6B8F71']}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
           style={styles.emptyIconGradient}
         >
-          <Text style={styles.emptyIcon}>🐾</Text>
+          <PawIcon size={44} color="#FFF" />
         </LinearGradient>
       </View>
       <Text style={styles.emptyTitle}>Aucun animal</Text>
       <Text style={styles.emptySubtitle}>
-        Ajoutez votre premier compagnon{'\n'}pour commencer l'aventure Pépète
+        Ajoutez votre premier compagnon{'\n'}pour commencer l'aventure Patoune
       </Text>
       <TouchableOpacity
         style={styles.emptyButton}
@@ -262,12 +264,12 @@ const MyPetsScreen = ({ navigation }) => {
         activeOpacity={0.8}
       >
         <LinearGradient
-          colors={['#7B8B6F', '#96A88A']}
+          colors={['#527A56', '#6B8F71']}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 0 }}
           style={styles.emptyButtonGradient}
         >
-          <Text style={styles.emptyButtonIcon}>➕</Text>
+          <Feather name="plus" size={16} color="#FFF" />
           <Text style={styles.emptyButtonText}>Ajouter mon premier animal</Text>
         </LinearGradient>
       </TouchableOpacity>
@@ -277,7 +279,7 @@ const MyPetsScreen = ({ navigation }) => {
   const renderErrorState = () => (
     <View style={styles.emptyContainer}>
       <View style={styles.errorIconContainer}>
-        <Text style={styles.errorIcon}>😿</Text>
+        <Feather name="frown" size={44} color={colors.warning} />
       </View>
       <Text style={styles.emptyTitle}>Oups !</Text>
       <Text style={styles.emptySubtitle}>{error}</Text>
@@ -289,7 +291,7 @@ const MyPetsScreen = ({ navigation }) => {
         }}
         activeOpacity={0.8}
       >
-        <Text style={styles.retryButtonText}>Reessayer</Text>
+        <Text style={styles.retryButtonText}>Réessayer</Text>
       </TouchableOpacity>
     </View>
   );
@@ -315,7 +317,7 @@ const MyPetsScreen = ({ navigation }) => {
           onPress={() => navigation.goBack()}
           activeOpacity={0.7}
         >
-          <Text style={styles.backArrow}>‹</Text>
+          <Feather name="chevron-left" size={24} color={colors.text} />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Mes animaux</Text>
         <View style={styles.headerBadge}>
@@ -369,12 +371,12 @@ const MyPetsScreen = ({ navigation }) => {
               style={styles.fabTouchable}
             >
               <LinearGradient
-                colors={['#7B8B6F', '#96A88A']}
+                colors={['#527A56', '#6B8F71']}
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 1 }}
                 style={styles.fabGradient}
               >
-                <Text style={styles.fabIcon}>+</Text>
+                <Feather name="plus" size={28} color="#FFF" />
               </LinearGradient>
             </TouchableOpacity>
           </Animated.View>
@@ -421,12 +423,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     ...SHADOWS.sm,
-  },
-  backArrow: {
-    fontSize: 26,
-    color: colors.text,
-    fontWeight: '600',
-    marginTop: -2,
   },
   headerTitle: {
     flex: 1,
@@ -487,7 +483,10 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   speciesIcon: {
-    fontSize: 26,
+    fontSize: 16,
+    fontWeight: '800',
+    color: '#FFF',
+    letterSpacing: 0.5,
   },
   petInfo: {
     flex: 1,
@@ -528,11 +527,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  deleteIcon: {
-    fontSize: 13,
-    color: colors.error,
-    fontWeight: '700',
-  },
 
   // Details
   detailsRow: {
@@ -550,9 +544,6 @@ const styles = StyleSheet.create({
     paddingVertical: SPACING.xs + 2,
     borderRadius: RADIUS.full,
     gap: SPACING.xs,
-  },
-  detailChipIcon: {
-    fontSize: 12,
   },
   detailChipText: {
     fontSize: FONT_SIZE.xs,
@@ -608,7 +599,7 @@ const styles = StyleSheet.create({
     marginBottom: SPACING.xl,
     borderRadius: 50,
     overflow: 'hidden',
-    ...SHADOWS.glow('#7B8B6F'),
+    ...SHADOWS.glow('#527A56'),
   },
   emptyIconGradient: {
     width: 100,
@@ -616,9 +607,6 @@ const styles = StyleSheet.create({
     borderRadius: 50,
     alignItems: 'center',
     justifyContent: 'center',
-  },
-  emptyIcon: {
-    fontSize: 44,
   },
   emptyTitle: {
     fontSize: FONT_SIZE['2xl'],
@@ -636,7 +624,7 @@ const styles = StyleSheet.create({
   emptyButton: {
     borderRadius: RADIUS.xl,
     overflow: 'hidden',
-    ...SHADOWS.glow('#7B8B6F'),
+    ...SHADOWS.glow('#527A56'),
   },
   emptyButtonGradient: {
     flexDirection: 'row',
@@ -645,9 +633,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: SPACING['2xl'],
     borderRadius: RADIUS.xl,
     gap: SPACING.sm,
-  },
-  emptyButtonIcon: {
-    fontSize: 16,
   },
   emptyButtonText: {
     fontSize: FONT_SIZE.base,
@@ -664,9 +649,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: SPACING.xl,
-  },
-  errorIcon: {
-    fontSize: 44,
   },
   retryButton: {
     backgroundColor: colors.primary,
@@ -685,7 +667,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
     bottom: Platform.OS === 'ios' ? 32 : 24,
     right: SPACING.lg,
-    ...SHADOWS.glow('#7B8B6F'),
+    ...SHADOWS.glow('#527A56'),
   },
   fabTouchable: {
     borderRadius: 30,
@@ -697,12 +679,6 @@ const styles = StyleSheet.create({
     borderRadius: 30,
     alignItems: 'center',
     justifyContent: 'center',
-  },
-  fabIcon: {
-    fontSize: 30,
-    color: colors.white,
-    fontWeight: '300',
-    lineHeight: 32,
   },
 });
 

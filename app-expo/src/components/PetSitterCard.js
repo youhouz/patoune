@@ -6,35 +6,29 @@ import { FONTS } from '../utils/typography';
 const colors = require('../utils/colors');
 const { SHADOWS, RADIUS } = require('../utils/colors');
 
-const ANIMAL_EMOJI_MAP = {
-  chien: '🐕',
-  chat: '🐈',
-  rongeur: '🐹',
-  oiseau: '🐦',
-  reptile: '🦎',
-  poisson: '🐟',
-  autre: '🐾',
+const ANIMAL_ICON_MAP = {
+  chien: 'gitlab',
+  chat: 'github',
+  rongeur: 'mouse-pointer',
+  oiseau: 'feather',
+  reptile: 'zap',
+  poisson: 'droplet',
+  autre: 'heart',
 };
 
-/* ---------- Star Rating (Unicode — renders filled on all platforms) ---------- */
+/* ---------- Star Rating (inline with Feather icons) ---------- */
 const StarRating = ({ value = 0, count, size = 13 }) => {
   const fullStars = Math.floor(value);
-  const hasHalf = value - fullStars >= 0.25;
+  const hasHalf = value - fullStars >= 0.5;
   const stars = [];
   for (let i = 0; i < 5; i++) {
-    if (i < fullStars) {
+    if (i < fullStars || (i === fullStars && hasHalf)) {
       stars.push(
-        <Text key={i} style={{ fontSize: size, color: '#F59E0B', lineHeight: size + 2 }}>★</Text>
-      );
-    } else if (i === fullStars && hasHalf) {
-      stars.push(
-        <View key={i} style={{ width: size * 0.75, overflow: 'hidden' }}>
-          <Text style={{ fontSize: size, color: '#F59E0B', lineHeight: size + 2 }}>★</Text>
-        </View>
+        <Feather key={i} name="star" size={size} color="#C4956A" />
       );
     } else {
       stars.push(
-        <Text key={i} style={{ fontSize: size, color: colors.border, lineHeight: size + 2 }}>★</Text>
+        <Feather key={i} name="star" size={size} color={colors.border} />
       );
     }
   }
@@ -49,7 +43,6 @@ const StarRating = ({ value = 0, count, size = 13 }) => {
 };
 
 const PetSitterCard = ({ petsitter, onPress }) => {
-  if (!petsitter) return null;
   const { user, bio, pricePerDay, rating, reviewCount, acceptedAnimals, services } = petsitter;
 
   return (
@@ -94,9 +87,11 @@ const PetSitterCard = ({ petsitter, onPress }) => {
         <View style={styles.tags}>
           {acceptedAnimals?.slice(0, 4).map((animal, idx) => (
             <View key={idx} style={styles.animalChip}>
-              <Text style={styles.animalEmoji}>
-                {ANIMAL_EMOJI_MAP[animal] || '🐾'}
-              </Text>
+              <Feather
+                name={ANIMAL_ICON_MAP[animal] || 'heart'}
+                size={12}
+                color={colors.primary}
+              />
               <Text style={styles.animalText}>{animal}</Text>
             </View>
           ))}
@@ -212,9 +207,6 @@ const styles = StyleSheet.create({
     paddingVertical: 4,
     borderRadius: RADIUS.sm,
     gap: 4,
-  },
-  animalEmoji: {
-    fontSize: 12,
   },
   animalText: {
     fontSize: 11,

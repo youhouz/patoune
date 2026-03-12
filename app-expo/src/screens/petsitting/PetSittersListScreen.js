@@ -2,36 +2,33 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import {
   View, Text, FlatList, StyleSheet, ActivityIndicator,
   TouchableOpacity, TextInput, Platform, Animated, RefreshControl,
-  StatusBar, Dimensions, Image,
+  StatusBar, Image,
 } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { searchPetSittersAPI } from '../../api/petsitters';
 import useLocation from '../../hooks/useLocation';
+import useResponsive from '../../hooks/useResponsive';
 import { FONTS } from '../../utils/typography';
 const colors = require('../../utils/colors');
 const { SHADOWS, RADIUS, SPACING, FONT_SIZE } = require('../../utils/colors');
 
-const { width: SCREEN_WIDTH } = Dimensions.get('window');
-
 const ANIMAL_FILTERS = [
-  { key: 'Tous', emoji: '❤️', label: 'Tous' },
-  { key: 'Chien', emoji: '🐕', label: 'Chiens' },
-  { key: 'Chat', emoji: '🐈', label: 'Chats' },
-  { key: 'Rongeur', emoji: '🐹', label: 'Rongeurs' },
-  { key: 'Oiseau', emoji: '🐦', label: 'Oiseaux' },
-  { key: 'Reptile', emoji: '🦎', label: 'Reptiles' },
+  { key: 'Tous', icon: 'heart', label: 'Tous' },
+  { key: 'Chien', icon: 'gitlab', label: 'Chiens' },
+  { key: 'Chat', icon: 'github', label: 'Chats' },
+  { key: 'Rongeur', icon: 'mouse-pointer', label: 'Rongeurs' },
+  { key: 'Oiseau', icon: 'feather', label: 'Oiseaux' },
+  { key: 'Reptile', icon: 'zap', label: 'Reptiles' },
 ];
 
-const ANIMAL_EMOJI_MAP = {
-  chien: '🐕',
-  chat: '🐈',
-  rongeur: '🐹',
-  oiseau: '🐦',
-  reptile: '🦎',
-  poisson: '🐟',
-  autre: '🐾',
+const ANIMAL_ICON_MAP = {
+  chien: 'gitlab',
+  chat: 'github',
+  rongeur: 'mouse-pointer',
+  oiseau: 'feather',
+  reptile: 'zap',
 };
 
 const RADIUS_FILTERS = [
@@ -41,31 +38,19 @@ const RADIUS_FILTERS = [
   { key: 50, label: '50 km' },
 ];
 
-/* ---------- Star Rating (Unicode — renders filled on all platforms) ---------- */
+/* ---------- Star Rating ---------- */
 const StarRating = ({ rating, size = 14 }) => {
-  const val = rating || 0;
-  const fullStars = Math.floor(val);
-  const hasHalf = val - fullStars >= 0.25;
   const stars = [];
+  const fullStars = Math.floor(rating || 0);
+  const hasHalf = (rating || 0) - fullStars >= 0.5;
   for (let i = 0; i < 5; i++) {
-    if (i < fullStars) {
-      stars.push(
-        <Text key={i} style={{ fontSize: size, color: '#F59E0B', lineHeight: size + 2 }}>★</Text>
-      );
-    } else if (i === fullStars && hasHalf) {
-      // Half star: overlapping empty + clipped filled
-      stars.push(
-        <View key={i} style={{ width: size * 0.75, overflow: 'hidden' }}>
-          <Text style={{ fontSize: size, color: '#F59E0B', lineHeight: size + 2 }}>★</Text>
-        </View>
-      );
+    if (i < fullStars || (i === fullStars && hasHalf)) {
+      stars.push(<Feather key={i} name="star" size={size} color="#C4956A" />);
     } else {
-      stars.push(
-        <Text key={i} style={{ fontSize: size, color: colors.border, lineHeight: size + 2 }}>★</Text>
-      );
+      stars.push(<Feather key={i} name="star" size={size} color={colors.border} />);
     }
   }
-  return <View style={{ flexDirection: 'row', alignItems: 'center', gap: 0 }}>{stars}</View>;
+  return <View style={{ flexDirection: 'row', alignItems: 'center', gap: 1 }}>{stars}</View>;
 };
 
 /* ---------- Skeleton Placeholder ---------- */
@@ -163,8 +148,6 @@ const PetSitterCard = ({ petsitter, onPress, index }) => {
         onPressIn={onPressIn}
         onPressOut={onPressOut}
         activeOpacity={1}
-        accessibilityRole="button"
-        accessibilityLabel={`${petsitter.user?.name || 'Gardien'}, ${petsitter.rating?.toFixed(1) || 0} etoiles, ${priceDisplay} euros par jour`}
       >
         <View style={styles.cardContent}>
           {/* Avatar */}
@@ -196,7 +179,7 @@ const PetSitterCard = ({ petsitter, onPress, index }) => {
               </Text>
               {petsitter.verified && (
                 <View style={styles.verifiedBadge}>
-                  <Feather name="check-circle" size={9} color="#10B981" />
+                  <Feather name="check-circle" size={9} color="#527A56" />
                   <Text style={styles.verifiedBadgeText}>Verifie</Text>
                 </View>
               )}
@@ -239,9 +222,11 @@ const PetSitterCard = ({ petsitter, onPress, index }) => {
             <View style={styles.animalTags}>
               {petsitter.acceptedAnimals?.slice(0, 4).map((animal, idx) => (
                 <View key={idx} style={styles.animalTag}>
-                  <Text style={styles.animalTagEmoji}>
-                    {ANIMAL_EMOJI_MAP[animal.toLowerCase()] || '🐾'}
-                  </Text>
+                  <Feather
+                    name={ANIMAL_ICON_MAP[animal.toLowerCase()] || 'heart'}
+                    size={11}
+                    color={colors.primary}
+                  />
                   <Text style={styles.animalTagText}>
                     {animal.charAt(0).toUpperCase() + animal.slice(1)}
                   </Text>
@@ -273,6 +258,7 @@ const PetSitterCard = ({ petsitter, onPress, index }) => {
 /* ---------- Main Screen ---------- */
 const PetSittersListScreen = ({ navigation }) => {
   const insets = useSafeAreaInsets();
+  const { numColumns } = useResponsive();
   const [petsitters, setPetsitters] = useState([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -282,7 +268,7 @@ const PetSittersListScreen = ({ navigation }) => {
   const [searchFocused, setSearchFocused] = useState(false);
   const scrollY = useRef(new Animated.Value(0)).current;
 
-  const { location, city, loading: locationLoading, error: locationError, requestLocation } = useLocation();
+  const { location, city, loading: locationLoading, requestLocation } = useLocation();
 
   useEffect(() => {
     requestLocation();
@@ -346,14 +332,14 @@ const PetSittersListScreen = ({ navigation }) => {
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 0 }}
           >
-            <Text style={styles.filterEmoji}>{item.emoji}</Text>
+            <Feather name={item.icon} size={15} color={colors.white} />
             <Text style={[styles.filterText, styles.filterTextActive]}>
               {item.label}
             </Text>
           </LinearGradient>
         ) : (
           <View style={styles.filterChipInner}>
-            <Text style={styles.filterEmoji}>{item.emoji}</Text>
+            <Feather name={item.icon} size={15} color={colors.textSecondary} />
             <Text style={styles.filterText}>{item.label}</Text>
           </View>
         )}
@@ -389,7 +375,7 @@ const PetSittersListScreen = ({ navigation }) => {
               color={city ? colors.white : 'rgba(255,255,255,0.6)'}
             />
             <Text style={styles.locationText} numberOfLines={1}>
-              {locationLoading ? 'Localisation...' : city || (locationError ? 'Reessayer' : 'Localiser')}
+              {locationLoading ? 'Localisation...' : city || 'Localiser'}
             </Text>
           </TouchableOpacity>
         </View>
@@ -452,17 +438,6 @@ const PetSittersListScreen = ({ navigation }) => {
             );
           })}
         </View>
-      )}
-
-      {/* Location error banner */}
-      {locationError && !location && (
-        <TouchableOpacity style={styles.locationErrorBanner} onPress={requestLocation} activeOpacity={0.7}>
-          <Feather name="alert-circle" size={16} color={colors.warning} />
-          <Text style={styles.locationErrorText}>
-            Localisation indisponible. Appuyez pour reessayer.
-          </Text>
-          <Feather name="refresh-cw" size={14} color={colors.warning} />
-        </TouchableOpacity>
       )}
 
       {/* Results count */}
@@ -536,7 +511,9 @@ const PetSittersListScreen = ({ navigation }) => {
         </View>
       ) : (
         <FlatList
+          key={String(numColumns)}
           data={filteredPetsitters}
+          numColumns={numColumns}
           renderItem={({ item, index }) => (
             <PetSitterCard
               petsitter={item}
@@ -683,9 +660,6 @@ const styles = StyleSheet.create({
     paddingVertical: SPACING.sm + 2,
     gap: SPACING.xs,
   },
-  filterEmoji: {
-    fontSize: 15,
-  },
   filterText: {
     fontSize: FONT_SIZE.sm,
     fontFamily: FONTS.bodySemiBold,
@@ -727,27 +701,6 @@ const styles = StyleSheet.create({
     color: colors.secondary,
   },
 
-  // Location error
-  locationErrorBanner: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: colors.warningSoft,
-    marginHorizontal: SPACING.base,
-    marginTop: SPACING.sm,
-    paddingHorizontal: SPACING.base,
-    paddingVertical: SPACING.md,
-    borderRadius: RADIUS.lg,
-    gap: SPACING.sm,
-    borderWidth: 1,
-    borderColor: colors.warning + '30',
-  },
-  locationErrorText: {
-    flex: 1,
-    fontSize: FONT_SIZE.sm,
-    fontFamily: FONTS.bodyMedium,
-    color: colors.warning,
-  },
-
   // Results count
   resultsCount: {
     flexDirection: 'row',
@@ -777,29 +730,30 @@ const styles = StyleSheet.create({
   card: {
     backgroundColor: colors.white,
     marginHorizontal: SPACING.base,
-    marginBottom: SPACING.base,
-    borderRadius: RADIUS['2xl'],
-    ...SHADOWS.lg,
-    borderWidth: 0,
+    marginBottom: SPACING.md,
+    borderRadius: RADIUS.xl,
+    ...SHADOWS.md,
+    borderWidth: 1,
+    borderColor: colors.borderLight,
   },
   cardContent: {
     flexDirection: 'row',
-    padding: SPACING.lg,
+    padding: SPACING.base,
     alignItems: 'flex-start',
   },
   avatarContainer: {
     position: 'relative',
-    marginRight: SPACING.base,
+    marginRight: SPACING.md,
   },
   avatar: {
-    width: 64,
-    height: 64,
+    width: 56,
+    height: 56,
     borderRadius: RADIUS['2xl'],
     alignItems: 'center',
     justifyContent: 'center',
   },
   avatarLetter: {
-    fontSize: FONT_SIZE['2xl'],
+    fontSize: FONT_SIZE.xl,
     fontFamily: FONTS.heading,
     color: colors.white,
   },
@@ -807,13 +761,13 @@ const styles = StyleSheet.create({
     position: 'absolute',
     bottom: -2,
     right: -2,
-    width: 22,
-    height: 22,
+    width: 20,
+    height: 20,
     borderRadius: RADIUS.full,
-    backgroundColor: '#10B981',
+    backgroundColor: '#527A56',
     alignItems: 'center',
     justifyContent: 'center',
-    borderWidth: 3,
+    borderWidth: 2.5,
     borderColor: colors.white,
   },
   cardInfo: {
@@ -824,34 +778,33 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: SPACING.sm,
-    marginBottom: 5,
+    marginBottom: 4,
   },
   cardName: {
-    fontSize: FONT_SIZE.lg,
+    fontSize: FONT_SIZE.md,
     fontFamily: FONTS.heading,
     color: colors.text,
     flexShrink: 1,
-    letterSpacing: -0.2,
   },
   verifiedBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#ECFDF5',
-    paddingHorizontal: SPACING.sm + 2,
-    paddingVertical: 3,
-    borderRadius: RADIUS.full,
+    backgroundColor: '#EFF5F0',
+    paddingHorizontal: SPACING.sm,
+    paddingVertical: 2,
+    borderRadius: RADIUS.xs,
     gap: 3,
   },
   verifiedBadgeText: {
     fontSize: FONT_SIZE.xs,
     fontFamily: FONTS.bodySemiBold,
-    color: '#10B981',
+    color: '#527A56',
   },
   ratingRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: SPACING.xs + 2,
-    marginBottom: SPACING.sm + 2,
+    gap: SPACING.xs,
+    marginBottom: SPACING.sm,
   },
   ratingText: {
     fontSize: FONT_SIZE.sm,
@@ -865,9 +818,9 @@ const styles = StyleSheet.create({
   },
   expBadge: {
     backgroundColor: colors.infoSoft,
-    paddingHorizontal: SPACING.sm + 2,
-    paddingVertical: 2,
-    borderRadius: RADIUS.full,
+    paddingHorizontal: SPACING.sm,
+    paddingVertical: 1,
+    borderRadius: RADIUS.xs,
     marginLeft: SPACING.xs,
   },
   expText: {
@@ -879,71 +832,68 @@ const styles = StyleSheet.create({
     fontSize: FONT_SIZE.sm,
     fontFamily: FONTS.body,
     color: colors.textSecondary,
-    lineHeight: 20,
-    marginBottom: SPACING.sm + 2,
+    lineHeight: 19,
+    marginBottom: SPACING.sm,
   },
   distanceRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 5,
-    marginBottom: SPACING.sm + 2,
+    gap: 4,
+    marginBottom: SPACING.sm,
   },
   distanceText: {
     fontSize: FONT_SIZE.xs,
-    fontFamily: FONTS.bodySemiBold,
+    fontFamily: FONTS.bodyMedium,
     color: colors.secondary,
   },
   animalTags: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: SPACING.sm,
+    gap: SPACING.xs,
   },
   animalTag: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: colors.primarySoft,
-    paddingHorizontal: SPACING.md,
-    paddingVertical: 5,
-    borderRadius: RADIUS.full,
-    gap: 4,
+    paddingHorizontal: SPACING.sm,
+    paddingVertical: 3,
+    borderRadius: RADIUS.sm,
+    gap: 3,
   },
   animalTagMore: {
     backgroundColor: colors.background,
   },
-  animalTagEmoji: {
-    fontSize: 12,
-  },
   animalTagText: {
     fontSize: FONT_SIZE.xs,
-    fontFamily: FONTS.bodySemiBold,
+    fontFamily: FONTS.bodyMedium,
     color: colors.primary,
   },
   priceBox: {
     alignItems: 'center',
     backgroundColor: colors.primarySoft,
-    paddingHorizontal: SPACING.base,
-    paddingVertical: SPACING.base,
-    borderRadius: RADIUS.xl,
-    minWidth: 68,
+    paddingHorizontal: SPACING.md,
+    paddingVertical: SPACING.md,
+    borderRadius: RADIUS.lg,
+    minWidth: 62,
   },
   priceAmount: {
-    fontSize: FONT_SIZE['2xl'],
+    fontSize: FONT_SIZE.xl,
     fontFamily: FONTS.heading,
     color: colors.primary,
     letterSpacing: -0.5,
   },
   priceCurrency: {
-    fontSize: 11,
+    fontSize: 10,
     fontFamily: FONTS.heading,
     color: colors.primary,
     marginTop: -2,
     letterSpacing: 0.5,
   },
   priceDivider: {
-    width: 24,
+    width: 20,
     height: 1,
-    backgroundColor: colors.primary + '25',
-    marginVertical: 5,
+    backgroundColor: colors.primary + '30',
+    marginVertical: 4,
   },
   priceUnit: {
     fontSize: FONT_SIZE.xs,

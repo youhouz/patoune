@@ -1,44 +1,42 @@
 import React from 'react';
 import { TouchableOpacity, Text, StyleSheet, ActivityIndicator, View } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { FONTS } from '../utils/typography';
 const colors = require('../utils/colors');
-const { SHADOWS, RADIUS } = require('../utils/colors');
+const { SHADOWS, RADIUS, FONT_SIZE } = require('../utils/colors');
 
 const Button = ({
   title, onPress, loading, style, textStyle,
   variant = 'primary', disabled, icon, size = 'md',
   fullWidth = true
 }) => {
-  // Ultra-modern SF Agency sizing
   const sizeStyles = {
-    sm: { paddingVertical: 12, paddingHorizontal: 16, minHeight: 44 },
-    md: { paddingVertical: 16, paddingHorizontal: 24, minHeight: 56 },
-    lg: { paddingVertical: 20, paddingHorizontal: 32, minHeight: 64 },
+    sm: { paddingVertical: 13, paddingHorizontal: 20, minHeight: 48, borderRadius: RADIUS.md },
+    md: { paddingVertical: 16, paddingHorizontal: 28, minHeight: 56, borderRadius: RADIUS.lg },
+    lg: { paddingVertical: 18, paddingHorizontal: 34, minHeight: 62, borderRadius: RADIUS.xl },
   };
 
-  const fontSizes = { sm: 14, md: 16, lg: 18 };
+  const fontSizes = { sm: FONT_SIZE.sm, md: FONT_SIZE.md, lg: FONT_SIZE.lg };
+  const sz = sizeStyles[size] || sizeStyles.md;
 
   if (variant === 'primary') {
     return (
       <TouchableOpacity
         onPress={onPress}
         disabled={loading || disabled}
-        activeOpacity={0.8}
+        activeOpacity={0.82}
         style={[fullWidth && { width: '100%' }, style]}
       >
         <LinearGradient
-          colors={disabled ? ['#E2E8F0', '#CBD5E1'] : colors.gradientPrimary}
+          colors={disabled ? ['#D1D5DB', '#C6CAD0'] : ['#527A56', '#6B8F71']}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
           style={[
-            styles.button, sizeStyles[size],
-            { borderRadius: RADIUS.full }, // Pill-shaped buttons are very modern
-            !disabled && SHADOWS.glow(colors.primary),
+            styles.button, sz,
+            !disabled && SHADOWS.glow('#527A56'),
           ]}
         >
           {loading ? (
-            <ActivityIndicator color={colors.white} size="small" />
+            <ActivityIndicator color="#FFF" size="small" />
           ) : (
             <View style={styles.content}>
               {icon && <Text style={[styles.icon, { fontSize: fontSizes[size] }]}>{icon}</Text>}
@@ -55,8 +53,8 @@ const Button = ({
   const variantStyles = {
     outline: {
       bg: 'transparent',
-      border: colors.border,
-      textColor: colors.textPrimary,
+      border: colors.primary,
+      textColor: colors.primary,
     },
     secondary: {
       bg: colors.primarySoft,
@@ -66,12 +64,17 @@ const Button = ({
     ghost: {
       bg: 'transparent',
       border: 'transparent',
-      textColor: colors.textSecondary,
+      textColor: colors.primary,
     },
     danger: {
       bg: colors.errorSoft,
       border: 'transparent',
       textColor: colors.error,
+    },
+    dark: {
+      bg: colors.dark,
+      border: 'transparent',
+      textColor: colors.white,
     },
   };
 
@@ -80,13 +83,13 @@ const Button = ({
   return (
     <TouchableOpacity
       style={[
-        styles.button, sizeStyles[size],
+        styles.button, sz,
         {
           backgroundColor: v.bg,
           borderWidth: variant === 'outline' ? 1.5 : 0,
           borderColor: v.border,
-          borderRadius: RADIUS.full, // Pill-shaped buttons
         },
+        variant === 'secondary' && SHADOWS.xs,
         disabled && styles.disabled,
         fullWidth && { width: '100%' },
         style,
@@ -117,20 +120,20 @@ const styles = StyleSheet.create({
   content: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
+    gap: 10,
   },
   icon: {
     lineHeight: undefined,
   },
   text: {
-    fontFamily: FONTS.bodySemiBold,
-    letterSpacing: -0.2, // Tighter tracking for modern look
+    fontWeight: '700',
+    letterSpacing: 0.3,
   },
   primaryText: {
-    color: '#FFFFFF',
+    color: '#FFF',
   },
   disabled: {
-    opacity: 0.5,
+    opacity: 0.45,
   },
 });
 

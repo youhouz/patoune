@@ -1,173 +1,232 @@
-// Pépète Design System — v4.0 (San Francisco Agency Edition)
-// Brand: Ultra-modern, high-contrast, minimalist, vibrant gradient
+// ═══════════════════════════════════════════════════════════════════════════
+// Patoune v5.0 — Design System 2026
+// Pepete-inspired DA — Sage green, warm cream, natural & organic premium
+// ═══════════════════════════════════════════════════════════════════════════
 
 const COLORS = {
-  // Brand Primary — Electric Indigo
-  primary: '#4F46E5', // Indigo 600
-  primaryLight: '#818CF8', // Indigo 400
-  primaryDark: '#3730A3', // Indigo 800
-  primarySoft: '#EEF2FF', // Indigo 50
-  primaryGlow: 'rgba(79, 70, 229, 0.25)',
+  // -- Brand — Sage Green (pepete identity) --
+  primary:        '#6B8F71',
+  primaryLight:   '#8CB092',
+  primaryDark:    '#527A56',
+  primarySoft:    '#EFF5F0',
+  primaryGlow:    'rgba(107, 143, 113, 0.12)',
+  primaryMuted:   '#D4E5D6',
+  primaryUltra:   '#F5FAF6',
 
-  // Brand Secondary — Rose/Coral
-  secondary: '#F43F5E', // Rose 500
-  secondaryLight: '#FB7185', // Rose 400
-  secondaryDark: '#BE123C', // Rose 700
-  secondarySoft: '#FFF1F2', // Rose 50
+  // -- Secondary — Deep Forest --
+  secondary:      '#527A56',
+  secondaryLight: '#6B8F71',
+  secondaryDark:  '#3D5E41',
+  secondarySoft:  '#EFF5F0',
 
-  // Accent — Emerald 
-  accent: '#10B981',
-  accentLight: '#34D399',
-  accentSoft: '#D1FAE5',
+  // -- Accent — Warm Terracotta --
+  accent:         '#C4956A',
+  accentLight:    '#D4AD86',
+  accentDark:     '#A67B52',
+  accentSoft:     '#FDF5ED',
 
-  // Backgrounds - Ultra clean Minimalist
-  white: '#FFFFFF',
-  background: '#F8FAFC', // Slate 50
-  surface: '#FFFFFF',
-  surfaceElevated: '#FFFFFF',
-  card: '#FFFFFF',
-  border: '#E2E8F0', // Slate 200
-  borderLight: '#F1F5F9', // Slate 100
-  divider: '#F1F5F9',
+  // -- Tertiary — Soft Gold --
+  tertiary:       '#B8A88A',
+  tertiaryLight:  '#D4C8AE',
+  tertiarySoft:   '#FAF7F2',
 
-  // Text — High contrast slate/black
-  text: '#0F172A', // Slate 900
-  textPrimary: '#0F172A',
-  textSecondary: '#475569', // Slate 600
-  textTertiary: '#94A3B8', // Slate 400
-  textLight: '#CBD5E1', // Slate 300
-  textInverse: '#FFFFFF',
-  placeholder: '#A1A1AA', // Zinc 400
+  // -- Neutrals — Warm Cream --
+  white:          '#FFFFFF',
+  background:     '#FAF7F2',
+  surface:        '#FFFFFF',
+  surfaceElevated:'#FFFFFF',
+  card:           '#FFFFFF',
+  border:         '#E8E2D8',
+  borderLight:    '#F0ECE4',
+  borderSubtle:   '#F5F1EB',
+  divider:        '#EDE8E0',
 
-  // Nutrition Scores - Modern styling
-  scoreExcellent: '#059669',
-  scoreGood: '#10B981',
-  scoreMediocre: '#F59E0B',
-  scoreBad: '#EA580C',
-  scoreVeryBad: '#DC2626',
+  // -- Glass / Frosted --
+  glass:          'rgba(255, 255, 255, 0.72)',
+  glassBorder:    'rgba(255, 255, 255, 0.20)',
+  glassOverlay:   'rgba(255, 255, 255, 0.85)',
 
-  scoreExcellentBg: '#ECFDF5',
-  scoreGoodBg: '#F0FDF4',
-  scoreMediocreBg: '#FFFBEB',
-  scoreBadBg: '#FFF7ED',
-  scoreVeryBadBg: '#FEF2F2',
+  // -- Dark palette --
+  dark:           '#2C3E2F',
+  darkSurface:    '#3A4E3D',
+  darkCard:       '#485E4B',
+  darkMuted:      '#5A6E5D',
 
-  // Functional Colors
-  success: '#10B981',
-  successSoft: '#D1FAE5',
-  warning: '#F59E0B',
-  warningSoft: '#FEF3C7',
-  error: '#EF4444',
-  errorSoft: '#FEE2E2',
-  info: '#3B82F6',
-  infoSoft: '#DBEAFE',
+  // -- Text — warm hierarchy --
+  text:           '#2C3E2F',
+  textPrimary:    '#2C3E2F',
+  textSecondary:  '#6B7E6E',
+  textTertiary:   '#8A9A8C',
+  textLight:      '#B0BEB2',
+  textInverse:    '#FFFFFF',
+  placeholder:    '#A0AEA2',
 
-  // Semantic aliases — Tech minimalist
-  cream: '#F8FAFC',
-  linen: '#F1F5F9',
-  charcoal: '#0F172A',
-  stone: '#475569',
-  pebble: '#94A3B8',
-  sand: '#CBD5E1',
+  // -- Nutrition Scores --
+  scoreExcellent:   '#527A56',
+  scoreGood:        '#6B8F71',
+  scoreMediocre:    '#C4956A',
+  scoreBad:         '#D4855A',
+  scoreVeryBad:     '#C25B4A',
 
-  // Shadows & Overlays
-  shadow: 'rgba(15, 23, 42, 0.04)',
-  shadowMedium: 'rgba(15, 23, 42, 0.08)',
-  overlay: 'rgba(15, 23, 42, 0.6)',
-  overlayLight: 'rgba(15, 23, 42, 0.3)',
+  scoreExcellentBg: '#EFF5F0',
+  scoreGoodBg:      '#F0F6F1',
+  scoreMediocreBg:  '#FDF5ED',
+  scoreBadBg:       '#FDF0E8',
+  scoreVeryBadBg:   '#FBE8E4',
 
-  // Gradients for modern glow
-  gradientPrimary: ['#4F46E5', '#6366F1'],
-  gradientWarm: ['#F43F5E', '#FB7185'],
-  gradientSuccess: ['#10B981', '#34D399'],
-  gradientAccent: ['#06B6D4', '#22D3EE'],
-  gradientDark: ['#0F172A', '#1E293B'],
-  gradientCharcoal: ['#0F172A', '#1E293B'],
-  gradientHero: ['#4F46E5', '#818CF8', '#C7D2FE'],
+  // -- Functional --
+  success:     '#527A56',
+  successSoft: '#EFF5F0',
+  warning:     '#C4956A',
+  warningSoft: '#FDF5ED',
+  error:       '#C25B4A',
+  errorSoft:   '#FBE8E4',
+  info:        '#6B8F71',
+  infoSoft:    '#EFF5F0',
+
+  // -- Semantic aliases (backward compat) --
+  cream:     '#FAF7F2',
+  linen:     '#F5F1EB',
+  charcoal:  '#2C3E2F',
+  stone:     '#6B7E6E',
+  pebble:    '#8A9A8C',
+  sand:      '#B0BEB2',
+
+  // -- Shadows & Overlays --
+  shadow:       'rgba(44, 62, 47, 0.03)',
+  shadowMedium: 'rgba(44, 62, 47, 0.06)',
+  shadowHeavy:  'rgba(44, 62, 47, 0.10)',
+  overlay:      'rgba(44, 62, 47, 0.55)',
+  overlayLight: 'rgba(44, 62, 47, 0.25)',
+
+  // -- Gradients --
+  gradientPrimary:   ['#6B8F71', '#8CB092'],
+  gradientWarm:      ['#6B8F71', '#C4956A'],
+  gradientSuccess:   ['#527A56', '#6B8F71'],
+  gradientAccent:    ['#C4956A', '#D4AD86'],
+  gradientDark:      ['#2C3E2F', '#3A4E3D'],
+  gradientHero:      ['#527A56', '#6B8F71', '#8CB092'],
+  gradientCharcoal:  ['#2C3E2F', '#3A4E3D'],
+  gradientSunrise:   ['#6B8F71', '#C4956A'],
+  gradientOcean:     ['#6B8F71', '#8CB092'],
+  gradientForest:    ['#527A56', '#6B8F71'],
+  gradientMidnight:  ['#3A4E3D', '#5A6E5D'],
+  gradientGlass:     ['rgba(255,255,255,0.95)', 'rgba(255,255,255,0.80)'],
 };
 
-// Spacing — crisp, geometric rhythm
+// -- Spacing — 4-point grid --
 const SPACING = {
-  xs: 4,
-  sm: 8,
-  md: 12,
+  xs:   4,
+  sm:   8,
+  md:   12,
   base: 16,
-  lg: 24,
-  xl: 32,
-  '2xl': 40,
-  '3xl': 48,
-  '4xl': 64,
-  '5xl': 80,
-};
-
-// Border Radius - Apple-like rounded corners (squircle feel)
-const RADIUS = {
-  xs: 6,
-  sm: 8,
-  md: 12,
-  lg: 16,
-  xl: 24,
+  lg:   20,
+  xl:   24,
   '2xl': 32,
   '3xl': 40,
-  full: 9999,
-};
-
-// Font Sizes
-const FONT_SIZE = {
-  xs: 12,
-  sm: 14,
-  base: 16,
-  md: 18,
-  lg: 20,
-  xl: 24,
-  '2xl': 30,
-  '3xl': 36,
   '4xl': 48,
-  '5xl': 60,
+  '5xl': 64,
+  '6xl': 80,
 };
 
-// Modern, diffusion-like shadows
+// -- Border Radius --
+const RADIUS = {
+  xs:   8,
+  sm:   12,
+  md:   16,
+  lg:   20,
+  xl:   24,
+  '2xl': 28,
+  '3xl': 36,
+  pill:  999,
+  full:  999,
+};
+
+// -- Font Sizes --
+const FONT_SIZE = {
+  '2xs':  11,
+  xs:   12,
+  sm:   14,
+  base: 16,
+  md:   17,
+  lg:   19,
+  xl:   22,
+  '2xl': 26,
+  '3xl': 32,
+  '4xl': 38,
+  '5xl': 48,
+};
+
+// -- Shadows — layered depth --
 const SHADOWS = {
+  xs: {
+    shadowColor: '#2C3E2F',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.03,
+    shadowRadius: 2,
+    elevation: 1,
+  },
   sm: {
-    shadowColor: '#0F172A',
+    shadowColor: '#2C3E2F',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.04,
-    shadowRadius: 4,
+    shadowRadius: 6,
     elevation: 2,
   },
   md: {
-    shadowColor: '#0F172A',
+    shadowColor: '#2C3E2F',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.06,
-    shadowRadius: 12,
+    shadowRadius: 16,
     elevation: 4,
   },
   lg: {
-    shadowColor: '#0F172A',
+    shadowColor: '#2C3E2F',
     shadowOffset: { width: 0, height: 8 },
     shadowOpacity: 0.08,
-    shadowRadius: 24,
+    shadowRadius: 28,
     elevation: 8,
   },
   xl: {
-    shadowColor: '#0F172A',
-    shadowOffset: { width: 0, height: 16 },
-    shadowOpacity: 0.1,
-    shadowRadius: 32,
+    shadowColor: '#2C3E2F',
+    shadowOffset: { width: 0, height: 14 },
+    shadowOpacity: 0.12,
+    shadowRadius: 40,
     elevation: 12,
   },
   glow: function(color) {
     return {
-      shadowColor: color || '#4F46E5',
-      shadowOffset: { width: 0, height: 8 },
-      shadowOpacity: 0.25,
+      shadowColor: color || '#6B8F71',
+      shadowOffset: { width: 0, height: 6 },
+      shadowOpacity: 0.28,
       shadowRadius: 20,
       elevation: 10,
     };
   },
+  soft: {
+    shadowColor: '#2C3E2F',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.02,
+    shadowRadius: 8,
+    elevation: 1,
+  },
+  card: {
+    shadowColor: '#2C3E2F',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.05,
+    shadowRadius: 12,
+    elevation: 3,
+  },
+  float: {
+    shadowColor: '#2C3E2F',
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.10,
+    shadowRadius: 32,
+    elevation: 10,
+  },
 };
 
-// Score helpers
+// -- Score helpers --
 const getScoreColor = function(score) {
   if (score >= 80) return COLORS.scoreExcellent;
   if (score >= 60) return COLORS.scoreGood;
@@ -189,10 +248,10 @@ const getScoreLabel = function(score) {
   if (score >= 60) return 'Bon';
   if (score >= 40) return 'Moyen';
   if (score >= 20) return 'Mauvais';
-  return 'À éviter';
+  return 'A eviter';
 };
 
-// CommonJS exports — backward compatible with all existing require() calls
+// CommonJS — backward compatible
 module.exports = COLORS;
 module.exports.COLORS = COLORS;
 module.exports.SPACING = SPACING;

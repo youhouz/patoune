@@ -1,5 +1,6 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { Feather } from '@expo/vector-icons';
 const colors = require('../utils/colors');
 const { SHADOWS, RADIUS, getScoreColor, getScoreBg, getScoreLabel } = require('../utils/colors');
 
@@ -45,7 +46,7 @@ const ProductScoreCard = ({ product, onPress, compact = false }) => {
 
       {/* Arrow */}
       {onPress && (
-        <Text style={styles.arrow}>›</Text>
+        <Feather name="chevron-right" size={20} color={colors.textTertiary} />
       )}
     </Wrapper>
   );
