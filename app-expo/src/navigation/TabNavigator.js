@@ -106,7 +106,7 @@ const TabNavigator = () => (
       tabBarIcon: ({ focused }) => <TabIcon routeName={route.name} focused={focused} />,
       tabBarLabel: () => null,
       tabBarStyle: {
-        height: Platform.OS === 'ios' ? 82 : 62,
+        height: Platform.OS === 'ios' ? 82 : 64,
         paddingBottom: Platform.OS === 'ios' ? 24 : 0,
         paddingTop: 0,
         backgroundColor: '#FFFFFF',
@@ -117,6 +117,14 @@ const TabNavigator = () => (
         shadowOpacity: 0.04,
         shadowRadius: 8,
         elevation: 6,
+        alignItems: 'center',
+        justifyContent: 'center',
+      },
+      tabBarItemStyle: {
+        flex: 1,
+        alignItems: 'center',
+        justifyContent: 'center',
+        height: '100%',
       },
     })}
   >
@@ -136,7 +144,6 @@ const styles = StyleSheet.create({
   tabItem: {
     alignItems: 'center',
     justifyContent: 'center',
-    paddingTop: 10,
     gap: 4,
     position: 'relative',
   },
