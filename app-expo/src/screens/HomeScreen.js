@@ -496,7 +496,6 @@ const HomeScreen = ({ navigation }) => {
     </View>
   );
 };
-};
 
 const s = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#FAF6EE' },

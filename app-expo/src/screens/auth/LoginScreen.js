@@ -6,6 +6,7 @@ import {
 import { LinearGradient } from 'expo-linear-gradient';
 import { Feather } from '@expo/vector-icons';
 import { useAuth } from '../../context/AuthContext';
+import { PawIcon } from '../../components/Logo';
 import useResponsive from '../../hooks/useResponsive';
 
 const LoginScreen = ({ navigation }) => {
@@ -48,8 +49,10 @@ const LoginScreen = ({ navigation }) => {
           {/* ── Logo badge ── */}
           <View style={s.logoArea}>
             <View style={s.logoBadge}>
-              <Feather name="heart" size={28} color="#6B8F71" />
+              <PawIcon size={28} color="#6B8F71" />
             </View>
+            <Text style={s.logoName}>pépète.</Text>
+            <Text style={s.logoTagline}>Le meilleur pour vos animaux</Text>
           </View>
 
           {/* ── Titre ── */}
@@ -142,8 +145,10 @@ const s = StyleSheet.create({
   blob3: { position: 'absolute', bottom: 60, left: -60, width: 200, height: 200, borderRadius: 100, backgroundColor: 'rgba(107,143,113,0.05)' },
 
   inner:    { paddingHorizontal: 28 },
-  logoArea: { paddingTop: Platform.OS === 'ios' ? 72 : 60, paddingBottom: 32 },
-  logoBadge: { width: 64, height: 64, borderRadius: 20, backgroundColor: '#EFF5F0', alignItems: 'center', justifyContent: 'center' },
+  logoArea: { paddingTop: Platform.OS === 'ios' ? 72 : 60, paddingBottom: 28, alignItems: 'center' },
+  logoBadge: { width: 64, height: 64, borderRadius: 20, backgroundColor: '#EFF5F0', alignItems: 'center', justifyContent: 'center', marginBottom: 12 },
+  logoName: { fontSize: 28, fontWeight: '900', color: '#1C2B1E', letterSpacing: -0.8, marginBottom: 4 },
+  logoTagline: { fontSize: 13, color: '#96A89A', fontWeight: '500' },
 
   title:  { fontSize: 34, fontWeight: '900', color: '#1C2B1E', letterSpacing: -1,   lineHeight: 40, marginBottom: 10 },
   accent: { color: '#6B8F71' },
