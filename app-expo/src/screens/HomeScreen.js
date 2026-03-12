@@ -1,7 +1,7 @@
 import React, { useState, useCallback } from 'react';
 import {
   View, Text, ScrollView, TouchableOpacity, StyleSheet,
-  Platform, StatusBar, RefreshControl
+  Platform, StatusBar, RefreshControl, TextInput
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useFocusEffect } from '@react-navigation/native';
@@ -105,6 +105,7 @@ const HomeScreen = ({ navigation }) => {
   const [bookings, setBookings] = useState([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [query, setQuery] = useState('');
 
   const fetchData = async () => {
     try {
@@ -205,14 +206,68 @@ const HomeScreen = ({ navigation }) => {
               </TouchableOpacity>
             </View>
 
-            <TouchableOpacity style={s.searchBar} onPress={() => navigation.navigate('Scanner')} activeOpacity={0.8}>
+            <View style={s.searchBar}>
               <Feather name="search" size={18} color="rgba(255,255,255,0.7)" />
-              <Text style={s.searchPlaceholder}>Rechercher un produit, un gardien...</Text>
-            </TouchableOpacity>
+              <TextInput
+                style={s.searchInput}
+                value={query}
+                onChangeText={setQuery}
+                placeholder="Rechercher un produit, un gardien…"
+                placeholderTextColor="rgba(255,255,255,0.55)"
+                returnKeyType="search"
+                clearButtonMode="while-editing"
+              />
+              {query.length > 0 && (
+                <TouchableOpacity onPress={() => setQuery('')} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
+                  <Feather name="x" size={16} color="rgba(255,255,255,0.7)" />
+                </TouchableOpacity>
+              )}
+            </View>
           </View>
         </LinearGradient>
 
-        {/* ── Mes animaux ── */}
+        {/* ── Résultats de recherche ── */}
+        {query.trim().length > 0 && (() => {
+          const q = query.trim().toLowerCase();
+          const matchedScans = recentScans.filter(sc =>
+            sc.product?.name?.toLowerCase().includes(q) ||
+            sc.product?.brand?.toLowerCase().includes(q)
+          );
+          return (
+            <View style={[s.searchResults, { paddingHorizontal: hPadding }, centerWrap]}>
+              <Text style={s.searchResultsTitle}>
+                {matchedScans.length} résultat{matchedScans.length !== 1 ? 's' : ''} pour &quot;{query}&quot;
+              </Text>
+              {matchedScans.length === 0 ? (
+                <View style={s.searchEmpty}>
+                  <Feather name="search" size={32} color={COLORS.textTertiary} />
+                  <Text style={s.searchEmptyText}>Aucun produit trouvé</Text>
+                  <TouchableOpacity
+                    style={s.searchScanBtn}
+                    onPress={() => navigation.navigate('Scanner')}
+                    activeOpacity={0.8}
+                  >
+                    <Feather name="maximize" size={15} color="#FFF" />
+                    <Text style={s.searchScanBtnText}>Scanner un produit</Text>
+                  </TouchableOpacity>
+                </View>
+              ) : (
+                matchedScans.map((scan, idx) => (
+                  <RecentScanCard
+                    key={scan._id || idx}
+                    scan={scan}
+                    onPress={() => navigation.navigate('Scanner', { screen: 'ProductResult', params: { product: scan.product } })}
+                  />
+                ))
+              )}
+            </View>
+          );
+        })()}
+
+        {/* ── Contenu principal (masqué pendant la recherche) ── */}
+        {query.trim().length === 0 && <>
+
+        {/* ── Mes animaux ── */}}
         {pets.length > 0 && (
           <View style={[s.petsSection, { paddingLeft: hPadding }]}>
             <View style={[s.sectionHeader, { paddingRight: hPadding, maxWidth: contentWidth, alignSelf: 'center', width: '100%' }]}>
@@ -362,9 +417,12 @@ const HomeScreen = ({ navigation }) => {
         </View>
 
         <View style={{ height: 32 }} />
+        </>
+        }
       </ScrollView>
     </View>
   );
+};
 };
 
 const s = StyleSheet.create({
@@ -413,7 +471,10 @@ const s = StyleSheet.create({
     borderRadius: RADIUS.lg, paddingHorizontal: 18, height: 52, gap: 12,
     borderWidth: 1, borderColor: 'rgba(255,255,255,0.15)',
   },
-  searchPlaceholder: { fontSize: FONT_SIZE.sm, color: 'rgba(255,255,255,0.72)', fontWeight: '500' },
+  searchInput: {
+    flex: 1, fontSize: FONT_SIZE.sm, color: '#FFF', fontWeight: '500',
+    ...(Platform.OS === 'web' ? { outlineStyle: 'none' } : {}),
+  },
 
   // Section header
   sectionHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 },
@@ -530,6 +591,14 @@ const s = StyleSheet.create({
   quickIconWrapTablet: { width: 72, height: 72, borderRadius: RADIUS['2xl'] },
   quickLabel: { fontSize: FONT_SIZE['2xs'], color: COLORS.textSecondary, fontWeight: '600', textAlign: 'center', lineHeight: 15 },
   quickLabelTablet: { fontSize: FONT_SIZE.xs, lineHeight: 17 },
+
+  // Search results
+  searchResults:      { marginTop: 20 },
+  searchResultsTitle: { fontSize: 13, fontWeight: '700', color: COLORS.textSecondary, letterSpacing: 0.2, marginBottom: 12 },
+  searchEmpty:        { alignItems: 'center', paddingVertical: 32, gap: 12 },
+  searchEmptyText:    { fontSize: 15, color: COLORS.textSecondary, fontWeight: '500' },
+  searchScanBtn:      { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: COLORS.primary, borderRadius: RADIUS.pill, paddingHorizontal: 20, paddingVertical: 12, marginTop: 4 },
+  searchScanBtnText:  { color: '#FFF', fontWeight: '700', fontSize: 14 },
 
   // Banner — premium CTA
   bannerSection: { marginTop: 32 },
