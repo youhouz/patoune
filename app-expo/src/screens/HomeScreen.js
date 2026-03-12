@@ -465,6 +465,54 @@ const HomeScreen = ({ navigation }) => {
           </View>
         )}
 
+        {/* ── Bientôt disponible ── */}
+        <View style={[s.soonSection, { paddingHorizontal: hPadding }, centerWrap]}>
+          <View style={s.soonHeader}>
+            <View style={s.soonBadge}>
+              <Text style={s.soonBadgeText}>BIENTÔT</Text>
+            </View>
+            <Text style={s.sectionTitle}>Ce qui arrive prochainement</Text>
+          </View>
+
+          {/* Marketplace */}
+          <View style={s.soonCard}>
+            <View style={s.soonIconWrap}>
+              <Feather name="tag" size={22} color="#B0BAB3" />
+            </View>
+            <View style={s.soonBody}>
+              <View style={s.soonTitleRow}>
+                <Text style={s.soonCardTitle}>Marketplace animaux</Text>
+                <View style={s.soonPill}><Text style={s.soonPillText}>Q3 2026</Text></View>
+              </View>
+              <Text style={s.soonCardSub}>Achète, vends et adoptes : accessoires, nourriture, animaux — entre particuliers de confiance.</Text>
+              <View style={s.soonTags}>
+                {['Adoption', 'Vente', 'Échange', 'Occasion'].map(t => (
+                  <View key={t} style={s.soonTag}><Text style={s.soonTagText}>{t}</Text></View>
+                ))}
+              </View>
+            </View>
+          </View>
+
+          {/* Vétérinaires */}
+          <View style={s.soonCard}>
+            <View style={s.soonIconWrap}>
+              <Feather name="map-pin" size={22} color="#B0BAB3" />
+            </View>
+            <View style={s.soonBody}>
+              <View style={s.soonTitleRow}>
+                <Text style={s.soonCardTitle}>Vétérinaires proches</Text>
+                <View style={s.soonPill}><Text style={s.soonPillText}>Q4 2026</Text></View>
+              </View>
+              <Text style={s.soonCardSub}>Trouve un vétérinaire autour de toi — cliniques, urgences 24h/24, téléconsultation.</Text>
+              <View style={s.soonTags}>
+                {['Urgences', 'Téléconsult', 'Avis', 'Carte'].map(t => (
+                  <View key={t} style={s.soonTag}><Text style={s.soonTagText}>{t}</Text></View>
+                ))}
+              </View>
+            </View>
+          </View>
+        </View>
+
         {/* ── Bannière CTA — Premium gradient ── */}
         <View style={[s.bannerSection, { paddingHorizontal: hPadding }, centerWrap]}>
           <TouchableOpacity activeOpacity={0.9} onPress={() => navigation.navigate('Scanner')}>
@@ -696,6 +744,23 @@ const s = StyleSheet.create({
   popLabel: { fontSize: 11, fontWeight: '800' },
   popScanBadge: { flexDirection: 'row', alignItems: 'center', gap: 3 },
   popScanCount: { fontSize: 10, color: COLORS.textTertiary, fontWeight: '600' },
+
+  // Coming soon
+  soonSection:    { marginTop: 32 },
+  soonHeader:     { marginBottom: 16, gap: 10 },
+  soonBadge:      { alignSelf: 'flex-start', backgroundColor: '#F0F0EE', borderRadius: RADIUS.pill, paddingHorizontal: 10, paddingVertical: 4, marginBottom: 6 },
+  soonBadgeText:  { fontSize: 10, fontWeight: '800', color: '#B0BAB3', letterSpacing: 1.5 },
+  soonCard:       { flexDirection: 'row', gap: 14, backgroundColor: '#FAFAFA', borderRadius: RADIUS.xl, padding: 18, marginBottom: 12, borderWidth: 1, borderColor: '#EBEBEB' },
+  soonIconWrap:   { width: 46, height: 46, borderRadius: 14, backgroundColor: '#F0F0EE', alignItems: 'center', justifyContent: 'center', flexShrink: 0, marginTop: 2 },
+  soonBody:       { flex: 1 },
+  soonTitleRow:   { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6, gap: 8 },
+  soonCardTitle:  { fontSize: 15, fontWeight: '800', color: '#B0BAB3', flex: 1 },
+  soonPill:       { backgroundColor: '#EBEBEB', borderRadius: RADIUS.pill, paddingHorizontal: 8, paddingVertical: 3 },
+  soonPillText:   { fontSize: 10, fontWeight: '700', color: '#C8C8C8' },
+  soonCardSub:    { fontSize: 13, color: '#C8C8C8', lineHeight: 19, marginBottom: 12, fontWeight: '500' },
+  soonTags:       { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
+  soonTag:        { backgroundColor: '#F0F0EE', borderRadius: RADIUS.pill, paddingHorizontal: 10, paddingVertical: 4 },
+  soonTagText:    { fontSize: 11, color: '#C0C0C0', fontWeight: '600' },
 
   // Banner — premium CTA
   bannerSection: { marginTop: 32 },
