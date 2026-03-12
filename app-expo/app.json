@@ -5,12 +5,12 @@
     "version": "2.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
-    "userInterfaceStyle": "dark",
+    "userInterfaceStyle": "light",
     "newArchEnabled": true,
     "splash": {
       "image": "./assets/splash-icon.png",
       "resizeMode": "contain",
-      "backgroundColor": "#080B12"
+      "backgroundColor": "#2C2825"
     },
     "ios": {
       "supportsTablet": true,
@@ -23,7 +23,7 @@
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
-        "backgroundColor": "#080B12"
+        "backgroundColor": "#C4704B"
       },
       "edgeToEdgeEnabled": true,
       "package": "com.pepete.app",
@@ -35,8 +35,8 @@
       "shortName": "Pépète",
       "description": "Le compagnon de vos compagnons - Scanner produits, garde animaux, assistant IA",
       "lang": "fr",
-      "themeColor": "#00E676",
-      "backgroundColor": "#080B12",
+      "themeColor": "#C4704B",
+      "backgroundColor": "#FDFAF7",
       "display": "standalone",
       "startUrl": "/",
       "scope": "/",

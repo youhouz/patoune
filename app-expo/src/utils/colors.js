@@ -1,127 +1,117 @@
 // ═══════════════════════════════════════════════════════════════════════════
-// Pépète v7.0 — Dark Premium Design System 2027
-// Inspired: Apple Intelligence × Revolut 3.0 × Arc Browser
+// Patoune v5.0 — Design System 2026
+// Pepete-inspired DA — Sage green, warm cream, natural & organic premium
 // ═══════════════════════════════════════════════════════════════════════════
 
 const COLORS = {
-  // ── Backgrounds (dark spectrum) ──────────────────────────────────────────
-  bg:             '#080B12',   // page background
-  surface:        '#0E1118',   // cards, panels
-  surfaceHigh:    '#141A27',   // elevated cards
-  surfaceTop:     '#1A2133',   // modals, sheets
-  surfaceHover:   '#1F2840',   // hover state
+  // -- Brand — Sage Green (pepete identity) --
+  primary:        '#6B8F71',
+  primaryLight:   '#8CB092',
+  primaryDark:    '#527A56',
+  primarySoft:    '#EFF5F0',
+  primaryGlow:    'rgba(107, 143, 113, 0.12)',
+  primaryMuted:   '#D4E5D6',
+  primaryUltra:   '#F5FAF6',
 
-  // ── Glass morphism ────────────────────────────────────────────────────────
-  glass:          'rgba(255,255,255,0.04)',
-  glassHover:     'rgba(255,255,255,0.07)',
-  glassBorder:    'rgba(255,255,255,0.07)',
-  glassStrong:    'rgba(255,255,255,0.10)',
-  glassOverlay:   'rgba(8,11,18,0.80)',
+  // -- Secondary — Deep Forest --
+  secondary:      '#527A56',
+  secondaryLight: '#6B8F71',
+  secondaryDark:  '#3D5E41',
+  secondarySoft:  '#EFF5F0',
 
-  // ── Brand Electric Green (Pépète identity) ────────────────────────────────
-  primary:       '#00E676',
-  primaryDark:   '#00C853',
-  primaryDeep:   '#00A844',
-  primaryGlow:   'rgba(0,230,118,0.20)',
-  primarySoft:   'rgba(0,230,118,0.08)',
-  primaryUltra:  'rgba(0,230,118,0.04)',
-  primaryMuted:  'rgba(0,230,118,0.30)',
-  primaryLight:  '#4FFFAB',
+  // -- Accent — Warm Terracotta --
+  accent:         '#C4956A',
+  accentLight:    '#D4AD86',
+  accentDark:     '#A67B52',
+  accentSoft:     '#FDF5ED',
 
-  // ── Secondary: Emerald tints ──────────────────────────────────────────────
-  secondary:     '#00BFA5',
-  secondaryLight:'#26D9BF',
-  secondaryDark: '#009688',
-  secondarySoft: 'rgba(0,191,165,0.08)',
+  // -- Tertiary — Soft Gold --
+  tertiary:       '#B8A88A',
+  tertiaryLight:  '#D4C8AE',
+  tertiarySoft:   '#FAF7F2',
 
-  // ── Accent Violet (AI / premium features) ─────────────────────────────────
-  accent:        '#A78BFA',
-  accentDark:    '#7C3AED',
-  accentLight:   '#C4B5FD',
-  accentSoft:    'rgba(167,139,250,0.08)',
-  accentGlow:    'rgba(167,139,250,0.18)',
+  // -- Neutrals — Warm Cream --
+  white:          '#FFFFFF',
+  background:     '#FAF7F2',
+  surface:        '#FFFFFF',
+  surfaceElevated:'#FFFFFF',
+  card:           '#FFFFFF',
+  border:         '#E8E2D8',
+  borderLight:    '#F0ECE4',
+  borderSubtle:   '#F5F1EB',
+  divider:        '#EDE8E0',
 
-  // ── Accent Cyan (Scanner) ─────────────────────────────────────────────────
-  cyan:          '#22D3EE',
-  cyanGlow:      'rgba(34,211,238,0.18)',
-  cyanSoft:      'rgba(34,211,238,0.08)',
+  // -- Glass / Frosted --
+  glass:          'rgba(255, 255, 255, 0.72)',
+  glassBorder:    'rgba(255, 255, 255, 0.20)',
+  glassOverlay:   'rgba(255, 255, 255, 0.85)',
 
-  // ── Accent Amber (warnings / scores) ─────────────────────────────────────
-  amber:         '#FBBF24',
-  amberGlow:     'rgba(251,191,36,0.18)',
-  amberSoft:     'rgba(251,191,36,0.08)',
+  // -- Dark palette --
+  dark:           '#2C3E2F',
+  darkSurface:    '#3A4E3D',
+  darkCard:       '#485E4B',
+  darkMuted:      '#5A6E5D',
 
-  // ── Functional ────────────────────────────────────────────────────────────
-  success:       '#00E676',
-  successSoft:   'rgba(0,230,118,0.08)',
-  warning:       '#FBBF24',
-  warningSoft:   'rgba(251,191,36,0.08)',
-  error:         '#F87171',
-  errorSoft:     'rgba(248,113,113,0.08)',
-  info:          '#22D3EE',
-  infoSoft:      'rgba(34,211,238,0.08)',
+  // -- Text — warm hierarchy --
+  text:           '#2C3E2F',
+  textPrimary:    '#2C3E2F',
+  textSecondary:  '#6B7E6E',
+  textTertiary:   '#8A9A8C',
+  textLight:      '#B0BEB2',
+  textInverse:    '#FFFFFF',
+  placeholder:    '#A0AEA2',
 
-  // ── Text — crisp white hierarchy ──────────────────────────────────────────
-  text:          '#F8FAFC',
-  textPrimary:   '#F8FAFC',
-  textSecondary: 'rgba(248,250,252,0.60)',
-  textTertiary:  'rgba(248,250,252,0.35)',
-  textLight:     'rgba(248,250,252,0.20)',
-  textInverse:   '#080B12',
-  placeholder:   'rgba(248,250,252,0.28)',
+  // -- Nutrition Scores --
+  scoreExcellent:   '#527A56',
+  scoreGood:        '#6B8F71',
+  scoreMediocre:    '#C4956A',
+  scoreBad:         '#D4855A',
+  scoreVeryBad:     '#C25B4A',
 
-  // ── Nutrition Scores (vivid on dark) ──────────────────────────────────────
-  scoreExcellent:   '#00E676',
-  scoreGood:        '#4ADE80',
-  scoreMediocre:    '#FBBF24',
-  scoreBad:         '#FB923C',
-  scoreVeryBad:     '#F87171',
+  scoreExcellentBg: '#EFF5F0',
+  scoreGoodBg:      '#F0F6F1',
+  scoreMediocreBg:  '#FDF5ED',
+  scoreBadBg:       '#FDF0E8',
+  scoreVeryBadBg:   '#FBE8E4',
 
-  scoreExcellentBg: 'rgba(0,230,118,0.10)',
-  scoreGoodBg:      'rgba(74,222,128,0.10)',
-  scoreMediocreBg:  'rgba(251,191,36,0.10)',
-  scoreBadBg:       'rgba(251,146,60,0.10)',
-  scoreVeryBadBg:   'rgba(248,113,113,0.10)',
+  // -- Functional --
+  success:     '#527A56',
+  successSoft: '#EFF5F0',
+  warning:     '#C4956A',
+  warningSoft: '#FDF5ED',
+  error:       '#C25B4A',
+  errorSoft:   '#FBE8E4',
+  info:        '#6B8F71',
+  infoSoft:    '#EFF5F0',
 
-  // ── Borders — barely-there ────────────────────────────────────────────────
-  border:        'rgba(255,255,255,0.07)',
-  borderLight:   'rgba(255,255,255,0.04)',
-  borderStrong:  'rgba(255,255,255,0.14)',
-  borderSubtle:  'rgba(255,255,255,0.03)',
-  divider:       'rgba(255,255,255,0.05)',
+  // -- Semantic aliases (backward compat) --
+  cream:     '#FAF7F2',
+  linen:     '#F5F1EB',
+  charcoal:  '#2C3E2F',
+  stone:     '#6B7E6E',
+  pebble:    '#8A9A8C',
+  sand:      '#B0BEB2',
 
-  // ── Shadows & Overlays ────────────────────────────────────────────────────
-  shadow:        'rgba(0,0,0,0.35)',
-  shadowMedium:  'rgba(0,0,0,0.55)',
-  shadowHeavy:   'rgba(0,0,0,0.75)',
-  overlay:       'rgba(8,11,18,0.85)',
-  overlayLight:  'rgba(8,11,18,0.55)',
+  // -- Shadows & Overlays --
+  shadow:       'rgba(44, 62, 47, 0.03)',
+  shadowMedium: 'rgba(44, 62, 47, 0.06)',
+  shadowHeavy:  'rgba(44, 62, 47, 0.10)',
+  overlay:      'rgba(44, 62, 47, 0.55)',
+  overlayLight: 'rgba(44, 62, 47, 0.25)',
 
-  // ── Backward compat aliases ───────────────────────────────────────────────
-  white:         '#F8FAFC',
-  background:    '#080B12',
-  card:          '#141A27',
-  dark:          '#080B12',
-  cream:         '#0E1118',
-  linen:         '#141A27',
-  charcoal:      '#080B12',
-  stone:         'rgba(248,250,252,0.60)',
-  pebble:        'rgba(248,250,252,0.35)',
-  sand:          'rgba(248,250,252,0.20)',
-
-  // ── Gradients ─────────────────────────────────────────────────────────────
-  gradientPrimary:   ['#00E676', '#00BFA5'],
-  gradientWarm:      ['#00E676', '#A78BFA'],
-  gradientSuccess:   ['#00C853', '#00E676'],
-  gradientAccent:    ['#A78BFA', '#22D3EE'],
-  gradientDark:      ['#080B12', '#141A27'],
-  gradientHero:      ['#0E1118', '#141A27', '#1A2133'],
-  gradientCharcoal:  ['#080B12', '#0E1118'],
-  gradientSunrise:   ['#00E676', '#FBBF24'],
-  gradientOcean:     ['#00BFA5', '#22D3EE'],
-  gradientForest:    ['#00C853', '#00E676'],
-  gradientMidnight:  ['#080B12', '#0E1118'],
-  gradientGlass:     ['rgba(255,255,255,0.06)', 'rgba(255,255,255,0.02)'],
+  // -- Gradients --
+  gradientPrimary:   ['#6B8F71', '#8CB092'],
+  gradientWarm:      ['#6B8F71', '#C4956A'],
+  gradientSuccess:   ['#527A56', '#6B8F71'],
+  gradientAccent:    ['#C4956A', '#D4AD86'],
+  gradientDark:      ['#2C3E2F', '#3A4E3D'],
+  gradientHero:      ['#527A56', '#6B8F71', '#8CB092'],
+  gradientCharcoal:  ['#2C3E2F', '#3A4E3D'],
+  gradientSunrise:   ['#6B8F71', '#C4956A'],
+  gradientOcean:     ['#6B8F71', '#8CB092'],
+  gradientForest:    ['#527A56', '#6B8F71'],
+  gradientMidnight:  ['#3A4E3D', '#5A6E5D'],
+  gradientGlass:     ['rgba(255,255,255,0.95)', 'rgba(255,255,255,0.80)'],
 };
 
 // -- Spacing — 4-point grid --
@@ -206,11 +196,11 @@ const SHADOWS = {
   },
   glow: function(color) {
     return {
-      shadowColor: color || '#00E676',
-      shadowOffset: { width: 0, height: 0 },
-      shadowOpacity: 0.45,
-      shadowRadius: 22,
-      elevation: 12,
+      shadowColor: color || '#6B8F71',
+      shadowOffset: { width: 0, height: 6 },
+      shadowOpacity: 0.28,
+      shadowRadius: 20,
+      elevation: 10,
     };
   },
   soft: {

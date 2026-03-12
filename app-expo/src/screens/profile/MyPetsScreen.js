@@ -23,13 +23,13 @@ const { SHADOWS, RADIUS, SPACING, FONT_SIZE } = require('../../utils/colors');
 const HEADER_PADDING_TOP = Platform.OS === 'ios' ? 56 : (StatusBar.currentHeight || 24) + 12;
 
 const SPECIES_CONFIG = {
-  chien: { letter: 'C', label: 'Chien', gradient: ['#00C853', '#00E676'] },
-  chat: { letter: 'Ch', label: 'Chat', gradient: ['#00BFA5', '#22D3EE'] },
-  rongeur: { letter: 'R', label: 'Rongeur', gradient: ['#FBBF24', '#F59E0B'] },
-  oiseau: { letter: 'O', label: 'Oiseau', gradient: ['#22D3EE', '#67E8F9'] },
-  reptile: { letter: 'Re', label: 'Reptile', gradient: ['#00A844', '#00C853'] },
-  poisson: { letter: 'P', label: 'Poisson', gradient: ['#A78BFA', '#C4B5FD'] },
-  autre: { letter: '?', label: 'Autre', gradient: ['#64748B', '#94A3B8'] },
+  chien: { letter: 'C', label: 'Chien', gradient: ['#527A56', '#6B8F71'] },
+  chat: { letter: 'Ch', label: 'Chat', gradient: ['#6B8F71', '#8CB092'] },
+  rongeur: { letter: 'R', label: 'Rongeur', gradient: ['#C4956A', '#D4AD86'] },
+  oiseau: { letter: 'O', label: 'Oiseau', gradient: ['#8CB092', '#B0BEB2'] },
+  reptile: { letter: 'Re', label: 'Reptile', gradient: ['#3D5E41', '#527A56'] },
+  poisson: { letter: 'P', label: 'Poisson', gradient: ['#B8A88A', '#D4C8AE'] },
+  autre: { letter: '?', label: 'Autre', gradient: ['#8A9A8C', '#B0BEB2'] },
 };
 
 const MyPetsScreen = ({ navigation }) => {
@@ -159,7 +159,7 @@ const MyPetsScreen = ({ navigation }) => {
                     styles.genderBadge,
                     {
                       backgroundColor:
-                        item.gender === 'male' ? 'rgba(0,230,118,0.08)' : 'rgba(251,191,36,0.08)',
+                        item.gender === 'male' ? '#EFF5F0' : '#FDF5ED',
                     },
                   ]}
                 >
@@ -167,7 +167,7 @@ const MyPetsScreen = ({ navigation }) => {
                     style={[
                       styles.genderText,
                       {
-                        color: item.gender === 'male' ? '#22D3EE' : '#FBBF24',
+                        color: item.gender === 'male' ? '#8CB092' : '#C4956A',
                       },
                     ]}
                   >
@@ -246,7 +246,7 @@ const MyPetsScreen = ({ navigation }) => {
     <View style={styles.emptyContainer}>
       <View style={styles.emptyIconContainer}>
         <LinearGradient
-          colors={['#00C853', '#00E676']}
+          colors={['#527A56', '#6B8F71']}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
           style={styles.emptyIconGradient}
@@ -264,7 +264,7 @@ const MyPetsScreen = ({ navigation }) => {
         activeOpacity={0.8}
       >
         <LinearGradient
-          colors={['#00C853', '#00E676']}
+          colors={['#527A56', '#6B8F71']}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 0 }}
           style={styles.emptyButtonGradient}
@@ -371,7 +371,7 @@ const MyPetsScreen = ({ navigation }) => {
               style={styles.fabTouchable}
             >
               <LinearGradient
-                colors={['#00C853', '#00E676']}
+                colors={['#527A56', '#6B8F71']}
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 1 }}
                 style={styles.fabGradient}
@@ -599,7 +599,7 @@ const styles = StyleSheet.create({
     marginBottom: SPACING.xl,
     borderRadius: 50,
     overflow: 'hidden',
-    ...SHADOWS.glow('#00E676'),
+    ...SHADOWS.glow('#527A56'),
   },
   emptyIconGradient: {
     width: 100,
@@ -624,7 +624,7 @@ const styles = StyleSheet.create({
   emptyButton: {
     borderRadius: RADIUS.xl,
     overflow: 'hidden',
-    ...SHADOWS.glow('#00E676'),
+    ...SHADOWS.glow('#527A56'),
   },
   emptyButtonGradient: {
     flexDirection: 'row',
@@ -667,7 +667,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
     bottom: Platform.OS === 'ios' ? 32 : 24,
     right: SPACING.lg,
-    ...SHADOWS.glow('#00E676'),
+    ...SHADOWS.glow('#527A56'),
   },
   fabTouchable: {
     borderRadius: 30,

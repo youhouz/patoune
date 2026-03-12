@@ -152,12 +152,12 @@ const DisclaimerBanner = ({ compact = false }) => (
 // ---------------------------------------------------------------------------
 const PetSelectorItem = ({ pet, isSelected, onSelect }) => {
   const speciesGradients = {
-    chien:   ['#00C853', '#00E676'],
-    chat:    ['#00BFA5', '#22D3EE'],
-    oiseau:  ['#FBBF24', '#F59E0B'],
-    rongeur: ['#A78BFA', '#7C3AED'],
-    reptile: ['#22D3EE', '#0891B2'],
-    poisson: ['#00BFA5', '#00E676'],
+    chien: ['#C4704B', '#D4896A'],
+    chat: ['#6B8F71', '#8BAF8F'],
+    oiseau: ['#C4A35A', '#D4B97A'],
+    rongeur: ['#5A7EA0', '#7A9EBF'],
+    reptile: ['#8C6B4A', '#A88B6A'],
+    poisson: ['#4A7050', '#6B8F71'],
   };
 
   return (

@@ -18,18 +18,28 @@ import ProfileScreen from '../screens/profile/ProfileScreen';
 import MyPetsScreen from '../screens/profile/MyPetsScreen';
 import AddPetScreen from '../screens/profile/AddPetScreen';
 import SettingsScreen from '../screens/profile/SettingsScreen';
-const { COLORS, RADIUS, SHADOWS } = require('../utils/colors');
+const colors = require('../utils/colors');
+const { SHADOWS } = require('../utils/colors');
 
 const Tab = createBottomTabNavigator();
 const PetSittingStack = createStackNavigator();
 const ProfileStack = createStackNavigator();
 
 const stackScreenOptions = {
-  headerStyle: { backgroundColor: COLORS.bg, elevation: 0, shadowOpacity: 0, borderBottomWidth: 0 },
-  headerTintColor: COLORS.primary,
-  headerTitleStyle: { fontWeight: '800', fontSize: 18, color: COLORS.text },
+  headerStyle: {
+    backgroundColor: colors.white,
+    elevation: 0,
+    shadowOpacity: 0,
+    borderBottomWidth: 0,
+  },
+  headerTintColor: colors.primary,
+  headerTitleStyle: {
+    fontWeight: '700',
+    fontSize: 18,
+    color: colors.text,
+  },
   headerBackTitleVisible: false,
-  cardStyle: { backgroundColor: COLORS.bg },
+  cardStyle: { backgroundColor: colors.background },
 };
 
 const PetSittingNavigator = () => {
@@ -37,10 +47,10 @@ const PetSittingNavigator = () => {
   if (!user) return <GuestGateScreen />;
   return (
     <PetSittingStack.Navigator screenOptions={stackScreenOptions}>
-      <PetSittingStack.Screen name="PetSittersList"   component={PetSittersListScreen}   options={{ headerShown: false }} />
-      <PetSittingStack.Screen name="PetSitterDetail"  component={PetSitterDetailScreen}  options={{ headerShown: false }} />
-      <PetSittingStack.Screen name="Booking"          component={BookingScreen}           options={{ title: 'Réserver' }} />
-      <PetSittingStack.Screen name="Messages"         component={MessagesScreen}          options={{ title: 'Messages' }} />
+      <PetSittingStack.Screen name="PetSittersList" component={PetSittersListScreen} options={{ headerShown: false }} />
+      <PetSittingStack.Screen name="PetSitterDetail" component={PetSitterDetailScreen} options={{ headerShown: false }} />
+      <PetSittingStack.Screen name="Booking" component={BookingScreen} options={{ title: 'Réserver' }} />
+      <PetSittingStack.Screen name="Messages" component={MessagesScreen} options={{ title: 'Messages' }} />
     </PetSittingStack.Navigator>
   );
 };
@@ -50,10 +60,10 @@ const ProfileNavigator = () => {
   if (!user) return <GuestGateScreen />;
   return (
     <ProfileStack.Navigator screenOptions={stackScreenOptions}>
-      <ProfileStack.Screen name="ProfileMain" component={ProfileScreen}   options={{ headerShown: false }} />
-      <ProfileStack.Screen name="MyPets"      component={MyPetsScreen}    options={{ title: 'Mes Animaux' }} />
-      <ProfileStack.Screen name="AddPet"      component={AddPetScreen}    options={{ title: 'Nouvel Animal' }} />
-      <ProfileStack.Screen name="Settings"    component={SettingsScreen}  options={{ title: 'Réglages' }} />
+      <ProfileStack.Screen name="ProfileMain" component={ProfileScreen} options={{ headerShown: false }} />
+      <ProfileStack.Screen name="MyPets" component={MyPetsScreen} options={{ title: 'Mes Animaux' }} />
+      <ProfileStack.Screen name="AddPet" component={AddPetScreen} options={{ title: 'Nouvel Animal' }} />
+      <ProfileStack.Screen name="Settings" component={SettingsScreen} options={{ title: 'Réglages' }} />
     </ProfileStack.Navigator>
   );
 };
@@ -61,28 +71,34 @@ const ProfileNavigator = () => {
 const AuthStack = createStackNavigator();
 const AuthNavigatorStack = () => (
   <AuthStack.Navigator screenOptions={{ headerShown: false }}>
-    <AuthStack.Screen name="Login"    component={LoginScreen} />
+    <AuthStack.Screen name="Login" component={LoginScreen} />
     <AuthStack.Screen name="Register" component={RegisterScreen} />
   </AuthStack.Navigator>
 );
 
-// ── Tab config
+// Tab configuration with Feather icon and label
 const TAB_CONFIG = {
-  Accueil:   { icon: 'home',           label: 'Accueil'  },
-  Scanner:   { icon: 'maximize',       label: 'Scanner'  },
-  Garde:     { icon: 'shield',         label: 'Garde'    },
-  Assistant: { icon: 'message-circle', label: 'IA'       },
-  Profil:    { icon: 'user',           label: 'Profil'   },
+  Accueil:   { icon: 'home', label: 'Accueil' },
+  Scanner:   { icon: 'maximize', label: 'Scanner' },
+  Garde:     { icon: 'users', label: 'Garde' },
+  Assistant: { icon: 'message-circle', label: 'IA' },
+  Profil:    { icon: 'user', label: 'Profil' },
 };
 
 const TabIcon = ({ routeName, focused }) => {
-  const cfg = TAB_CONFIG[routeName];
+  const config = TAB_CONFIG[routeName];
   return (
-    <View style={t.item}>
-      <View style={[t.pill, focused && t.pillActive]}>
-        <Feather name={cfg?.icon || 'circle'} size={20} color={focused ? COLORS.primary : COLORS.textTertiary} />
+    <View style={styles.tabItem}>
+      <View style={[styles.iconPill, focused && styles.iconPillActive]}>
+        <Feather
+          name={config?.icon || 'circle'}
+          size={22}
+          color={focused ? colors.primary : colors.textTertiary}
+        />
       </View>
-      <Text style={[t.label, focused && t.labelActive]}>{cfg?.label}</Text>
+      <Text style={[styles.tabLabel, focused && styles.tabLabelActive]}>
+        {config?.label}
+      </Text>
     </View>
   );
 };
@@ -93,27 +109,25 @@ const TabNavigator = () => (
       headerShown: false,
       tabBarIcon: ({ focused }) => <TabIcon routeName={route.name} focused={focused} />,
       tabBarLabel: () => null,
+      tabBarActiveTintColor: colors.primary,
+      tabBarInactiveTintColor: colors.textLight,
       tabBarStyle: {
-        height: Platform.OS === 'ios' ? 84 : 66,
-        paddingBottom: Platform.OS === 'ios' ? 24 : 6,
-        paddingTop: 4,
-        backgroundColor: COLORS.surfaceHigh,
+        height: Platform.OS === 'ios' ? 86 : 68,
+        paddingBottom: Platform.OS === 'ios' ? 22 : 6,
+        paddingTop: 6,
+        backgroundColor: colors.white,
         borderTopWidth: 1,
-        borderTopColor: COLORS.border,
-        // Glow shadow upward
-        shadowColor: '#00E676',
-        shadowOffset: { width: 0, height: -4 },
-        shadowOpacity: 0.08,
-        shadowRadius: 20,
-        elevation: 20,
+        borderTopColor: colors.borderLight,
+        ...SHADOWS.lg,
       },
     })}
   >
-    <Tab.Screen name="Accueil"   component={HomeScreen} />
-    <Tab.Screen name="Scanner"   component={ScannerNavigator} />
-    <Tab.Screen name="Garde"     component={PetSittingNavigator} />
+    <Tab.Screen name="Accueil" component={HomeScreen} />
+    <Tab.Screen name="Scanner" component={ScannerNavigator} />
+    <Tab.Screen name="Garde" component={PetSittingNavigator} />
     <Tab.Screen name="Assistant" component={AIAssistantScreen} />
-    <Tab.Screen name="Profil"    component={ProfileNavigator} />
+    <Tab.Screen name="Profil" component={ProfileNavigator} />
+    {/* Hidden screen for auth flows */}
     <Tab.Screen
       name="AuthStack"
       component={AuthNavigatorStack}
@@ -122,16 +136,33 @@ const TabNavigator = () => (
   </Tab.Navigator>
 );
 
-const t = StyleSheet.create({
-  item: { alignItems: 'center', justifyContent: 'center', paddingTop: 2 },
-  pill: {
-    width: 48, height: 28, borderRadius: 14,
-    alignItems: 'center', justifyContent: 'center',
+const styles = StyleSheet.create({
+  tabItem: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingTop: 2,
+  },
+  iconPill: {
+    width: 52,
+    height: 30,
+    borderRadius: 15,
+    alignItems: 'center',
+    justifyContent: 'center',
     backgroundColor: 'transparent',
   },
-  pillActive: { backgroundColor: COLORS.primarySoft },
-  label: { fontSize: 10, fontWeight: '500', color: COLORS.textTertiary, marginTop: 3 },
-  labelActive: { color: COLORS.primary, fontWeight: '700' },
+  iconPillActive: {
+    backgroundColor: colors.primarySoft,
+  },
+  tabLabel: {
+    fontSize: 11,
+    fontWeight: '500',
+    color: colors.textLight,
+    marginTop: 3,
+  },
+  tabLabelActive: {
+    color: colors.primary,
+    fontWeight: '700',
+  },
 });
 
 export default TabNavigator;

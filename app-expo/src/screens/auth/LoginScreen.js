@@ -1,210 +1,158 @@
-// ═══════════════════════════════════════════════════════════════════════════
-// Pépète v7.0 — LoginScreen (Dark Premium 2027)
-// ═══════════════════════════════════════════════════════════════════════════
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState } from 'react';
 import {
   View, Text, TextInput, TouchableOpacity,
-  StyleSheet, KeyboardAvoidingView, Platform, ScrollView,
-  StatusBar, Animated,
+  StyleSheet, KeyboardAvoidingView, Platform, ScrollView, Alert,
+  StatusBar
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Feather } from '@expo/vector-icons';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAuth } from '../../context/AuthContext';
 import Button from '../../components/Button';
-import { PepeteIcon } from '../../components/PepeteLogo';
+import Logo, { PawIcon } from '../../components/Logo';
 import useResponsive from '../../hooks/useResponsive';
-import { showAlert } from '../../utils/alert';
-const { COLORS, RADIUS, SPACING, FONT_SIZE } = require('../../utils/colors');
+const colors = require('../../utils/colors');
+const { SHADOWS, RADIUS, SPACING, FONT_SIZE } = require('../../utils/colors');
 
-// ── Premium dark input field
-const DarkInput = ({ label, icon, value, onChangeText, placeholder, secureTextEntry, toggle, keyboardType, autoCapitalize, autoComplete }) => {
-  const [focused, setFocused] = useState(false);
-  const borderAnim = useRef(new Animated.Value(0)).current;
-
-  const onFocus = () => {
-    setFocused(true);
-    Animated.timing(borderAnim, { toValue: 1, duration: 220, useNativeDriver: false }).start();
-  };
-  const onBlur = () => {
-    setFocused(false);
-    Animated.timing(borderAnim, { toValue: 0, duration: 220, useNativeDriver: false }).start();
-  };
-
-  const borderColor = borderAnim.interpolate({
-    inputRange: [0, 1],
-    outputRange: [COLORS.border, COLORS.primary],
-  });
-
-  return (
-    <View style={inputStyles.group}>
-      <Text style={inputStyles.label}>{label}</Text>
-      <Animated.View style={[inputStyles.wrapper, { borderColor }]}>
-        <Feather name={icon} size={18} color={focused ? COLORS.primary : COLORS.textTertiary} style={{ marginRight: 12 }} />
-        <TextInput
-          style={inputStyles.input}
-          value={value}
-          onChangeText={onChangeText}
-          placeholder={placeholder}
-          placeholderTextColor={COLORS.placeholder}
-          secureTextEntry={secureTextEntry}
-          keyboardType={keyboardType || 'default'}
-          autoCapitalize={autoCapitalize || 'none'}
-          autoComplete={autoComplete}
-          autoCorrect={false}
-          onFocus={onFocus}
-          onBlur={onBlur}
-        />
-        {toggle && (
-          <TouchableOpacity onPress={toggle.onPress} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
-            <Feather name={toggle.icon} size={18} color={COLORS.textTertiary} />
-          </TouchableOpacity>
-        )}
-      </Animated.View>
-    </View>
-  );
-};
-
-const inputStyles = StyleSheet.create({
-  group: { marginBottom: 16 },
-  label: { fontSize: 13, fontWeight: '600', color: COLORS.textSecondary, marginBottom: 8, letterSpacing: 0.3 },
-  wrapper: {
-    flexDirection: 'row', alignItems: 'center',
-    backgroundColor: COLORS.surfaceHigh,
-    borderRadius: RADIUS.lg,
-    borderWidth: 1.5,
-    paddingHorizontal: 16,
-    height: 58,
-  },
-  input: {
-    flex: 1, fontSize: 16, color: COLORS.text,
-    paddingVertical: 0, fontWeight: '500',
-  },
-});
-
-// ═══════════════════════════════════════════════════════════
 const LoginScreen = ({ navigation }) => {
   const { login } = useAuth();
   const { isTablet, contentWidth } = useResponsive();
-  const insets = useSafeAreaInsets();
-  
-  const [email, setEmail]       = useState('');
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [loading, setLoading]   = useState(false);
-  const [showPwd, setShowPwd]   = useState(false);
-
-  const fadeIn  = useRef(new Animated.Value(0)).current;
-  const slideUp = useRef(new Animated.Value(40)).current;
+  const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [focusedField, setFocusedField] = useState(null);
   const formMaxWidth = isTablet ? Math.min(contentWidth, 480) : undefined;
-
-  useEffect(() => {
-    Animated.parallel([
-      Animated.timing(fadeIn,  { toValue: 1, duration: 500, useNativeDriver: true }),
-      Animated.spring(slideUp, { toValue: 0, tension: 50, friction: 8, useNativeDriver: true }),
-    ]).start();
-  }, []);
 
   const handleLogin = async () => {
     if (!email || !password) {
-      showAlert('Oups !', 'Remplis tous les champs pour continuer');
+      Alert.alert('Oups !', 'Remplis tous les champs pour continuer');
       return;
     }
     setLoading(true);
     const result = await login(email.trim().toLowerCase(), password);
     setLoading(false);
-    if (!result.success) showAlert('Connexion impossible', result.error);
+    if (!result.success) {
+      Alert.alert('Connexion impossible', result.error);
+    }
   };
 
   return (
-    <View style={styles.root}>
-      <StatusBar barStyle="light-content" backgroundColor="transparent" translucent />
+    <View style={styles.container}>
+      <StatusBar barStyle="light-content" />
 
-      {/* ── Ambient glow ── */}
+      {/* Header gradient with brand logo */}
       <LinearGradient
-        colors={[COLORS.primaryGlow, 'transparent']}
-        style={styles.glow}
-        pointerEvents="none"
-      />
+        colors={['#527A56', '#6B8F71', '#8CB092']}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+        style={styles.headerGradient}
+      >
+        {/* Decorative circles */}
+        <View style={styles.circle1} />
+        <View style={styles.circle2} />
+        <View style={styles.circle3} />
+
+        <View style={styles.headerContent}>
+          <View style={styles.logoCircle}>
+            <PawIcon size={38} color="#FFF" />
+          </View>
+          <Logo variant="light" size="lg" showText={true} style={{ marginTop: 10 }} />
+          <Text style={styles.tagline}>Le meilleur pour vos animaux</Text>
+        </View>
+        <View style={styles.headerCurve} />
+      </LinearGradient>
 
       <KeyboardAvoidingView
-        style={{ flex: 1 }}
+        style={styles.formWrapper}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       >
         <ScrollView
-          style={{ flex: 1 }}
-          contentContainerStyle={[styles.scroll, { paddingBottom: Math.max(100, insets.bottom + 40) }]}
+          contentContainerStyle={styles.scroll}
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
         >
-          <Animated.View style={[
-            styles.inner,
-            formMaxWidth ? { maxWidth: formMaxWidth, alignSelf: 'center', width: '100%' } : null,
-            { opacity: fadeIn, transform: [{ translateY: slideUp }] },
-          ]}>
+          <View style={formMaxWidth ? { maxWidth: formMaxWidth, alignSelf: 'center', width: '100%' } : null}>
+          <Text style={styles.welcomeBack}>Content de vous revoir !</Text>
+          <Text style={styles.subtitle}>Connectez-vous pour continuer</Text>
 
-            {/* ── Logo block ── */}
-            <View style={styles.logoBlock}>
-              <View style={styles.logoGlow}>
-                <PepeteIcon size={56} color={COLORS.primary} />
-              </View>
-              <Text style={styles.brand}>Pépète</Text>
-              <Text style={styles.tagline}>Content de vous revoir</Text>
-            </View>
-
-            {/* ── Glass card ── */}
-            <View style={styles.card}>
-              <Text style={styles.cardTitle}>Connexion</Text>
-
-              <DarkInput
-                label="Adresse email"
-                icon="mail"
+          {/* Email field */}
+          <View style={styles.fieldGroup}>
+            <Text style={styles.label}>Adresse email</Text>
+            <View style={[
+              styles.inputWrapper,
+              focusedField === 'email' && styles.inputFocused,
+            ]}>
+              <Feather name="mail" size={18} color={focusedField === 'email' ? colors.primary : colors.textTertiary} style={{ marginRight: 12 }} />
+              <TextInput
+                style={styles.input}
                 value={email}
                 onChangeText={setEmail}
                 placeholder="votre@email.com"
+                placeholderTextColor={colors.placeholder}
                 keyboardType="email-address"
-                autoComplete="email"
+                autoCapitalize="none"
+                autoCorrect={false}
+                onFocus={() => setFocusedField('email')}
+                onBlur={() => setFocusedField(null)}
               />
-              <DarkInput
-                label="Mot de passe"
-                icon="lock"
+            </View>
+          </View>
+
+          {/* Password field */}
+          <View style={styles.fieldGroup}>
+            <Text style={styles.label}>Mot de passe</Text>
+            <View style={[
+              styles.inputWrapper,
+              focusedField === 'password' && styles.inputFocused,
+            ]}>
+              <Feather name="lock" size={18} color={focusedField === 'password' ? colors.primary : colors.textTertiary} style={{ marginRight: 12 }} />
+              <TextInput
+                style={[styles.input, { flex: 1 }]}
                 value={password}
                 onChangeText={setPassword}
                 placeholder="Votre mot de passe"
-                secureTextEntry={!showPwd}
-                toggle={{ icon: showPwd ? 'eye-off' : 'eye', onPress: () => setShowPwd(!showPwd) }}
+                placeholderTextColor={colors.placeholder}
+                secureTextEntry={!showPassword}
+                onFocus={() => setFocusedField('password')}
+                onBlur={() => setFocusedField(null)}
               />
-
-              <TouchableOpacity style={styles.forgotBtn} onPress={() => {}}>
-                <Text style={styles.forgotText}>Mot de passe oublié ?</Text>
+              <TouchableOpacity
+                style={styles.eyeBtn}
+                onPress={() => setShowPassword(!showPassword)}
+                hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+              >
+                <Feather name={showPassword ? 'eye-off' : 'eye'} size={18} color={colors.textTertiary} />
               </TouchableOpacity>
-
-              <Button
-                title="Se connecter"
-                onPress={handleLogin}
-                loading={loading}
-                size="lg"
-                style={{ marginTop: 8 }}
-              />
             </View>
+          </View>
 
-            {/* ── Divider ── */}
-            <View style={styles.divRow}>
-              <View style={styles.divLine} />
-              <Text style={styles.divText}>ou</Text>
-              <View style={styles.divLine} />
-            </View>
+          <Button
+            title="Se connecter"
+            onPress={handleLogin}
+            loading={loading}
+            style={{ marginTop: 10 }}
+            size="lg"
+          />
 
-            {/* ── Register link ── */}
-            <TouchableOpacity style={styles.registerBtn} onPress={() => navigation.navigate('Register')}>
-              <Text style={styles.registerText}>Pas encore de compte ?</Text>
-              <Text style={styles.registerBold}> Créer un compte →</Text>
-            </TouchableOpacity>
+          {/* Separator */}
+          <View style={styles.separator}>
+            <View style={styles.separatorLine} />
+            <Text style={styles.separatorText}>ou</Text>
+            <View style={styles.separatorLine} />
+          </View>
 
-            {/* ── Guest ── */}
-            <TouchableOpacity style={styles.guestBtn} onPress={() => navigation.getParent()?.navigate?.('MainTabs')}>
-              <Text style={styles.guestText}>Continuer sans compte</Text>
-            </TouchableOpacity>
-          </Animated.View>
+          {/* Register CTA */}
+          <TouchableOpacity
+            style={styles.registerBtn}
+            onPress={() => navigation.navigate('Register')}
+            activeOpacity={0.75}
+          >
+            <Text style={styles.registerText}>
+              Pas encore de compte ?{'  '}
+              <Text style={styles.registerBold}>Créer un compte</Text>
+            </Text>
+          </TouchableOpacity>
+          </View>
         </ScrollView>
       </KeyboardAvoidingView>
     </View>
@@ -212,72 +160,153 @@ const LoginScreen = ({ navigation }) => {
 };
 
 const styles = StyleSheet.create({
-  root: { flex: 1, backgroundColor: COLORS.bg },
-  glow: {
-    position: 'absolute',
-    top: -100, left: -100, right: -100,
-    height: 400,
-    opacity: 0.6,
+  container: {
+    flex: 1,
+    backgroundColor: colors.white,
   },
-  scroll: { flexGrow: 1, paddingHorizontal: 24, paddingTop: 80, paddingBottom: 40 },
-  inner: {},
-
-  // Logo
-  logoBlock: { alignItems: 'center', marginBottom: 40 },
-  logoGlow: {
-    width: 90, height: 90, borderRadius: 26,
-    backgroundColor: COLORS.primarySoft,
-    borderWidth: 1,
-    borderColor: COLORS.primary + '30',
+  headerGradient: {
+    paddingTop: Platform.OS === 'ios' ? 64 : 52,
+    paddingBottom: 56,
+    alignItems: 'center',
+    overflow: 'hidden',
+  },
+  circle1: {
+    position: 'absolute',
+    top: -40, right: -40,
+    width: 160, height: 160, borderRadius: 80,
+    backgroundColor: 'rgba(255,255,255,0.08)',
+  },
+  circle2: {
+    position: 'absolute',
+    bottom: 0, left: -50,
+    width: 200, height: 200, borderRadius: 100,
+    backgroundColor: 'rgba(255,255,255,0.06)',
+  },
+  circle3: {
+    position: 'absolute',
+    top: 60, left: '40%',
+    width: 100, height: 100, borderRadius: 50,
+    backgroundColor: 'rgba(255,255,255,0.05)',
+  },
+  headerContent: {
+    alignItems: 'center',
+    zIndex: 1,
+  },
+  headerCurve: {
+    position: 'absolute',
+    bottom: -1,
+    left: 0, right: 0,
+    height: 32,
+    backgroundColor: colors.white,
+    borderTopLeftRadius: 32,
+    borderTopRightRadius: 32,
+  },
+  logoCircle: {
+    width: 76,
+    height: 76,
+    borderRadius: 38,
+    backgroundColor: 'rgba(255,255,255,0.2)',
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: 16,
-    shadowColor: COLORS.primary,
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.4,
-    shadowRadius: 30,
+    marginBottom: 14,
+    borderWidth: 2,
+    borderColor: 'rgba(255,255,255,0.3)',
   },
-  brand: { fontSize: 32, fontWeight: '900', color: COLORS.text, letterSpacing: -1.5, marginBottom: 6 },
-  tagline: { fontSize: 15, color: COLORS.textSecondary, fontWeight: '400' },
-
-  // Card
-  card: {
-    backgroundColor: COLORS.surfaceHigh,
-    borderRadius: RADIUS['2xl'],
-    borderWidth: 1,
-    borderColor: COLORS.border,
-    padding: 24,
+  tagline: {
+    fontSize: 15,
+    color: 'rgba(255,255,255,0.88)',
+    marginTop: 8,
+    fontWeight: '500',
+    letterSpacing: 0.2,
+  },
+  formWrapper: {
+    flex: 1,
+  },
+  scroll: {
+    flexGrow: 1,
+    paddingHorizontal: 24,
+    paddingTop: 12,
+    paddingBottom: 48,
+  },
+  welcomeBack: {
+    fontSize: 26,
+    fontWeight: '800',
+    color: colors.text,
+    marginBottom: 6,
+    letterSpacing: -0.3,
+  },
+  subtitle: {
+    fontSize: 16,
+    color: colors.textSecondary,
+    marginBottom: 30,
+  },
+  fieldGroup: {
     marginBottom: 20,
   },
-  cardTitle: { fontSize: 20, fontWeight: '800', color: COLORS.text, marginBottom: 24, letterSpacing: -0.5 },
-
-  forgotBtn: { alignSelf: 'flex-end', marginBottom: 8, marginTop: -4 },
-  forgotText: { fontSize: 13, color: COLORS.primary, fontWeight: '600' },
-
-  // Divider
-  divRow: { flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 16 },
-  divLine: { flex: 1, height: 1, backgroundColor: COLORS.border },
-  divText: { fontSize: 13, color: COLORS.textTertiary, fontWeight: '500' },
-
-  // Register
-  registerBtn: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingVertical: 16,
-    paddingHorizontal: 20,
-    backgroundColor: COLORS.surfaceHigh,
-    borderRadius: RADIUS.xl,
-    borderWidth: 1,
-    borderColor: COLORS.border,
-    marginBottom: 12,
+  label: {
+    fontSize: 15,
+    fontWeight: '700',
+    color: colors.text,
+    marginBottom: 9,
+    marginLeft: 2,
   },
-  registerText: { fontSize: 15, color: COLORS.textSecondary, fontWeight: '400' },
-  registerBold: { fontSize: 15, color: COLORS.primary, fontWeight: '700' },
-
-  // Guest
-  guestBtn: { alignItems: 'center', paddingVertical: 14 },
-  guestText: { fontSize: 14, color: COLORS.textTertiary, fontWeight: '500' },
+  inputWrapper: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: colors.background,
+    borderRadius: RADIUS.lg,
+    borderWidth: 2,
+    borderColor: colors.border,
+    paddingHorizontal: 16,
+    height: 60,
+  },
+  inputFocused: {
+    borderColor: colors.primary,
+    backgroundColor: colors.primarySoft,
+  },
+  input: {
+    flex: 1,
+    fontSize: 16,
+    color: colors.text,
+    paddingVertical: 0,
+    fontWeight: '500',
+  },
+  eyeBtn: {
+    padding: 4,
+  },
+  separator: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginVertical: 26,
+  },
+  separatorLine: {
+    flex: 1,
+    height: 1,
+    backgroundColor: colors.border,
+  },
+  separatorText: {
+    marginHorizontal: 16,
+    fontSize: 14,
+    color: colors.textTertiary,
+    fontWeight: '600',
+  },
+  registerBtn: {
+    alignItems: 'center',
+    paddingVertical: 18,
+    backgroundColor: colors.primarySoft,
+    borderRadius: RADIUS.lg,
+    borderWidth: 1.5,
+    borderColor: colors.primary + '25',
+  },
+  registerText: {
+    fontSize: 16,
+    color: colors.textSecondary,
+    fontWeight: '500',
+  },
+  registerBold: {
+    color: colors.primary,
+    fontWeight: '800',
+  },
 });
 
 export default LoginScreen;

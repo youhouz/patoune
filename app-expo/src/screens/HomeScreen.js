@@ -1,10 +1,7 @@
-// ═══════════════════════════════════════════════════════════════════════════
-// Pépète v7.0 — HomeScreen (Dark Premium 2027 — Revolut Dashboard Style)
-// ═══════════════════════════════════════════════════════════════════════════
-import React, { useState, useCallback, useRef, useEffect } from 'react';
+import React, { useState, useCallback } from 'react';
 import {
   View, Text, ScrollView, TouchableOpacity, StyleSheet,
-  Platform, StatusBar, RefreshControl, Animated,
+  Platform, StatusBar, RefreshControl
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useFocusEffect } from '@react-navigation/native';
@@ -13,60 +10,70 @@ import { useAuth } from '../context/AuthContext';
 import { getMyPetsAPI } from '../api/pets';
 import { getScanHistoryAPI } from '../api/products';
 import { getMyBookingsAPI } from '../api/petsitters';
-import { PepeteIcon } from '../components/PepeteLogo';
+import { PawIcon } from '../components/Logo';
 import useResponsive from '../hooks/useResponsive';
 const { COLORS, SPACING, RADIUS, SHADOWS, FONT_SIZE, getScoreColor, getScoreLabel } = require('../utils/colors');
 
-// ─── Recent Scan Card ────────────────────────────────────────────────────
+// ─── Recent Scan Card — Glass morphism ─────────────────────
 const RecentScanCard = ({ scan, onPress }) => {
   const score = scan.product?.nutritionScore || 0;
   const color = getScoreColor(score);
-  const scale = useRef(new Animated.Value(1)).current;
   return (
-    <TouchableOpacity
-      onPressIn={() => Animated.spring(scale, { toValue: 0.97, useNativeDriver: true, tension: 300 }).start()}
-      onPressOut={() => { Animated.spring(scale, { toValue: 1, useNativeDriver: true, tension: 200 }).start(); onPress?.(); }}
-      activeOpacity={1}
-    >
-      <Animated.View style={[s.scanCard, { transform: [{ scale }] }]}>
-        <View style={[s.scanScore, { backgroundColor: color + '15' }]}>
-          <Text style={[s.scanScoreNum, { color }]}>{score}</Text>
-        </View>
-        <View style={s.scanInfo}>
-          <Text style={s.scanName} numberOfLines={1}>{scan.product?.name || 'Produit'}</Text>
-          <Text style={s.scanBrand} numberOfLines={1}>{scan.product?.brand || '—'}</Text>
-        </View>
-        <View style={[s.scanBadge, { backgroundColor: color + '12' }]}>
-          <Text style={[s.scanBadgeText, { color }]}>{getScoreLabel(score)}</Text>
-        </View>
-      </Animated.View>
+    <TouchableOpacity style={s.scanCard} onPress={onPress} activeOpacity={0.7}>
+      <View style={[s.scanScoreBadge, { backgroundColor: color + '14' }]}>
+        <Text style={[s.scanScoreText, { color }]}>{score}</Text>
+        <Text style={[s.scanScoreMax, { color: color + '80' }]}>/100</Text>
+      </View>
+      <View style={s.scanInfo}>
+        <Text style={s.scanName} numberOfLines={1}>{scan.product?.name || 'Produit'}</Text>
+        <Text style={s.scanBrand} numberOfLines={1}>{scan.product?.brand || ''}</Text>
+      </View>
+      <View style={[s.scanLabel, { backgroundColor: color + '12' }]}>
+        <Text style={[s.scanLabelText, { color }]}>{getScoreLabel(score)}</Text>
+      </View>
     </TouchableOpacity>
   );
 };
 
-// ─── Next Booking Card ───────────────────────────────────────────────────
+// ─── Next Booking Card — Premium gradient ──────────────────
 const NextBookingCard = ({ booking }) => {
   if (!booking) return null;
   const start = new Date(booking.startDate);
   const daysUntil = Math.ceil((start - new Date()) / (1000 * 60 * 60 * 24));
   const dayLabel = daysUntil <= 0 ? "Aujourd'hui" : daysUntil === 1 ? 'Demain' : `Dans ${daysUntil}j`;
-  const labels = { garde_domicile: 'Garde à domicile', garde_chez_sitter: 'Chez le gardien', promenade: 'Promenade', visite: 'Visite', toilettage: 'Toilettage' };
+  const serviceLabels = {
+    garde_domicile: 'Garde à domicile',
+    garde_chez_sitter: 'Chez le gardien',
+    promenade: 'Promenade',
+    visite: 'Visite à domicile',
+    toilettage: 'Toilettage',
+  };
   return (
     <View style={s.bookingCard}>
-      <LinearGradient colors={['#00C853', '#00E676']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={s.bookingGrad}>
+      <LinearGradient
+        colors={['#527A56', '#6B8F71']}
+        start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}
+        style={s.bookingGradient}
+      >
         <View style={s.bookingTop}>
-          <View style={s.bookingTimeBadge}>
-            <Feather name="clock" size={11} color="#080B12" />
-            <Text style={s.bookingTimeText}>{dayLabel}</Text>
+          <View style={s.bookingBadge}>
+            <Feather name="clock" size={12} color="#FFF" style={{ marginRight: 5 }} />
+            <Text style={s.bookingBadgeText}>{dayLabel}</Text>
           </View>
           <Text style={s.bookingPrice}>{booking.totalPrice} €</Text>
         </View>
-        <Text style={s.bookingService}>{labels[booking.service] || booking.service}</Text>
+        <Text style={s.bookingService}>{serviceLabels[booking.service] || booking.service}</Text>
         <View style={s.bookingMeta}>
-          <Feather name="calendar" size={13} color="rgba(8,11,18,0.7)" />
-          <Text style={s.bookingDate}>{start.toLocaleDateString('fr-FR', { day: 'numeric', month: 'long' })}</Text>
-          <View style={s.bookingStatus}>
-            <Text style={s.bookingStatusText}>{booking.status === 'confirmed' ? 'Confirmé' : 'En attente'}</Text>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+            <Feather name="calendar" size={13} color="rgba(255,255,255,0.85)" />
+            <Text style={s.bookingMetaText}>
+              {start.toLocaleDateString('fr-FR', { day: 'numeric', month: 'long' })}
+            </Text>
+          </View>
+          <View style={s.bookingStatusBadge}>
+            <Text style={s.bookingStatusText}>
+              {booking.status === 'confirmed' ? 'Confirmé' : 'En attente'}
+            </Text>
           </View>
         </View>
       </LinearGradient>
@@ -74,383 +81,477 @@ const NextBookingCard = ({ booking }) => {
   );
 };
 
-// ─── Pet Chip ────────────────────────────────────────────────────────────
-const PetChip = ({ pet, onPress }) => {
-  const colorMap = { chien: COLORS.primary, chat: COLORS.accent, oiseau: COLORS.cyan, rongeur: COLORS.amber, reptile: COLORS.secondary, poisson: COLORS.accentLight };
-  const color = colorMap[pet.species] || COLORS.primary;
-  const initial = pet.name?.charAt(0)?.toUpperCase() || '?';
+// ─── Pet Mini Card — Refined ───────────────────────────────
+const PetMiniCard = ({ pet }) => {
+  const speciesLetters = { chien: 'C', chat: 'Ch', oiseau: 'O', rongeur: 'R', reptile: 'Re', poisson: 'P' };
+  const speciesColors = { chien: '#6B8F71', chat: '#527A56', oiseau: '#8CB092', rongeur: '#C4956A', reptile: '#3D5E41', poisson: '#B8A88A' };
+  const color = speciesColors[pet.species] || COLORS.primary;
   return (
-    <TouchableOpacity onPress={onPress} activeOpacity={0.75} style={s.petChip}>
-      <View style={[s.petAvatar, { backgroundColor: color + '16', borderColor: color + '30' }]}>
-        <Text style={[s.petInitial, { color }]}>{initial}</Text>
+    <View style={s.petMini}>
+      <View style={[s.petMiniAvatar, { backgroundColor: color + '10', borderColor: color + '20' }]}>
+        <Text style={[s.petMiniLetter, { color }]}>{speciesLetters[pet.species] || '?'}</Text>
       </View>
-      <Text style={s.petName} numberOfLines={1}>{pet.name}</Text>
-    </TouchableOpacity>
+      <Text style={s.petMiniName} numberOfLines={1}>{pet.name}</Text>
+    </View>
   );
 };
 
-// ═══════════════════════════════════════════════════════════════════════════
+// ═══════════════════════════════════════════════════════════
 const HomeScreen = ({ navigation }) => {
   const { user } = useAuth();
   const { isTablet, hPadding, contentWidth } = useResponsive();
-  const [pets, setPets]             = useState([]);
-  const [recentScans, setScans]     = useState([]);
-  const [bookings, setBookings]     = useState([]);
-  const [loading, setLoading]       = useState(true);
+  const [pets, setPets] = useState([]);
+  const [recentScans, setRecentScans] = useState([]);
+  const [bookings, setBookings] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-
-  const fadeAnim = useRef(new Animated.Value(0)).current;
 
   const fetchData = async () => {
     try {
-      const [pR, sR, bR] = await Promise.allSettled([
-        getMyPetsAPI(), getScanHistoryAPI(), getMyBookingsAPI(),
+      const [petsRes, scansRes, bookingsRes] = await Promise.allSettled([
+        getMyPetsAPI(),
+        getScanHistoryAPI(),
+        getMyBookingsAPI(),
       ]);
-      if (pR.status === 'fulfilled') setPets(pR.value.data?.pets || pR.value.data || []);
-      if (sR.status === 'fulfilled') setScans((sR.value.data?.history || sR.value.data || []).slice(0, 5));
-      if (bR.status === 'fulfilled') {
-        const all = bR.value.data?.bookings || bR.value.data || [];
-        setBookings(all.filter(b => b.status === 'confirmed' || b.status === 'pending').sort((a, b) => new Date(a.startDate) - new Date(b.startDate)));
+      if (petsRes.status === 'fulfilled') setPets(petsRes.value.data?.pets || petsRes.value.data || []);
+      if (scansRes.status === 'fulfilled') setRecentScans((scansRes.value.data?.history || scansRes.value.data || []).slice(0, 5));
+      if (bookingsRes.status === 'fulfilled') {
+        const all = bookingsRes.value.data?.bookings || bookingsRes.value.data || [];
+        const upcoming = all
+          .filter(b => b.status === 'confirmed' || b.status === 'pending')
+          .sort((a, b) => new Date(a.startDate) - new Date(b.startDate));
+        setBookings(upcoming);
       }
-    } catch (e) {
+    } catch (err) {
+      console.log('Home fetch error:', err.message);
     } finally {
       setLoading(false);
       setRefreshing(false);
     }
   };
 
-  useFocusEffect(useCallback(() => {
-    fetchData();
-    Animated.timing(fadeAnim, { toValue: 1, duration: 600, useNativeDriver: true }).start();
-  }, []));
-
+  useFocusEffect(useCallback(() => { fetchData(); }, []));
   const onRefresh = () => { setRefreshing(true); fetchData(); };
 
-  const firstName = user?.name?.split(' ')[0] || 'là';
+  const firstName = user?.name?.split(' ')[0] || 'ami';
   const hour = new Date().getHours();
-  const greet = hour < 12 ? 'Bonjour' : hour < 18 ? 'Bonne journée' : 'Bonsoir';
+  const greetText = hour < 12 ? 'Bonjour' : hour < 18 ? 'Bonne journee' : 'Bonsoir';
 
-  const centerWrap = { maxWidth: contentWidth, alignSelf: 'center', width: '100%' };
-
-  const quickActions = [
-    { icon: 'camera',        label: 'Scanner',    color: COLORS.cyan,   onPress: () => navigation.navigate('Scanner') },
-    { icon: 'shield',        label: 'Gardiens',   color: COLORS.accent, onPress: () => navigation.navigate('Garde') },
-    { icon: 'message-circle',label: 'Assistant',  color: COLORS.amber,  onPress: () => navigation.navigate('Assistant') },
-    { icon: 'user',          label: 'Mon profil', color: COLORS.primary,onPress: () => navigation.navigate('Profil') },
+  const features = [
+    {
+      icon: 'camera',
+      title: 'Scanner',
+      subtitle: 'Analyser un aliment',
+      gradient: ['#527A56', '#6B8F71'],
+      onPress: () => navigation.navigate('Scanner'),
+    },
+    {
+      icon: 'heart',
+      title: 'Gardiens',
+      subtitle: 'Trouver un gardien',
+      gradient: ['#6B8F71', '#8CB092'],
+      onPress: () => navigation.navigate('Garde'),
+    },
+    {
+      icon: 'users',
+      title: 'Animaux',
+      subtitle: 'Mes compagnons',
+      gradient: ['#C4956A', '#D4AD86'],
+      onPress: () => navigation.navigate('Profil', { screen: 'MyPets' }),
+    },
   ];
 
-  return (
-    <View style={s.root}>
-      <StatusBar barStyle="light-content" backgroundColor="transparent" translucent />
+  // Responsive helpers
+  const centerWrap = { maxWidth: contentWidth, alignSelf: 'center', width: '100%' };
+  // Feature card: 2-column grid on tablet, flex:1 on phone
+  const featureCardWidth = isTablet
+    ? (contentWidth - hPadding * 2 - 10) / 2
+    : undefined;
 
+  return (
+    <View style={s.container}>
+      <StatusBar barStyle="light-content" />
       <ScrollView
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={s.scroll}
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={COLORS.primary} colors={[COLORS.primary]} progressBackgroundColor={COLORS.surfaceHigh} />}
+        contentContainerStyle={s.scrollContent}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={COLORS.primary} />}
       >
-        {/* ── HERO SECTION ────────────────────────────────── */}
-        <View style={s.hero}>
-          {/* Background glow */}
-          <LinearGradient
-            colors={[COLORS.primaryGlow, 'transparent']}
-            style={s.heroGlow}
-            pointerEvents="none"
-          />
-          <View style={[s.heroContent, { paddingHorizontal: hPadding, paddingTop: Platform.OS === 'ios' ? 64 : 52 }]}>
-            <View style={[centerWrap]}>
-              {/* Top row */}
-              <View style={s.heroTop}>
-                <View>
-                  <Text style={s.greetText}>{greet},</Text>
-                  <Text style={s.heroName}>{firstName} <Text style={s.heroEmoji}>👋</Text></Text>
-                </View>
-                <TouchableOpacity onPress={() => navigation.navigate('Profil')} style={s.avatarBtn}>
-                  <LinearGradient colors={['#00C853', '#00E676']} style={s.avatarGrad}>
-                    <Text style={s.avatarChar}>{user?.name?.charAt(0)?.toUpperCase() || '?'}</Text>
-                  </LinearGradient>
-                </TouchableOpacity>
-              </View>
+        {/* ── Hero Header — Apple-grade ── */}
+        <LinearGradient
+          colors={['#527A56', '#6B8F71', '#8CB092']}
+          start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}
+          style={s.hero}
+        >
+          <View style={s.heroCircle1} />
+          <View style={s.heroCircle2} />
+          <View style={s.heroCircle3} />
 
-              {/* Stats row — Revolut style */}
-              <View style={s.statsRow}>
-                {[
-                  { value: loading ? '—' : recentScans.length, label: 'Scans', icon: 'camera', color: COLORS.cyan },
-                  { value: loading ? '—' : pets.length,        label: 'Animaux', icon: 'heart', color: COLORS.primary },
-                  { value: loading ? '—' : bookings.length,    label: 'Gardes', icon: 'calendar', color: COLORS.accent },
-                ].map((st, i) => (
-                  <React.Fragment key={i}>
-                    {i > 0 && <View style={s.statsDivider} />}
-                    <View style={s.statItem}>
-                      <Text style={[s.statValue, { color: st.color }]}>{st.value}</Text>
-                      <Text style={s.statLabel}>{st.label}</Text>
-                    </View>
-                  </React.Fragment>
-                ))}
+          <View style={[s.heroInner, { paddingHorizontal: hPadding }, centerWrap]}>
+            <View style={s.heroTop}>
+              <View style={s.heroGreetBox}>
+                <View style={s.heroGreetRow}>
+                  <PawIcon size={18} color="rgba(255,255,255,0.9)" />
+                  <Text style={s.greeting}>{greetText}</Text>
+                </View>
+                <Text style={s.userName}>{firstName}</Text>
               </View>
+              <TouchableOpacity
+                style={s.avatarBtn}
+                onPress={() => navigation.navigate('Profil')}
+                activeOpacity={0.8}
+              >
+                <Text style={s.avatarText}>{user?.name?.charAt(0)?.toUpperCase() || '?'}</Text>
+              </TouchableOpacity>
             </View>
-          </View>
-        </View>
 
-        {/* ── QUICK ACTIONS ───────────────────────────────── */}
-        <Animated.View style={[s.section, { paddingHorizontal: hPadding }, centerWrap, { opacity: fadeAnim }]}>
-          <View style={s.quickRow}>
-            {quickActions.map((a, i) => (
-              <TouchableOpacity key={i} onPress={a.onPress} activeOpacity={0.7} style={s.quickItem}>
-                <View style={[s.quickIcon, { backgroundColor: a.color + '14', borderColor: a.color + '25' }]}>
-                  <Feather name={a.icon} size={22} color={a.color} />
-                </View>
-                <Text style={s.quickLabel}>{a.label}</Text>
-              </TouchableOpacity>
-            ))}
+            <TouchableOpacity style={s.searchBar} onPress={() => navigation.navigate('Scanner')} activeOpacity={0.8}>
+              <Feather name="search" size={18} color="rgba(255,255,255,0.7)" />
+              <Text style={s.searchPlaceholder}>Rechercher un produit, un gardien...</Text>
+            </TouchableOpacity>
           </View>
-        </Animated.View>
+        </LinearGradient>
 
-        {/* ── CTA BANNER (no account) ─────────────────────── */}
-        {!user && (
-          <View style={[s.section, { paddingHorizontal: hPadding }, centerWrap]}>
-            <LinearGradient colors={['#00C853', '#00E676']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={s.ctaBanner}>
-              <View style={s.ctaBannerContent}>
-                <PepeteIcon size={40} color="#080B12" />
-                <View style={{ flex: 1 }}>
-                  <Text style={s.ctaTitle}>Crée ton compte gratuit</Text>
-                  <Text style={s.ctaDesc}>Accède à toutes les fonctionnalités</Text>
-                </View>
-              </View>
-              <TouchableOpacity onPress={() => navigation.navigate('Auth')} style={s.ctaBtn}>
-                <Text style={s.ctaBtnText}>S'inscrire →</Text>
-              </TouchableOpacity>
-            </LinearGradient>
-          </View>
-        )}
-
-        {/* ── MES ANIMAUX ─────────────────────────────────── */}
+        {/* ── Mes animaux ── */}
         {pets.length > 0 && (
-          <View style={s.sectionCol}>
-            <View style={[s.sectionHead, { paddingHorizontal: hPadding }, centerWrap]}>
+          <View style={[s.petsSection, { paddingLeft: hPadding }]}>
+            <View style={[s.sectionHeader, { paddingRight: hPadding, maxWidth: contentWidth, alignSelf: 'center', width: '100%' }]}>
               <Text style={s.sectionTitle}>Mes compagnons</Text>
               <TouchableOpacity onPress={() => navigation.navigate('Profil', { screen: 'MyPets' })}>
                 <Text style={s.seeAll}>Voir tout</Text>
               </TouchableOpacity>
             </View>
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={[s.hScroll, { paddingLeft: hPadding }]}>
-              {pets.map((p, i) => <PetChip key={p._id || i} pet={p} onPress={() => navigation.navigate('Profil', { screen: 'MyPets' })} />)}
-              <TouchableOpacity style={s.petAddChip} onPress={() => navigation.navigate('Profil', { screen: 'AddPet' })}>
-                <View style={s.petAddAvatar}><Feather name="plus" size={18} color={COLORS.primary} /></View>
-                <Text style={s.petAddLabel}>Ajouter</Text>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={s.petsScroll}>
+              {pets.map((pet, idx) => <PetMiniCard key={pet._id || idx} pet={pet} />)}
+              <TouchableOpacity style={s.petMiniAdd} onPress={() => navigation.navigate('Profil', { screen: 'AddPet' })}>
+                <View style={s.petMiniAddCircle}><Text style={s.petMiniAddIcon}>+</Text></View>
+                <Text style={s.petMiniAddLabel}>Ajouter</Text>
               </TouchableOpacity>
             </ScrollView>
           </View>
         )}
 
-        {/* ── PROCHAINE GARDE ─────────────────────────────── */}
+        {/* ── Que faire ? — Feature cards ── */}
+        <View style={[s.featuresSection, { paddingHorizontal: hPadding }, centerWrap]}>
+          <Text style={s.sectionTitle}>Que voulez-vous faire ?</Text>
+          <View style={[s.featuresGrid, isTablet && s.featuresGridTablet]}>
+            {features.map((f, idx) => (
+              <TouchableOpacity
+                key={idx}
+                onPress={f.onPress}
+                activeOpacity={0.85}
+                style={[
+                  s.featureCardWrapper,
+                  isTablet ? { width: featureCardWidth } : null,
+                ]}
+              >
+                <LinearGradient colors={f.gradient} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={s.featureCard}>
+                  <View style={s.featureIconCircle}>
+                    <Feather name={f.icon} size={22} color="#FFF" />
+                  </View>
+                  <View style={{ flex: 1 }}>
+                    <Text style={s.featureTitle}>{f.title}</Text>
+                    <Text style={s.featureSubtitle}>{f.subtitle}</Text>
+                  </View>
+                  <View style={s.featureArrow}>
+                    <Feather name="arrow-right" size={14} color="#FFF" />
+                  </View>
+                </LinearGradient>
+              </TouchableOpacity>
+            ))}
+          </View>
+        </View>
+
+        {/* ── Tableau de bord — Stats cards ── */}
+        <View style={[s.statsSection, { paddingHorizontal: hPadding }, centerWrap]}>
+          <Text style={s.sectionTitle}>Mon tableau de bord</Text>
+          <View style={s.statsCard}>
+            {[
+              { value: recentScans.length, label: 'Produits\nscannés', featherIcon: 'camera', color: '#6B8F71' },
+              { value: pets.length, label: 'Animaux\nenregistrés', featherIcon: 'heart', color: '#527A56' },
+              { value: bookings.length, label: 'Gardes\nà venir', featherIcon: 'calendar', color: '#C4956A' },
+            ].map((stat, idx) => (
+              <React.Fragment key={idx}>
+                <View style={s.stat}>
+                  <View style={[s.statIconWrap, { backgroundColor: stat.color + '0D' }]}>
+                    <Feather name={stat.featherIcon} size={20} color={stat.color} />
+                  </View>
+                  <Text style={[s.statValue, { color: stat.color }]}>{loading ? '-' : stat.value}</Text>
+                  <Text style={s.statLabel}>{stat.label}</Text>
+                </View>
+                {idx < 2 && <View style={s.statDivider} />}
+              </React.Fragment>
+            ))}
+          </View>
+        </View>
+
+        {/* ── Prochaine garde ── */}
         {bookings.length > 0 && (
-          <View style={[s.sectionCol, { paddingHorizontal: hPadding }]}>
-            <View style={[s.sectionHead, centerWrap]}>
+          <View style={[s.bookingSection, { paddingHorizontal: hPadding }, centerWrap]}>
+            <View style={s.sectionHeader}>
               <Text style={s.sectionTitle}>Prochaine garde</Text>
               <TouchableOpacity onPress={() => navigation.navigate('Garde')}>
-                <Text style={s.seeAll}>Tout voir</Text>
-              </TouchableOpacity>
-            </View>
-            <View style={[centerWrap]}>
-              <NextBookingCard booking={bookings[0]} />
-            </View>
-          </View>
-        )}
-
-        {/* ── DERNIERS SCANS ──────────────────────────────── */}
-        {recentScans.length > 0 && (
-          <View style={[s.sectionCol, { paddingHorizontal: hPadding }]}>
-            <View style={[s.sectionHead, centerWrap]}>
-              <Text style={s.sectionTitle}>Derniers scans</Text>
-              <TouchableOpacity onPress={() => navigation.navigate('Scanner', { screen: 'ScanHistory' })}>
                 <Text style={s.seeAll}>Historique</Text>
               </TouchableOpacity>
             </View>
-            <View style={centerWrap}>
-              {recentScans.slice(0, 3).map((sc, i) => (
-                <RecentScanCard key={sc._id || i} scan={sc}
-                  onPress={() => navigation.navigate('Scanner', { screen: 'ProductResult', params: { product: sc.product } })}
-                />
-              ))}
-            </View>
+            <NextBookingCard booking={bookings[0]} />
           </View>
         )}
 
-        {/* ── SCAN CTA BANNER ─────────────────────────────── */}
-        {user && (
-          <View style={[s.section, { paddingHorizontal: hPadding }, centerWrap]}>
-            <TouchableOpacity onPress={() => navigation.navigate('Scanner')} activeOpacity={0.88}>
-              <View style={s.scanBanner}>
-                <LinearGradient colors={[COLORS.cyanGlow, COLORS.primaryGlow]} style={StyleSheet.absoluteFill} />
-                <View style={s.scanBannerIcon}>
-                  <Feather name="camera" size={28} color={COLORS.cyan} />
-                </View>
-                <View style={{ flex: 1 }}>
-                  <Text style={s.scanBannerTitle}>Analyser un produit</Text>
-                  <Text style={s.scanBannerDesc}>Scanner le code-barres d'un aliment pour votre animal</Text>
-                </View>
-                <Feather name="chevron-right" size={20} color={COLORS.textTertiary} />
-              </View>
-            </TouchableOpacity>
-          </View>
-        )}
-
-        {/* ── EMPTY STATE (new user) ──────────────────────── */}
-        {user && pets.length === 0 && recentScans.length === 0 && (
-          <View style={[s.section, { paddingHorizontal: hPadding }, centerWrap]}>
-            <View style={s.emptyCard}>
-              <PepeteIcon size={48} color={COLORS.primary} />
-              <Text style={s.emptyTitle}>Bienvenue sur Pépète !</Text>
-              <Text style={s.emptyDesc}>Commence par ajouter ton premier animal pour personnaliser ton expérience.</Text>
-              <TouchableOpacity style={s.emptyBtn} onPress={() => navigation.navigate('Profil', { screen: 'AddPet' })}>
-                <Text style={s.emptyBtnText}>Ajouter un animal →</Text>
+        {/* ── Derniers scans ── */}
+        {recentScans.length > 0 && (
+          <View style={[s.scansSection, { paddingHorizontal: hPadding }, centerWrap]}>
+            <View style={s.sectionHeader}>
+              <Text style={s.sectionTitle}>Derniers scans</Text>
+              <TouchableOpacity onPress={() => navigation.navigate('Scanner', { screen: 'ScanHistory' })}>
+                <Text style={s.seeAll}>Voir tout</Text>
               </TouchableOpacity>
             </View>
+            {recentScans.slice(0, 3).map((scan, idx) => (
+              <RecentScanCard
+                key={scan._id || idx}
+                scan={scan}
+                onPress={() => navigation.navigate('Scanner', { screen: 'ProductResult', params: { product: scan.product } })}
+              />
+            ))}
           </View>
         )}
 
-        <View style={{ height: 24 }} />
+        {/* ── Accès rapide — Icon grid ── */}
+        <View style={[s.quickSection, { paddingHorizontal: hPadding }, centerWrap]}>
+          <Text style={s.sectionTitle}>Accès rapide</Text>
+          <View style={[s.quickGrid, isTablet && s.quickGridTablet]}>
+            {[
+              { featherIcon: 'list', label: 'Historique\nscans', onPress: () => navigation.navigate('Scanner', { screen: 'ScanHistory' }) },
+              { featherIcon: 'calendar', label: 'Réservations', onPress: () => navigation.navigate('Garde') },
+              { featherIcon: 'message-circle', label: 'Messages', onPress: () => navigation.navigate('Garde', { screen: 'Messages' }) },
+              { featherIcon: 'settings', label: 'Réglages', onPress: () => navigation.navigate('Profil', { screen: 'Settings' }) },
+            ].map((qa, idx) => (
+              <TouchableOpacity key={idx} style={[s.quickAction, isTablet && s.quickActionTablet]} onPress={qa.onPress} activeOpacity={0.7}>
+                <View style={[s.quickIconWrap, isTablet && s.quickIconWrapTablet]}>
+                  <Feather name={qa.featherIcon} size={isTablet ? 24 : 22} color={COLORS.primary} />
+                </View>
+                <Text style={[s.quickLabel, isTablet && s.quickLabelTablet]}>{qa.label}</Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+        </View>
+
+        {/* ── Bannière CTA — Premium gradient ── */}
+        <View style={[s.bannerSection, { paddingHorizontal: hPadding }, centerWrap]}>
+          <TouchableOpacity activeOpacity={0.9} onPress={() => navigation.navigate('Scanner')}>
+            <LinearGradient
+              colors={['#527A56', '#6B8F71']}
+              start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}
+              style={s.bannerGradient}
+            >
+              <View style={s.bannerCircleDeco} />
+              <View style={s.bannerIconCircle}>
+                <Feather name="zap" size={24} color="#FFF" />
+              </View>
+              <View style={s.bannerContent}>
+                <Text style={s.bannerTitle}>Contrôlez ce que mange votre animal</Text>
+                <Text style={s.bannerText}>Scannez les emballages pour connaître la qualité de chaque produit.</Text>
+                <View style={s.bannerBtn}>
+                  <Text style={s.bannerBtnText}>Scanner maintenant</Text>
+                  <Feather name="arrow-right" size={14} color="#FFF" style={{ marginLeft: 6 }} />
+                </View>
+              </View>
+            </LinearGradient>
+          </TouchableOpacity>
+        </View>
+
+        <View style={{ height: 32 }} />
       </ScrollView>
     </View>
   );
 };
 
 const s = StyleSheet.create({
-  root: { flex: 1, backgroundColor: COLORS.bg },
-  scroll: { paddingBottom: 32 },
+  container: { flex: 1, backgroundColor: COLORS.background },
+  scrollContent: { paddingBottom: 24 },
 
-  // ── Hero
-  hero: { position: 'relative', paddingBottom: 28 },
-  heroGlow: {
-    position: 'absolute',
-    top: -60, left: -80, right: -80,
-    height: 360,
-    opacity: 0.7,
-  },
-  heroContent: {},
-  heroTop: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 24 },
-  greetText: { fontSize: 14, color: COLORS.textTertiary, fontWeight: '500', marginBottom: 4 },
-  heroName: { fontSize: 30, fontWeight: '900', color: COLORS.text, letterSpacing: -1 },
-  heroEmoji: { fontSize: 26 },
-  avatarBtn: {},
-  avatarGrad: { width: 48, height: 48, borderRadius: 24, alignItems: 'center', justifyContent: 'center' },
-  avatarChar: { fontSize: 20, fontWeight: '800', color: '#080B12' },
-
-  // Stats row
-  statsRow: {
-    flexDirection: 'row',
-    backgroundColor: COLORS.surfaceHigh,
-    borderRadius: RADIUS.xl,
-    borderWidth: 1,
-    borderColor: COLORS.border,
-    padding: 20,
-  },
-  statsDivider: { width: 1, backgroundColor: COLORS.border, marginHorizontal: 20 },
-  statItem: { flex: 1, alignItems: 'center' },
-  statValue: { fontSize: 28, fontWeight: '900', letterSpacing: -1 },
-  statLabel: { fontSize: 12, color: COLORS.textTertiary, fontWeight: '500', marginTop: 2 },
-
-  // Quick actions
-  section: { marginTop: 28 },
-  sectionCol: { marginTop: 28 },
-  quickRow: { flexDirection: 'row', gap: 12 },
-  quickItem: { flex: 1, alignItems: 'center', gap: 8 },
-  quickIcon: {
-    width: 58, height: 58, borderRadius: 18,
-    alignItems: 'center', justifyContent: 'center',
-    borderWidth: 1,
-  },
-  quickLabel: { fontSize: 12, color: COLORS.textSecondary, fontWeight: '600', textAlign: 'center' },
-
-  // CTA banner
-  ctaBanner: {
-    borderRadius: RADIUS.xl,
-    padding: 20,
-    gap: 12,
-  },
-  ctaBannerContent: { flexDirection: 'row', alignItems: 'center', gap: 14 },
-  ctaTitle: { fontSize: 16, fontWeight: '800', color: '#080B12' },
-  ctaDesc: { fontSize: 13, color: 'rgba(8,11,18,0.65)', fontWeight: '400' },
-  ctaBtn: { backgroundColor: 'rgba(8,11,18,0.12)', borderRadius: RADIUS.lg, paddingVertical: 12, paddingHorizontal: 20, alignSelf: 'flex-end' },
-  ctaBtnText: { fontSize: 14, fontWeight: '700', color: '#080B12' },
-
-  // Section headers
-  sectionHead: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 },
-  sectionTitle: { fontSize: 18, fontWeight: '800', color: COLORS.text, letterSpacing: -0.3 },
-  seeAll: { fontSize: 13, color: COLORS.primary, fontWeight: '600' },
-  hScroll: { gap: 10, paddingRight: 24, paddingBottom: 4 },
-
-  // Pets
-  petChip: { alignItems: 'center', gap: 6, width: 70 },
-  petAvatar: { width: 52, height: 52, borderRadius: 16, alignItems: 'center', justifyContent: 'center', borderWidth: 1 },
-  petInitial: { fontSize: 20, fontWeight: '800' },
-  petName: { fontSize: 11, color: COLORS.textSecondary, fontWeight: '600', textAlign: 'center' },
-  petAddChip: { alignItems: 'center', gap: 6, width: 70 },
-  petAddAvatar: { width: 52, height: 52, borderRadius: 16, alignItems: 'center', justifyContent: 'center', backgroundColor: COLORS.primarySoft, borderWidth: 1.5, borderColor: COLORS.primary, borderStyle: 'dashed' },
-  petAddLabel: { fontSize: 11, color: COLORS.primary, fontWeight: '600', textAlign: 'center' },
-
-  // Booking card
-  bookingCard: { borderRadius: RADIUS.xl, overflow: 'hidden' },
-  bookingGrad: { padding: 20 },
-  bookingTop: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 },
-  bookingTimeBadge: { flexDirection: 'row', alignItems: 'center', gap: 5, backgroundColor: 'rgba(8,11,18,0.15)', borderRadius: 20, paddingVertical: 5, paddingHorizontal: 10 },
-  bookingTimeText: { fontSize: 12, fontWeight: '700', color: '#080B12' },
-  bookingPrice: { fontSize: 22, fontWeight: '900', color: '#080B12' },
-  bookingService: { fontSize: 17, fontWeight: '800', color: '#080B12', marginBottom: 12 },
-  bookingMeta: { flexDirection: 'row', alignItems: 'center', gap: 6 },
-  bookingDate: { fontSize: 13, color: 'rgba(8,11,18,0.7)', flex: 1, fontWeight: '500' },
-  bookingStatus: { backgroundColor: 'rgba(8,11,18,0.12)', borderRadius: 12, paddingVertical: 4, paddingHorizontal: 10 },
-  bookingStatusText: { fontSize: 12, fontWeight: '700', color: '#080B12' },
-
-  // Scan card
-  scanCard: {
-    flexDirection: 'row', alignItems: 'center',
-    backgroundColor: COLORS.surfaceHigh,
-    borderRadius: RADIUS.lg,
-    borderWidth: 1, borderColor: COLORS.border,
-    padding: 14,
-    marginBottom: 10,
-    gap: 14,
-  },
-  scanScore: { width: 50, height: 50, borderRadius: 14, alignItems: 'center', justifyContent: 'center' },
-  scanScoreNum: { fontSize: 17, fontWeight: '900', letterSpacing: -0.5 },
-  scanInfo: { flex: 1 },
-  scanName: { fontSize: 15, fontWeight: '700', color: COLORS.text, marginBottom: 3 },
-  scanBrand: { fontSize: 12, color: COLORS.textTertiary, fontWeight: '500' },
-  scanBadge: { paddingHorizontal: 10, paddingVertical: 5, borderRadius: 10 },
-  scanBadgeText: { fontSize: 12, fontWeight: '700' },
-
-  // Scan CTA banner
-  scanBanner: {
-    flexDirection: 'row', alignItems: 'center', gap: 16,
-    backgroundColor: COLORS.surfaceHigh,
-    borderRadius: RADIUS.xl,
-    borderWidth: 1, borderColor: COLORS.border,
-    padding: 18,
+  // Hero — fluid gradient
+  hero: {
+    paddingTop: Platform.OS === 'ios' ? 62 : 52,
+    paddingBottom: 34,
+    borderBottomLeftRadius: RADIUS['3xl'],
+    borderBottomRightRadius: RADIUS['3xl'],
     overflow: 'hidden',
   },
-  scanBannerIcon: {
-    width: 52, height: 52, borderRadius: 14,
-    backgroundColor: COLORS.cyanSoft,
+  heroInner: {},
+  heroCircle1: {
+    position: 'absolute', top: -60, right: -60,
+    width: 200, height: 200, borderRadius: 100,
+    backgroundColor: 'rgba(255,255,255,0.06)',
+  },
+  heroCircle2: {
+    position: 'absolute', bottom: -70, left: -50,
+    width: 240, height: 240, borderRadius: 120,
+    backgroundColor: 'rgba(255,255,255,0.04)',
+  },
+  heroCircle3: {
+    position: 'absolute', top: 40, left: '40%',
+    width: 100, height: 100, borderRadius: 50,
+    backgroundColor: 'rgba(255,255,255,0.03)',
+  },
+  heroTop: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 },
+  heroGreetBox: {},
+  heroGreetRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 4 },
+  greeting: { fontSize: FONT_SIZE.sm, color: 'rgba(255,255,255,0.88)', fontWeight: '600' },
+  userName: { fontSize: FONT_SIZE['3xl'], fontWeight: '800', color: '#FFF', letterSpacing: -0.8 },
+  avatarBtn: {
+    width: 52, height: 52, borderRadius: 26,
+    backgroundColor: 'rgba(255,255,255,0.18)',
+    alignItems: 'center', justifyContent: 'center',
+    borderWidth: 2, borderColor: 'rgba(255,255,255,0.3)',
+  },
+  avatarText: { fontSize: FONT_SIZE.xl, fontWeight: '800', color: '#FFF' },
+  searchBar: {
+    flexDirection: 'row', alignItems: 'center',
+    backgroundColor: 'rgba(255,255,255,0.15)',
+    borderRadius: RADIUS.lg, paddingHorizontal: 18, height: 52, gap: 12,
+    borderWidth: 1, borderColor: 'rgba(255,255,255,0.15)',
+  },
+  searchPlaceholder: { fontSize: FONT_SIZE.sm, color: 'rgba(255,255,255,0.72)', fontWeight: '500' },
+
+  // Section header
+  sectionHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 },
+  sectionTitle: { fontSize: FONT_SIZE.lg, fontWeight: '800', color: COLORS.text, letterSpacing: -0.3 },
+  seeAll: { fontSize: FONT_SIZE.sm, fontWeight: '700', color: COLORS.primary },
+
+  // Pets
+  petsSection: { marginTop: 26 },
+  petsScroll: { gap: 14, paddingRight: 20 },
+  petMini: { alignItems: 'center', width: 74 },
+  petMiniAvatar: {
+    width: 62, height: 62, borderRadius: 31,
+    alignItems: 'center', justifyContent: 'center',
+    borderWidth: 2, marginBottom: 8,
+  },
+  petMiniLetter: { fontSize: 16, fontWeight: '800' },
+  petMiniName: { fontSize: FONT_SIZE.xs, fontWeight: '700', color: COLORS.text, textAlign: 'center' },
+  petMiniAdd: { alignItems: 'center', width: 74, justifyContent: 'center' },
+  petMiniAddCircle: {
+    width: 62, height: 62, borderRadius: 31,
+    borderWidth: 1.5, borderColor: COLORS.border, borderStyle: 'dashed',
+    alignItems: 'center', justifyContent: 'center', marginBottom: 8,
+  },
+  petMiniAddIcon: { fontSize: 24, color: COLORS.textTertiary },
+  petMiniAddLabel: { fontSize: FONT_SIZE.xs, fontWeight: '600', color: COLORS.textTertiary },
+
+  // Features — refined cards
+  featuresSection: { marginTop: 28 },
+  featuresGrid: { flexDirection: 'row', gap: 10, marginTop: 16 },
+  featuresGridTablet: { flexWrap: 'wrap' },
+  featureCardWrapper: { flex: 1 },
+  featureCard: {
+    borderRadius: RADIUS.xl, padding: 18,
+    height: 156, justifyContent: 'space-between',
+    ...SHADOWS.lg,
+  },
+  featureIconCircle: {
+    width: 42, height: 42, borderRadius: 21,
+    backgroundColor: 'rgba(255,255,255,0.22)',
     alignItems: 'center', justifyContent: 'center',
   },
-  scanBannerTitle: { fontSize: 15, fontWeight: '700', color: COLORS.text, marginBottom: 3 },
-  scanBannerDesc: { fontSize: 13, color: COLORS.textTertiary, fontWeight: '400' },
-
-  // Empty state
-  emptyCard: {
-    alignItems: 'center',
-    backgroundColor: COLORS.surfaceHigh,
-    borderRadius: RADIUS['2xl'],
-    borderWidth: 1,
-    borderColor: COLORS.border,
-    padding: 32,
-    gap: 12,
+  featureTitle: { fontSize: FONT_SIZE.md, fontWeight: '800', color: '#FFF' },
+  featureSubtitle: { fontSize: FONT_SIZE.xs, color: 'rgba(255,255,255,0.78)', fontWeight: '500', marginTop: 3 },
+  featureArrow: {
+    width: 32, height: 32, borderRadius: 16,
+    backgroundColor: 'rgba(255,255,255,0.22)',
+    alignItems: 'center', justifyContent: 'center', alignSelf: 'flex-end',
   },
-  emptyTitle: { fontSize: 18, fontWeight: '800', color: COLORS.text, letterSpacing: -0.3, textAlign: 'center' },
-  emptyDesc: { fontSize: 14, color: COLORS.textSecondary, textAlign: 'center', lineHeight: 22 },
-  emptyBtn: { backgroundColor: COLORS.primarySoft, borderRadius: RADIUS.lg, paddingVertical: 13, paddingHorizontal: 24, borderWidth: 1, borderColor: COLORS.primary + '40', marginTop: 8 },
-  emptyBtnText: { fontSize: 15, fontWeight: '700', color: COLORS.primary },
+
+  // Stats — clean card
+  statsSection: { marginTop: 32 },
+  statsCard: {
+    backgroundColor: COLORS.white, borderRadius: RADIUS.xl,
+    paddingVertical: 24, paddingHorizontal: 8,
+    flexDirection: 'row', justifyContent: 'space-around',
+    ...SHADOWS.card, marginTop: 16,
+  },
+  stat: { alignItems: 'center', flex: 1 },
+  statDivider: { width: 1, backgroundColor: COLORS.borderLight, marginVertical: 10 },
+  statIconWrap: {
+    width: 48, height: 48, borderRadius: RADIUS.md,
+    alignItems: 'center', justifyContent: 'center', marginBottom: 10,
+  },
+  statValue: { fontSize: FONT_SIZE['2xl'], fontWeight: '800', letterSpacing: -0.5 },
+  statLabel: { fontSize: FONT_SIZE['2xs'], color: COLORS.textSecondary, fontWeight: '500', marginTop: 4, textAlign: 'center', lineHeight: 15 },
+
+  // Booking — premium gradient
+  bookingSection: { marginTop: 32 },
+  bookingCard: { borderRadius: RADIUS.xl, overflow: 'hidden', ...SHADOWS.lg, marginTop: 16 },
+  bookingGradient: { padding: 22, borderRadius: RADIUS.xl },
+  bookingTop: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 },
+  bookingBadge: {
+    flexDirection: 'row', alignItems: 'center',
+    backgroundColor: 'rgba(255,255,255,0.20)',
+    borderRadius: RADIUS.pill, paddingHorizontal: 14, paddingVertical: 6,
+  },
+  bookingBadgeText: { color: '#FFF', fontWeight: '700', fontSize: FONT_SIZE.sm },
+  bookingPrice: { color: '#FFF', fontWeight: '900', fontSize: FONT_SIZE['2xl'], letterSpacing: -0.5 },
+  bookingService: { color: '#FFF', fontWeight: '700', fontSize: FONT_SIZE.lg, marginBottom: 12 },
+  bookingMeta: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  bookingMetaText: { color: 'rgba(255,255,255,0.88)', fontSize: FONT_SIZE.sm, fontWeight: '500' },
+  bookingStatusBadge: { backgroundColor: 'rgba(255,255,255,0.18)', borderRadius: RADIUS.pill, paddingHorizontal: 12, paddingVertical: 4 },
+  bookingStatusText: { color: '#FFF', fontSize: FONT_SIZE.xs, fontWeight: '700' },
+
+  // Scans — refined cards
+  scansSection: { marginTop: 32 },
+  scanCard: {
+    flexDirection: 'row', alignItems: 'center',
+    backgroundColor: COLORS.white, borderRadius: RADIUS.lg,
+    padding: 16, marginTop: 10,
+    ...SHADOWS.card,
+  },
+  scanScoreBadge: { width: 52, height: 52, borderRadius: RADIUS.md, alignItems: 'center', justifyContent: 'center', marginRight: 14 },
+  scanScoreText: { fontSize: FONT_SIZE.lg, fontWeight: '900' },
+  scanScoreMax: { fontSize: FONT_SIZE['2xs'], fontWeight: '600' },
+  scanInfo: { flex: 1, marginRight: 8 },
+  scanName: { fontSize: FONT_SIZE.base, fontWeight: '700', color: COLORS.text },
+  scanBrand: { fontSize: FONT_SIZE.sm, color: COLORS.textSecondary, marginTop: 3 },
+  scanLabel: { borderRadius: RADIUS.pill, paddingHorizontal: 12, paddingVertical: 5 },
+  scanLabelText: { fontSize: FONT_SIZE.xs, fontWeight: '700' },
+
+  // Quick actions — clean icons
+  quickSection: { marginTop: 32 },
+  quickGrid: { flexDirection: 'row', justifyContent: 'space-between', marginTop: 16 },
+  quickGridTablet: { gap: 14 },
+  quickAction: { alignItems: 'center', flex: 1 },
+  quickActionTablet: { flex: 0, width: 100 },
+  quickIconWrap: {
+    width: 60, height: 60, borderRadius: RADIUS.xl,
+    backgroundColor: COLORS.white,
+    alignItems: 'center', justifyContent: 'center',
+    ...SHADOWS.card, marginBottom: 8,
+  },
+  quickIconWrapTablet: { width: 72, height: 72, borderRadius: RADIUS['2xl'] },
+  quickLabel: { fontSize: FONT_SIZE['2xs'], color: COLORS.textSecondary, fontWeight: '600', textAlign: 'center', lineHeight: 15 },
+  quickLabelTablet: { fontSize: FONT_SIZE.xs, lineHeight: 17 },
+
+  // Banner — premium CTA
+  bannerSection: { marginTop: 32 },
+  bannerGradient: { borderRadius: RADIUS.xl, padding: 24, ...SHADOWS.lg, overflow: 'hidden' },
+  bannerCircleDeco: {
+    position: 'absolute', top: -30, right: -30,
+    width: 120, height: 120, borderRadius: 60,
+    backgroundColor: 'rgba(255,255,255,0.08)',
+  },
+  bannerIconCircle: {
+    width: 52, height: 52, borderRadius: 26,
+    backgroundColor: 'rgba(255,255,255,0.18)',
+    alignItems: 'center', justifyContent: 'center', marginBottom: 16,
+  },
+  bannerContent: {},
+  bannerTitle: { fontSize: FONT_SIZE.lg, fontWeight: '800', color: '#FFF', marginBottom: 8, lineHeight: 26 },
+  bannerText: { fontSize: FONT_SIZE.sm, color: 'rgba(255,255,255,0.82)', lineHeight: 21, marginBottom: 18 },
+  bannerBtn: {
+    alignSelf: 'flex-start', flexDirection: 'row', alignItems: 'center',
+    backgroundColor: 'rgba(255,255,255,0.20)',
+    borderRadius: RADIUS.pill, paddingHorizontal: 18, paddingVertical: 10,
+  },
+  bannerBtnText: { color: '#FFF', fontWeight: '700', fontSize: FONT_SIZE.sm },
 });
 
 export default HomeScreen;

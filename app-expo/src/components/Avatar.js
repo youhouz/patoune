@@ -56,11 +56,11 @@ const SIZE_MAP = {
 // ---------------------------------------------------------------------------
 const GRADIENT_PALETTE = [
   ['#C4704B', '#D4896A'],   // terracotta
-  ['#00E676', '#00BFA5'],   // forest sage
+  ['#6B8F71', '#8BAF8F'],   // forest sage
   ['#C4A35A', '#D4B97A'],   // dusty gold
   ['#5A7EA0', '#7A9EBF'],   // slate blue
   ['#A85A38', '#C4704B'],   // deep terracotta
-  ['#00A844', '#00E676'],   // deep forest
+  ['#4A7050', '#6B8F71'],   // deep forest
   ['#8C6B4A', '#A88B6A'],   // walnut
   ['#7A5A6A', '#9A7A8A'],   // mauve
 ];

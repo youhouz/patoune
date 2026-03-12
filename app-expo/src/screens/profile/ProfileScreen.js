@@ -123,9 +123,9 @@ const ProfileScreen = ({ navigation }) => {
   };
 
   const stats = [
-    { label: 'Animaux', value: petsCount, icon: 'heart', color: '#00E676' },
-    { label: 'Scans', value: scansCount, icon: 'camera', color: '#22D3EE' },
-    { label: 'Gardes', value: bookingsCount, icon: 'calendar', color: '#A78BFA' },
+    { label: 'Animaux', value: petsCount, icon: 'heart', color: '#6B8F71' },
+    { label: 'Scans', value: scansCount, icon: 'camera', color: '#527A56' },
+    { label: 'Gardes', value: bookingsCount, icon: 'calendar', color: '#C4956A' },
   ];
 
   const menuSections = [
@@ -137,7 +137,7 @@ const ProfileScreen = ({ navigation }) => {
           label: 'Mes animaux',
           subtitle: `${petsCount} compagnon${petsCount !== 1 ? 's' : ''} enregistré${petsCount !== 1 ? 's' : ''}`,
           screen: 'MyPets',
-          accentColor: colors.primary,
+          accentColor: '#6B8F71',
           bgColor: colors.primarySoft,
         },
         {
@@ -145,8 +145,8 @@ const ProfileScreen = ({ navigation }) => {
           label: 'Ajouter un animal',
           subtitle: 'Enregistrez un nouveau compagnon',
           screen: 'AddPet',
-          accentColor: colors.cyan,
-          bgColor: colors.cyanSoft,
+          accentColor: '#527A56',
+          bgColor: colors.secondarySoft,
         },
       ],
     },
@@ -158,7 +158,7 @@ const ProfileScreen = ({ navigation }) => {
           label: 'Réglages',
           subtitle: 'Compte, préférences, à propos',
           screen: 'Settings',
-          accentColor: colors.accent,
+          accentColor: '#C4956A',
           bgColor: colors.accentSoft,
         },
       ],
@@ -185,7 +185,7 @@ const ProfileScreen = ({ navigation }) => {
       >
         {/* Hero Header with Gradient */}
         <LinearGradient
-          colors={['#080B12', '#0E1118', '#141A27']}
+          colors={['#527A56', '#6B8F71', '#8CB092']}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
           style={styles.heroGradient}
@@ -393,7 +393,7 @@ const styles = StyleSheet.create({
   avatarInitials: {
     fontSize: FONT_SIZE['3xl'],
     fontWeight: '800',
-    color: '#080B12',
+    color: '#6B8F71',
     letterSpacing: 1,
   },
   sitterBadge: {
@@ -401,7 +401,7 @@ const styles = StyleSheet.create({
     bottom: -6,
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#00E676',
+    backgroundColor: '#527A56',
     paddingHorizontal: SPACING.md,
     paddingVertical: SPACING.xs + 1,
     borderRadius: RADIUS.full,
@@ -490,12 +490,11 @@ const styles = StyleSheet.create({
   menuCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: colors.surfaceHigh,
+    backgroundColor: colors.white,
     borderRadius: RADIUS.xl,
     padding: SPACING.base,
     marginBottom: SPACING.md,
-    borderWidth: 1,
-    borderColor: colors.border,
+    ...SHADOWS.md,
   },
   menuIconContainer: {
     width: 48,
@@ -523,7 +522,7 @@ const styles = StyleSheet.create({
     width: 32,
     height: 32,
     borderRadius: RADIUS.full,
-    backgroundColor: colors.surface,
+    backgroundColor: colors.background,
     alignItems: 'center',
     justifyContent: 'center',
   },
