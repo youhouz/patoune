@@ -11,3 +11,6 @@ export const getScanHistoryAPI = () =>
 
 export const searchProductsAPI = (query) =>
   api.get('/products/search', { params: query });
+
+export const getPopularProductsAPI = (limit = 12) =>
+  api.get('/products/popular', { params: { limit } });

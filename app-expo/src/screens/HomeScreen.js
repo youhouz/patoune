@@ -8,7 +8,7 @@ import { useFocusEffect } from '@react-navigation/native';
 import { Feather } from '@expo/vector-icons';
 import { useAuth } from '../context/AuthContext';
 import { getMyPetsAPI } from '../api/pets';
-import { getScanHistoryAPI } from '../api/products';
+import { getScanHistoryAPI, getPopularProductsAPI } from '../api/products';
 import { getMyBookingsAPI } from '../api/petsitters';
 import { PawIcon } from '../components/Logo';
 import useResponsive from '../hooks/useResponsive';
@@ -95,7 +95,46 @@ const PetMiniCard = ({ pet }) => {
     </View>
   );
 };
+// ─── Popular Product Card ─────────────────────────────────
+const ANIMAL_EMOJI = { chien: '🐶', chat: '🐱', rongeur: '🐹', oiseau: '🐦', reptile: '🦎', poisson: '🐟', tous: '🐾' };
 
+const PopularProductCard = ({ product, onPress }) => {
+  const score = product.nutritionScore ?? 0;
+  const color = getScoreColor(score);
+  const label = getScoreLabel(score);
+  const animals = (product.targetAnimal || []).slice(0, 2).map(a => ANIMAL_EMOJI[a] || '🐾').join(' ');
+  const pct = Math.max(4, score);  // barre min 4% pour être visible
+  return (
+    <TouchableOpacity style={s.popCard} onPress={onPress} activeOpacity={0.78}>
+      {/* Score badge en haut à droite */}
+      <View style={[s.popScoreBadge, { backgroundColor: color + '18' }]}>
+        <Text style={[s.popScoreNum, { color }]}>{score}</Text>
+        <Text style={[s.popScoreMax, { color: color + '90' }]}>/100</Text>
+      </View>
+
+      {/* Contenu */}
+      <View style={s.popBody}>
+        <Text style={s.popAnimal}>{animals || '🐾'}</Text>
+        <Text style={s.popName} numberOfLines={2}>{product.name}</Text>
+        <Text style={s.popBrand} numberOfLines={1}>{product.brand || 'Marque inconnue'}</Text>
+      </View>
+
+      {/* Barre de score */}
+      <View style={s.popBarTrack}>
+        <View style={[s.popBarFill, { width: `${pct}%`, backgroundColor: color }]} />
+      </View>
+      <View style={s.popBarRow}>
+        <Text style={[s.popLabel, { color }]}>{label}</Text>
+        {product.scanCount > 0 && (
+          <View style={s.popScanBadge}>
+            <Feather name="maximize" size={10} color={COLORS.textTertiary} />
+            <Text style={s.popScanCount}>{product.scanCount}x</Text>
+          </View>
+        )}
+      </View>
+    </TouchableOpacity>
+  );
+};
 // ═══════════════════════════════════════════════════════════
 const HomeScreen = ({ navigation }) => {
   const { user } = useAuth();
@@ -106,6 +145,7 @@ const HomeScreen = ({ navigation }) => {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [query, setQuery] = useState('');
+  const [popularProducts, setPopularProducts] = useState([]);
 
   const fetchData = async () => {
     try {
@@ -123,6 +163,11 @@ const HomeScreen = ({ navigation }) => {
           .sort((a, b) => new Date(a.startDate) - new Date(b.startDate));
         setBookings(upcoming);
       }
+      // Produits populaires (sans auth)
+      try {
+        const popRes = await getPopularProductsAPI(12);
+        setPopularProducts(popRes.data?.products || []);
+      } catch (_) {}
     } catch (err) {
       console.log('Home fetch error:', err.message);
     } finally {
@@ -392,6 +437,34 @@ const HomeScreen = ({ navigation }) => {
           </View>
         </View>
 
+        {/* ── Produits les + scannés ── */}
+        {popularProducts.length > 0 && (
+          <View style={[s.popularSection, { paddingHorizontal: hPadding }, centerWrap]}>
+            <View style={s.sectionHeader}>
+              <View>
+                <Text style={s.sectionEyebrow}>COMMUNAUTÉ</Text>
+                <Text style={s.sectionTitle}>Produits les + scannés</Text>
+              </View>
+              <TouchableOpacity onPress={() => navigation.navigate('Scanner', { screen: 'ScanHistory' })}>
+                <Text style={s.seeAll}>Voir tout</Text>
+              </TouchableOpacity>
+            </View>
+            {/* Grille 2 colonnes */}
+            <View style={s.popGrid}>
+              {popularProducts.map((product, idx) => (
+                <PopularProductCard
+                  key={product._id || idx}
+                  product={product}
+                  onPress={() => navigation.navigate('Scanner', {
+                    screen: 'ProductResult',
+                    params: { product },
+                  })}
+                />
+              ))}
+            </View>
+          </View>
+        )}
+
         {/* ── Bannière CTA — Premium gradient ── */}
         <View style={[s.bannerSection, { paddingHorizontal: hPadding }, centerWrap]}>
           <TouchableOpacity activeOpacity={0.9} onPress={() => navigation.navigate('Scanner')}>
@@ -599,6 +672,31 @@ const s = StyleSheet.create({
   searchEmptyText:    { fontSize: 15, color: COLORS.textSecondary, fontWeight: '500' },
   searchScanBtn:      { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: COLORS.primary, borderRadius: RADIUS.pill, paddingHorizontal: 20, paddingVertical: 12, marginTop: 4 },
   searchScanBtnText:  { color: '#FFF', fontWeight: '700', fontSize: 14 },
+
+  // Popular products
+  popularSection: { marginTop: 32 },
+  sectionEyebrow: { fontSize: 11, fontWeight: '800', color: COLORS.primary, letterSpacing: 2, textTransform: 'uppercase', marginBottom: 4 },
+  popGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 12, marginTop: 16 },
+  popCard: {
+    width: '47.5%',
+    backgroundColor: COLORS.white,
+    borderRadius: RADIUS.xl,
+    padding: 16,
+    ...SHADOWS.card,
+  },
+  popScoreBadge: { alignSelf: 'flex-end', borderRadius: RADIUS.md, paddingHorizontal: 10, paddingVertical: 5, flexDirection: 'row', alignItems: 'baseline', gap: 1, marginBottom: 10 },
+  popScoreNum: { fontSize: 22, fontWeight: '900', letterSpacing: -0.5 },
+  popScoreMax: { fontSize: 11, fontWeight: '700' },
+  popBody: { flex: 1, marginBottom: 12 },
+  popAnimal: { fontSize: 20, marginBottom: 6 },
+  popName: { fontSize: 13, fontWeight: '800', color: COLORS.text, lineHeight: 18, marginBottom: 4 },
+  popBrand: { fontSize: 11, color: COLORS.textSecondary, fontWeight: '600' },
+  popBarTrack: { height: 5, backgroundColor: COLORS.borderLight, borderRadius: 3, overflow: 'hidden', marginBottom: 6 },
+  popBarFill: { height: '100%', borderRadius: 3 },
+  popBarRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  popLabel: { fontSize: 11, fontWeight: '800' },
+  popScanBadge: { flexDirection: 'row', alignItems: 'center', gap: 3 },
+  popScanCount: { fontSize: 10, color: COLORS.textTertiary, fontWeight: '600' },
 
   // Banner — premium CTA
   bannerSection: { marginTop: 32 },

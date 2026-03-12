@@ -84,6 +84,54 @@ exports.getScanHistory = async (req, res, next) => {
   }
 };
 
+// @desc    Produits les plus scannés (publique)
+// @route   GET /api/products/popular
+exports.getPopularProducts = async (req, res, next) => {
+  try {
+    const limit = parseInt(req.query.limit) || 12;
+    // Agréger ScanHistory pour compter les scans par produit
+    const popular = await ScanHistory.aggregate([
+      { $group: { _id: '$product', scanCount: { $sum: 1 } } },
+      { $sort: { scanCount: -1 } },
+      { $limit: limit },
+      { $lookup: {
+          from: 'products',
+          localField: '_id',
+          foreignField: '_id',
+          as: 'product'
+      }},
+      { $unwind: '$product' },
+      { $project: {
+          _id: '$product._id',
+          name: '$product.name',
+          brand: '$product.brand',
+          nutritionScore: '$product.nutritionScore',
+          category: '$product.category',
+          targetAnimal: '$product.targetAnimal',
+          image: '$product.image',
+          scanCount: 1
+      }}
+    ]);
+
+    // Fallback: si pas assez de scans, compléter avec les mieux notés
+    if (popular.length < 6) {
+      const topRated = await Product.find({})
+        .sort({ nutritionScore: -1 })
+        .limit(limit)
+        .select('name brand nutritionScore category targetAnimal image');
+      const existingIds = new Set(popular.map(p => p._id.toString()));
+      const extras = topRated
+        .filter(p => !existingIds.has(p._id.toString()))
+        .map(p => ({ ...p.toObject(), scanCount: 0 }));
+      popular.push(...extras.slice(0, limit - popular.length));
+    }
+
+    res.json({ success: true, count: popular.length, products: popular });
+  } catch (error) {
+    next(error);
+  }
+};
+
 // @desc    Rechercher des produits
 // @route   GET /api/products/search?q=
 exports.searchProducts = async (req, res, next) => {
