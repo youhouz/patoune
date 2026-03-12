@@ -59,7 +59,7 @@ const SplashLoader = () => {
         <View style={styles.pawCircle}>
           <PawIcon size={48} color="#FFF" />
         </View>
-        <Text style={styles.splashLogo}>patoune</Text>
+        <Text style={styles.splashLogo}>pépète.</Text>
         <Text style={styles.splashTagline}>Le meilleur pour vos animaux</Text>
       </Animated.View>
 
@@ -167,11 +167,11 @@ const styles = StyleSheet.create({
     borderColor: 'rgba(255,255,255,0.3)',
   },
   splashLogo: {
-    fontSize: 48,
+    fontSize: 42,
     fontWeight: '900',
     color: '#FFF',
-    letterSpacing: 2,
-    textTransform: 'lowercase',
+    letterSpacing: -1,
+    textTransform: 'none',
     marginBottom: 8,
   },
   splashTagline: {

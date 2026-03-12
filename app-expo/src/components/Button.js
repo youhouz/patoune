@@ -1,5 +1,5 @@
-import React from 'react';
-import { TouchableOpacity, Text, StyleSheet, ActivityIndicator, View } from 'react-native';
+import React, { useRef } from 'react';
+import { TouchableOpacity, Text, StyleSheet, ActivityIndicator, View, Animated } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 const colors = require('../utils/colors');
 const { SHADOWS, RADIUS, FONT_SIZE } = require('../utils/colors');
@@ -18,14 +18,22 @@ const Button = ({
   const fontSizes = { sm: FONT_SIZE.sm, md: FONT_SIZE.md, lg: FONT_SIZE.lg };
   const sz = sizeStyles[size] || sizeStyles.md;
 
+  const scaleAnim = useRef(new Animated.Value(1)).current;
+  const spring = (val) => Animated.spring(scaleAnim, {
+    toValue: val, tension: 320, friction: 10, useNativeDriver: true,
+  }).start();
+
   if (variant === 'primary') {
     return (
       <TouchableOpacity
         onPress={onPress}
+        onPressIn={() => spring(0.96)}
+        onPressOut={() => spring(1)}
         disabled={loading || disabled}
-        activeOpacity={0.82}
+        activeOpacity={0.9}
         style={[fullWidth && { width: '100%' }, style]}
       >
+        <Animated.View style={{ transform: [{ scale: scaleAnim }] }}>
         <LinearGradient
           colors={disabled ? ['#D1D5DB', '#C6CAD0'] : ['#527A56', '#6B8F71']}
           start={{ x: 0, y: 0 }}
@@ -46,6 +54,7 @@ const Button = ({
             </View>
           )}
         </LinearGradient>
+        </Animated.View>
       </TouchableOpacity>
     );
   }
@@ -82,22 +91,26 @@ const Button = ({
 
   return (
     <TouchableOpacity
-      style={[
-        styles.button, sz,
-        {
-          backgroundColor: v.bg,
-          borderWidth: variant === 'outline' ? 1.5 : 0,
-          borderColor: v.border,
-        },
-        variant === 'secondary' && SHADOWS.xs,
-        disabled && styles.disabled,
-        fullWidth && { width: '100%' },
-        style,
-      ]}
+      style={[fullWidth && { width: '100%' }, style]}
       onPress={onPress}
+      onPressIn={() => spring(0.96)}
+      onPressOut={() => spring(1)}
       disabled={loading || disabled}
-      activeOpacity={0.7}
+      activeOpacity={0.9}
     >
+      <Animated.View
+        style={[
+          styles.button, sz,
+          {
+            backgroundColor: v.bg,
+            borderWidth: variant === 'outline' ? 1.5 : 0,
+            borderColor: v.border,
+          },
+          variant === 'secondary' && SHADOWS.xs,
+          disabled && styles.disabled,
+          { transform: [{ scale: scaleAnim }] },
+        ]}
+      >
       {loading ? (
         <ActivityIndicator color={v.textColor} size="small" />
       ) : (
@@ -108,6 +121,7 @@ const Button = ({
           </Text>
         </View>
       )}
+      </Animated.View>
     </TouchableOpacity>
   );
 };

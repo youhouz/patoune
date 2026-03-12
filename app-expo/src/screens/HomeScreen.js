@@ -367,7 +367,7 @@ const HomeScreen = ({ navigation }) => {
 };
 
 const s = StyleSheet.create({
-  container: { flex: 1, backgroundColor: COLORS.background },
+  container: { flex: 1, backgroundColor: '#FAF6EE' },
   scrollContent: { paddingBottom: 24 },
 
   // Hero — fluid gradient
@@ -397,8 +397,8 @@ const s = StyleSheet.create({
   heroTop: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 },
   heroGreetBox: {},
   heroGreetRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 4 },
-  greeting: { fontSize: FONT_SIZE.sm, color: 'rgba(255,255,255,0.88)', fontWeight: '600' },
-  userName: { fontSize: FONT_SIZE['3xl'], fontWeight: '800', color: '#FFF', letterSpacing: -0.8 },
+  greeting: { fontSize: 12, color: 'rgba(255,255,255,0.82)', fontWeight: '700', letterSpacing: 1.8, textTransform: 'uppercase' },
+  userName: { fontSize: 38, fontWeight: '900', color: '#FFF', letterSpacing: -1.2, marginTop: 2 },
   avatarBtn: {
     width: 52, height: 52, borderRadius: 26,
     backgroundColor: 'rgba(255,255,255,0.18)',
@@ -416,7 +416,7 @@ const s = StyleSheet.create({
 
   // Section header
   sectionHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 },
-  sectionTitle: { fontSize: FONT_SIZE.lg, fontWeight: '800', color: COLORS.text, letterSpacing: -0.3 },
+  sectionTitle: { fontSize: 22, fontWeight: '900', color: COLORS.text, letterSpacing: -0.6 },
   seeAll: { fontSize: FONT_SIZE.sm, fontWeight: '700', color: COLORS.primary },
 
   // Pets
@@ -466,7 +466,7 @@ const s = StyleSheet.create({
   statsSection: { marginTop: 32 },
   statsCard: {
     backgroundColor: COLORS.white, borderRadius: RADIUS.xl,
-    paddingVertical: 24, paddingHorizontal: 8,
+    paddingVertical: 28, paddingHorizontal: 8,
     flexDirection: 'row', justifyContent: 'space-around',
     ...SHADOWS.card, marginTop: 16,
   },
@@ -476,8 +476,8 @@ const s = StyleSheet.create({
     width: 48, height: 48, borderRadius: RADIUS.md,
     alignItems: 'center', justifyContent: 'center', marginBottom: 10,
   },
-  statValue: { fontSize: FONT_SIZE['2xl'], fontWeight: '800', letterSpacing: -0.5 },
-  statLabel: { fontSize: FONT_SIZE['2xs'], color: COLORS.textSecondary, fontWeight: '500', marginTop: 4, textAlign: 'center', lineHeight: 15 },
+  statValue: { fontSize: 34, fontWeight: '900', letterSpacing: -1 },
+  statLabel: { fontSize: FONT_SIZE['2xs'], color: COLORS.textSecondary, fontWeight: '600', marginTop: 4, textAlign: 'center', lineHeight: 15 },
 
   // Booking — premium gradient
   bookingSection: { marginTop: 32 },
