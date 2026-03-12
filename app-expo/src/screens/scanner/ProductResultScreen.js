@@ -56,11 +56,11 @@ const getRiskIconName = (risk) => {
 };
 
 const getScoreGradient = (score) => {
-  if (score >= 80) return [COLORS.scoreExcellent, '#6B8F71'];
-  if (score >= 60) return [COLORS.scoreGood, '#8CB092'];
-  if (score >= 40) return [COLORS.scoreMediocre, '#D4AD86'];
-  if (score >= 20) return [COLORS.scoreBad, '#C4956A'];
-  return [COLORS.scoreVeryBad, '#B86B4A'];
+  if (score >= 80) return [COLORS.scoreExcellent, COLORS.primaryDeep];
+  if (score >= 60) return [COLORS.scoreGood, COLORS.secondary];
+  if (score >= 40) return [COLORS.scoreMediocre, '#B45309'];
+  if (score >= 20) return [COLORS.scoreBad, '#92400E'];
+  return [COLORS.scoreVeryBad, '#7F1D1D'];
 };
 
 const DETAIL_ICONS = {

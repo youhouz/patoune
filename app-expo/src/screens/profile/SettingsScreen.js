@@ -125,10 +125,10 @@ const SettingsScreen = ({ navigation }) => {
       <View
         style={[
           styles.settingIconContainer,
-          { backgroundColor: (accentColor || '#6B8F71') + '15' },
+          { backgroundColor: (accentColor || '#00E676') + '15' },
         ]}
       >
-        <Feather name={icon} size={18} color={accentColor || '#6B8F71'} />
+        <Feather name={icon} size={18} color={accentColor || '#00E676'} />
       </View>
       <View style={styles.settingInfo}>
         <Text style={styles.settingLabel}>{label}</Text>
@@ -141,9 +141,9 @@ const SettingsScreen = ({ navigation }) => {
         onValueChange={onValueChange}
         trackColor={{
           false: colors.border,
-          true: (accentColor || '#6B8F71') + '70',
+          true: (accentColor || '#00E676') + '70',
         }}
-        thumbColor={value ? accentColor || '#6B8F71' : '#f4f3f4'}
+        thumbColor={value ? accentColor || '#00E676' : '#f4f3f4'}
         ios_backgroundColor={colors.border}
       />
     </View>
@@ -204,7 +204,7 @@ const SettingsScreen = ({ navigation }) => {
                 <View style={styles.accountHeader}>
                   <View style={styles.accountAvatar}>
                     <LinearGradient
-                      colors={['#527A56', '#6B8F71']}
+                      colors={['#00C853', '#00E676']}
                       start={{ x: 0, y: 0 }}
                       end={{ x: 1, y: 1 }}
                       style={styles.accountAvatarGradient}
@@ -284,7 +284,7 @@ const SettingsScreen = ({ navigation }) => {
                     colors={
                       loading
                         ? [colors.textLight, colors.textTertiary]
-                        : ['#527A56', '#6B8F71']
+                        : ['#00C853', '#00E676']
                     }
                     start={{ x: 0, y: 0 }}
                     end={{ x: 1, y: 0 }}
@@ -313,7 +313,7 @@ const SettingsScreen = ({ navigation }) => {
                   description: 'Recevoir les notifications sur votre appareil',
                   value: notifPush,
                   onValueChange: setNotifPush,
-                  accentColor: '#6B8F71',
+                  accentColor: '#00E676',
                 })}
                 {renderSettingRow({
                   icon: 'camera',
@@ -321,7 +321,7 @@ const SettingsScreen = ({ navigation }) => {
                   description: 'Résultats de vos scans de produits',
                   value: notifScans,
                   onValueChange: setNotifScans,
-                  accentColor: '#527A56',
+                  accentColor: '#00C853',
                 })}
                 {renderSettingRow({
                   icon: 'calendar',
@@ -329,7 +329,7 @@ const SettingsScreen = ({ navigation }) => {
                   description: 'Rappels pour vos réservations',
                   value: notifBookings,
                   onValueChange: setNotifBookings,
-                  accentColor: '#C4956A',
+                  accentColor: '#FBBF24',
                 })}
                 {renderSettingRow({
                   icon: 'message-circle',
@@ -337,7 +337,7 @@ const SettingsScreen = ({ navigation }) => {
                   description: 'Nouveaux messages de gardiens',
                   value: notifMessages,
                   onValueChange: setNotifMessages,
-                  accentColor: '#8CB092',
+                  accentColor: '#22D3EE',
                   isLast: true,
                 })}
               </View>
@@ -351,7 +351,7 @@ const SettingsScreen = ({ navigation }) => {
                 <View style={styles.aboutBranding}>
                   <View style={styles.aboutLogoContainer}>
                     <LinearGradient
-                      colors={['#527A56', '#6B8F71']}
+                      colors={['#00C853', '#00E676']}
                       start={{ x: 0, y: 0 }}
                       end={{ x: 1, y: 1 }}
                       style={styles.aboutLogoGradient}
@@ -535,7 +535,7 @@ const styles = StyleSheet.create({
     fontWeight: '400',
   },
   sitterTag: {
-    backgroundColor: '#527A5615',
+    backgroundColor: 'rgba(0,200,83,0.08)',
     paddingHorizontal: SPACING.md,
     paddingVertical: SPACING.xs,
     borderRadius: RADIUS.full,
@@ -543,7 +543,7 @@ const styles = StyleSheet.create({
   sitterTagText: {
     fontSize: FONT_SIZE.xs,
     fontWeight: '700',
-    color: '#527A56',
+    color: '#00C853',
   },
   accountDivider: {
     height: 1,
@@ -597,7 +597,7 @@ const styles = StyleSheet.create({
     width: 22,
     height: 22,
     borderRadius: 11,
-    backgroundColor: '#527A56',
+    backgroundColor: '#00C853',
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -607,7 +607,7 @@ const styles = StyleSheet.create({
     borderRadius: RADIUS.xl,
     overflow: 'hidden',
     marginTop: SPACING.base,
-    ...SHADOWS.glow('#527A56'),
+    ...SHADOWS.glow('#00C853'),
   },
   saveGradient: {
     flexDirection: 'row',

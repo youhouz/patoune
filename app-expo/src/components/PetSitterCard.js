@@ -24,7 +24,7 @@ const StarRating = ({ value = 0, count, size = 13 }) => {
   for (let i = 0; i < 5; i++) {
     if (i < fullStars || (i === fullStars && hasHalf)) {
       stars.push(
-        <Feather key={i} name="star" size={size} color="#C4956A" />
+        <Feather key={i} name="star" size={size} color="#FBBF24" />
       );
     } else {
       stars.push(

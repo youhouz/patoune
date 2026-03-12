@@ -16,8 +16,8 @@ export const PawIcon = ({ size = 32, color, gradient = false }) => (
     {gradient && (
       <Defs>
         <SvgGradient id="pawGrad" x1="0" y1="0" x2="64" y2="64" gradientUnits="userSpaceOnUse">
-          <Stop offset="0" stopColor="#527A56" />
-          <Stop offset="1" stopColor="#8CB092" />
+          <Stop offset="0" stopColor="#00C853" />
+          <Stop offset="1" stopColor="#00E676" />
         </SvgGradient>
       </Defs>
     )}

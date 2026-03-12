@@ -1,189 +1,230 @@
-import React, { useState } from 'react';
+// ═══════════════════════════════════════════════════════════════════════════
+// Pépète v7.0 — RegisterScreen (Dark Premium 2027)
+// ═══════════════════════════════════════════════════════════════════════════
+import React, { useState, useRef, useEffect } from 'react';
 import {
   View, Text, TextInput, TouchableOpacity,
-  StyleSheet, KeyboardAvoidingView, Platform, ScrollView, Alert, StatusBar
+  StyleSheet, KeyboardAvoidingView, Platform, ScrollView,
+  StatusBar, Animated,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Feather } from '@expo/vector-icons';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAuth } from '../../context/AuthContext';
 import Button from '../../components/Button';
 import useResponsive from '../../hooks/useResponsive';
-const colors = require('../../utils/colors');
-const { RADIUS, SPACING } = require('../../utils/colors');
+import { showAlert } from '../../utils/alert';
+const { COLORS, RADIUS, FONT_SIZE } = require('../../utils/colors');
 
-const InputField = ({ label, icon, value, onChangeText, placeholder, focusedField, fieldName, setFocusedField, ...props }) => (
-  <View style={styles.fieldGroup}>
-    <Text style={styles.label}>{label}</Text>
-    <View style={[styles.inputWrapper, focusedField === fieldName && styles.inputFocused]}>
-      <Feather name={icon} size={18} color={focusedField === fieldName ? colors.primary : colors.textTertiary} style={{ marginRight: 12 }} />
-      <TextInput
-        style={styles.input}
-        value={value}
-        onChangeText={onChangeText}
-        placeholder={placeholder}
-        placeholderTextColor={colors.placeholder}
-        onFocus={() => setFocusedField(fieldName)}
-        onBlur={() => setFocusedField(null)}
-        {...props}
-      />
+// ── Premium dark input field (re-used pattern)
+const DarkInput = ({ label, icon, value, onChangeText, placeholder, secureTextEntry, toggle, keyboardType, autoCapitalize }) => {
+  const [focused, setFocused] = useState(false);
+  const borderAnim = useRef(new Animated.Value(0)).current;
+
+  const onFocus = () => {
+    setFocused(true);
+    Animated.timing(borderAnim, { toValue: 1, duration: 220, useNativeDriver: false }).start();
+  };
+  const onBlur  = () => {
+    setFocused(false);
+    Animated.timing(borderAnim, { toValue: 0, duration: 220, useNativeDriver: false }).start();
+  };
+
+  const borderColor = borderAnim.interpolate({
+    inputRange: [0, 1],
+    outputRange: [COLORS.border, COLORS.primary],
+  });
+
+  return (
+    <View style={s.group}>
+      <Text style={s.label}>{label}</Text>
+      <Animated.View style={[s.wrapper, { borderColor }]}>
+        <Feather name={icon} size={18} color={focused ? COLORS.primary : COLORS.textTertiary} style={{ marginRight: 12 }} />
+        <TextInput
+          style={s.input}
+          value={value}
+          onChangeText={onChangeText}
+          placeholder={placeholder}
+          placeholderTextColor={COLORS.placeholder}
+          secureTextEntry={secureTextEntry}
+          keyboardType={keyboardType || 'default'}
+          autoCapitalize={autoCapitalize || 'none'}
+          autoCorrect={false}
+          onFocus={onFocus}
+          onBlur={onBlur}
+        />
+        {toggle && (
+          <TouchableOpacity onPress={toggle.onPress} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
+            <Feather name={toggle.icon} size={18} color={COLORS.textTertiary} />
+          </TouchableOpacity>
+        )}
+      </Animated.View>
     </View>
-  </View>
-);
+  );
+};
 
+const s = StyleSheet.create({
+  group: { marginBottom: 14 },
+  label: { fontSize: 13, fontWeight: '600', color: COLORS.textSecondary, marginBottom: 8, letterSpacing: 0.3 },
+  wrapper: {
+    flexDirection: 'row', alignItems: 'center',
+    backgroundColor: COLORS.surfaceHigh,
+    borderRadius: RADIUS.lg,
+    borderWidth: 1.5,
+    paddingHorizontal: 16,
+    height: 56,
+  },
+  input: { flex: 1, fontSize: 16, color: COLORS.text, paddingVertical: 0, fontWeight: '500' },
+});
+
+// ═══════════════════════════════════════════════════════════
 const RegisterScreen = ({ navigation }) => {
   const { register } = useAuth();
   const { isTablet, contentWidth } = useResponsive();
-  const [name, setName] = useState('');
-  const [email, setEmail] = useState('');
-  const [phone, setPhone] = useState('');
-  const [password, setPassword] = useState('');
+  const insets = useSafeAreaInsets();
+
+  const [name,            setName]            = useState('');
+  const [email,           setEmail]           = useState('');
+  const [phone,           setPhone]           = useState('');
+  const [password,        setPassword]        = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-  const [loading, setLoading] = useState(false);
-  const [focusedField, setFocusedField] = useState(null);
+  const [loading,         setLoading]         = useState(false);
+  const [showPwd,         setShowPwd]         = useState(false);
+  const [showConfirm,     setShowConfirm]     = useState(false);
+
+  const fadeIn  = useRef(new Animated.Value(0)).current;
+  const slideUp = useRef(new Animated.Value(40)).current;
   const formMaxWidth = isTablet ? Math.min(contentWidth, 480) : undefined;
+
+  useEffect(() => {
+    Animated.parallel([
+      Animated.timing(fadeIn,  { toValue: 1, duration: 500, useNativeDriver: true }),
+      Animated.spring(slideUp, { toValue: 0, tension: 50, friction: 8, useNativeDriver: true }),
+    ]).start();
+  }, []);
 
   const handleRegister = async () => {
     if (!name || !email || !password || !confirmPassword) {
-      Alert.alert('Champs manquants', 'Remplis tous les champs obligatoires');
+      showAlert('Oups !', 'Remplis tous les champs obligatoires');
       return;
     }
     if (password !== confirmPassword) {
-      Alert.alert('Oups !', 'Les mots de passe ne correspondent pas');
+      showAlert('Erreur', 'Les mots de passe ne correspondent pas');
       return;
     }
     if (password.length < 6) {
-      Alert.alert('Mot de passe trop court', 'Minimum 6 caractères requis');
+      showAlert('Mot de passe trop court', 'Minimum 6 caractères');
       return;
     }
     setLoading(true);
-    const result = await register(name.trim(), email.trim().toLowerCase(), password, phone);
+    const result = await register({ name, email: email.trim().toLowerCase(), phone, password });
     setLoading(false);
-    if (!result.success) {
-      Alert.alert('Erreur', result.error);
-    }
+    if (!result.success) showAlert('Inscription impossible', result.error);
   };
 
-  return (
-    <View style={styles.container}>
-      <StatusBar barStyle="light-content" />
+  const pwdStrength = password.length === 0 ? 0 : password.length < 6 ? 1 : password.length < 10 ? 2 : 3;
+  const pwdColor = [COLORS.border, COLORS.error, COLORS.warning, COLORS.primary][pwdStrength];
+  const pwdLabel = ['', 'Faible', 'Moyen', 'Fort'][pwdStrength];
 
-      {/* Single ScrollView wrapping header + form — ensures scroll works on web */}
+  return (
+    <View style={styles.root}>
+      <StatusBar barStyle="light-content" backgroundColor="transparent" translucent />
+
+      {/* Ambient glow */}
+      <LinearGradient
+        colors={[COLORS.primaryGlow, 'transparent']}
+        style={styles.glow}
+        pointerEvents="none"
+      />
+
       <KeyboardAvoidingView
         style={{ flex: 1 }}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       >
         <ScrollView
-          contentContainerStyle={styles.scroll}
+          style={{ flex: 1 }}
+          contentContainerStyle={[styles.scroll, { paddingBottom: Math.max(100, insets.bottom + 40) }]}
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
           bounces={true}
         >
-          {/* ── Gradient Header (scrolls with content) ── */}
-          <LinearGradient
-            colors={['#527A56', '#6B8F71', '#8CB092']}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 1 }}
-            style={styles.headerGradient}
-          >
-            <View style={styles.circle1} pointerEvents="none" />
-            <View style={styles.circle2} pointerEvents="none" />
-            <TouchableOpacity
-              onPress={() => navigation.goBack()}
-              style={styles.backBtn}
-              hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-            >
-              <Feather name="arrow-left" size={22} color="#FFF" />
-            </TouchableOpacity>
-            <View style={styles.headerContent}>
-              <Text style={styles.headerTitle}>Rejoins Pépète !</Text>
-              <Text style={styles.headerSub}>Crée ton compte en 30 secondes</Text>
-            </View>
-          </LinearGradient>
+          <Animated.View style={[
+            styles.inner,
+            formMaxWidth ? { maxWidth: formMaxWidth, alignSelf: 'center', width: '100%' } : null,
+            { opacity: fadeIn, transform: [{ translateY: slideUp }] },
+          ]}>
 
-          {/* ── Form Body ── */}
-          <View style={[styles.formBody, formMaxWidth ? { maxWidth: formMaxWidth, alignSelf: 'center', width: '100%' } : null]}>
-          {/* Progress dots */}
-          <View style={styles.progress}>
-            <View style={[styles.dot, styles.dotActive]} />
-            <View style={styles.dotLine} />
-            <View style={[styles.dot, (email && name) ? styles.dotActive : null]} />
-            <View style={styles.dotLine} />
-            <View style={[styles.dot, password ? styles.dotActive : null]} />
-          </View>
-
-          <InputField
-            label="Nom complet" icon="user" fieldName="name"
-            value={name} onChangeText={setName} placeholder="Ton prénom et nom"
-            focusedField={focusedField} setFocusedField={setFocusedField}
-            autoCapitalize="words"
-          />
-
-          <InputField
-            label="Email" icon="mail" fieldName="email"
-            value={email} onChangeText={setEmail} placeholder="ton@email.com"
-            focusedField={focusedField} setFocusedField={setFocusedField}
-            keyboardType="email-address" autoCapitalize="none"
-          />
-
-          <InputField
-            label="Téléphone (optionnel)" icon="phone" fieldName="phone"
-            value={phone} onChangeText={setPhone} placeholder="06 12 34 56 78"
-            focusedField={focusedField} setFocusedField={setFocusedField}
-            keyboardType="phone-pad"
-          />
-
-          <InputField
-            label="Mot de passe" icon="lock" fieldName="password"
-            value={password} onChangeText={setPassword} placeholder="Minimum 6 caractères"
-            focusedField={focusedField} setFocusedField={setFocusedField}
-            secureTextEntry
-          />
-
-          <InputField
-            label="Confirmer le mot de passe" icon="shield" fieldName="confirm"
-            value={confirmPassword} onChangeText={setConfirmPassword} placeholder="Retape ton mot de passe"
-            focusedField={focusedField} setFocusedField={setFocusedField}
-            secureTextEntry
-          />
-
-          {/* Password strength */}
-          {password.length > 0 && (
-            <View style={styles.strengthRow}>
-              <View style={styles.strengthBar}>
-                <View style={[
-                  styles.strengthFill,
-                  {
-                    width: password.length < 6 ? '33%' : password.length < 10 ? '66%' : '100%',
-                    backgroundColor: password.length < 6 ? colors.error : password.length < 10 ? colors.warning : colors.success,
-                  }
-                ]} />
+            {/* Header */}
+            <View style={styles.header}>
+              <TouchableOpacity
+                style={styles.backBtn}
+                onPress={() => navigation.goBack()}
+                hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+              >
+                <Feather name="arrow-left" size={20} color={COLORS.text} />
+              </TouchableOpacity>
+              <View style={styles.headerText}>
+                <Text style={styles.title}>Créer un compte</Text>
+                <Text style={styles.subtitle}>Rejoins Pépète — C'est gratuit</Text>
               </View>
-              <Text style={[styles.strengthText, {
-                color: password.length < 6 ? colors.error : password.length < 10 ? colors.warning : colors.success
-              }]}>
-                {password.length < 6 ? 'Faible' : password.length < 10 ? 'Moyen' : 'Fort'}
-              </Text>
             </View>
-          )}
 
-          <Button
-            title="Créer mon compte"
-            onPress={handleRegister}
-            loading={loading}
-            style={{ marginTop: 12 }}
-            size="lg"
-          />
+            {/* Progress */}
+            <View style={styles.progressBar}>
+              <View style={[styles.progressFill, {
+                width: `${Math.min(100, ((name ? 20 : 0) + (email ? 20 : 0) + (phone ? 10 : 0) + (password.length >= 6 ? 25 : 0) + (confirmPassword && confirmPassword === password ? 25 : 0)))}%`,
+              }]} />
+            </View>
 
-          <TouchableOpacity
-            style={styles.loginLink}
-            onPress={() => navigation.goBack()}
-          >
-            <Text style={styles.loginText}>
-              Déjà un compte ?{' '}
-              <Text style={styles.loginBold}>Se connecter</Text>
-            </Text>
-          </TouchableOpacity>
-          </View>
+            {/* Form card */}
+            <View style={styles.card}>
+              <DarkInput label="Nom complet *" icon="user" value={name} onChangeText={setName} placeholder="Ton prénom et nom" autoCapitalize="words" />
+              <DarkInput label="Email *" icon="mail" value={email} onChangeText={setEmail} placeholder="ton@email.com" keyboardType="email-address" />
+              <DarkInput label="Téléphone (optionnel)" icon="phone" value={phone} onChangeText={setPhone} placeholder="06 12 34 56 78" keyboardType="phone-pad" />
+              <DarkInput
+                label="Mot de passe *" icon="lock"
+                value={password} onChangeText={setPassword}
+                placeholder="Minimum 6 caractères"
+                secureTextEntry={!showPwd}
+                toggle={{ icon: showPwd ? 'eye-off' : 'eye', onPress: () => setShowPwd(!showPwd) }}
+              />
+
+              {/* Password strength */}
+              {password.length > 0 && (
+                <View style={styles.strengthRow}>
+                  <View style={styles.strengthTrack}>
+                    <View style={[styles.strengthFill, {
+                      width: `${[0, 33, 66, 100][pwdStrength]}%`,
+                      backgroundColor: pwdColor,
+                    }]} />
+                  </View>
+                  <Text style={[styles.strengthLabel, { color: pwdColor }]}>{pwdLabel}</Text>
+                </View>
+              )}
+
+              <DarkInput
+                label="Confirmer le mot de passe *" icon="shield"
+                value={confirmPassword} onChangeText={setConfirmPassword}
+                placeholder="Retape ton mot de passe"
+                secureTextEntry={!showConfirm}
+                toggle={{ icon: showConfirm ? 'eye-off' : 'eye', onPress: () => setShowConfirm(!showConfirm) }}
+              />
+
+              <Button
+                title="Créer mon compte"
+                onPress={handleRegister}
+                loading={loading}
+                size="lg"
+                style={{ marginTop: 8 }}
+              />
+            </View>
+
+            {/* Back to login */}
+            <TouchableOpacity style={styles.loginBtn} onPress={() => navigation.goBack()}>
+              <Text style={styles.loginText}>Déjà un compte ?</Text>
+              <Text style={styles.loginBold}> Se connecter →</Text>
+            </TouchableOpacity>
+          </Animated.View>
         </ScrollView>
       </KeyboardAvoidingView>
     </View>
@@ -191,166 +232,59 @@ const RegisterScreen = ({ navigation }) => {
 };
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.white,
-  },
-  headerGradient: {
-    paddingTop: Platform.OS === 'ios' ? 60 : 48,
-    paddingBottom: 44,
-    paddingHorizontal: 24,
-    overflow: 'hidden',
-  },
-  circle1: {
+  root: { flex: 1, backgroundColor: COLORS.bg },
+  glow: {
     position: 'absolute',
-    top: -40, right: -40,
-    width: 160, height: 160, borderRadius: 80,
-    backgroundColor: 'rgba(255,255,255,0.08)',
+    top: -100, left: -100, right: -100,
+    height: 400,
+    opacity: 0.5,
   },
-  circle2: {
-    position: 'absolute',
-    bottom: 10, left: -50,
-    width: 180, height: 180, borderRadius: 90,
-    backgroundColor: 'rgba(255,255,255,0.06)',
-  },
+  scroll: { flexGrow: 1, paddingHorizontal: 24, paddingTop: 60, paddingBottom: 40 },
+  inner: {},
+
+  header: { flexDirection: 'row', alignItems: 'flex-start', gap: 16, marginBottom: 28 },
   backBtn: {
-    width: 44,
-    height: 44,
+    width: 44, height: 44,
     borderRadius: 22,
-    backgroundColor: 'rgba(255,255,255,0.2)',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 14,
-  },
-  headerContent: {
-    zIndex: 1,
-  },
-  headerTitle: {
-    fontSize: 30,
-    fontWeight: '900',
-    color: '#FFF',
-    letterSpacing: -0.3,
-  },
-  headerSub: {
-    fontSize: 16,
-    color: 'rgba(255,255,255,0.88)',
-    marginTop: 6,
-    fontWeight: '500',
-  },
-  headerCurve: {
-    position: 'absolute',
-    bottom: -1,
-    left: 0,
-    right: 0,
-    height: 28,
-    backgroundColor: colors.white,
-    borderTopLeftRadius: 28,
-    borderTopRightRadius: 28,
-  },
-  scroll: {
-    flexGrow: 1,
-  },
-  formBody: {
-    paddingHorizontal: 24,
-    paddingTop: 24,
-    paddingBottom: 48,
-  },
-  progress: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 26,
+    backgroundColor: COLORS.surfaceHigh,
+    borderWidth: 1, borderColor: COLORS.border,
+    alignItems: 'center', justifyContent: 'center',
     marginTop: 4,
   },
-  dot: {
-    width: 10,
-    height: 10,
-    borderRadius: 5,
-    backgroundColor: colors.border,
-  },
-  dotActive: {
-    backgroundColor: colors.primary,
-    width: 12,
-    height: 12,
-    borderRadius: 6,
-  },
-  dotLine: {
-    width: 40,
-    height: 2,
-    backgroundColor: colors.border,
-    marginHorizontal: 6,
-  },
-  fieldGroup: {
-    marginBottom: 18,
-  },
-  label: {
-    fontSize: 15,
-    fontWeight: '700',
-    color: colors.text,
-    marginBottom: 9,
-    marginLeft: 2,
-  },
-  inputWrapper: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: colors.background,
-    borderRadius: RADIUS.lg,
-    borderWidth: 2,
-    borderColor: colors.border,
-    paddingHorizontal: 16,
-    height: 60,
-  },
-  inputFocused: {
-    borderColor: colors.primary,
-    backgroundColor: colors.primarySoft,
-  },
-  input: {
-    flex: 1,
-    fontSize: 16,
-    color: colors.text,
-    paddingVertical: 0,
-    fontWeight: '500',
-  },
-  strengthRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 8,
-    gap: 10,
-  },
-  strengthBar: {
-    flex: 1,
-    height: 5,
-    backgroundColor: colors.border,
-    borderRadius: 3,
+  headerText: { flex: 1 },
+  title: { fontSize: 28, fontWeight: '900', color: COLORS.text, letterSpacing: -1 },
+  subtitle: { fontSize: 15, color: COLORS.textSecondary, marginTop: 4 },
+
+  progressBar: {
+    height: 3,
+    backgroundColor: COLORS.border,
+    borderRadius: 2,
+    marginBottom: 28,
     overflow: 'hidden',
   },
-  strengthFill: {
-    height: '100%',
-    borderRadius: 3,
+  progressFill: {
+    height: 3,
+    backgroundColor: COLORS.primary,
+    borderRadius: 2,
   },
-  strengthText: {
-    fontSize: 13,
-    fontWeight: '700',
-  },
-  loginLink: {
-    alignItems: 'center',
-    marginTop: 20,
+
+  card: {
+    backgroundColor: COLORS.surfaceHigh,
+    borderRadius: RADIUS['2xl'],
+    borderWidth: 1,
+    borderColor: COLORS.border,
+    padding: 24,
     marginBottom: 20,
-    paddingVertical: 18,
-    backgroundColor: colors.primarySoft,
-    borderRadius: RADIUS.lg,
-    borderWidth: 1.5,
-    borderColor: colors.primary + '25',
   },
-  loginText: {
-    fontSize: 16,
-    color: colors.textSecondary,
-    fontWeight: '500',
-  },
-  loginBold: {
-    color: colors.primary,
-    fontWeight: '800',
-  },
+
+  strengthRow: { flexDirection: 'row', alignItems: 'center', gap: 10, marginTop: -6, marginBottom: 14 },
+  strengthTrack: { flex: 1, height: 4, backgroundColor: COLORS.border, borderRadius: 2, overflow: 'hidden' },
+  strengthFill: { height: 4, borderRadius: 2 },
+  strengthLabel: { fontSize: 12, fontWeight: '700', minWidth: 42 },
+
+  loginBtn: { flexDirection: 'row', justifyContent: 'center', paddingVertical: 14 },
+  loginText: { fontSize: 15, color: COLORS.textSecondary },
+  loginBold: { fontSize: 15, color: COLORS.primary, fontWeight: '700' },
 });
 
 export default RegisterScreen;

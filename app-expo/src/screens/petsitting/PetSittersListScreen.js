@@ -45,7 +45,7 @@ const StarRating = ({ rating, size = 14 }) => {
   const hasHalf = (rating || 0) - fullStars >= 0.5;
   for (let i = 0; i < 5; i++) {
     if (i < fullStars || (i === fullStars && hasHalf)) {
-      stars.push(<Feather key={i} name="star" size={size} color="#C4956A" />);
+      stars.push(<Feather key={i} name="star" size={size} color={colors.amber} />);
     } else {
       stars.push(<Feather key={i} name="star" size={size} color={colors.border} />);
     }
@@ -179,7 +179,7 @@ const PetSitterCard = ({ petsitter, onPress, index }) => {
               </Text>
               {petsitter.verified && (
                 <View style={styles.verifiedBadge}>
-                  <Feather name="check-circle" size={9} color="#527A56" />
+                  <Feather name="check-circle" size={9} color={colors.primary} />
                   <Text style={styles.verifiedBadgeText}>Verifie</Text>
                 </View>
               )}
@@ -764,11 +764,11 @@ const styles = StyleSheet.create({
     width: 20,
     height: 20,
     borderRadius: RADIUS.full,
-    backgroundColor: '#527A56',
+    backgroundColor: colors.primaryDark,
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 2.5,
-    borderColor: colors.white,
+    borderColor: colors.bg,
   },
   cardInfo: {
     flex: 1,
@@ -789,7 +789,7 @@ const styles = StyleSheet.create({
   verifiedBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#EFF5F0',
+    backgroundColor: colors.primarySoft,
     paddingHorizontal: SPACING.sm,
     paddingVertical: 2,
     borderRadius: RADIUS.xs,
@@ -798,7 +798,7 @@ const styles = StyleSheet.create({
   verifiedBadgeText: {
     fontSize: FONT_SIZE.xs,
     fontFamily: FONTS.bodySemiBold,
-    color: '#527A56',
+    color: colors.primary,
   },
   ratingRow: {
     flexDirection: 'row',

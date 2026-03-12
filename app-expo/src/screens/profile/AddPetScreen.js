@@ -24,18 +24,18 @@ const { SHADOWS, RADIUS, SPACING, FONT_SIZE } = require('../../utils/colors');
 const HEADER_PADDING_TOP = Platform.OS === 'ios' ? 56 : (StatusBar.currentHeight || 24) + 12;
 
 const SPECIES = [
-  { key: 'chien', label: 'Chien', letter: 'C', color: '#6B8F71' },
-  { key: 'chat', label: 'Chat', letter: 'Ch', color: '#527A56' },
-  { key: 'rongeur', label: 'Rongeur', letter: 'R', color: '#C4956A' },
-  { key: 'oiseau', label: 'Oiseau', letter: 'O', color: '#8CB092' },
-  { key: 'reptile', label: 'Reptile', letter: 'Re', color: '#527A56' },
-  { key: 'poisson', label: 'Poisson', letter: 'P', color: '#B8A88A' },
-  { key: 'autre', label: 'Autre', letter: '?', color: '#8A9A8C' },
+  { key: 'chien', label: 'Chien', letter: 'C', color: '#00E676' },
+  { key: 'chat', label: 'Chat', letter: 'Ch', color: '#00C853' },
+  { key: 'rongeur', label: 'Rongeur', letter: 'R', color: '#FBBF24' },
+  { key: 'oiseau', label: 'Oiseau', letter: 'O', color: '#22D3EE' },
+  { key: 'reptile', label: 'Reptile', letter: 'Re', color: '#00C853' },
+  { key: 'poisson', label: 'Poisson', letter: 'P', color: '#A78BFA' },
+  { key: 'autre', label: 'Autre', letter: '?', color: '#94A3B8' },
 ];
 
 const GENDERS = [
-  { key: 'male', label: 'Mâle', icon: '♂', color: '#8CB092', bgColor: '#EFF5F0' },
-  { key: 'femelle', label: 'Femelle', icon: '♀', color: '#C4956A', bgColor: '#FDF5ED' },
+  { key: 'male', label: 'Mâle', icon: '♂', color: '#22D3EE', bgColor: 'rgba(34,211,238,0.08)' },
+  { key: 'femelle', label: 'Femelle', icon: '♀', color: '#FBBF24', bgColor: 'rgba(251,191,36,0.08)' },
 ];
 
 const AddPetScreen = ({ navigation }) => {
@@ -169,7 +169,7 @@ const AddPetScreen = ({ navigation }) => {
                 {
                   width: `${progress * 100}%`,
                   backgroundColor:
-                    progress === 1 ? '#527A56' : '#6B8F71',
+                    progress === 1 ? '#00C853' : '#00E676',
                 },
               ]}
             />
@@ -199,7 +199,7 @@ const AddPetScreen = ({ navigation }) => {
                 colors={
                   selectedSpecies
                     ? [selectedSpecies.color, selectedSpecies.color + 'CC']
-                    : ['#6B8F71', '#8CB092']
+                    : ['#00E676', '#22D3EE']
                 }
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 1 }}
@@ -455,9 +455,9 @@ const AddPetScreen = ({ navigation }) => {
                   onValueChange={setVaccinated}
                   trackColor={{
                     false: colors.border,
-                    true: '#527A5670',
+                    true: '#00E676B3',
                   }}
-                  thumbColor={vaccinated ? '#527A56' : '#f4f3f4'}
+                  thumbColor={vaccinated ? '#00C853' : '#f4f3f4'}
                   ios_backgroundColor={colors.border}
                 />
               </View>
@@ -505,7 +505,7 @@ const AddPetScreen = ({ navigation }) => {
               colors={
                 loading
                   ? [colors.textLight, colors.textTertiary]
-                  : ['#6B8F71', '#8CB092']
+                  : ['#00E676', '#22D3EE']
               }
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 0 }}
@@ -835,7 +835,7 @@ const styles = StyleSheet.create({
     borderRadius: RADIUS.xl,
     overflow: 'hidden',
     marginTop: SPACING.sm,
-    ...SHADOWS.glow('#6B8F71'),
+    ...SHADOWS.glow('#00E676'),
   },
   submitButtonDisabled: {
     ...SHADOWS.sm,

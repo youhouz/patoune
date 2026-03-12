@@ -412,7 +412,7 @@ const ScanHistoryScreen = ({ navigation }) => {
       <View style={styles.container}>
         <StatusBar barStyle="light-content" translucent backgroundColor="transparent" />
         <LinearGradient
-          colors={['#7B8B6F', '#96A88A']}
+          colors={['#00C853', '#00E676']}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
           style={[styles.headerGradient, { paddingTop: insets.top + SPACING.md }]}
@@ -447,7 +447,7 @@ const ScanHistoryScreen = ({ navigation }) => {
 
       {/* Header — Premium */}
       <LinearGradient
-        colors={['#7B8B6F', '#8A9A7E', '#96A88A']}
+        colors={['#080B12', '#0E1118', '#141A27']}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
         style={[styles.headerGradient, { paddingTop: insets.top + SPACING.md }]}

@@ -47,7 +47,7 @@ const StarRating = ({ rating, size = 16, showValue = false, light = false }) => 
   const emptyColor = light ? 'rgba(255,255,255,0.3)' : colors.border;
   for (let i = 0; i < 5; i++) {
     if (i < fullStars || (i === fullStars && hasHalf)) {
-      stars.push(<Feather key={i} name="star" size={size} color="#C4956A" />);
+      stars.push(<Feather key={i} name="star" size={size} color="#FBBF24" />);
     } else {
       stars.push(<Feather key={i} name="star" size={size} color={emptyColor} />);
     }
@@ -59,7 +59,7 @@ const StarRating = ({ rating, size = 16, showValue = false, light = false }) => 
         <Text style={{
           fontSize: size - 2,
           fontFamily: FONTS.heading,
-          color: '#C4956A',
+          color: '#FBBF24',
           marginLeft: 4,
         }}>
           {(rating || 0).toFixed(1)}
@@ -75,7 +75,7 @@ const RatingBar = ({ stars, count, total }) => {
   return (
     <View style={styles.ratingBarRow}>
       <Text style={styles.ratingBarLabel}>{stars}</Text>
-      <Feather name="star" size={10} color="#C4956A" />
+      <Feather name="star" size={10} color="#FBBF24" />
       <View style={styles.ratingBarTrack}>
         <View style={[styles.ratingBarFill, { width: `${percentage}%` }]} />
       </View>
@@ -232,7 +232,7 @@ const PetSitterDetailScreen = ({ route, navigation }) => {
             {/* Verified Badge */}
             {petsitter.verified && (
               <View style={styles.heroVerifiedBadge}>
-                <Feather name="check-circle" size={12} color="#6B8F71" />
+                <Feather name="check-circle" size={12} color="#00E676" />
                 <Text style={styles.heroVerifiedBadgeText}>Profil verifie</Text>
               </View>
             )}
@@ -337,7 +337,7 @@ const PetSitterDetailScreen = ({ route, navigation }) => {
                         ) : null}
                       </View>
                       <View style={styles.serviceCheckmark}>
-                        <Feather name="check" size={12} color="#527A56" />
+                        <Feather name="check" size={12} color="#00C853" />
                       </View>
                     </View>
                   );
@@ -604,7 +604,7 @@ const styles = StyleSheet.create({
     width: 28,
     height: 28,
     borderRadius: RADIUS.full,
-    backgroundColor: '#527A56',
+    backgroundColor: '#00C853',
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 3,
@@ -643,7 +643,7 @@ const styles = StyleSheet.create({
   heroVerifiedBadgeText: {
     fontSize: FONT_SIZE.sm,
     fontFamily: FONTS.bodySemiBold,
-    color: '#6B8F71',
+    color: '#00E676',
   },
   statsRow: {
     flexDirection: 'row',
@@ -779,7 +779,7 @@ const styles = StyleSheet.create({
     width: 26,
     height: 26,
     borderRadius: RADIUS.full,
-    backgroundColor: '#EFF5F0',
+    backgroundColor: 'rgba(0,230,118,0.08)',
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -825,8 +825,8 @@ const styles = StyleSheet.create({
     borderColor: colors.border,
   },
   availabilityDayActive: {
-    backgroundColor: '#EFF5F0',
-    borderColor: '#527A56',
+    backgroundColor: 'rgba(0,230,118,0.08)',
+    borderColor: '#00C853',
   },
   availabilityDayText: {
     fontSize: FONT_SIZE.sm,
@@ -834,7 +834,7 @@ const styles = StyleSheet.create({
     color: colors.textTertiary,
   },
   availabilityDayTextActive: {
-    color: '#527A56',
+    color: '#00C853',
   },
   availabilityHint: {
     fontSize: FONT_SIZE.xs,
@@ -912,7 +912,7 @@ const styles = StyleSheet.create({
   },
   ratingBarFill: {
     height: '100%',
-    backgroundColor: '#C4956A',
+    backgroundColor: '#FBBF24',
     borderRadius: RADIUS.full,
   },
   ratingBarCount: {

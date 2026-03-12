@@ -1,10 +1,10 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { View, Text, StyleSheet, StatusBar, Animated, Platform } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useAuth } from '../context/AuthContext';
 import { PawIcon } from '../components/Logo';
+const { COLORS } = require('../utils/colors');
 import TabNavigator from './TabNavigator';
 import OnboardingScreen from '../screens/OnboardingScreen';
 import PWAInstallBanner from '../components/PWAInstallBanner';
@@ -48,27 +48,27 @@ const SplashLoader = () => {
   }, []);
 
   return (
-    <LinearGradient colors={['#527A56', '#6B8F71', '#8CB092']} style={styles.splash}>
-      <StatusBar barStyle="light-content" />
+    <View style={styles.splash}>
+      <StatusBar barStyle="light-content" backgroundColor="transparent" translucent />
 
-      {/* Decorative circles */}
-      <View style={styles.circle1} />
-      <View style={styles.circle2} />
+      {/* Ambient glow orbs */}
+      <View style={styles.orb1} />
+      <View style={styles.orb2} />
 
       <Animated.View style={[styles.logoWrap, { transform: [{ scale: logoScale }], opacity: logoOpacity }]}>
         <View style={styles.pawCircle}>
-          <PawIcon size={48} color="#FFF" />
+          <PawIcon size={46} color="#080B12" />
         </View>
-        <Text style={styles.splashLogo}>patoune</Text>
+        <Text style={styles.splashLogo}>Pépète</Text>
         <Text style={styles.splashTagline}>Le meilleur pour vos animaux</Text>
       </Animated.View>
 
       <View style={styles.dotsRow}>
         {[dot1, dot2, dot3].map((dot, i) => (
-          <Animated.View key={i} style={[styles.dot, { opacity: dot }]} />
+          <Animated.View key={i} style={[styles.dot, i === 1 && styles.dotMid, { opacity: dot }]} />
         ))}
       </View>
-    </LinearGradient>
+    </View>
   );
 };
 
@@ -133,50 +133,54 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
+    backgroundColor: '#080B12',
   },
-  circle1: {
+  orb1: {
     position: 'absolute',
-    top: -60,
+    top: -80,
+    left: '50%',
+    marginLeft: -120,
+    width: 240,
+    height: 240,
+    borderRadius: 120,
+    backgroundColor: 'rgba(0,230,118,0.06)',
+  },
+  orb2: {
+    position: 'absolute',
+    bottom: -100,
     right: -60,
-    width: 220,
-    height: 220,
-    borderRadius: 110,
-    backgroundColor: 'rgba(255,255,255,0.08)',
-  },
-  circle2: {
-    position: 'absolute',
-    bottom: -80,
-    left: -80,
     width: 280,
     height: 280,
     borderRadius: 140,
-    backgroundColor: 'rgba(255,255,255,0.06)',
+    backgroundColor: 'rgba(167,139,250,0.04)',
   },
   logoWrap: {
     alignItems: 'center',
   },
   pawCircle: {
-    width: 96,
-    height: 96,
-    borderRadius: 48,
-    backgroundColor: 'rgba(255,255,255,0.2)',
+    width: 100,
+    height: 100,
+    borderRadius: 50,
+    backgroundColor: '#00E676',
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: 20,
-    borderWidth: 2,
-    borderColor: 'rgba(255,255,255,0.3)',
+    marginBottom: 24,
+    shadowColor: '#00E676',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.50,
+    shadowRadius: 28,
+    elevation: 12,
   },
   splashLogo: {
-    fontSize: 48,
+    fontSize: 44,
     fontWeight: '900',
-    color: '#FFF',
-    letterSpacing: 2,
-    textTransform: 'lowercase',
+    color: '#F8FAFC',
+    letterSpacing: -1.5,
     marginBottom: 8,
   },
   splashTagline: {
     fontSize: 15,
-    color: 'rgba(255,255,255,0.85)',
+    color: 'rgba(248,250,252,0.55)',
     fontWeight: '500',
     letterSpacing: 0.3,
   },
@@ -186,10 +190,13 @@ const styles = StyleSheet.create({
     marginTop: 52,
   },
   dot: {
-    width: 10,
-    height: 10,
-    borderRadius: 5,
-    backgroundColor: '#FFF',
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: '#00E676',
+  },
+  dotMid: {
+    backgroundColor: '#A78BFA',
   },
 });
 
