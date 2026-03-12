@@ -32,6 +32,149 @@ const stackScreenOptions = {
     borderBottomWidth: 0,
   },
   headerTintColor: colors.primary,
+  headerTitleStyle: { fontWeight: '700', fontSize: 18, color: colors.text },
+  headerBackTitleVisible: false,
+  cardStyle: { backgroundColor: colors.background },
+};
+
+const PetSittingNavigator = () => {
+  const { user } = useAuth();
+  if (!user) return <GuestGateScreen />;
+  return (
+    <PetSittingStack.Navigator screenOptions={stackScreenOptions}>
+      <PetSittingStack.Screen name="PetSittersList" component={PetSittersListScreen} options={{ headerShown: false }} />
+      <PetSittingStack.Screen name="PetSitterDetail" component={PetSitterDetailScreen} options={{ headerShown: false }} />
+      <PetSittingStack.Screen name="Booking" component={BookingScreen} options={{ title: 'Réserver' }} />
+      <PetSittingStack.Screen name="Messages" component={MessagesScreen} options={{ title: 'Messages' }} />
+    </PetSittingStack.Navigator>
+  );
+};
+
+const ProfileNavigator = () => {
+  const { user } = useAuth();
+  if (!user) return <GuestGateScreen />;
+  return (
+    <ProfileStack.Navigator screenOptions={stackScreenOptions}>
+      <ProfileStack.Screen name="ProfileMain" component={ProfileScreen} options={{ headerShown: false }} />
+      <ProfileStack.Screen name="MyPets" component={MyPetsScreen} options={{ title: 'Mes Animaux' }} />
+      <ProfileStack.Screen name="AddPet" component={AddPetScreen} options={{ title: 'Nouvel Animal' }} />
+      <ProfileStack.Screen name="Settings" component={SettingsScreen} options={{ title: 'Réglages' }} />
+    </ProfileStack.Navigator>
+  );
+};
+
+const AuthStack = createStackNavigator();
+const AuthNavigatorStack = () => (
+  <AuthStack.Navigator screenOptions={{ headerShown: false }}>
+    <AuthStack.Screen name="Login" component={LoginScreen} />
+    <AuthStack.Screen name="Register" component={RegisterScreen} />
+  </AuthStack.Navigator>
+);
+
+// ─── 3 tabs visibles uniquement ──────────────────────────
+const VISIBLE_TABS = {
+  Accueil: { icon: 'home',     label: 'Accueil'  },
+  Scanner: { icon: 'maximize', label: 'Scanner'  },
+  Profil:  { icon: 'user',     label: 'Profil'   },
+};
+
+const TabIcon = ({ routeName, focused }) => {
+  const config = VISIBLE_TABS[routeName];
+  if (!config) return null;
+  return (
+    <View style={styles.tabItem}>
+      <Feather
+        name={config.icon}
+        size={23}
+        color={focused ? colors.primary : '#B0BAB3'}
+        strokeWidth={focused ? 2.5 : 1.8}
+      />
+      <Text style={[styles.tabLabel, focused && styles.tabLabelActive]}>
+        {config.label}
+      </Text>
+      {focused && <View style={styles.activeDot} />}
+    </View>
+  );
+};
+
+const HIDDEN = { tabBarButton: () => null };
+
+const TabNavigator = () => (
+  <Tab.Navigator
+    screenOptions={({ route }) => ({
+      headerShown: false,
+      tabBarIcon: ({ focused }) => <TabIcon routeName={route.name} focused={focused} />,
+      tabBarLabel: () => null,
+      tabBarStyle: {
+        height: Platform.OS === 'ios' ? 82 : 62,
+        paddingBottom: Platform.OS === 'ios' ? 24 : 0,
+        paddingTop: 0,
+        backgroundColor: '#FFFFFF',
+        borderTopWidth: 1,
+        borderTopColor: 'rgba(0,0,0,0.06)',
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: -2 },
+        shadowOpacity: 0.04,
+        shadowRadius: 8,
+        elevation: 6,
+      },
+    })}
+  >
+    {/* ── 3 onglets visibles ── */}
+    <Tab.Screen name="Accueil"  component={HomeScreen} />
+    <Tab.Screen name="Scanner"  component={ScannerNavigator} />
+    <Tab.Screen name="Profil"   component={ProfileNavigator} />
+
+    {/* ── Accessibles via navigation mais cachés de la tab bar ── */}
+    <Tab.Screen name="Garde"     component={PetSittingNavigator} options={HIDDEN} />
+    <Tab.Screen name="Assistant" component={AIAssistantScreen}   options={HIDDEN} />
+    <Tab.Screen name="AuthStack" component={AuthNavigatorStack}  options={{ ...HIDDEN, tabBarStyle: { display: 'none' } }} />
+  </Tab.Navigator>
+);
+
+const styles = StyleSheet.create({
+  tabItem: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingTop: 10,
+    gap: 4,
+    position: 'relative',
+  },
+  tabLabel: {
+    fontSize: 10,
+    fontWeight: '500',
+    color: '#B0BAB3',
+    letterSpacing: 0.2,
+  },
+  tabLabelActive: {
+    color: colors.primary,
+    fontWeight: '700',
+  },
+  activeDot: {
+    position: 'absolute',
+    top: 0,
+    width: 4,
+    height: 4,
+    borderRadius: 2,
+    backgroundColor: colors.primary,
+  },
+});
+
+export default TabNavigator;
+
+
+const Tab = createBottomTabNavigator();
+const PetSittingStack = createStackNavigator();
+const ProfileStack = createStackNavigator();
+
+const stackScreenOptions = {
+  headerStyle: {
+    backgroundColor: colors.white,
+    elevation: 0,
+    shadowOpacity: 0,
+    borderBottomWidth: 0,
+  },
+  headerTintColor: colors.primary,
   headerTitleStyle: {
     fontWeight: '700',
     fontSize: 18,
