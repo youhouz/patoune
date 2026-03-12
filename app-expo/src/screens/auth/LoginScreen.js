@@ -65,11 +65,14 @@ const LoginScreen = ({ navigation }) => {
       <KeyboardAvoidingView
         style={styles.formWrapper}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        enabled={Platform.OS === 'ios'}
       >
         <ScrollView
+          style={{ flex: 1 }}
           contentContainerStyle={styles.scroll}
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
+          bounces={Platform.OS !== 'web'}
         >
           <View style={formMaxWidth ? { maxWidth: formMaxWidth, alignSelf: 'center', width: '100%' } : null}>
           <Text style={styles.welcomeBack}>Content de vous revoir !</Text>

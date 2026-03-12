@@ -71,12 +71,14 @@ const RegisterScreen = ({ navigation }) => {
       <KeyboardAvoidingView
         style={{ flex: 1 }}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        enabled={Platform.OS === 'ios'}
       >
         <ScrollView
+          style={{ flex: 1 }}
           contentContainerStyle={styles.scroll}
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
-          bounces={true}
+          bounces={Platform.OS !== 'web'}
         >
           {/* ── Gradient Header (scrolls with content) ── */}
           <LinearGradient
