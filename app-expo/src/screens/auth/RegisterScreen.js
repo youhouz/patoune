@@ -67,38 +67,41 @@ const RegisterScreen = ({ navigation }) => {
     <View style={styles.container}>
       <StatusBar barStyle="light-content" />
 
-      <LinearGradient
-        colors={['#527A56', '#6B8F71', '#8CB092']}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1 }}
-        style={styles.headerGradient}
-      >
-        <View style={styles.circle1} />
-        <View style={styles.circle2} />
-        <TouchableOpacity
-          onPress={() => navigation.goBack()}
-          style={styles.backBtn}
-          hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-        >
-          <Feather name="arrow-left" size={22} color="#FFF" />
-        </TouchableOpacity>
-        <View style={styles.headerContent}>
-          <Text style={styles.headerTitle}>Rejoins Patoune !</Text>
-          <Text style={styles.headerSub}>Crée ton compte en 30 secondes</Text>
-        </View>
-        <View style={styles.headerCurve} />
-      </LinearGradient>
-
+      {/* Single ScrollView wrapping header + form — ensures scroll works on web */}
       <KeyboardAvoidingView
-        style={styles.formWrapper}
+        style={{ flex: 1 }}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       >
         <ScrollView
           contentContainerStyle={styles.scroll}
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
+          bounces={true}
         >
-          <View style={formMaxWidth ? { maxWidth: formMaxWidth, alignSelf: 'center', width: '100%' } : null}>
+          {/* ── Gradient Header (scrolls with content) ── */}
+          <LinearGradient
+            colors={['#527A56', '#6B8F71', '#8CB092']}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={styles.headerGradient}
+          >
+            <View style={styles.circle1} pointerEvents="none" />
+            <View style={styles.circle2} pointerEvents="none" />
+            <TouchableOpacity
+              onPress={() => navigation.goBack()}
+              style={styles.backBtn}
+              hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+            >
+              <Feather name="arrow-left" size={22} color="#FFF" />
+            </TouchableOpacity>
+            <View style={styles.headerContent}>
+              <Text style={styles.headerTitle}>Rejoins Pépète !</Text>
+              <Text style={styles.headerSub}>Crée ton compte en 30 secondes</Text>
+            </View>
+          </LinearGradient>
+
+          {/* ── Form Body ── */}
+          <View style={[styles.formBody, formMaxWidth ? { maxWidth: formMaxWidth, alignSelf: 'center', width: '100%' } : null]}>
           {/* Progress dots */}
           <View style={styles.progress}>
             <View style={[styles.dot, styles.dotActive]} />
@@ -244,12 +247,12 @@ const styles = StyleSheet.create({
     borderTopLeftRadius: 28,
     borderTopRightRadius: 28,
   },
-  formWrapper: {
-    flex: 1,
-  },
   scroll: {
+    flexGrow: 1,
+  },
+  formBody: {
     paddingHorizontal: 24,
-    paddingTop: 8,
+    paddingTop: 24,
     paddingBottom: 48,
   },
   progress: {
