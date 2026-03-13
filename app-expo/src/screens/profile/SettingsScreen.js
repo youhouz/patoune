@@ -183,19 +183,23 @@ const SettingsScreen = ({ navigation }) => {
     }
   };
 
+  const doLogout = async () => {
+    await logout();
+  };
+
   const handleLogout = () => {
-    Alert.alert(
-      'Déconnexion',
-      'Êtes-vous sûr de vouloir vous déconnecter ?',
-      [
-        { text: 'Annuler', style: 'cancel' },
-        {
-          text: 'Se déconnecter',
-          style: 'destructive',
-          onPress: logout,
-        },
-      ]
-    );
+    if (Platform.OS === 'web') {
+      doLogout();
+    } else {
+      Alert.alert(
+        'Déconnexion',
+        'Êtes-vous sûr de vouloir vous déconnecter ?',
+        [
+          { text: 'Annuler', style: 'cancel' },
+          { text: 'Se déconnecter', style: 'destructive', onPress: doLogout },
+        ]
+      );
+    }
   };
 
   // Build user initials

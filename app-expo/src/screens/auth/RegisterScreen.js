@@ -126,7 +126,15 @@ const RegisterScreen = ({ navigation }) => {
     setLoading(true);
     const result = await register(name.trim(), email.trim().toLowerCase(), password, phone.trim());
     setLoading(false);
-    if (!result.success) {
+    if (result.success) {
+      // Retour à l'accueil après inscription réussie
+      const parent = navigation.getParent()?.getParent();
+      if (parent) {
+        parent.reset({ index: 0, routes: [{ name: 'Tabs' }] });
+      } else {
+        navigation.getParent()?.reset({ index: 0, routes: [{ name: 'Tabs' }] });
+      }
+    } else {
       shake();
       setErrors({ global: result.error || "Impossible de créer le compte." });
     }

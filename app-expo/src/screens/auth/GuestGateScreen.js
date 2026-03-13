@@ -3,16 +3,19 @@ import {
   View, Text, TouchableOpacity, StyleSheet, Platform, Animated, ScrollView,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
+import { Feather } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
+import { PawIcon } from '../../components/Logo';
+import { FONTS } from '../../utils/typography';
 const colors = require('../../utils/colors');
 const { RADIUS, SHADOWS, SPACING, FONT_SIZE } = require('../../utils/colors');
 
 const FEATURES = [
-  { icon: '❤️', title: 'Trouvez un gardien', desc: 'Des gardiens vérifiés près de chez vous pour vos animaux.' },
-  { icon: '📋', title: 'Historique des scans', desc: 'Retrouvez tous vos produits analysés en un clin d\'œil.' },
-  { icon: '🐾', title: 'Profil de vos animaux', desc: 'Enregistrez vos compagnons pour des conseils personnalisés.' },
-  { icon: '💬', title: 'Messagerie', desc: 'Communiquez directement avec les gardiens.' },
+  { icon: 'heart', title: 'Trouvez un gardien', desc: 'Des gardiens vérifiés près de chez vous pour vos animaux.' },
+  { icon: 'camera', title: 'Historique des scans', desc: 'Retrouvez tous vos produits analysés en un clin d\'œil.' },
+  { icon: 'users', title: 'Profil de vos animaux', desc: 'Enregistrez vos compagnons pour des conseils personnalisés.' },
+  { icon: 'message-circle', title: 'Messagerie', desc: 'Communiquez directement avec les gardiens.' },
 ];
 
 const GuestGateScreen = ({ route }) => {
@@ -32,16 +35,19 @@ const GuestGateScreen = ({ route }) => {
     <View style={s.container}>
       <ScrollView contentContainerStyle={s.scroll} showsVerticalScrollIndicator={false}>
         <Animated.View style={[s.content, { opacity: fadeAnim, transform: [{ translateY: slideAnim }] }]}>
-          {/* Header illustration */}
+          {/* Header */}
           <View style={s.hero}>
             <LinearGradient
-              colors={colors.gradientHero}
+              colors={['#1C2B1E', '#2C3E2F', '#3D5E41']}
               start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}
               style={[s.heroGrad, { paddingTop: insets.top + 20 }]}
             >
               <View style={s.heroOrb1} />
               <View style={s.heroOrb2} />
-              <Text style={s.heroEmoji}>🔒</Text>
+              <View style={s.logoBadge}>
+                <PawIcon size={28} color="#FFF" />
+              </View>
+              <Text style={s.logoWord}>pépète.</Text>
               <Text style={s.heroTitle}>Créez votre compte</Text>
               <Text style={s.heroSubtitle}>
                 Débloquez toutes les fonctionnalités gratuitement
@@ -55,7 +61,7 @@ const GuestGateScreen = ({ route }) => {
             {FEATURES.map((f, i) => (
               <View key={i} style={s.featureRow}>
                 <View style={s.featureIconWrap}>
-                  <Text style={s.featureIcon}>{f.icon}</Text>
+                  <Feather name={f.icon} size={20} color={colors.primary} />
                 </View>
                 <View style={s.featureText}>
                   <Text style={s.featureTitle}>{f.title}</Text>
@@ -73,7 +79,7 @@ const GuestGateScreen = ({ route }) => {
               activeOpacity={0.85}
             >
               <LinearGradient
-                colors={['#7B8B6F', '#96A88A']}
+                colors={[colors.primaryDark, colors.primary]}
                 start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}
                 style={s.ctaPrimaryGrad}
               >
@@ -125,10 +131,27 @@ const s = StyleSheet.create({
     width: 140, height: 140, borderRadius: 70,
     backgroundColor: 'rgba(255,255,255,0.05)',
   },
-  heroEmoji: { fontSize: 52, marginBottom: 16 },
+  logoBadge: {
+    width: 56, height: 56,
+    borderRadius: RADIUS.xl,
+    backgroundColor: 'rgba(255,255,255,0.12)',
+    borderWidth: 1.5,
+    borderColor: 'rgba(255,255,255,0.18)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: SPACING.base,
+  },
+  logoWord: {
+    fontFamily: FONTS.brand,
+    fontSize: FONT_SIZE.sm,
+    color: 'rgba(255,255,255,0.5)',
+    letterSpacing: 2,
+    textTransform: 'uppercase',
+    marginBottom: SPACING.lg,
+  },
   heroTitle: {
+    fontFamily: FONTS.brand,
     fontSize: FONT_SIZE['3xl'],
-    fontWeight: '800',
     color: '#FFF',
     textAlign: 'center',
     letterSpacing: -0.5,
@@ -162,7 +185,6 @@ const s = StyleSheet.create({
     alignItems: 'center', justifyContent: 'center',
     marginRight: 14,
   },
-  featureIcon: { fontSize: 22 },
   featureText: { flex: 1 },
   featureTitle: {
     fontSize: FONT_SIZE.base,
@@ -181,7 +203,7 @@ const s = StyleSheet.create({
     borderRadius: RADIUS.lg,
     overflow: 'hidden',
     marginBottom: 12,
-    ...SHADOWS.glow('#7B8B6F'),
+    ...(typeof SHADOWS.glow === 'function' ? SHADOWS.glow(colors.primary) : {}),
   },
   ctaPrimaryGrad: {
     paddingVertical: 16,

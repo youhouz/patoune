@@ -105,7 +105,13 @@ const LoginScreen = ({ navigation }) => {
     setLoading(true);
     const result = await login(email.trim().toLowerCase(), password);
     setLoading(false);
-    if (!result.success) {
+    if (result.success) {
+      // Retour à l'accueil après connexion réussie
+      const parent = navigation.getParent();
+      if (parent) {
+        parent.reset({ index: 0, routes: [{ name: 'Tabs' }] });
+      }
+    } else {
       shake();
       setErrorMsg(result.error || 'Connexion impossible. Vérifie tes identifiants.');
     }
