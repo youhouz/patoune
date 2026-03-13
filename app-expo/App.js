@@ -4,7 +4,7 @@
 // visible until everything is ready, then renders the app.
 // ---------------------------------------------------------------------------
 
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { View, StyleSheet, ActivityIndicator, Text, Platform } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import * as SplashScreen from 'expo-splash-screen';
@@ -55,19 +55,14 @@ export default function App() {
     PlayfairDisplay_700Bold,
   });
 
-  // Once fonts are loaded (or errored), mark the app as ready
+  // Once fonts are loaded (or errored), hide Expo splash immediately
+  // so the custom SplashLoader in AppNavigator takes over without overlap
   useEffect(() => {
     if (fontsLoaded || fontError) {
+      SplashScreen.hideAsync();
       setAppIsReady(true);
     }
   }, [fontsLoaded, fontError]);
-
-  // Hide the splash screen once the root view has performed layout
-  const onLayoutRootView = useCallback(async () => {
-    if (appIsReady) {
-      await SplashScreen.hideAsync();
-    }
-  }, [appIsReady]);
 
   // Still loading - render nothing (splash screen stays visible)
   if (!appIsReady) {
@@ -77,7 +72,7 @@ export default function App() {
   // Font loading failed - show a minimal error state
   if (fontError) {
     return (
-      <View style={styles.errorContainer} onLayout={onLayoutRootView}>
+      <View style={styles.errorContainer}>
         <ActivityIndicator size="large" color={COLORS.primary} />
         <Text style={styles.errorText}>
           Chargement des polices impossible.
@@ -89,7 +84,7 @@ export default function App() {
   // App is ready - render the full application
   return (
     <SafeAreaProvider>
-      <View style={styles.root} onLayout={onLayoutRootView}>
+      <View style={styles.root}>
         <AuthProvider>
           <StatusBar style="dark" />
           <AppNavigator />
