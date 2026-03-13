@@ -10,7 +10,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { Feather } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
-import { PawIcon } from '../../components/Logo';
+import { PepeteIcon } from '../../components/PepeteLogo';
 import { FONTS } from '../../utils/typography';
 import colors, { RADIUS, SHADOWS, SPACING, FONT_SIZE } from '../../utils/colors';
 
@@ -48,7 +48,7 @@ const GuestGateScreen = ({ route }) => {
               <View style={s.heroOrb1} />
               <View style={s.heroOrb2} />
               <View style={s.logoBadge}>
-                <PawIcon size={28} color="#FFF" />
+                <PepeteIcon size={48} color="#FFF" />
               </View>
               <Text style={s.logoWord}>pépète.</Text>
               <Text style={s.heroTitle}>Créez votre compte</Text>
@@ -135,7 +135,7 @@ const s = StyleSheet.create({
     backgroundColor: 'rgba(255,255,255,0.05)',
   },
   logoBadge: {
-    width: 56, height: 56,
+    width: 72, height: 72,
     borderRadius: RADIUS.xl,
     backgroundColor: 'rgba(255,255,255,0.12)',
     borderWidth: 1.5,

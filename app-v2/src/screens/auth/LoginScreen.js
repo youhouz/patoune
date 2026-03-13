@@ -13,7 +13,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { Feather } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAuth } from '../../context/AuthContext';
-import { PawIcon } from '../../components/Logo';
+import { PepeteIcon } from '../../components/PepeteLogo';
 import useResponsive from '../../hooks/useResponsive';
 import { FONTS } from '../../utils/typography';
 import { showAlert } from '../../utils/alert';
@@ -138,7 +138,7 @@ const LoginScreen = ({ navigation }) => {
         <Animated.View style={[s.heroInner, { transform: [{ scale: heroScale }], opacity: heroOpacity, maxWidth: maxW, alignSelf: 'center', width: '100%' }]}>
           {/* Badge logo */}
           <View style={s.logoBadge}>
-            <PawIcon size={28} color="#FFF" />
+            <PepeteIcon size={48} color="#FFF" />
           </View>
           <Text style={s.logoWord}>pépète.</Text>
           <Text style={s.heroTitle}>Bon retour <Text style={s.heroAccent}>!</Text></Text>
@@ -297,7 +297,7 @@ const s = StyleSheet.create({
     alignItems: 'flex-start',
   },
   logoBadge: {
-    width: 56, height: 56, borderRadius: RADIUS.xl,
+    width: 72, height: 72, borderRadius: RADIUS.xl,
     backgroundColor: 'rgba(255,255,255,0.12)',
     borderWidth: 1.5,
     borderColor: 'rgba(255,255,255,0.18)',
