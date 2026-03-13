@@ -19,6 +19,8 @@ import { Feather } from '@expo/vector-icons';
 import { useAuth } from '../../context/AuthContext';
 import { PawIcon } from '../../components/Logo';
 import api from '../../api/client';
+import { geocodeCity } from '../../hooks/useLocation';
+import { updatePetSitterAPI } from '../../api/petsitters';
 const colors = require('../../utils/colors');
 const { SHADOWS, RADIUS, SPACING, FONT_SIZE } = require('../../utils/colors');
 
@@ -32,6 +34,11 @@ const SettingsScreen = ({ navigation }) => {
   const [name, setName] = useState(user?.name || '');
   const [phone, setPhone] = useState(user?.phone || '');
   const [loading, setSaving] = useState(false);
+
+  // City / localisation
+  const [cityInput, setCityInput] = useState(user?.address?.city || '');
+  const [cityCoords, setCityCoords] = useState(null);
+  const [cityLoading, setCityLoading] = useState(false);
 
   // Notification preferences (local state)
   const [notifPush, setNotifPush] = useState(true);
@@ -60,7 +67,73 @@ const SettingsScreen = ({ navigation }) => {
   }, []);
 
   const hasChanges =
-    name.trim() !== (user?.name || '') || phone.trim() !== (user?.phone || '');
+    name.trim() !== (user?.name || '') ||
+    phone.trim() !== (user?.phone || '') ||
+    cityCoords !== null;
+
+  const handleGeocodeCityInput = async () => {
+    if (!cityInput.trim()) return;
+    setCityLoading(true);
+    try {
+      const result = await geocodeCity(cityInput.trim());
+      if (result) {
+        setCityCoords(result);
+      } else {
+        Alert.alert('Ville introuvable', 'Impossible de localiser cette ville. Essayez le format "Paris", "Lyon 69"...');
+      }
+    } catch (_) {
+      Alert.alert('Erreur', 'Impossible de géocoder cette ville.');
+    } finally {
+      setCityLoading(false);
+    }
+  };
+
+  const handleLocateMe = async () => {
+    setCityLoading(true);
+    try {
+      if (Platform.OS === 'web' && typeof navigator !== 'undefined' && navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(
+          async (pos) => {
+            const { latitude, longitude } = pos.coords;
+            let cityName = 'Ma position';
+            try {
+              const res = await fetch(
+                `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${latitude}&longitude=${longitude}&localityLanguage=fr`,
+                { signal: AbortSignal.timeout(5000) }
+              );
+              if (res.ok) {
+                const data = await res.json();
+                cityName = data.city || data.locality || data.principalSubdivision || 'Ma position';
+              }
+            } catch (_) {}
+            setCityInput(cityName);
+            setCityCoords({ latitude, longitude, displayName: cityName });
+            setCityLoading(false);
+          },
+          () => {
+            Alert.alert('GPS indisponible', 'Saisissez votre ville manuellement.');
+            setCityLoading(false);
+          },
+          { timeout: 10000 }
+        );
+      } else {
+        const res = await fetch('https://ip-api.com/json/?lang=fr&fields=status,city,lat,lon', {
+          signal: AbortSignal.timeout(5000),
+        });
+        if (res.ok) {
+          const data = await res.json();
+          if (data.status === 'success') {
+            setCityInput(data.city || 'Ma position');
+            setCityCoords({ latitude: data.lat, longitude: data.lon, displayName: data.city || 'Ma position' });
+          }
+        }
+        setCityLoading(false);
+      }
+    } catch (_) {
+      Alert.alert('Erreur', 'Impossible de récupérer votre position.');
+      setCityLoading(false);
+    }
+  };
 
   const handleSave = async () => {
     if (!name.trim()) {
@@ -70,11 +143,38 @@ const SettingsScreen = ({ navigation }) => {
 
     setSaving(true);
     try {
-      const response = await api.put('/users/me', {
+      const payload = {
         name: name.trim(),
         phone: phone.trim(),
-      });
+      };
+
+      if (cityCoords) {
+        payload.location = {
+          type: 'Point',
+          coordinates: [cityCoords.longitude, cityCoords.latitude],
+        };
+        payload.address = {
+          city: cityInput.trim() || cityCoords.displayName || '',
+          country: 'France',
+        };
+      }
+
+      const response = await api.put('/users/me', payload);
       updateUser(response.data.user);
+
+      // Si l'utilisateur est gardien, aussi mettre à jour son profil PetSitter
+      if (user?.isPetSitter && cityCoords) {
+        try {
+          await updatePetSitterAPI({
+            location: {
+              type: 'Point',
+              coordinates: [cityCoords.longitude, cityCoords.latitude],
+            },
+          });
+        } catch (_) {}
+      }
+
+      setCityCoords(null);
       Alert.alert('Succès', 'Votre profil a été mis à jour');
     } catch (error) {
       Alert.alert('Erreur', 'Impossible de mettre à jour le profil. Réessayez.');
@@ -301,6 +401,63 @@ const SettingsScreen = ({ navigation }) => {
                   </LinearGradient>
                 </TouchableOpacity>
               )}
+            </View>
+
+            {/* Section: Localisation */}
+            <View style={styles.section}>
+              <Text style={styles.sectionTitle}>Ma localisation</Text>
+              <View style={styles.sectionCard}>
+                {user?.address?.city ? (
+                  <View style={styles.locCurrentCityRow}>
+                    <Feather name="map-pin" size={13} color="#527A56" />
+                    <Text style={styles.locCurrentCity}>Ville actuelle : {user.address.city}</Text>
+                  </View>
+                ) : (
+                  <Text style={styles.locHint}>
+                    Enregistrez votre ville pour être trouvé(e) par vos voisins.
+                  </Text>
+                )}
+                <View style={styles.cityInputRow}>
+                  <TextInput
+                    style={styles.cityTextInput}
+                    value={cityInput}
+                    onChangeText={(v) => { setCityInput(v); setCityCoords(null); }}
+                    placeholder="Paris, Lyon, Marseille..."
+                    placeholderTextColor={colors.placeholder}
+                    autoCapitalize="words"
+                    returnKeyType="search"
+                    onSubmitEditing={handleGeocodeCityInput}
+                  />
+                  <TouchableOpacity
+                    style={[styles.citySearchBtn, (!cityInput.trim() || cityLoading) && { opacity: 0.6 }]}
+                    onPress={handleGeocodeCityInput}
+                    activeOpacity={0.8}
+                    disabled={cityLoading || !cityInput.trim()}
+                  >
+                    {cityLoading ? (
+                      <ActivityIndicator size="small" color={colors.white} />
+                    ) : (
+                      <Feather name="search" size={18} color={colors.white} />
+                    )}
+                  </TouchableOpacity>
+                </View>
+                {cityCoords && (
+                  <View style={styles.cityValidated}>
+                    <Feather name="check-circle" size={14} color="#527A56" />
+                    <Text style={styles.cityValidatedText}>{cityInput} — localisé ✓</Text>
+                  </View>
+                )}
+                <TouchableOpacity
+                  style={styles.gpsLocate}
+                  onPress={handleLocateMe}
+                  disabled={cityLoading}
+                  activeOpacity={0.7}
+                >
+                  <Feather name="map-pin" size={15} color="#527A56" />
+                  <Text style={styles.gpsLocateText}>Utiliser ma position GPS</Text>
+                  <Feather name="chevron-right" size={14} color={colors.textTertiary} />
+                </TouchableOpacity>
+              </View>
             </View>
 
             {/* Section: Notifications */}
@@ -768,6 +925,76 @@ const styles = StyleSheet.create({
 
   bottomSpacer: {
     height: SPACING['2xl'],
+  },
+
+  // Localisation section
+  locCurrentCityRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: SPACING.xs,
+    marginBottom: SPACING.md,
+  },
+  locCurrentCity: {
+    fontSize: FONT_SIZE.sm,
+    fontWeight: '600',
+    color: '#527A56',
+  },
+  locHint: {
+    fontSize: FONT_SIZE.sm,
+    color: colors.textSecondary,
+    marginBottom: SPACING.md,
+    fontStyle: 'italic',
+  },
+  cityInputRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: SPACING.sm,
+    marginBottom: SPACING.sm,
+  },
+  cityTextInput: {
+    flex: 1,
+    backgroundColor: colors.background,
+    borderRadius: RADIUS.lg,
+    paddingHorizontal: SPACING.base,
+    paddingVertical: SPACING.md + 2,
+    fontSize: FONT_SIZE.base,
+    color: colors.text,
+    borderWidth: 1.5,
+    borderColor: colors.border,
+  },
+  citySearchBtn: {
+    width: 44,
+    height: 44,
+    borderRadius: RADIUS.lg,
+    backgroundColor: '#527A56',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  cityValidated: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: SPACING.xs,
+    marginBottom: SPACING.sm,
+  },
+  cityValidatedText: {
+    fontSize: FONT_SIZE.sm,
+    color: '#527A56',
+    fontWeight: '600',
+  },
+  gpsLocate: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: SPACING.sm,
+    paddingVertical: SPACING.sm + 2,
+    borderTopWidth: 1,
+    borderTopColor: colors.borderLight,
+    marginTop: SPACING.xs,
+  },
+  gpsLocateText: {
+    fontSize: FONT_SIZE.sm,
+    color: '#527A56',
+    fontWeight: '600',
+    flex: 1,
   },
 });
 

@@ -74,8 +74,57 @@ const getLocationFromIP = async () => {
 };
 
 /**
- * Get GPS position via browser Geolocation API.
+ * Géocode une ville/adresse → { latitude, longitude, displayName }
+ * Utilise Nominatim (gratuit, pas de clé).
+ * @param {string} cityQuery - ex: "Paris", "Lyon, France"
+ * @returns {object|null} { latitude, longitude, displayName } ou null
  */
+export const geocodeCity = async (cityQuery) => {
+  if (!cityQuery || !cityQuery.trim()) return null;
+
+  const q = encodeURIComponent(cityQuery.trim() + ', France');
+
+  // Essai 1 : Nominatim
+  try {
+    const res = await fetch(
+      `https://nominatim.openstreetmap.org/search?q=${q}&format=json&limit=1&countrycodes=fr&accept-language=fr`,
+      {
+        headers: { 'User-Agent': 'Pepete/3.0' },
+        signal: AbortSignal.timeout(7000),
+      }
+    );
+    if (res.ok) {
+      const data = await res.json();
+      if (data.length > 0) {
+        const { lat, lon, display_name } = data[0];
+        // Extraire le nom court (1er segment avant la virgule)
+        const short = display_name.split(',')[0].trim();
+        return { latitude: parseFloat(lat), longitude: parseFloat(lon), displayName: short };
+      }
+    }
+  } catch (_) {}
+
+  // Essai 2 : Photon (Komoot, aussi gratuit)
+  try {
+    const res2 = await fetch(
+      `https://photon.komoot.io/api/?q=${encodeURIComponent(cityQuery.trim())}&limit=1&lang=fr`,
+      { signal: AbortSignal.timeout(6000) }
+    );
+    if (res2.ok) {
+      const data2 = await res2.json();
+      const feat = data2.features?.[0];
+      if (feat) {
+        const [lon, lat] = feat.geometry.coordinates;
+        const name = feat.properties.city || feat.properties.name || cityQuery;
+        return { latitude: lat, longitude: lon, displayName: name };
+      }
+    }
+  } catch (_) {}
+
+  return null;
+};
+
+
 const getWebPosition = () =>
   new Promise((resolve, reject) => {
     if (typeof navigator === 'undefined' || !navigator.geolocation) {

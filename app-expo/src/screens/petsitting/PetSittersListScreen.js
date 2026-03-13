@@ -2,13 +2,13 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import {
   View, Text, FlatList, StyleSheet, ActivityIndicator,
   TouchableOpacity, TextInput, Platform, Animated, RefreshControl,
-  StatusBar, Image,
+  StatusBar, Image, Alert,
 } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { searchPetSittersAPI } from '../../api/petsitters';
-import useLocation from '../../hooks/useLocation';
+import useLocation, { geocodeCity } from '../../hooks/useLocation';
 import useResponsive from '../../hooks/useResponsive';
 import { FONTS } from '../../utils/typography';
 const colors = require('../../utils/colors');
@@ -266,6 +266,11 @@ const PetSittersListScreen = ({ navigation }) => {
   const [selectedRadius, setSelectedRadius] = useState(25);
   const [searchQuery, setSearchQuery] = useState('');
   const [searchFocused, setSearchFocused] = useState(false);
+  const [manualLocation, setManualLocation] = useState(null);
+  const [cityManualName, setCityManualName] = useState(null);
+  const [citySearchVisible, setCitySearchVisible] = useState(false);
+  const [citySearchValue, setCitySearchValue] = useState('');
+  const [citySearchLoading, setCitySearchLoading] = useState(false);
   const scrollY = useRef(new Animated.Value(0)).current;
 
   const { location, city, loading: locationLoading, error: locationError, approximate, requestLocation } = useLocation();
@@ -276,7 +281,27 @@ const PetSittersListScreen = ({ navigation }) => {
 
   useEffect(() => {
     loadPetSitters();
-  }, [selectedAnimal, location, selectedRadius]);
+  }, [selectedAnimal, location, selectedRadius, manualLocation]);
+
+  const handleCitySearch = async () => {
+    if (!citySearchValue.trim()) return;
+    setCitySearchLoading(true);
+    try {
+      const result = await geocodeCity(citySearchValue.trim());
+      if (result) {
+        setManualLocation({ latitude: result.latitude, longitude: result.longitude });
+        setCityManualName(result.displayName || citySearchValue.trim());
+        setCitySearchVisible(false);
+        setCitySearchValue('');
+      } else {
+        Alert.alert('Ville introuvable', "Vérifiez l'orthographe et réessayez.");
+      }
+    } catch (_) {
+      Alert.alert('Erreur', 'Impossible de localiser cette ville.');
+    } finally {
+      setCitySearchLoading(false);
+    }
+  };
 
   const loadPetSitters = async () => {
     if (!refreshing) setLoading(true);
@@ -288,9 +313,10 @@ const PetSittersListScreen = ({ navigation }) => {
       if (searchQuery.trim()) {
         params.search = searchQuery.trim();
       }
-      if (location) {
-        params.lat = location.latitude;
-        params.lng = location.longitude;
+      const searchLoc = manualLocation || location;
+      if (searchLoc) {
+        params.lat = searchLoc.latitude;
+        params.lng = searchLoc.longitude;
         params.radius = selectedRadius;
       }
       const response = await searchPetSittersAPI(params);
@@ -306,7 +332,7 @@ const PetSittersListScreen = ({ navigation }) => {
   const onRefresh = useCallback(() => {
     setRefreshing(true);
     loadPetSitters();
-  }, [selectedAnimal, searchQuery, location, selectedRadius]);
+  }, [selectedAnimal, searchQuery, location, selectedRadius, manualLocation]);
 
   const filteredPetsitters = petsitters.filter((ps) => {
     if (!searchQuery.trim()) return true;
@@ -363,28 +389,82 @@ const PetSittersListScreen = ({ navigation }) => {
               De confiance pour vos compagnons
             </Text>
           </View>
-          {/* Location indicator */}
-          <TouchableOpacity
-            style={[styles.locationBadge, locationError && styles.locationBadgeError]}
-            onPress={requestLocation}
-            activeOpacity={0.7}
-          >
-            <Feather
-              name={locationError ? 'alert-circle' : 'map-pin'}
-              size={14}
-              color={city ? colors.white : 'rgba(255,255,255,0.6)'}
-            />
-            <Text style={styles.locationText} numberOfLines={1}>
-              {locationLoading
-                ? 'Localisation...'
-                : city
-                  ? `${city}${approximate ? ' ~' : ''}`
-                  : locationError
-                    ? 'Réessayer'
-                    : 'Me localiser'}
-            </Text>
-          </TouchableOpacity>
+          {/* Location indicator + city search toggle */}
+          <View style={styles.locationBadgeRow}>
+            <TouchableOpacity
+              style={[
+                styles.locationBadge,
+                locationError && !manualLocation && styles.locationBadgeError,
+                manualLocation && styles.locationBadgeManual,
+              ]}
+              onPress={manualLocation
+                ? () => { setManualLocation(null); setCityManualName(null); }
+                : requestLocation}
+              activeOpacity={0.7}
+            >
+              <Feather
+                name={locationError && !manualLocation ? 'alert-circle' : 'map-pin'}
+                size={14}
+                color={colors.white}
+              />
+              <Text style={styles.locationText} numberOfLines={1}>
+                {manualLocation
+                  ? cityManualName || 'Ville saisie'
+                  : locationLoading
+                    ? 'Localisation...'
+                    : city
+                      ? `${city}${approximate ? ' ~' : ''}`
+                      : locationError
+                        ? 'Réessayer'
+                        : 'Me localiser'}
+              </Text>
+              {manualLocation && (
+                <Feather name="x" size={12} color="rgba(255,255,255,0.8)" />
+              )}
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.locationEditBtn}
+              onPress={() => setCitySearchVisible((v) => !v)}
+              activeOpacity={0.7}
+              hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+            >
+              <Feather name="edit-2" size={13} color="rgba(255,255,255,0.85)" />
+            </TouchableOpacity>
+          </View>
         </View>
+
+        {/* City search input (toggled with edit button) */}
+        {citySearchVisible && (
+          <View style={styles.citySearchRow}>
+            <TextInput
+              style={styles.citySearchInput}
+              value={citySearchValue}
+              onChangeText={setCitySearchValue}
+              placeholder="Nom de la ville..."
+              placeholderTextColor="rgba(255,255,255,0.6)"
+              autoFocus
+              returnKeyType="search"
+              onSubmitEditing={handleCitySearch}
+            />
+            {citySearchLoading ? (
+              <ActivityIndicator size="small" color={colors.white} style={{ width: 36 }} />
+            ) : (
+              <TouchableOpacity
+                onPress={handleCitySearch}
+                style={[styles.citySearchSubmit, !citySearchValue.trim() && { opacity: 0.5 }]}
+                disabled={!citySearchValue.trim()}
+              >
+                <Feather name="search" size={16} color={colors.white} />
+              </TouchableOpacity>
+            )}
+            <TouchableOpacity
+              onPress={() => { setCitySearchVisible(false); setCitySearchValue(''); }}
+              style={styles.citySearchClose}
+            >
+              <Feather name="x" size={16} color="rgba(255,255,255,0.8)" />
+            </TouchableOpacity>
+          </View>
+        )}
 
         {/* Search Bar */}
         <View style={[styles.searchContainer, searchFocused && styles.searchContainerFocused]}>
@@ -424,8 +504,8 @@ const PetSittersListScreen = ({ navigation }) => {
         />
       </View>
 
-      {/* Radius Filter Pills (only when location is available) */}
-      {location && (
+      {/* Radius Filter Pills (only when location or manual location is available) */}
+      {(location || manualLocation) && (
         <View style={styles.radiusSection}>
           <Feather name="target" size={13} color={colors.textTertiary} style={{ marginRight: SPACING.sm }} />
           {RADIUS_FILTERS.map((rf) => {
@@ -582,6 +662,11 @@ const styles = StyleSheet.create({
   },
 
   // Location badge
+  locationBadgeRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: SPACING.xs,
+  },
   locationBadge: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -590,15 +675,62 @@ const styles = StyleSheet.create({
     paddingVertical: SPACING.sm,
     borderRadius: RADIUS.full,
     gap: SPACING.xs,
-    maxWidth: 160,
+    maxWidth: 155,
   },
   locationBadgeError: {
     backgroundColor: 'rgba(255,100,80,0.25)',
+  },
+  locationBadgeManual: {
+    backgroundColor: 'rgba(82,122,86,0.45)',
+  },
+  locationEditBtn: {
+    width: 30,
+    height: 30,
+    borderRadius: RADIUS.full,
+    backgroundColor: 'rgba(255,255,255,0.15)',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   locationText: {
     fontSize: FONT_SIZE.xs,
     fontFamily: FONTS.bodySemiBold,
     color: colors.white,
+    flexShrink: 1,
+  },
+  // City search (inside gradient header)
+  citySearchRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: SPACING.sm,
+    marginTop: SPACING.sm,
+  },
+  citySearchInput: {
+    flex: 1,
+    backgroundColor: 'rgba(255,255,255,0.18)',
+    borderRadius: RADIUS.lg,
+    paddingHorizontal: SPACING.base,
+    paddingVertical: SPACING.sm + 2,
+    fontSize: FONT_SIZE.sm,
+    fontFamily: FONTS.body,
+    color: colors.white,
+    borderWidth: 1.5,
+    borderColor: 'rgba(255,255,255,0.3)',
+  },
+  citySearchSubmit: {
+    width: 36,
+    height: 36,
+    borderRadius: RADIUS.lg,
+    backgroundColor: 'rgba(255,255,255,0.25)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  citySearchClose: {
+    width: 36,
+    height: 36,
+    borderRadius: RADIUS.lg,
+    backgroundColor: 'rgba(255,255,255,0.1)',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
 
   // Search
