@@ -11,6 +11,7 @@ import {
   ActivityIndicator,
   KeyboardAvoidingView,
   Vibration,
+  ScrollView,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { CameraView, useCameraPermissions } from 'expo-camera';
@@ -25,13 +26,57 @@ import { COLORS, SPACING, RADIUS, FONT_SIZE, SHADOWS } from '../../utils/colors'
 const CORNER_SIZE = 28;
 const CORNER_WIDTH = 3.5;
 
-const DEMO_PRODUCTS = [
-  { barcode: '8710255130002', name: 'Orijen Original', brand: 'Orijen', icon: 'heart', score: 95 },
-  { barcode: '3017620422003', name: 'Royal Canin Maxi', brand: 'Royal Canin', icon: 'heart', score: 62 },
-  { barcode: '3564700266236', name: 'Pedigree Vital', brand: 'Pedigree', icon: 'heart', score: 31 },
-  { barcode: '4260215761024', name: 'Applaws Chat', brand: 'Applaws', icon: 'gitlab', score: 93 },
-  { barcode: '5410340620007', name: 'Whiskas Poisson', brand: 'Whiskas', icon: 'gitlab', score: 22 },
-  { barcode: '4047059414422', name: 'Kong Classic M', brand: 'Kong', icon: 'gift', score: 92 },
+/* ── 25 vrais produits populaires pour animaux (codes-barres EAN reels) ── */
+const POPULAR_PRODUCTS = [
+  {
+    category: 'Croquettes Chien',
+    icon: 'heart',
+    items: [
+      { barcode: '3182550402217', name: 'Medium Adult', brand: 'Royal Canin', score: 65 },
+      { barcode: '7613035120433', name: 'Pro Plan Adult', brand: 'Purina', score: 58 },
+      { barcode: '0052742306902', name: 'Science Plan Adult', brand: "Hill's", score: 72 },
+      { barcode: '8710255120409', name: 'Adult Medium', brand: 'Eukanuba', score: 68 },
+      { barcode: '5998749108581', name: 'Vital Protection', brand: 'Pedigree', score: 32 },
+      { barcode: '8410650174075', name: 'Adult Medium-Maxi', brand: 'Ultima', score: 61 },
+      { barcode: '5425039486123', name: 'Poulet Plein Air', brand: 'Edgard & Cooper', score: 88 },
+      { barcode: '0064992500252', name: 'Heritage Adult', brand: 'Acana', score: 91 },
+    ],
+  },
+  {
+    category: 'Croquettes Chat',
+    icon: 'gitlab',
+    items: [
+      { barcode: '3182550702225', name: 'Regular Fit 32', brand: 'Royal Canin', score: 63 },
+      { barcode: '7613041557564', name: 'Adult Poulet', brand: 'Purina One', score: 55 },
+      { barcode: '5998749108680', name: 'Adult Thon', brand: 'Whiskas', score: 24 },
+      { barcode: '0052742369600', name: 'Science Plan Adult', brand: "Hill's", score: 74 },
+      { barcode: '8410650235417', name: 'Adult Sterilise', brand: 'Ultima', score: 60 },
+      { barcode: '4008429089633', name: 'Adult Indoor', brand: 'Perfect Fit', score: 48 },
+      { barcode: '8595602508839', name: 'Saumon Adult', brand: 'Carnilove', score: 89 },
+      { barcode: '4260215761024', name: 'Poulet Adult', brand: 'Applaws', score: 93 },
+    ],
+  },
+  {
+    category: 'Patees & Humide',
+    icon: 'droplet',
+    items: [
+      { barcode: '8001154120684', name: 'HFC Poulet', brand: 'Almo Nature', score: 86 },
+      { barcode: '4017721837002', name: 'Carny Adult Boeuf', brand: 'Animonda', score: 82 },
+      { barcode: '4008429083662', name: 'Fresh & Fine', brand: 'Sheba', score: 41 },
+      { barcode: '7613034586391', name: 'Tendres Effiles', brand: 'Felix', score: 35 },
+      { barcode: '7613287232410', name: 'Cesar Barquettes', brand: 'Cesar', score: 38 },
+    ],
+  },
+  {
+    category: 'Friandises & Soins',
+    icon: 'gift',
+    items: [
+      { barcode: '5998749113370', name: 'Dreamies Fromage', brand: 'Dreamies', score: 29 },
+      { barcode: '5998749113813', name: 'Dentastix', brand: 'Pedigree', score: 42 },
+      { barcode: '5010394003209', name: 'Dental Treats', brand: 'Greenies', score: 76 },
+      { barcode: '0035585111131', name: 'Classic Rouge M', brand: 'Kong', score: 95 },
+    ],
+  },
 ];
 
 const STEP_ICONS = [
@@ -45,7 +90,6 @@ const ScannerScreen = ({ navigation }) => {
   const { width, isTablet, contentWidth, hPadding } = useResponsive();
   const SCAN_FRAME_SIZE = Math.min(width * 0.62, isTablet ? 380 : width * 0.62);
   const CAMERA_HEIGHT = Math.min(width * 0.78, isTablet ? 460 : width * 0.78);
-  const DEMO_CARD_WIDTH = (contentWidth - hPadding * 2 - SPACING.md * 2) / 3;
   const [permission, requestPermission] = useCameraPermissions();
   const [barcode, setBarcode] = useState('');
   const [scanning, setScanning] = useState(false);
@@ -539,45 +583,47 @@ const ScannerScreen = ({ navigation }) => {
           </View>
         )}
 
-        {/* Demo products for quick testing */}
-        <View style={[styles.demoSection, { paddingHorizontal: hPadding }]}>
-          <Text style={styles.demoTitle}>Produits demo</Text>
-          <Text style={styles.demoSubtitle}>Appuyez pour tester le scanner</Text>
-          <View style={styles.demoGrid}>
-            {DEMO_PRODUCTS.map((item) => (
-              <TouchableOpacity
-                key={item.barcode}
-                style={[styles.demoCard, { width: DEMO_CARD_WIDTH }]}
-                onPress={() => handleBarcodeScan(item.barcode)}
-                disabled={scanning}
-                activeOpacity={0.7}
-              >
-                <View style={[
-                  styles.demoIconCircle,
-                  { backgroundColor: item.score >= 70 ? COLORS.successSoft : item.score >= 40 ? COLORS.warningSoft : COLORS.errorSoft }
-                ]}>
-                  <Feather
-                    name={item.icon}
-                    size={18}
-                    color={item.score >= 70 ? COLORS.success : item.score >= 40 ? COLORS.warning : COLORS.error}
-                  />
-                </View>
-                <Text style={styles.demoName} numberOfLines={1}>{item.name}</Text>
-                <Text style={styles.demoBrand}>{item.brand}</Text>
-                <View style={[
-                  styles.demoScoreBadge,
-                  { backgroundColor: item.score >= 70 ? COLORS.successSoft : item.score >= 40 ? COLORS.warningSoft : COLORS.errorSoft }
-                ]}>
-                  <Text style={[
-                    styles.demoScoreText,
-                    { color: item.score >= 70 ? COLORS.success : item.score >= 40 ? COLORS.warning : COLORS.error }
-                  ]}>
-                    {item.score}/100
-                  </Text>
-                </View>
-              </TouchableOpacity>
-            ))}
+        {/* Produits populaires */}
+        <View style={styles.popularSection}>
+          <View style={[styles.popularHeader, { paddingHorizontal: hPadding }]}>
+            <Text style={styles.popularTitle}>Produits populaires</Text>
+            <Text style={styles.popularSubtitle}>Appuyez pour analyser un produit</Text>
           </View>
+
+          {POPULAR_PRODUCTS.map((category) => (
+            <View key={category.category} style={styles.categoryBlock}>
+              <View style={[styles.categoryHeader, { paddingHorizontal: hPadding }]}>
+                <Feather name={category.icon} size={14} color={COLORS.primary} />
+                <Text style={styles.categoryTitle}>{category.category}</Text>
+                <Text style={styles.categoryCount}>{category.items.length}</Text>
+              </View>
+              <ScrollView
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                contentContainerStyle={[styles.categoryScroll, { paddingHorizontal: hPadding }]}
+              >
+                {category.items.map((item) => {
+                  const scoreColor = item.score >= 70 ? COLORS.success : item.score >= 40 ? COLORS.warning : COLORS.error;
+                  const scoreBg = item.score >= 70 ? COLORS.successSoft : item.score >= 40 ? COLORS.warningSoft : COLORS.errorSoft;
+                  return (
+                    <TouchableOpacity
+                      key={item.barcode}
+                      style={styles.productCard}
+                      onPress={() => handleBarcodeScan(item.barcode)}
+                      disabled={scanning}
+                      activeOpacity={0.7}
+                    >
+                      <View style={[styles.productScoreDot, { backgroundColor: scoreBg }]}>
+                        <Text style={[styles.productScoreNum, { color: scoreColor }]}>{item.score}</Text>
+                      </View>
+                      <Text style={styles.productName} numberOfLines={1}>{item.name}</Text>
+                      <Text style={styles.productBrand} numberOfLines={1}>{item.brand}</Text>
+                    </TouchableOpacity>
+                  );
+                })}
+              </ScrollView>
+            </View>
+          ))}
         </View>
       </Animated.ScrollView>
     </KeyboardAvoidingView>
@@ -602,10 +648,8 @@ const styles = StyleSheet.create({
 
   // Header
   header: {
-    paddingBottom: SPACING.lg,
+    paddingBottom: SPACING.xl,
     paddingHorizontal: SPACING.xl,
-    borderBottomLeftRadius: RADIUS['2xl'],
-    borderBottomRightRadius: RADIUS['2xl'],
   },
   headerContent: {
     flexDirection: 'row',
@@ -675,7 +719,7 @@ const styles = StyleSheet.create({
 
   // Camera
   cameraContainer: {
-    marginTop: -SPACING.md,
+    marginTop: SPACING.base,
   },
   cameraArea: {
     borderRadius: RADIUS['2xl'],
@@ -884,7 +928,7 @@ const styles = StyleSheet.create({
   // Mode toggle
   toggleSection: {
     paddingHorizontal: SPACING.xl,
-    marginTop: SPACING.base,
+    marginTop: SPACING.md,
   },
   toggleContainer: {
     flexDirection: 'row',
@@ -981,8 +1025,8 @@ const styles = StyleSheet.create({
   // Info section
   infoSection: {
     paddingHorizontal: SPACING.xl,
-    marginTop: SPACING.xl,
-    paddingBottom: SPACING['2xl'],
+    marginTop: SPACING.lg,
+    paddingBottom: SPACING.md,
   },
   infoTitle: {
     fontSize: FONT_SIZE.lg,
@@ -1024,35 +1068,59 @@ const styles = StyleSheet.create({
     fontFamily: FONTS.bodyMedium,
   },
 
-  // Demo products section
-  demoSection: {
-    marginTop: SPACING.xl,
+  // Popular products section
+  popularSection: {
+    marginTop: SPACING.lg,
+    paddingBottom: SPACING.md,
   },
-  demoTitle: {
+  popularHeader: {
+    marginBottom: SPACING.base,
+  },
+  popularTitle: {
     fontSize: FONT_SIZE.lg,
     fontFamily: FONTS.heading,
     color: COLORS.charcoal,
-    marginBottom: SPACING.xs,
+    marginBottom: 2,
   },
-  demoSubtitle: {
+  popularSubtitle: {
     fontSize: FONT_SIZE.sm,
     fontFamily: FONTS.bodyMedium,
     color: COLORS.stone,
+  },
+  categoryBlock: {
     marginBottom: SPACING.base,
   },
-  demoGrid: {
+  categoryHeader: {
     flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: SPACING.md,
+    alignItems: 'center',
+    gap: SPACING.xs,
+    marginBottom: SPACING.sm,
   },
-  demoCard: {
+  categoryTitle: {
+    fontSize: FONT_SIZE.sm,
+    fontFamily: FONTS.bodySemiBold,
+    color: COLORS.charcoal,
+    flex: 1,
+  },
+  categoryCount: {
+    fontSize: FONT_SIZE.xs,
+    fontFamily: FONTS.bodyMedium,
+    color: COLORS.pebble,
+  },
+  categoryScroll: {
+    gap: SPACING.sm,
+    paddingRight: SPACING.xl,
+  },
+  productCard: {
     backgroundColor: COLORS.white,
     borderRadius: RADIUS.lg,
-    padding: SPACING.md,
+    paddingVertical: SPACING.md,
+    paddingHorizontal: SPACING.md,
     alignItems: 'center',
+    width: 110,
     ...SHADOWS.sm,
   },
-  demoIconCircle: {
+  productScoreDot: {
     width: 36,
     height: 36,
     borderRadius: 18,
@@ -1060,27 +1128,22 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     marginBottom: SPACING.sm,
   },
-  demoName: {
+  productScoreNum: {
+    fontSize: FONT_SIZE.sm,
+    fontFamily: FONTS.heading,
+  },
+  productName: {
     fontSize: FONT_SIZE.xs,
     fontFamily: FONTS.bodySemiBold,
     color: COLORS.charcoal,
     textAlign: 'center',
     marginBottom: 2,
   },
-  demoBrand: {
-    fontSize: FONT_SIZE.xs,
+  productBrand: {
+    fontSize: FONT_SIZE.xs - 1,
     fontFamily: FONTS.bodyMedium,
     color: COLORS.pebble,
-    marginBottom: SPACING.sm,
-  },
-  demoScoreBadge: {
-    paddingHorizontal: SPACING.sm,
-    paddingVertical: SPACING.xs,
-    borderRadius: RADIUS.sm,
-  },
-  demoScoreText: {
-    fontSize: FONT_SIZE.xs,
-    fontFamily: FONTS.heading,
+    textAlign: 'center',
   },
 });
 
