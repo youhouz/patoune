@@ -268,7 +268,7 @@ const PetSittersListScreen = ({ navigation }) => {
   const [searchFocused, setSearchFocused] = useState(false);
   const scrollY = useRef(new Animated.Value(0)).current;
 
-  const { location, city, loading: locationLoading, requestLocation } = useLocation();
+  const { location, city, loading: locationLoading, error: locationError, approximate, requestLocation } = useLocation();
 
   useEffect(() => {
     requestLocation();
@@ -365,17 +365,23 @@ const PetSittersListScreen = ({ navigation }) => {
           </View>
           {/* Location indicator */}
           <TouchableOpacity
-            style={styles.locationBadge}
+            style={[styles.locationBadge, locationError && styles.locationBadgeError]}
             onPress={requestLocation}
             activeOpacity={0.7}
           >
             <Feather
-              name="map-pin"
+              name={locationError ? 'alert-circle' : 'map-pin'}
               size={14}
               color={city ? colors.white : 'rgba(255,255,255,0.6)'}
             />
             <Text style={styles.locationText} numberOfLines={1}>
-              {locationLoading ? 'Localisation...' : city || 'Localiser'}
+              {locationLoading
+                ? 'Localisation...'
+                : city
+                  ? `${city}${approximate ? ' ~' : ''}`
+                  : locationError
+                    ? 'Réessayer'
+                    : 'Me localiser'}
             </Text>
           </TouchableOpacity>
         </View>
@@ -585,6 +591,9 @@ const styles = StyleSheet.create({
     borderRadius: RADIUS.full,
     gap: SPACING.xs,
     maxWidth: 160,
+  },
+  locationBadgeError: {
+    backgroundColor: 'rgba(255,100,80,0.25)',
   },
   locationText: {
     fontSize: FONT_SIZE.xs,

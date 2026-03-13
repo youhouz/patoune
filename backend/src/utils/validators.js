@@ -9,7 +9,7 @@ exports.registerValidation = [
 ];
 
 exports.loginValidation = [
-  body('email').isEmail().withMessage('Email invalide'),
+  body('email').isEmail().withMessage('Email invalide').normalizeEmail(),
   body('password').notEmpty().withMessage('Le mot de passe est requis'),
 ];
 

@@ -13,6 +13,8 @@ const allowedOrigins = process.env.CORS_ORIGINS
   : ['*'];
 const corsOptions = allowedOrigins.includes('*') ? {} : { origin: allowedOrigins };
 
+// Trust Vercel/proxy headers so req.ip is the real client IP
+app.set('trust proxy', true);
 app.use(helmet());
 app.use(cors(corsOptions));
 app.use(express.json({ limit: '1mb' }));

@@ -21,7 +21,10 @@ module.exports = function rateLimit({ windowMs = 15 * 60 * 1000, max = 10 } = {}
   cleanup.unref();
 
   return (req, res, next) => {
-    const key = req.ip;
+    // Use the real client IP from X-Forwarded-For (Vercel / proxies).
+    // req.ip already uses the forwarded value when 'trust proxy' is set.
+    const forwarded = req.headers['x-forwarded-for'];
+    const key = (forwarded ? forwarded.split(',')[0].trim() : null) || req.ip || 'unknown';
     const now = Date.now();
 
     let entry = hits.get(key);
