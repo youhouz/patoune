@@ -107,10 +107,12 @@ const PetSitterDetailScreen = ({ route, navigation }) => {
   const slideAnim = useRef(new Animated.Value(30)).current;
 
   useEffect(() => {
-    if (!petsitter && route.params?.petsitterId) {
-      fetchPetSitter();
-    }
-    loadReviews();
+    const init = async () => {
+      if (!petsitter && route.params?.petsitterId) {
+        await fetchPetSitter();
+      }
+    };
+    init();
     Animated.parallel([
       Animated.timing(fadeAnim, {
         toValue: 1,
@@ -126,24 +128,36 @@ const PetSitterDetailScreen = ({ route, navigation }) => {
     ]).start();
   }, []);
 
+  // Load reviews whenever petsitter changes (fixes: reviews not loading when navigated by petsitterId)
+  useEffect(() => {
+    const id = petsitter?._id || route.params?.petsitterId;
+    if (id) {
+      loadReviews(id);
+    }
+  }, [petsitter?._id]);
+
   const fetchPetSitter = async () => {
     try {
       const response = await getPetSitterAPI(route.params.petsitterId);
-      setPetsitter(response.data.petsitter || response.data);
+      const data = response.data;
+      const sitter = data?.petsitter || (data?._id ? data : null);
+      if (sitter) {
+        setPetsitter(sitter);
+      } else {
+        showAlert('Erreur', 'Impossible de charger le profil du gardien.');
+      }
     } catch (error) {
       console.log('Erreur chargement gardien:', error);
       showAlert('Erreur', 'Impossible de charger le profil du gardien.');
     }
   };
 
-  const loadReviews = async () => {
+  const loadReviews = async (id) => {
+    if (!id) return;
     setLoadingReviews(true);
     try {
-      const id = petsitter?._id || route.params?.petsitterId;
-      if (id) {
-        const response = await getPetSitterReviewsAPI(id);
-        setReviews(response.data.reviews || []);
-      }
+      const response = await getPetSitterReviewsAPI(id);
+      setReviews(response.data?.reviews || []);
     } catch (error) {
       console.log('Erreur reviews:', error);
     } finally {

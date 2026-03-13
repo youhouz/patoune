@@ -55,7 +55,7 @@ const ScrollToBottomFAB = ({ visible, onPress, unreadCount }) => {
 /* ---------- Main Screen ---------- */
 const MessagesScreen = ({ route, navigation }) => {
   const insets = useSafeAreaInsets();
-  const { userId, userName } = route.params;
+  const { userId, userName } = route.params || {};
   const { user } = useAuth();
   const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState('');
@@ -72,7 +72,7 @@ const MessagesScreen = ({ route, navigation }) => {
   useEffect(() => {
     loadMessages(true);
 
-    pollingRef.current = setInterval(() => loadMessages(false), 5000);
+    pollingRef.current = setInterval(() => loadMessages(false), 10000);
 
     Animated.timing(fadeAnim, {
       toValue: 1,
@@ -89,11 +89,13 @@ const MessagesScreen = ({ route, navigation }) => {
   }, []);
 
   const loadMessages = async (isInitial = false) => {
+    if (!userId) return;
     try {
       const response = await api.get(`/messages/${userId}`);
-      const newMessages = response.data.messages || [];
+      const newMessages = response.data?.messages || [];
       setMessages((prev) => {
-        if (JSON.stringify(prev.map(m => m._id)) !== JSON.stringify(newMessages.map(m => m._id))) {
+        const hasChanged = prev.length !== newMessages.length || prev.some((m, i) => m._id !== newMessages[i]?._id);
+        if (hasChanged) {
           // If new messages arrived and user is at bottom, auto-scroll
           if (newMessages.length > prevMessageCount.current && isNearBottomRef.current) {
             setTimeout(() => {

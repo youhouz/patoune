@@ -2,11 +2,37 @@ import { useState, useCallback } from 'react';
 import { Platform } from 'react-native';
 import * as Location from 'expo-location';
 
+/** Create an AbortSignal with timeout, compatible with all RN/web environments */
+const createTimeoutSignal = (ms) => {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), ms);
+  // Clean up timer if request completes before timeout
+  const originalAbort = controller.abort.bind(controller);
+  controller.abort = () => {
+    clearTimeout(timer);
+    originalAbort();
+  };
+  return { signal: controller.signal, clear: () => clearTimeout(timer) };
+};
+
+const fetchWithTimeout = async (url, options = {}, timeoutMs = 5000) => {
+  const { signal, clear } = createTimeoutSignal(timeoutMs);
+  try {
+    const res = await fetch(url, { ...options, signal });
+    clear();
+    return res;
+  } catch (err) {
+    clear();
+    throw err;
+  }
+};
+
 const reverseGeocodeWeb = async (latitude, longitude) => {
   try {
-    const res = await fetch(
+    const res = await fetchWithTimeout(
       `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${latitude}&longitude=${longitude}&localityLanguage=fr`,
-      { signal: AbortSignal.timeout(5000) }
+      {},
+      5000
     );
     if (res.ok) {
       const data = await res.json();
@@ -16,12 +42,10 @@ const reverseGeocodeWeb = async (latitude, longitude) => {
   } catch (_) {}
 
   try {
-    const res = await fetch(
+    const res = await fetchWithTimeout(
       `https://nominatim.openstreetmap.org/reverse?lat=${latitude}&lon=${longitude}&format=json&accept-language=fr`,
-      {
-        headers: { 'User-Agent': 'Pepete/3.0' },
-        signal: AbortSignal.timeout(6000),
-      }
+      { headers: { 'User-Agent': 'Pepete/3.0' } },
+      6000
     );
     if (res.ok) {
       const data = await res.json();
@@ -34,9 +58,11 @@ const reverseGeocodeWeb = async (latitude, longitude) => {
 
 const getLocationFromIP = async () => {
   try {
-    const res = await fetch('https://ip-api.com/json/?lang=fr&fields=status,city,lat,lon,countryCode', {
-      signal: AbortSignal.timeout(5000),
-    });
+    const res = await fetchWithTimeout(
+      'https://ip-api.com/json/?lang=fr&fields=status,city,lat,lon,countryCode',
+      {},
+      5000
+    );
     if (res.ok) {
       const data = await res.json();
       if (data.status === 'success' && data.lat && data.lon) {
@@ -49,11 +75,8 @@ const getLocationFromIP = async () => {
     }
   } catch (_) {}
 
-  return {
-    coords: { latitude: 48.8566, longitude: 2.3522 },
-    city: 'Paris',
-    approximate: true,
-  };
+  // Fallback: return null to signal that IP geolocation failed entirely
+  return null;
 };
 
 export const geocodeCity = async (cityQuery) => {
@@ -62,12 +85,10 @@ export const geocodeCity = async (cityQuery) => {
   const q = encodeURIComponent(cityQuery.trim() + ', France');
 
   try {
-    const res = await fetch(
+    const res = await fetchWithTimeout(
       `https://nominatim.openstreetmap.org/search?q=${q}&format=json&limit=1&countrycodes=fr&accept-language=fr`,
-      {
-        headers: { 'User-Agent': 'Pepete/3.0' },
-        signal: AbortSignal.timeout(7000),
-      }
+      { headers: { 'User-Agent': 'Pepete/3.0' } },
+      7000
     );
     if (res.ok) {
       const data = await res.json();
@@ -80,9 +101,10 @@ export const geocodeCity = async (cityQuery) => {
   } catch (_) {}
 
   try {
-    const res2 = await fetch(
+    const res2 = await fetchWithTimeout(
       `https://photon.komoot.io/api/?q=${encodeURIComponent(cityQuery.trim())}&limit=1&lang=fr`,
-      { signal: AbortSignal.timeout(6000) }
+      {},
+      6000
     );
     if (res2.ok) {
       const data2 = await res2.json();
@@ -140,18 +162,22 @@ const useLocation = () => {
         } catch (gpsErr) {
           console.log('GPS indisponible, fallback IP:', gpsErr.message);
           const ipResult = await getLocationFromIP();
-          coords = ipResult.coords;
-          cityName = ipResult.city;
-          isApproximate = ipResult.approximate;
+          if (ipResult) {
+            coords = ipResult.coords;
+            cityName = ipResult.city;
+            isApproximate = ipResult.approximate;
+          }
         }
       } else {
         try {
           const { status } = await Location.requestForegroundPermissionsAsync();
           if (status !== 'granted') {
             const ipResult = await getLocationFromIP();
-            coords = ipResult.coords;
-            cityName = ipResult.city;
-            isApproximate = ipResult.approximate;
+            if (ipResult) {
+              coords = ipResult.coords;
+              cityName = ipResult.city;
+              isApproximate = ipResult.approximate;
+            }
           } else {
             const position = await Location.getCurrentPositionAsync({
               accuracy: Location.Accuracy.Balanced,
@@ -159,7 +185,8 @@ const useLocation = () => {
             coords = { latitude: position.coords.latitude, longitude: position.coords.longitude };
 
             try {
-              const [geocoded] = await Location.reverseGeocodeAsync(coords);
+              const geocodeResult = await Location.reverseGeocodeAsync(coords);
+              const geocoded = geocodeResult?.[0];
               cityName = geocoded?.city || geocoded?.subregion || geocoded?.region || null;
             } catch (_) {
               cityName = await reverseGeocodeWeb(coords.latitude, coords.longitude);
@@ -167,23 +194,33 @@ const useLocation = () => {
           }
         } catch (nativeErr) {
           const ipResult = await getLocationFromIP();
-          coords = ipResult.coords;
-          cityName = ipResult.city;
-          isApproximate = ipResult.approximate;
+          if (ipResult) {
+            coords = ipResult.coords;
+            cityName = ipResult.city;
+            isApproximate = ipResult.approximate;
+          }
         }
       }
 
-      setLocation(coords);
-      setCity(cityName);
-      setApproximate(isApproximate);
+      if (coords) {
+        setLocation(coords);
+        setCity(cityName);
+        setApproximate(isApproximate);
+      } else {
+        setError('Impossible de recuperer la localisation. Saisissez une ville manuellement.');
+      }
     } catch (err) {
       try {
         const ipResult = await getLocationFromIP();
-        setLocation(ipResult.coords);
-        setCity(ipResult.city);
-        setApproximate(true);
+        if (ipResult) {
+          setLocation(ipResult.coords);
+          setCity(ipResult.city);
+          setApproximate(true);
+        } else {
+          setError('Impossible de recuperer la localisation. Saisissez une ville manuellement.');
+        }
       } catch (_) {
-        setError('Impossible de récupérer la localisation');
+        setError('Impossible de recuperer la localisation. Saisissez une ville manuellement.');
       }
     } finally {
       setLoading(false);
