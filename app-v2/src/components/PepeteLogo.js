@@ -1,0 +1,210 @@
+import React from 'react';
+import { View, Text, StyleSheet } from 'react-native';
+import Svg, { Path, Circle, G, Defs, LinearGradient as SvgGradient, Stop } from 'react-native-svg';
+
+const DEFAULT_GRADIENT = ['#7B8B6F', '#5E6D53'];
+
+const PepeteIcon = ({ size = 80, color, gradientColors }) => {
+  const useGradient = !!gradientColors;
+  const fill = useGradient ? 'url(#iconGrad)' : (color || '#7B8B6F');
+  const accentFill = useGradient ? 'url(#accentGrad)' : (color || '#7B8B6F');
+
+  return (
+    <Svg width={size} height={size} viewBox="0 0 120 120" fill="none">
+      {useGradient && (
+        <Defs>
+          <SvgGradient id="iconGrad" x1="0" y1="0" x2="1" y2="1">
+            <Stop offset="0" stopColor={gradientColors[0]} />
+            <Stop offset="1" stopColor={gradientColors[1]} />
+          </SvgGradient>
+          <SvgGradient id="accentGrad" x1="0" y1="0" x2="0" y2="1">
+            <Stop offset="0" stopColor={gradientColors[0]} stopOpacity="0.7" />
+            <Stop offset="1" stopColor={gradientColors[1]} stopOpacity="0.5" />
+          </SvgGradient>
+        </Defs>
+      )}
+
+      <G>
+        {/* Body - vertical stroke of "P", sitting cat's back/tail */}
+        <Path
+          d="M38 108 C38 108 36 95 36 80 L36 52 C36 52 36 40 42 32
+             C48 24 56 20 60 18 C60 18 54 14 50 8
+             C48 5 50 2 54 4 C58 6 62 10 64 14
+             C68 10 74 6 78 4 C82 2 84 5 82 8
+             C78 14 72 18 72 18 C80 22 88 30 90 42
+             C92 54 84 68 72 72 C64 74 56 72 50 66
+             L50 80 C50 95 48 108 48 108 Z"
+          fill={fill}
+        />
+
+        {/* Ear left */}
+        <Path
+          d="M50 8 C50 8 44 18 42 24 C42 24 48 16 54 14 Z"
+          fill={fill}
+        />
+
+        {/* Ear right */}
+        <Path
+          d="M82 8 C82 8 88 18 90 24 C90 24 78 14 72 14 Z"
+          fill={fill}
+        />
+
+        {/* Eye */}
+        <Circle cx="58" cy="38" r="3.5" fill="#FFF" />
+        <Circle cx="58" cy="38" r="1.8" fill="#2C2825" />
+
+        {/* Nose */}
+        <Path d="M62 45 L64 48 L60 48 Z" fill="#A3B296" />
+
+        {/* Whiskers - left */}
+        <Path d="M54 46 L40 43" stroke="#FFF" strokeWidth="1" strokeLinecap="round" opacity="0.6" />
+        <Path d="M54 48 L40 50" stroke="#FFF" strokeWidth="1" strokeLinecap="round" opacity="0.6" />
+
+        {/* Whiskers - right */}
+        <Path d="M68 46 L82 43" stroke="#FFF" strokeWidth="1" strokeLinecap="round" opacity="0.6" />
+        <Path d="M68 48 L82 50" stroke="#FFF" strokeWidth="1" strokeLinecap="round" opacity="0.6" />
+
+        {/* Tail curl - round part of "P" */}
+        <Path
+          d="M72 72 C72 72 84 66 88 54 C92 42 84 30 72 28
+             C60 26 50 34 50 44 C50 54 58 60 66 58
+             C74 56 78 48 74 42"
+          fill="none"
+          stroke={fill}
+          strokeWidth="6"
+          strokeLinecap="round"
+          opacity="0.3"
+        />
+      </G>
+
+      {/* Mini paw print accent - bottom right */}
+      <G opacity="0.85">
+        <Path
+          d="M92 96 C92 92 96 88 100 88 C104 88 108 92 108 96
+             C108 100 104 104 100 104 C96 104 92 100 92 96 Z"
+          fill={accentFill}
+        />
+        <Circle cx="91" cy="86" r="3" fill={accentFill} />
+        <Circle cx="98" cy="82" r="3.2" fill={accentFill} />
+        <Circle cx="106" cy="84" r="3" fill={accentFill} />
+        <Circle cx="111" cy="90" r="2.5" fill={accentFill} />
+      </G>
+    </Svg>
+  );
+};
+
+const getThemeColors = (theme) => {
+  switch (theme) {
+    case 'light':
+      return {
+        textColor: '#FFFFFF',
+        taglineColor: 'rgba(255,255,255,0.8)',
+        iconGradient: ['#FFFFFF', '#F0F0F0'],
+        iconColor: '#FFFFFF',
+        dotColor: 'rgba(255,255,255,0.8)',
+      };
+    case 'brand':
+      return {
+        textColor: '#7B8B6F',
+        taglineColor: 'rgba(255, 107, 53, 0.7)',
+        iconGradient: DEFAULT_GRADIENT,
+        iconColor: undefined,
+        dotColor: '#7B8B6F',
+      };
+    default: // 'dark'
+      return {
+        textColor: '#2C2825',
+        taglineColor: 'rgba(44,40,37,0.55)',
+        iconGradient: DEFAULT_GRADIENT,
+        iconColor: undefined,
+        dotColor: '#7B8B6F',
+      };
+  }
+};
+
+const PepeteLogo = ({
+  size = 80,
+  variant = 'full',
+  theme = 'dark',
+  tagline,
+  style,
+}) => {
+  const colors = getThemeColors(theme);
+  const wordmarkSize = size * 0.5;
+  const taglineSize = size * 0.16;
+  const dotSize = size * 0.05;
+
+  const renderWordmark = () => (
+    <>
+      <View style={styles.wordmarkRow}>
+        <Text style={[styles.wordmark, { fontSize: wordmarkSize, color: colors.textColor }]}>
+          p&#233;p&#232;te
+        </Text>
+        <View
+          style={[
+            styles.accentDot,
+            { width: dotSize, height: dotSize, backgroundColor: colors.dotColor },
+          ]}
+        />
+      </View>
+      {tagline ? (
+        <Text style={[styles.tagline, { fontSize: taglineSize, color: colors.taglineColor }]}>
+          {tagline}
+        </Text>
+      ) : null}
+    </>
+  );
+
+  if (variant === 'icon') {
+    return (
+      <View style={[styles.container, style]}>
+        <PepeteIcon size={size} gradientColors={colors.iconGradient} color={colors.iconColor} />
+      </View>
+    );
+  }
+
+  if (variant === 'wordmark') {
+    return (
+      <View style={[styles.container, style]}>
+        {renderWordmark()}
+      </View>
+    );
+  }
+
+  // Full logo - icon + wordmark
+  return (
+    <View style={[styles.container, style]}>
+      <PepeteIcon size={size} gradientColors={colors.iconGradient} color={colors.iconColor} />
+      {renderWordmark()}
+    </View>
+  );
+};
+
+const styles = StyleSheet.create({
+  container: {
+    alignItems: 'center',
+  },
+  wordmarkRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-end',
+    marginTop: 6,
+  },
+  wordmark: {
+    fontFamily: 'PlayfairDisplay_700Bold',
+    letterSpacing: 3,
+    textTransform: 'lowercase',
+  },
+  accentDot: {
+    borderRadius: 50,
+    marginLeft: 2,
+    marginBottom: '12%',
+  },
+  tagline: {
+    fontFamily: 'DMSans_500Medium',
+    letterSpacing: 0.5,
+    marginTop: 6,
+  },
+});
+
+export { PepeteIcon };
+export default PepeteLogo;
