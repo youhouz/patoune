@@ -15,7 +15,6 @@ import colors, { SHADOWS, RADIUS, SPACING, FONT_SIZE } from '../../utils/colors'
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const MAX_MESSAGE_LENGTH = 1000;
-const POLL_INTERVAL_MS = 5000;
 
 /* ---------- Scroll to Bottom FAB ---------- */
 const ScrollToBottomFAB = ({ visible, onPress, unreadCount }) => {
@@ -28,7 +27,7 @@ const ScrollToBottomFAB = ({ visible, onPress, unreadCount }) => {
       friction: 8,
       useNativeDriver: true,
     }).start();
-  }, [visible, anim]);
+  }, [visible]);
 
   if (!visible) return null;
 
@@ -63,48 +62,38 @@ const MessagesScreen = ({ route, navigation }) => {
   const [initialLoading, setInitialLoading] = useState(true);
   const [sending, setSending] = useState(false);
   const [showScrollFab, setShowScrollFab] = useState(false);
-  const [isNearBottom, setIsNearBottom] = useState(true);
+  const isNearBottomRef = useRef(true);
   const flatListRef = useRef(null);
   const inputRef = useRef(null);
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const prevMessageCount = useRef(0);
-  const intervalRef = useRef(null);
-  const isNearBottomRef = useRef(true);
-
-  // Keep a ref in sync so the polling callback sees the latest value
-  useEffect(() => {
-    isNearBottomRef.current = isNearBottom;
-  }, [isNearBottom]);
+  const pollingRef = useRef(null);
 
   useEffect(() => {
     loadMessages(true);
 
-    intervalRef.current = setInterval(() => loadMessages(false), POLL_INTERVAL_MS);
+    pollingRef.current = setInterval(() => loadMessages(false), 5000);
 
-    const animation = Animated.timing(fadeAnim, {
+    Animated.timing(fadeAnim, {
       toValue: 1,
       duration: 400,
       useNativeDriver: true,
-    });
-    animation.start();
+    }).start();
 
     return () => {
-      if (intervalRef.current) {
-        clearInterval(intervalRef.current);
-        intervalRef.current = null;
+      if (pollingRef.current) {
+        clearInterval(pollingRef.current);
+        pollingRef.current = null;
       }
-      animation.stop();
     };
   }, []);
 
   const loadMessages = async (isInitial = false) => {
     try {
       const response = await api.get(`/messages/${userId}`);
-      const newMessages = response.data?.messages || [];
+      const newMessages = response.data.messages || [];
       setMessages((prev) => {
-        const prevIds = prev.map(m => m._id).join(',');
-        const newIds = newMessages.map(m => m._id).join(',');
-        if (prevIds !== newIds) {
+        if (JSON.stringify(prev.map(m => m._id)) !== JSON.stringify(newMessages.map(m => m._id))) {
           // If new messages arrived and user is at bottom, auto-scroll
           if (newMessages.length > prevMessageCount.current && isNearBottomRef.current) {
             setTimeout(() => {
@@ -124,9 +113,9 @@ const MessagesScreen = ({ route, navigation }) => {
   };
 
   const sendMessage = async () => {
-    const messageText = newMessage.trim();
-    if (!messageText || sending) return;
+    if (!newMessage.trim() || sending) return;
 
+    const messageText = newMessage.trim();
     setNewMessage('');
     setSending(true);
 
@@ -141,8 +130,8 @@ const MessagesScreen = ({ route, navigation }) => {
       }, 100);
     } catch (error) {
       console.log('Erreur envoi message:', error);
-      showAlert('Erreur', "Le message n'a pas pu etre envoye. Reessayez.");
       setNewMessage(messageText);
+      showAlert('Erreur', "Le message n'a pas pu etre envoye. Reessayez.");
     } finally {
       setSending(false);
     }
@@ -156,7 +145,7 @@ const MessagesScreen = ({ route, navigation }) => {
     const { contentOffset, contentSize, layoutMeasurement } = event.nativeEvent;
     const distanceFromBottom = contentSize.height - contentOffset.y - layoutMeasurement.height;
     const nearBottom = distanceFromBottom < 150;
-    setIsNearBottom(nearBottom);
+    isNearBottomRef.current = nearBottom;
     setShowScrollFab(!nearBottom && messages.length > 5);
   }, [messages.length]);
 
@@ -193,13 +182,9 @@ const MessagesScreen = ({ route, navigation }) => {
 
   const shouldShowDateSeparator = (index) => {
     if (index === 0) return true;
-    try {
-      const current = new Date(messages[index]?.createdAt).toDateString();
-      const previous = new Date(messages[index - 1]?.createdAt).toDateString();
-      return current !== previous;
-    } catch {
-      return false;
-    }
+    const current = new Date(messages[index]?.createdAt).toDateString();
+    const previous = new Date(messages[index - 1]?.createdAt).toDateString();
+    return current !== previous;
   };
 
   // Group consecutive messages from same sender
@@ -298,7 +283,7 @@ const MessagesScreen = ({ route, navigation }) => {
         </View>
       </View>
     );
-  }, [messages, user, receiverInitial]);
+  }, [messages, user]);
 
   const renderEmpty = () => {
     if (initialLoading) return null;
@@ -393,7 +378,7 @@ const MessagesScreen = ({ route, navigation }) => {
               onScroll={onScroll}
               scrollEventThrottle={16}
               onContentSizeChange={() => {
-                if (messages.length > 0 && isNearBottom) {
+                if (messages.length > 0 && isNearBottomRef.current) {
                   flatListRef.current?.scrollToEnd({ animated: false });
                 }
               }}
