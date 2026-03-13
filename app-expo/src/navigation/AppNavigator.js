@@ -112,11 +112,11 @@ const AppNavigator = () => {
       <NavigationContainer
         ref={navigationRef}
         onReady={() => {
-          // On web, always reset to Accueil to ignore any saved /login URL
+          // On web, always reset to Tabs>Accueil to ignore any saved /login URL
           if (Platform.OS === 'web') {
             navigationRef.current?.resetRoot({
               index: 0,
-              routes: [{ name: 'Accueil' }],
+              routes: [{ name: 'Tabs', state: { routes: [{ name: 'Accueil' }] } }],
             });
           }
         }}

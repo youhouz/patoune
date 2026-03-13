@@ -21,6 +21,7 @@ import SettingsScreen from '../screens/profile/SettingsScreen';
 const colors = require('../utils/colors');
 
 const Tab = createBottomTabNavigator();
+const RootStack = createStackNavigator();
 const PetSittingStack = createStackNavigator();
 const ProfileStack = createStackNavigator();
 
@@ -71,11 +72,11 @@ const AuthNavigatorStack = () => (
   </AuthStack.Navigator>
 );
 
-// ─── 3 tabs visibles uniquement ──────────────────────────
+// ─── 3 tabs uniquement ──────────────────────────────────
 const VISIBLE_TABS = {
-  Accueil: { icon: 'home',     label: 'Accueil'  },
-  Scanner: { icon: 'maximize', label: 'Scanner'  },
-  Profil:  { icon: 'user',     label: 'Profil'   },
+  Accueil: { icon: 'home',     label: 'Accueil' },
+  Scanner: { icon: 'maximize', label: 'Scanner' },
+  Profil:  { icon: 'user',     label: 'Profil'  },
 };
 
 const TabIcon = ({ routeName, focused }) => {
@@ -87,7 +88,6 @@ const TabIcon = ({ routeName, focused }) => {
         name={config.icon}
         size={23}
         color={focused ? colors.primary : '#B0BAB3'}
-        strokeWidth={focused ? 2.5 : 1.8}
       />
       <Text style={[styles.tabLabel, focused && styles.tabLabelActive]}>
         {config.label}
@@ -97,9 +97,8 @@ const TabIcon = ({ routeName, focused }) => {
   );
 };
 
-const HIDDEN = { tabBarButton: () => null, tabBarItemStyle: { width: 0, overflow: 'hidden' } };
-
-const TabNavigator = () => (
+// Tab avec SEULEMENT 3 écrans — aucun écran caché
+const ThreeTabs = () => (
   <Tab.Navigator
     screenOptions={({ route }) => ({
       headerShown: false,
@@ -122,20 +121,24 @@ const TabNavigator = () => (
         flex: 1,
         alignItems: 'center',
         justifyContent: 'center',
-        paddingVertical: 10,
+        paddingVertical: 8,
       },
     })}
   >
-    {/* ── 3 onglets visibles ── */}
-    <Tab.Screen name="Accueil"  component={HomeScreen} />
-    <Tab.Screen name="Scanner"  component={ScannerNavigator} />
-    <Tab.Screen name="Profil"   component={ProfileNavigator} />
-
-    {/* ── Accessibles via navigation mais cachés de la tab bar ── */}
-    <Tab.Screen name="Garde"     component={PetSittingNavigator} options={HIDDEN} />
-    <Tab.Screen name="Assistant" component={AIAssistantScreen}   options={HIDDEN} />
-    <Tab.Screen name="AuthStack" component={AuthNavigatorStack}  options={{ ...HIDDEN, tabBarStyle: { display: 'none' } }} />
+    <Tab.Screen name="Accueil" component={HomeScreen} />
+    <Tab.Screen name="Scanner" component={ScannerNavigator} />
+    <Tab.Screen name="Profil"  component={ProfileNavigator} />
   </Tab.Navigator>
+);
+
+// Root Stack — overlay les écrans hors tab bar
+const TabNavigator = () => (
+  <RootStack.Navigator screenOptions={{ headerShown: false, presentation: 'card' }}>
+    <RootStack.Screen name="Tabs"      component={ThreeTabs} />
+    <RootStack.Screen name="Garde"     component={PetSittingNavigator} />
+    <RootStack.Screen name="Assistant" component={AIAssistantScreen} />
+    <RootStack.Screen name="AuthStack" component={AuthNavigatorStack} />
+  </RootStack.Navigator>
 );
 
 const styles = StyleSheet.create({
