@@ -136,14 +136,15 @@ const RegisterScreen = ({ navigation }) => {
     <View style={s.root}>
       <StatusBar barStyle="light-content" />
 
-      {/* ── Hero ── */}
+      {/* ── Hero gradient ── */}
       <LinearGradient
-        colors={['#1C2B1E', '#3D5E41']}
+        colors={['#1C2B1E', '#2C3E2F', '#3D5E41']}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
         style={[s.hero, { paddingTop: insets.top + 16 }]}
       >
         <View style={s.glow1} pointerEvents="none" />
+        <View style={s.glow2} pointerEvents="none" />
         <View style={[s.heroInner, { maxWidth: maxW, alignSelf: 'center', width: '100%' }]}>
           <TouchableOpacity
             style={s.backBtn}
@@ -153,12 +154,11 @@ const RegisterScreen = ({ navigation }) => {
           >
             <Feather name="arrow-left" size={20} color="rgba(255,255,255,0.9)" />
           </TouchableOpacity>
-          <View style={s.heroBadgeRow}>
-            <View style={s.logoBadge}>
-              <PawIcon size={24} color="#FFF" />
-            </View>
+          <View style={s.logoBadge}>
+            <PawIcon size={28} color="#FFF" />
           </View>
-          <Text style={s.heroTitle}>Rejoindre{'\n'}pépète <Text style={s.heroAccent}>!</Text></Text>
+          <Text style={s.logoWord}>pépète.</Text>
+          <Text style={s.heroTitle}>Créer un compte <Text style={s.heroAccent}>!</Text></Text>
           <Text style={s.heroSub}>Compte gratuit · 30 secondes</Text>
         </View>
       </LinearGradient>
@@ -173,6 +173,7 @@ const RegisterScreen = ({ navigation }) => {
           contentContainerStyle={[s.scrollContent, { paddingBottom: insets.bottom + 48 }]}
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
+          bounces={false}
         >
           <Animated.View
             style={[
@@ -181,6 +182,9 @@ const RegisterScreen = ({ navigation }) => {
               { opacity: fadeAnim, transform: [{ translateY: slideAnim }, { translateX: shakeAnim }] },
             ]}
           >
+            {/* Titre section */}
+            <Text style={s.cardTitle}>Inscription</Text>
+
             {/* Erreur globale */}
             {errors.global ? (
               <View style={s.errorBanner}>
@@ -342,50 +346,61 @@ const s = StyleSheet.create({
   // Hero
   hero: {
     paddingHorizontal: SPACING.xl,
-    paddingBottom: SPACING['2xl'],
+    paddingBottom: SPACING['2xl'] + 10,
     overflow: 'hidden',
   },
   glow1: {
-    position: 'absolute', top: -60, right: -60,
-    width: 200, height: 200, borderRadius: 100,
-    backgroundColor: 'rgba(107,143,113,0.10)',
+    position: 'absolute', top: -80, right: -80,
+    width: 240, height: 240, borderRadius: 120,
+    backgroundColor: 'rgba(107,143,113,0.12)',
   },
-  heroInner: {},
+  glow2: {
+    position: 'absolute', bottom: 20, left: -60,
+    width: 160, height: 160, borderRadius: 80,
+    backgroundColor: 'rgba(82,122,86,0.08)',
+  },
+  heroInner: {
+    alignItems: 'flex-start',
+  },
   backBtn: {
     width: 40, height: 40,
     borderRadius: RADIUS.lg,
     backgroundColor: 'rgba(255,255,255,0.10)',
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: SPACING.lg,
-  },
-  heroBadgeRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
     marginBottom: SPACING.base,
   },
   logoBadge: {
-    width: 48, height: 48,
+    width: 56, height: 56,
     borderRadius: RADIUS.xl,
     backgroundColor: 'rgba(255,255,255,0.12)',
     borderWidth: 1.5,
     borderColor: 'rgba(255,255,255,0.18)',
     alignItems: 'center',
     justifyContent: 'center',
+    marginBottom: SPACING.base,
+  },
+  logoWord: {
+    fontFamily: FONTS.brand,
+    fontSize: FONT_SIZE.sm,
+    color: 'rgba(255,255,255,0.5)',
+    letterSpacing: 2,
+    textTransform: 'uppercase',
+    marginBottom: SPACING.lg,
   },
   heroTitle: {
     fontFamily: FONTS.brand,
-    fontSize: FONT_SIZE['2xl'],
+    fontSize: FONT_SIZE['3xl'],
     color: '#FFF',
-    letterSpacing: -0.8,
-    lineHeight: FONT_SIZE['2xl'] * 1.2,
+    letterSpacing: -1,
+    lineHeight: FONT_SIZE['3xl'] * 1.1,
     marginBottom: SPACING.sm,
   },
   heroAccent: { color: '#8CB092' },
   heroSub: {
     fontFamily: FONTS.bodyMedium,
-    fontSize: FONT_SIZE.sm,
-    color: 'rgba(255,255,255,0.5)',
+    fontSize: FONT_SIZE.base,
+    color: 'rgba(255,255,255,0.55)',
   },
 
   // Scroll
@@ -401,6 +416,14 @@ const s = StyleSheet.create({
     borderRadius: RADIUS['2xl'],
     padding: SPACING.xl,
     ...SHADOWS.lg,
+  },
+
+  cardTitle: {
+    fontFamily: FONTS.heading,
+    fontSize: FONT_SIZE['2xl'],
+    color: colors.text,
+    letterSpacing: -0.5,
+    marginBottom: SPACING.xl,
   },
 
   // Error banner
