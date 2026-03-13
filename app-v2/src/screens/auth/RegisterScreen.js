@@ -12,7 +12,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { Feather } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAuth } from '../../context/AuthContext';
-import { PepeteIcon } from '../../components/PepeteLogo';
+import { PawIcon } from '../../components/Logo';
 import useResponsive from '../../hooks/useResponsive';
 import { FONTS } from '../../utils/typography';
 import { showAlert } from '../../utils/alert';
@@ -169,7 +169,7 @@ const RegisterScreen = ({ navigation }) => {
             <Feather name="arrow-left" size={20} color="rgba(255,255,255,0.9)" />
           </TouchableOpacity>
           <View style={s.logoBadge}>
-            <PepeteIcon size={48} color="#FFF" />
+            <PawIcon size={42} color="#FFF" />
           </View>
           <Text style={s.logoWord}>pépète.</Text>
           <Text style={s.heroTitle}>Créer un compte <Text style={s.heroAccent}>!</Text></Text>
