@@ -105,7 +105,13 @@ const LoginScreen = ({ navigation }) => {
     setLoading(true);
     const result = await login(email.trim().toLowerCase(), password);
     setLoading(false);
-    if (!result.success) {
+    if (result.success) {
+      // Retour à l'accueil après connexion réussie
+      const parent = navigation.getParent();
+      if (parent) {
+        parent.reset({ index: 0, routes: [{ name: 'Tabs' }] });
+      }
+    } else {
       shake();
       setErrorMsg(result.error || 'Connexion impossible. Vérifie tes identifiants.');
     }
@@ -131,7 +137,7 @@ const LoginScreen = ({ navigation }) => {
           <View style={s.logoBadge}>
             <PawIcon size={28} color="#FFF" />
           </View>
-          <Text style={s.logoWord}>patoune</Text>
+          <Text style={s.logoWord}>pépète.</Text>
           <Text style={s.heroTitle}>Bon retour <Text style={s.heroAccent}>!</Text></Text>
           <Text style={s.heroSub}>Connectez-vous pour continuer</Text>
         </Animated.View>

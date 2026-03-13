@@ -67,7 +67,7 @@ const Logo = ({ variant = 'light', size = 'md', showText = true, style }) => {
             { fontSize: cfg.text, color: clr.text },
           ]}
         >
-          patoune
+          pépète.
         </Text>
       )}
     </View>

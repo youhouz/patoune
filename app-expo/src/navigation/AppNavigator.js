@@ -124,8 +124,14 @@ const SplashLoader = () => {
   const titleTY     = useRef(new Animated.Value(16)).current;
   const loaderWidth = useRef(new Animated.Value(0)).current;
 
-  // Paw step opacities
-  const paws = Array.from({ length: 6 }, () => useRef(new Animated.Value(0)).current);
+  // Paw step opacities (individual refs — hooks cannot be called in a loop)
+  const paw0 = useRef(new Animated.Value(0)).current;
+  const paw1 = useRef(new Animated.Value(0)).current;
+  const paw2 = useRef(new Animated.Value(0)).current;
+  const paw3 = useRef(new Animated.Value(0)).current;
+  const paw4 = useRef(new Animated.Value(0)).current;
+  const paw5 = useRef(new Animated.Value(0)).current;
+  const paws = [paw0, paw1, paw2, paw3, paw4, paw5];
 
   useEffect(() => {
     // Logo entrance

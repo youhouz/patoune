@@ -130,9 +130,9 @@ const ProductResultScreen = ({ route, navigation }) => {
 
   const handleShare = async () => {
     try {
-      const scoreText = hasScore ? `Score Patoune: ${score}/100 (${scoreLabel})` : 'Score en cours d\'evaluation';
+      const scoreText = hasScore ? `Score Pépète: ${score}/100 (${scoreLabel})` : 'Score en cours d\'evaluation';
       await Share.share({
-        message: `${product.name} (${product.brand || 'Marque inconnue'}) - ${scoreText}. Analyse sur Patoune!`,
+        message: `${product.name} (${product.brand || 'Marque inconnue'}) - ${scoreText}. Analyse sur Pépète!`,
       });
     } catch (_) {
       // Share cancelled

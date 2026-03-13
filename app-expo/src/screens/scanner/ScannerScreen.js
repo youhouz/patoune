@@ -227,7 +227,7 @@ const ScannerScreen = ({ navigation }) => {
       </View>
       <Text style={styles.permTitle}>Acces camera requis</Text>
       <Text style={styles.permDescription}>
-        Pour scanner les codes-barres des produits, Patoune a besoin d'acceder a votre camera.
+        Pour scanner les codes-barres des produits, Pépète a besoin d'accéder à votre caméra.
       </Text>
       <TouchableOpacity
         style={styles.permButton}

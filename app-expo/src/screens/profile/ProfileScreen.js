@@ -111,15 +111,24 @@ const ProfileScreen = ({ navigation }) => {
     return parts[0].substring(0, 2).toUpperCase();
   };
 
+  const doLogout = async () => {
+    await logout();
+  };
+
   const handleLogout = () => {
-    Alert.alert(
-      'Déconnexion',
-      'Voulez-vous vraiment vous déconnecter ?',
-      [
-        { text: 'Annuler', style: 'cancel' },
-        { text: 'Se déconnecter', style: 'destructive', onPress: logout },
-      ]
-    );
+    if (Platform.OS === 'web') {
+      // Alert.alert ne fonctionne pas sur web
+      doLogout();
+    } else {
+      Alert.alert(
+        'Déconnexion',
+        'Voulez-vous vraiment vous déconnecter ?',
+        [
+          { text: 'Annuler', style: 'cancel' },
+          { text: 'Se déconnecter', style: 'destructive', onPress: doLogout },
+        ]
+      );
+    }
   };
 
   const stats = [
@@ -306,7 +315,7 @@ const ProfileScreen = ({ navigation }) => {
         <View style={styles.footer}>
           <View style={styles.footerBadge}>
             <PawIcon size={16} color={colors.primary} />
-            <Text style={styles.footerText}>patoune</Text>
+            <Text style={styles.footerText}>pépète.</Text>
           </View>
           <Text style={styles.footerVersion}>v1.0.0 — Le meilleur pour vos animaux</Text>
         </View>

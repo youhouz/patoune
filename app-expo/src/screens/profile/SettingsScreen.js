@@ -183,19 +183,23 @@ const SettingsScreen = ({ navigation }) => {
     }
   };
 
+  const doLogout = async () => {
+    await logout();
+  };
+
   const handleLogout = () => {
-    Alert.alert(
-      'Déconnexion',
-      'Êtes-vous sûr de vouloir vous déconnecter ?',
-      [
-        { text: 'Annuler', style: 'cancel' },
-        {
-          text: 'Se déconnecter',
-          style: 'destructive',
-          onPress: logout,
-        },
-      ]
-    );
+    if (Platform.OS === 'web') {
+      doLogout();
+    } else {
+      Alert.alert(
+        'Déconnexion',
+        'Êtes-vous sûr de vouloir vous déconnecter ?',
+        [
+          { text: 'Annuler', style: 'cancel' },
+          { text: 'Se déconnecter', style: 'destructive', onPress: doLogout },
+        ]
+      );
+    }
   };
 
   // Build user initials
@@ -517,7 +521,7 @@ const SettingsScreen = ({ navigation }) => {
                     </LinearGradient>
                   </View>
                   <View style={styles.aboutBrandInfo}>
-                    <Text style={styles.aboutAppName}>Patoune</Text>
+                    <Text style={styles.aboutAppName}>Pépète</Text>
                     <Text style={styles.aboutTagline}>
                       Le compagnon de vos compagnons
                     </Text>
@@ -572,7 +576,7 @@ const SettingsScreen = ({ navigation }) => {
                 Fait avec amour pour vos compagnons
               </Text>
               <Text style={styles.footerCopy}>
-                Patoune v{APP_VERSION}
+                Pépète v{APP_VERSION}
               </Text>
             </View>
 
