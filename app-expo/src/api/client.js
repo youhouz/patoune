@@ -21,6 +21,7 @@ const getFallbackApiUrl = () => {
 };
 
 const API_URL = (process.env.EXPO_PUBLIC_API_URL || getFallbackApiUrl()).replace(/\/+$/, '');
+console.log('[API] URL:', API_URL);
 
 const api = axios.create({
   baseURL: API_URL,
@@ -56,9 +57,11 @@ api.interceptors.response.use(
     }
 
     if (!error.response) {
-      error.userMessage = 'Impossible de joindre le serveur. Verifie EXPO_PUBLIC_API_URL et ta connexion.';
+      console.error('[API] Serveur injoignable:', API_URL, error.message);
+      error.userMessage = 'Impossible de joindre le serveur. Vérifie ta connexion internet.';
     } else if (error.response.status >= 500) {
-      error.userMessage = 'Le serveur rencontre un probleme temporaire. Reessaie dans un instant.';
+      console.error('[API] Erreur serveur:', error.response.status, error.response.data);
+      error.userMessage = 'Le serveur rencontre un problème temporaire. Réessaie dans un instant.';
     }
 
     return Promise.reject(error);
