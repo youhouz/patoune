@@ -192,6 +192,13 @@ exports.ask = async (req, res, next) => {
     });
   } catch (error) {
     // Gerer les erreurs specifiques de l'API Anthropic
+    if (error.status === 400) {
+      console.error('Anthropic API 400 error:', error.message);
+      return res.status(400).json({
+        success: false,
+        error: 'La requete envoyee au service IA est invalide. Veuillez reformuler votre question.'
+      });
+    }
     if (error.status === 401) {
       return res.status(500).json({
         success: false,
