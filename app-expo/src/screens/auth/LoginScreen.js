@@ -35,7 +35,7 @@ const LoginScreen = ({ navigation }) => {
       <StatusBar barStyle="dark-content" />
       <ScrollView
         style={{ flex: 1 }}
-        contentContainerStyle={[s.scroll, { flexGrow: 1 }]}
+        contentContainerStyle={s.scroll}
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
       >
@@ -136,8 +136,8 @@ const LoginScreen = ({ navigation }) => {
 };
 
 const s = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#FFFFFF' },
-  scroll:    { paddingBottom: 60 },
+  container: { flex: 1, backgroundColor: '#FAF6EE' },
+  scroll:    { paddingBottom: 80 },
 
   /* blobs */
   blob1: { position: 'absolute', top: -80,  right: -60, width: 260, height: 260, borderRadius: 130, backgroundColor: 'rgba(107,143,113,0.07)' },
@@ -146,7 +146,7 @@ const s = StyleSheet.create({
 
   inner:    { paddingHorizontal: 28 },
   logoArea: { paddingTop: Platform.OS === 'ios' ? 72 : 60, paddingBottom: 28, alignItems: 'center' },
-  logoBadge: { width: 64, height: 64, borderRadius: 20, backgroundColor: '#EFF5F0', alignItems: 'center', justifyContent: 'center', marginBottom: 12 },
+  logoBadge: { width: 68, height: 68, borderRadius: 34, backgroundColor: '#EFF5F0', alignItems: 'center', justifyContent: 'center', marginBottom: 12 },
   logoName: { fontSize: 28, fontWeight: '900', color: '#1C2B1E', letterSpacing: -0.8, marginBottom: 4 },
   logoTagline: { fontSize: 13, color: '#96A89A', fontWeight: '500' },
 
@@ -156,7 +156,7 @@ const s = StyleSheet.create({
 
   fieldGroup: { marginBottom: 18 },
   label:      { fontSize: 13, fontWeight: '700', color: '#4A5E4D', marginBottom: 8, letterSpacing: 0.2 },
-  row:        { flexDirection: 'row', alignItems: 'center', backgroundColor: '#F5F7F5', borderRadius: 14, paddingHorizontal: 16, height: 56, borderWidth: 1.5, borderColor: 'transparent' },
+  row:        { flexDirection: 'row', alignItems: 'center', backgroundColor: '#F0EDE6', borderRadius: 14, paddingHorizontal: 16, height: 56, borderWidth: 1.5, borderColor: 'transparent' },
   rowFocused: { borderColor: '#6B8F71', backgroundColor: '#EFF5F0' },
   input:      { flex: 1, fontSize: 15, color: '#1C2B1E', fontWeight: '500' },
 

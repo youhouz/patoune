@@ -97,7 +97,7 @@ const TabIcon = ({ routeName, focused }) => {
   );
 };
 
-const HIDDEN = { tabBarButton: () => null };
+const HIDDEN = { tabBarButton: () => null, tabBarItemStyle: { display: 'none' } };
 
 const TabNavigator = () => (
   <Tab.Navigator
@@ -117,14 +117,11 @@ const TabNavigator = () => (
         shadowOpacity: 0.04,
         shadowRadius: 8,
         elevation: 6,
-        alignItems: 'center',
-        justifyContent: 'center',
       },
       tabBarItemStyle: {
         flex: 1,
         alignItems: 'center',
         justifyContent: 'center',
-        height: '100%',
       },
     })}
   >

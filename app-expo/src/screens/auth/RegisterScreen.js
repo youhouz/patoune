@@ -69,7 +69,7 @@ const RegisterScreen = ({ navigation }) => {
       <StatusBar barStyle="dark-content" />
       <ScrollView
         style={{ flex: 1 }}
-        contentContainerStyle={[s.scroll, { flexGrow: 1 }]}
+        contentContainerStyle={s.scroll}
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
       >
@@ -161,14 +161,14 @@ const RegisterScreen = ({ navigation }) => {
 };
 
 const s = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#FFFFFF' },
-  scroll:    { paddingBottom: 60 },
+  container: { flex: 1, backgroundColor: '#FAF6EE' },
+  scroll:    { paddingBottom: 80 },
 
   blob1: { position: 'absolute', top: -60,  right: -60, width: 220, height: 220, borderRadius: 110, backgroundColor: 'rgba(107,143,113,0.08)' },
   blob2: { position: 'absolute', top: 140,  right: -30, width: 140, height: 140, borderRadius: 70,  backgroundColor: 'rgba(196,149,106,0.07)' },
 
   header:  { paddingTop: Platform.OS === 'ios' ? 64 : 52, paddingHorizontal: 28, paddingBottom: 8 },
-  backBtn: { width: 40, height: 40, borderRadius: 20, backgroundColor: '#F5F5F3', alignItems: 'center', justifyContent: 'center', marginBottom: 28 },
+  backBtn: { width: 40, height: 40, borderRadius: 20, backgroundColor: '#EDE9E1', alignItems: 'center', justifyContent: 'center', marginBottom: 28 },
   title:   { fontSize: 38, fontWeight: '900', color: '#1C2B1E', letterSpacing: -1.2, lineHeight: 44, marginBottom: 10 },
   accent:  { color: '#6B8F71' },
   sub:     { fontSize: 15, color: '#96A89A', fontWeight: '500', marginBottom: 8 },
@@ -176,7 +176,7 @@ const s = StyleSheet.create({
   form:       { paddingHorizontal: 28, paddingTop: 24 },
   fieldGroup: { marginBottom: 18 },
   label:      { fontSize: 13, fontWeight: '700', color: '#4A5E4D', marginBottom: 8, letterSpacing: 0.2 },
-  row:        { flexDirection: 'row', alignItems: 'center', backgroundColor: '#F5F7F5', borderRadius: 14, paddingHorizontal: 16, height: 56, borderWidth: 1.5, borderColor: 'transparent' },
+  row:        { flexDirection: 'row', alignItems: 'center', backgroundColor: '#F0EDE6', borderRadius: 14, paddingHorizontal: 16, height: 56, borderWidth: 1.5, borderColor: 'transparent' },
   rowFocused: { borderColor: '#6B8F71', backgroundColor: '#EFF5F0' },
   input:      { fontSize: 15, color: '#1C2B1E', fontWeight: '500' },
 
