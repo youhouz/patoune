@@ -76,7 +76,7 @@ export const AuthProvider = ({ children }) => {
   const login = useCallback(async (email, password) => {
     try {
       // Mode démo pour tester sans backend
-      if (email.toLowerCase() === 'demo@pepete.fr' && password === 'demo123') {
+      if (email.trim().toLowerCase() === 'demo@pepete.fr' && password.trim() === 'demo123') {
         const demoUser = {
           _id: 'demo_user_001',
           name: 'Utilisateur Démo',
