@@ -31,13 +31,13 @@ const SERVICES = [
 ];
 
 const PET_SPECIES_EMOJI = {
-  chien: '🐕',
-  chat: '🐈',
-  rongeur: '🐹',
-  oiseau: '🐦',
-  reptile: '🦎',
-  poisson: '🐟',
-  autre: '🐾',
+  chien: '\u{1F415}',
+  chat: '\u{1F408}',
+  rongeur: '\u{1F439}',
+  oiseau: '\u{1F426}',
+  reptile: '\u{1F98E}',
+  poisson: '\u{1F41F}',
+  autre: '\u{1F43E}',
 };
 
 /* ---------- Step Indicator ---------- */
@@ -115,23 +115,20 @@ const BookingScreen = ({ route, navigation }) => {
 
   useEffect(() => {
     loadPets();
-    const animation = Animated.timing(fadeAnim, {
+    Animated.timing(fadeAnim, {
       toValue: 1,
       duration: 500,
       useNativeDriver: true,
-    });
-    animation.start();
-    return () => animation.stop();
+    }).start();
   }, []);
 
   const loadPets = async () => {
     setLoadingPets(true);
     try {
       const response = await getMyPetsAPI();
-      setPets(response.data?.pets || []);
+      setPets(response.data.pets || []);
     } catch (error) {
       console.log('Erreur chargement animaux:', error);
-      setPets([]);
     } finally {
       setLoadingPets(false);
     }
@@ -183,9 +180,9 @@ const BookingScreen = ({ route, navigation }) => {
 
   const getUnitLabel = () => {
     if (selectedService === 'promenade' || selectedService === 'visite') {
-      return '€/h';
+      return '\u20AC/h';
     }
-    return '€/j';
+    return '\u20AC/j';
   };
 
   // Determine current step for the indicator
@@ -289,7 +286,7 @@ const BookingScreen = ({ route, navigation }) => {
                 {petsitter.user?.name || 'Gardien'}
               </Text>
               <Text style={styles.headerSitterPrice}>
-                {petsitter.pricePerHour || '--'} €/h  •  {petsitter.pricePerDay || '--'} €/jour
+                {petsitter.pricePerHour || '--'} \u20AC/h  \u2022  {petsitter.pricePerDay || '--'} \u20AC/jour
               </Text>
             </View>
             {petsitter.verified && (
@@ -337,7 +334,7 @@ const BookingScreen = ({ route, navigation }) => {
                     >
                       <View style={[styles.petCardIcon, isSelected && styles.petCardIconActive]}>
                         <Text style={{ fontSize: 26 }}>
-                          {PET_SPECIES_EMOJI[pet.species?.toLowerCase()] || '🐾'}
+                          {PET_SPECIES_EMOJI[pet.species?.toLowerCase()] || '\u{1F43E}'}
                         </Text>
                       </View>
                       <Text style={[styles.petCardName, isSelected && styles.petCardNameActive]} numberOfLines={1}>
@@ -389,7 +386,7 @@ const BookingScreen = ({ route, navigation }) => {
                           : `${petsitter.pricePerDay || '--'}`}
                       </Text>
                       <Text style={styles.serviceOptionPriceUnit}>
-                        {service.key === 'promenade' || service.key === 'visite' ? '€/h' : '€/j'}
+                        {service.key === 'promenade' || service.key === 'visite' ? '\u20AC/h' : '\u20AC/j'}
                       </Text>
                     </View>
                   </TouchableOpacity>
@@ -464,7 +461,6 @@ const BookingScreen = ({ route, navigation }) => {
               multiline
               numberOfLines={4}
               textAlignVertical="top"
-              maxLength={500}
             />
             <Text style={styles.notesHint}>{notes.length}/500 caracteres</Text>
           </SectionCard>
@@ -492,7 +488,7 @@ const BookingScreen = ({ route, navigation }) => {
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
                   {selectedPetObj && (
                     <Text style={{ fontSize: 14 }}>
-                      {PET_SPECIES_EMOJI[selectedPetObj.species?.toLowerCase()] || '🐾'}
+                      {PET_SPECIES_EMOJI[selectedPetObj.species?.toLowerCase()] || '\u{1F43E}'}
                     </Text>
                   )}
                   <Text style={styles.summaryValue}>
@@ -528,7 +524,7 @@ const BookingScreen = ({ route, navigation }) => {
 
               <View style={styles.summaryTotalRow}>
                 <Text style={styles.summaryTotalLabel}>Total estime</Text>
-                <Text style={styles.summaryTotalValue}>{calculatePrice()} €</Text>
+                <Text style={styles.summaryTotalValue}>{calculatePrice()} \u20AC</Text>
               </View>
             </LinearGradient>
           </View>
