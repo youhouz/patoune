@@ -158,7 +158,7 @@ const RegisterScreen = ({ navigation }) => {
               <PawIcon size={24} color="#FFF" />
             </View>
           </View>
-          <Text style={s.heroTitle}>Rejoindre{'\n'}patoune <Text style={s.heroAccent}>!</Text></Text>
+          <Text style={s.heroTitle}>Rejoindre{'\n'}pépète <Text style={s.heroAccent}>!</Text></Text>
           <Text style={s.heroSub}>Compte gratuit · 30 secondes</Text>
         </View>
       </LinearGradient>

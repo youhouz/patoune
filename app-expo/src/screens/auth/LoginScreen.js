@@ -131,7 +131,7 @@ const LoginScreen = ({ navigation }) => {
           <View style={s.logoBadge}>
             <PawIcon size={28} color="#FFF" />
           </View>
-          <Text style={s.logoWord}>patoune</Text>
+          <Text style={s.logoWord}>pépète.</Text>
           <Text style={s.heroTitle}>Bon retour <Text style={s.heroAccent}>!</Text></Text>
           <Text style={s.heroSub}>Connectez-vous pour continuer</Text>
         </Animated.View>

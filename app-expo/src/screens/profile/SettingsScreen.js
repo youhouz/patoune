@@ -517,7 +517,7 @@ const SettingsScreen = ({ navigation }) => {
                     </LinearGradient>
                   </View>
                   <View style={styles.aboutBrandInfo}>
-                    <Text style={styles.aboutAppName}>Patoune</Text>
+                    <Text style={styles.aboutAppName}>Pépète</Text>
                     <Text style={styles.aboutTagline}>
                       Le compagnon de vos compagnons
                     </Text>
@@ -572,7 +572,7 @@ const SettingsScreen = ({ navigation }) => {
                 Fait avec amour pour vos compagnons
               </Text>
               <Text style={styles.footerCopy}>
-                Patoune v{APP_VERSION}
+                Pépète v{APP_VERSION}
               </Text>
             </View>
 

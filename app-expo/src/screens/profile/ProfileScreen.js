@@ -306,7 +306,7 @@ const ProfileScreen = ({ navigation }) => {
         <View style={styles.footer}>
           <View style={styles.footerBadge}>
             <PawIcon size={16} color={colors.primary} />
-            <Text style={styles.footerText}>patoune</Text>
+            <Text style={styles.footerText}>pépète.</Text>
           </View>
           <Text style={styles.footerVersion}>v1.0.0 — Le meilleur pour vos animaux</Text>
         </View>
