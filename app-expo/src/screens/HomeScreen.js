@@ -179,7 +179,7 @@ const HomeScreen = ({ navigation }) => {
   useFocusEffect(useCallback(() => { fetchData(); }, []));
   const onRefresh = () => { setRefreshing(true); fetchData(); };
 
-  const firstName = user?.name?.split(' ')[0] || 'ami';
+  const firstName = user?.name?.split(' ')[0] || null;
   const hour = new Date().getHours();
   const greetText = hour < 12 ? 'Bonjour' : hour < 18 ? 'Bonne journee' : 'Bonsoir';
 
@@ -240,14 +240,20 @@ const HomeScreen = ({ navigation }) => {
                   <PawIcon size={18} color="rgba(255,255,255,0.9)" />
                   <Text style={s.greeting}>{greetText}</Text>
                 </View>
-                <Text style={s.userName}>{firstName}</Text>
+                {firstName
+                  ? <Text style={s.userName}>{firstName}</Text>
+                  : <Text style={s.userNameSub}>Bienvenue !</Text>
+                }
               </View>
               <TouchableOpacity
                 style={s.avatarBtn}
                 onPress={() => navigation.navigate('Profil')}
                 activeOpacity={0.8}
               >
-                <Text style={s.avatarText}>{user?.name?.charAt(0)?.toUpperCase() || '?'}</Text>
+                {user?.name
+                  ? <Text style={s.avatarText}>{user.name.charAt(0).toUpperCase()}</Text>
+                  : <Feather name="user" size={22} color="#FFF" />
+                }
               </TouchableOpacity>
             </View>
 
@@ -577,7 +583,8 @@ const s = StyleSheet.create({
   heroGreetBox: {},
   heroGreetRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 4 },
   greeting: { fontSize: 12, color: 'rgba(255,255,255,0.82)', fontWeight: '700', letterSpacing: 1.8, textTransform: 'uppercase' },
-  userName: { fontSize: 38, fontWeight: '900', color: '#FFF', letterSpacing: -1.2, marginTop: 2 },
+  userName:    { fontSize: 38, fontWeight: '900', color: '#FFF', letterSpacing: -1.2, marginTop: 2 },
+  userNameSub: { fontSize: 28, fontWeight: '800', color: 'rgba(255,255,255,0.9)', letterSpacing: -0.8, marginTop: 2 },
   avatarBtn: {
     width: 52, height: 52, borderRadius: 26,
     backgroundColor: 'rgba(255,255,255,0.18)',
