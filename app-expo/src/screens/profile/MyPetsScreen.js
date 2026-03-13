@@ -1,45 +1,38 @@
-import React, { useState, useCallback, useRef, useEffect } from 'react';
+// ─────────────────────────────────────────────────────────────────────────────
+// Pépète — MyPetsScreen v3.0
+// ─────────────────────────────────────────────────────────────────────────────
+import React, { useState, useCallback, useRef } from 'react';
 import {
-  View,
-  Text,
-  FlatList,
-  TouchableOpacity,
-  StyleSheet,
-  ActivityIndicator,
-  Alert,
-  Platform,
-  StatusBar,
-  Animated,
-  RefreshControl,
+  View, Text, FlatList, TouchableOpacity, StyleSheet,
+  ActivityIndicator, Alert, Platform, StatusBar,
+  Animated, RefreshControl, Image,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Feather } from '@expo/vector-icons';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useFocusEffect } from '@react-navigation/native';
 import { PawIcon } from '../../components/Logo';
 import { getMyPetsAPI, deletePetAPI } from '../../api/pets';
+import { FONTS } from '../../utils/typography';
 const colors = require('../../utils/colors');
 const { SHADOWS, RADIUS, SPACING, FONT_SIZE } = require('../../utils/colors');
 
-const HEADER_PADDING_TOP = Platform.OS === 'ios' ? 56 : (StatusBar.currentHeight || 24) + 12;
-
 const SPECIES_CONFIG = {
-  chien: { letter: 'C', label: 'Chien', gradient: ['#527A56', '#6B8F71'] },
-  chat: { letter: 'Ch', label: 'Chat', gradient: ['#6B8F71', '#8CB092'] },
-  rongeur: { letter: 'R', label: 'Rongeur', gradient: ['#C4956A', '#D4AD86'] },
-  oiseau: { letter: 'O', label: 'Oiseau', gradient: ['#8CB092', '#B0BEB2'] },
-  reptile: { letter: 'Re', label: 'Reptile', gradient: ['#3D5E41', '#527A56'] },
-  poisson: { letter: 'P', label: 'Poisson', gradient: ['#B8A88A', '#D4C8AE'] },
-  autre: { letter: '?', label: 'Autre', gradient: ['#8A9A8C', '#B0BEB2'] },
+  chien:   { emoji: '🐶', label: 'Chien',    gradient: ['#527A56', '#6B8F71'] },
+  chat:    { emoji: '🐱', label: 'Chat',     gradient: ['#6B8F71', '#8CB092'] },
+  rongeur: { emoji: '🐹', label: 'Rongeur',  gradient: ['#C4956A', '#D4AD86'] },
+  oiseau:  { emoji: '🦜', label: 'Oiseau',   gradient: ['#8CB092', '#B0BEB2'] },
+  reptile: { emoji: '🦎', label: 'Reptile',  gradient: ['#3D5E41', '#527A56'] },
+  poisson: { emoji: '🐟', label: 'Poisson',  gradient: ['#B8A88A', '#D4C8AE'] },
+  autre:   { emoji: '🐾', label: 'Autre',    gradient: ['#8A9A8C', '#B0BEB2'] },
 };
 
 const MyPetsScreen = ({ navigation }) => {
   const [pets, setPets] = useState([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-  const [error, setError] = useState(null);
   const [deletingId, setDeletingId] = useState(null);
-  const fadeAnim = useRef(new Animated.Value(0)).current;
-  const fabAnim = useRef(new Animated.Value(0)).current;
+  const insets = useSafeAreaInsets();
 
   useFocusEffect(
     useCallback(() => {
@@ -47,31 +40,13 @@ const MyPetsScreen = ({ navigation }) => {
     }, [])
   );
 
-  useEffect(() => {
-    Animated.timing(fadeAnim, {
-      toValue: 1,
-      duration: 400,
-      useNativeDriver: true,
-    }).start();
-  }, []);
-
   const loadPets = async () => {
-    setError(null);
     try {
       const response = await getMyPetsAPI();
       const data = response.data?.pets || response.data || [];
       setPets(Array.isArray(data) ? data : []);
-
-      // Animate FAB after data loads
-      Animated.spring(fabAnim, {
-        toValue: 1,
-        tension: 50,
-        friction: 6,
-        useNativeDriver: true,
-      }).start();
     } catch (err) {
       console.log('Erreur chargement animaux:', err);
-      setError('Impossible de charger vos animaux. Tirez pour réessayer.');
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -85,8 +60,8 @@ const MyPetsScreen = ({ navigation }) => {
 
   const handleDelete = (pet) => {
     Alert.alert(
-      'Supprimer cet animal',
-      `Êtes-vous sûr de vouloir supprimer ${pet.name} ?\nCette action est irréversible.`,
+      `Supprimer ${pet.name} ?`,
+      'Cette action est irréversible.',
       [
         { text: 'Annuler', style: 'cancel' },
         {
@@ -97,8 +72,8 @@ const MyPetsScreen = ({ navigation }) => {
             try {
               await deletePetAPI(pet._id);
               setPets((prev) => prev.filter((p) => p._id !== pet._id));
-            } catch (err) {
-              Alert.alert('Erreur', 'Impossible de supprimer cet animal. Réessayez.');
+            } catch {
+              Alert.alert('Erreur', 'Impossible de supprimer cet animal.');
             } finally {
               setDeletingId(null);
             }
@@ -108,577 +83,470 @@ const MyPetsScreen = ({ navigation }) => {
     );
   };
 
-  const getAge = (age) => {
+  const getAgeLabel = (age) => {
     if (age == null) return null;
     if (age === 0) return '< 1 an';
     return `${age} an${age > 1 ? 's' : ''}`;
   };
 
-  const renderPetCard = ({ item, index }) => {
+  const renderPetCard = ({ item }) => {
     const config = SPECIES_CONFIG[item.species] || SPECIES_CONFIG.autre;
     const isDeleting = deletingId === item._id;
+    const photo = item.photos?.[0];
 
     return (
-      <Animated.View
-        style={[
-          styles.petCard,
-          {
-            opacity: isDeleting ? 0.5 : fadeAnim,
-          },
-        ]}
-      >
-        {/* Colored top accent bar */}
+      <Animated.View style={[styles.card, isDeleting && { opacity: 0.4 }]}>
         <LinearGradient
           colors={config.gradient}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 0 }}
-          style={styles.cardAccent}
+          style={styles.cardBar}
         />
-
-        {/* Pet Header Row */}
-        <View style={styles.petHeader}>
-          <View style={styles.speciesIconContainer}>
-            <LinearGradient
-              colors={config.gradient}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 1 }}
-              style={styles.speciesIconGradient}
-            >
-              <Text style={styles.speciesIcon}>{config.letter}</Text>
-            </LinearGradient>
+        <View style={styles.cardBody}>
+          {/* Avatar */}
+          <View style={styles.avatarWrap}>
+            {photo ? (
+              <Image source={{ uri: photo }} style={styles.avatarPhoto} resizeMode="cover" />
+            ) : (
+              <LinearGradient
+                colors={config.gradient}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+                style={styles.avatarGradient}
+              >
+                <Text style={styles.avatarEmoji}>{config.emoji}</Text>
+              </LinearGradient>
+            )}
           </View>
 
-          <View style={styles.petInfo}>
-            <View style={styles.petNameRow}>
-              <Text style={styles.petName} numberOfLines={1}>
-                {item.name}
-              </Text>
+          {/* Infos */}
+          <View style={styles.cardInfo}>
+            <View style={styles.nameRow}>
+              <Text style={styles.petName} numberOfLines={1}>{item.name}</Text>
               {item.gender && (
-                <View
-                  style={[
-                    styles.genderBadge,
-                    {
-                      backgroundColor:
-                        item.gender === 'male' ? '#EFF5F0' : '#FDF5ED',
-                    },
-                  ]}
-                >
-                  <Text
-                    style={[
-                      styles.genderText,
-                      {
-                        color: item.gender === 'male' ? '#8CB092' : '#C4956A',
-                      },
-                    ]}
-                  >
+                <View style={[styles.genderDot, { backgroundColor: item.gender === 'male' ? '#EFF5F0' : '#FDF5ED' }]}>
+                  <Text style={[styles.genderIcon, { color: item.gender === 'male' ? '#8CB092' : '#C4956A' }]}>
                     {item.gender === 'male' ? '♂' : '♀'}
                   </Text>
                 </View>
               )}
             </View>
             <Text style={styles.petBreed} numberOfLines={1}>
-              {config.label}
-              {item.breed ? ` - ${item.breed}` : ''}
+              {config.label}{item.breed ? ` · ${item.breed}` : ''}
             </Text>
+            <View style={styles.chips}>
+              {getAgeLabel(item.age) && (
+                <View style={styles.chip}>
+                  <Feather name="calendar" size={11} color={colors.textTertiary} />
+                  <Text style={styles.chipText}>{getAgeLabel(item.age)}</Text>
+                </View>
+              )}
+              {item.weight != null && (
+                <View style={styles.chip}>
+                  <Feather name="activity" size={11} color={colors.textTertiary} />
+                  <Text style={styles.chipText}>{item.weight} kg</Text>
+                </View>
+              )}
+              <View style={[styles.chip, item.vaccinated ? styles.chipGreen : styles.chipOrange]}>
+                <Feather
+                  name={item.vaccinated ? 'check-circle' : 'alert-circle'}
+                  size={11}
+                  color={item.vaccinated ? colors.success : colors.warning}
+                />
+                <Text style={[styles.chipText, { color: item.vaccinated ? colors.success : colors.warning }]}>
+                  {item.vaccinated ? 'Vacciné' : 'Non vacciné'}
+                </Text>
+              </View>
+            </View>
+            {item.specialNeeds ? (
+              <View style={styles.needsRow}>
+                <Feather name="info" size={11} color={colors.warning} />
+                <Text style={styles.needsText} numberOfLines={1}>{item.specialNeeds}</Text>
+              </View>
+            ) : null}
           </View>
 
-          <TouchableOpacity
-            style={styles.deleteButton}
-            onPress={() => handleDelete(item)}
-            activeOpacity={0.6}
-            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-            disabled={isDeleting}
-          >
-            {isDeleting ? (
-              <ActivityIndicator size="small" color={colors.error} />
-            ) : (
-              <Feather name="x" size={13} color={colors.error} />
-            )}
-          </TouchableOpacity>
-        </View>
-
-        {/* Details Chips */}
-        <View style={styles.detailsRow}>
-          {getAge(item.age) && (
-            <View style={styles.detailChip}>
-              <Feather name="gift" size={12} color={colors.textTertiary} />
-              <Text style={styles.detailChipText}>{getAge(item.age)}</Text>
-            </View>
-          )}
-          {item.weight != null && (
-            <View style={styles.detailChip}>
-              <Feather name="activity" size={12} color={colors.textTertiary} />
-              <Text style={styles.detailChipText}>{item.weight} kg</Text>
-            </View>
-          )}
-          {item.vaccinated && (
-            <View style={[styles.detailChip, styles.vaccinatedChip]}>
-              <Feather name="check-circle" size={12} color={colors.success} />
-              <Text style={[styles.detailChipText, styles.vaccinatedText]}>
-                Vacciné
-              </Text>
-            </View>
-          )}
-          {!item.vaccinated && (
-            <View style={[styles.detailChip, styles.notVaccinatedChip]}>
-              <Feather name="alert-triangle" size={12} color={colors.warning} />
-              <Text style={[styles.detailChipText, styles.notVaccinatedText]}>
-                Non vacciné
-              </Text>
-            </View>
-          )}
-        </View>
-
-        {/* Special Needs */}
-        {item.specialNeeds ? (
-          <View style={styles.specialNeedsContainer}>
-            <Text style={styles.specialNeedsLabel}>Besoins particuliers</Text>
-            <Text style={styles.specialNeedsText} numberOfLines={2}>
-              {item.specialNeeds}
-            </Text>
+          {/* Actions edit / delete */}
+          <View style={styles.actions}>
+            <TouchableOpacity
+              style={styles.editBtn}
+              onPress={() => navigation.navigate('AddPet', { pet: item })}
+              activeOpacity={0.7}
+              hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+            >
+              <Feather name="edit-2" size={14} color={colors.primary} />
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.deleteBtn}
+              onPress={() => handleDelete(item)}
+              disabled={isDeleting}
+              activeOpacity={0.7}
+              hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+            >
+              {isDeleting
+                ? <ActivityIndicator size="small" color={colors.error} />
+                : <Feather name="trash-2" size={14} color={colors.error} />
+              }
+            </TouchableOpacity>
           </View>
-        ) : null}
+        </View>
       </Animated.View>
     );
   };
 
-  const renderEmptyState = () => (
-    <View style={styles.emptyContainer}>
-      <View style={styles.emptyIconContainer}>
-        <LinearGradient
-          colors={['#527A56', '#6B8F71']}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
-          style={styles.emptyIconGradient}
-        >
-          <PawIcon size={44} color="#FFF" />
-        </LinearGradient>
-      </View>
+  const renderEmpty = () => (
+    <View style={styles.emptyWrap}>
+      <LinearGradient
+        colors={['#527A56', '#6B8F71']}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+        style={styles.emptyIcon}
+      >
+        <PawIcon size={44} color="#FFF" />
+      </LinearGradient>
       <Text style={styles.emptyTitle}>Aucun animal</Text>
-      <Text style={styles.emptySubtitle}>
+      <Text style={styles.emptySub}>
         Ajoutez votre premier compagnon{'\n'}pour commencer l'aventure Patoune
       </Text>
       <TouchableOpacity
-        style={styles.emptyButton}
+        style={styles.emptyBtn}
         onPress={() => navigation.navigate('AddPet')}
-        activeOpacity={0.8}
+        activeOpacity={0.85}
       >
         <LinearGradient
-          colors={['#527A56', '#6B8F71']}
+          colors={[colors.primaryDark, colors.primary]}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 0 }}
-          style={styles.emptyButtonGradient}
+          style={styles.emptyBtnGrad}
         >
           <Feather name="plus" size={16} color="#FFF" />
-          <Text style={styles.emptyButtonText}>Ajouter mon premier animal</Text>
+          <Text style={styles.emptyBtnText}>Ajouter mon premier animal</Text>
         </LinearGradient>
-      </TouchableOpacity>
-    </View>
-  );
-
-  const renderErrorState = () => (
-    <View style={styles.emptyContainer}>
-      <View style={styles.errorIconContainer}>
-        <Feather name="frown" size={44} color={colors.warning} />
-      </View>
-      <Text style={styles.emptyTitle}>Oups !</Text>
-      <Text style={styles.emptySubtitle}>{error}</Text>
-      <TouchableOpacity
-        style={styles.retryButton}
-        onPress={() => {
-          setLoading(true);
-          loadPets();
-        }}
-        activeOpacity={0.8}
-      >
-        <Text style={styles.retryButtonText}>Réessayer</Text>
       </TouchableOpacity>
     </View>
   );
 
   if (loading) {
     return (
-      <View style={styles.loadingContainer}>
-        <StatusBar barStyle="dark-content" backgroundColor={colors.background} />
+      <View style={styles.loading}>
+        <StatusBar barStyle="light-content" />
         <ActivityIndicator size="large" color={colors.primary} />
-        <Text style={styles.loadingText}>Chargement de vos animaux...</Text>
+        <Text style={styles.loadingText}>Chargement...</Text>
       </View>
     );
   }
 
   return (
-    <View style={styles.container}>
-      <StatusBar barStyle="dark-content" backgroundColor={colors.background} />
-
-      {/* Header */}
-      <View style={styles.header}>
-        <TouchableOpacity
-          style={styles.backButton}
-          onPress={() => navigation.goBack()}
-          activeOpacity={0.7}
-        >
-          <Feather name="chevron-left" size={24} color={colors.text} />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>Mes animaux</Text>
-        <View style={styles.headerBadge}>
-          <Text style={styles.headerBadgeText}>{pets.length}</Text>
-        </View>
-      </View>
-
-      {error ? (
-        renderErrorState()
-      ) : pets.length === 0 ? (
-        renderEmptyState()
-      ) : (
-        <>
-          <FlatList
-            data={pets}
-            renderItem={renderPetCard}
-            keyExtractor={(item) => item._id}
-            contentContainerStyle={styles.list}
-            showsVerticalScrollIndicator={false}
-            refreshControl={
-              <RefreshControl
-                refreshing={refreshing}
-                onRefresh={onRefresh}
-                colors={[colors.primary]}
-                tintColor={colors.primary}
-              />
-            }
-            ItemSeparatorComponent={() => <View style={styles.separator} />}
-          />
-
-          {/* FAB */}
-          <Animated.View
-            style={[
-              styles.fab,
-              {
-                transform: [
-                  {
-                    scale: fabAnim.interpolate({
-                      inputRange: [0, 1],
-                      outputRange: [0, 1],
-                    }),
-                  },
-                ],
-                opacity: fabAnim,
-              },
-            ]}
+    <View style={styles.root}>
+      <StatusBar barStyle="light-content" />
+      <LinearGradient
+        colors={['#1C2B1E', '#2C3E2F', '#3D5E41']}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+        style={[styles.header, { paddingTop: insets.top + 12 }]}
+      >
+        <View style={styles.headerRow}>
+          <TouchableOpacity
+            style={styles.backBtn}
+            onPress={() => navigation.goBack()}
+            activeOpacity={0.7}
           >
-            <TouchableOpacity
-              onPress={() => navigation.navigate('AddPet')}
-              activeOpacity={0.85}
-              style={styles.fabTouchable}
-            >
-              <LinearGradient
-                colors={['#527A56', '#6B8F71']}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 1 }}
-                style={styles.fabGradient}
-              >
-                <Feather name="plus" size={28} color="#FFF" />
-              </LinearGradient>
-            </TouchableOpacity>
-          </Animated.View>
-        </>
+            <Feather name="chevron-left" size={22} color="rgba(255,255,255,0.9)" />
+          </TouchableOpacity>
+          <View style={styles.headerCenter}>
+            <Text style={styles.headerTitle}>Mes animaux</Text>
+            {pets.length > 0 && (
+              <View style={styles.countBadge}>
+                <Text style={styles.countBadgeText}>{pets.length}</Text>
+              </View>
+            )}
+          </View>
+          <TouchableOpacity
+            style={styles.addBtn}
+            onPress={() => navigation.navigate('AddPet')}
+            activeOpacity={0.85}
+          >
+            <Feather name="plus" size={18} color="#FFF" />
+            <Text style={styles.addBtnText}>Ajouter</Text>
+          </TouchableOpacity>
+        </View>
+      </LinearGradient>
+
+      {pets.length === 0 ? (
+        renderEmpty()
+      ) : (
+        <FlatList
+          data={pets}
+          renderItem={renderPetCard}
+          keyExtractor={(item) => item._id}
+          contentContainerStyle={[styles.list, { paddingBottom: insets.bottom + 32 }]}
+          showsVerticalScrollIndicator={false}
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={onRefresh}
+              colors={[colors.primary]}
+              tintColor={colors.primary}
+            />
+          }
+        />
       )}
     </View>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
+  root: {
     flex: 1,
     backgroundColor: colors.background,
   },
-  loadingContainer: {
+  loading: {
     flex: 1,
-    justifyContent: 'center',
     alignItems: 'center',
+    justifyContent: 'center',
     backgroundColor: colors.background,
+    gap: SPACING.md,
   },
   loadingText: {
-    marginTop: SPACING.base,
+    fontFamily: FONTS.bodyMedium,
     fontSize: FONT_SIZE.base,
     color: colors.textSecondary,
-    fontWeight: '500',
   },
 
-  // Header
+  // Header gradient
   header: {
+    paddingHorizontal: SPACING.lg,
+    paddingBottom: SPACING.xl,
+  },
+  headerRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingTop: HEADER_PADDING_TOP,
-    paddingBottom: SPACING.base,
-    paddingHorizontal: SPACING.lg,
-    backgroundColor: colors.background,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.border,
+    gap: SPACING.base,
   },
-  backButton: {
-    width: 36,
-    height: 36,
-    borderRadius: RADIUS.md,
-    backgroundColor: colors.white,
+  backBtn: {
+    width: 38,
+    height: 38,
+    borderRadius: RADIUS.lg,
+    backgroundColor: 'rgba(255,255,255,0.10)',
     alignItems: 'center',
     justifyContent: 'center',
-    ...SHADOWS.sm,
+  },
+  headerCenter: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: SPACING.sm,
   },
   headerTitle: {
-    flex: 1,
+    fontFamily: FONTS.brand,
     fontSize: FONT_SIZE.xl,
-    fontWeight: '800',
-    color: colors.text,
-    marginLeft: SPACING.base,
-    letterSpacing: 0.2,
+    color: '#FFF',
+    letterSpacing: -0.4,
   },
-  headerBadge: {
-    backgroundColor: colors.primarySoft,
-    minWidth: 32,
+  countBadge: {
+    backgroundColor: 'rgba(255,255,255,0.18)',
     paddingHorizontal: SPACING.md,
-    paddingVertical: SPACING.xs,
+    paddingVertical: 3,
     borderRadius: RADIUS.full,
-    alignItems: 'center',
   },
-  headerBadgeText: {
+  countBadgeText: {
+    fontFamily: FONTS.bodySemiBold,
+    fontSize: FONT_SIZE.xs,
+    color: 'rgba(255,255,255,0.9)',
+  },
+  addBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: SPACING.xs,
+    backgroundColor: 'rgba(255,255,255,0.18)',
+    paddingHorizontal: SPACING.base,
+    paddingVertical: SPACING.sm,
+    borderRadius: RADIUS.full,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.20)',
+  },
+  addBtnText: {
+    fontFamily: FONTS.bodySemiBold,
     fontSize: FONT_SIZE.sm,
-    fontWeight: '700',
-    color: colors.primary,
+    color: '#FFF',
   },
 
   // List
   list: {
-    padding: SPACING.lg,
-    paddingBottom: 100,
-  },
-  separator: {
-    height: SPACING.base,
+    padding: SPACING.base,
+    paddingTop: SPACING.xl,
+    gap: SPACING.md,
   },
 
-  // Pet Card
-  petCard: {
+  // Pet card
+  card: {
     backgroundColor: colors.white,
     borderRadius: RADIUS.xl,
     overflow: 'hidden',
     ...SHADOWS.md,
   },
-  cardAccent: {
-    height: 4,
-  },
-  petHeader: {
+  cardBar: { height: 3 },
+  cardBody: {
     flexDirection: 'row',
-    alignItems: 'center',
     padding: SPACING.base,
-    paddingBottom: SPACING.sm,
+    alignItems: 'flex-start',
+    gap: SPACING.base,
   },
-  speciesIconContainer: {
-    borderRadius: RADIUS.lg,
+
+  // Avatar
+  avatarWrap: {
+    borderRadius: RADIUS.xl,
     overflow: 'hidden',
+    flexShrink: 0,
   },
-  speciesIconGradient: {
-    width: 52,
-    height: 52,
-    borderRadius: RADIUS.lg,
+  avatarPhoto: {
+    width: 64,
+    height: 64,
+    borderRadius: RADIUS.xl,
+  },
+  avatarGradient: {
+    width: 64,
+    height: 64,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  speciesIcon: {
-    fontSize: 16,
-    fontWeight: '800',
-    color: '#FFF',
-    letterSpacing: 0.5,
-  },
-  petInfo: {
+  avatarEmoji: { fontSize: 28 },
+
+  // Card info
+  cardInfo: {
     flex: 1,
-    marginLeft: SPACING.md,
+    gap: 4,
   },
-  petNameRow: {
+  nameRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: SPACING.sm,
   },
   petName: {
+    fontFamily: FONTS.heading,
     fontSize: FONT_SIZE.lg,
-    fontWeight: '700',
     color: colors.text,
+    flexShrink: 1,
+    letterSpacing: -0.3,
   },
-  genderBadge: {
-    width: 26,
-    height: 26,
-    borderRadius: 13,
+  genderDot: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  genderText: {
-    fontSize: 14,
+  genderIcon: {
+    fontSize: 13,
     fontWeight: '700',
   },
   petBreed: {
+    fontFamily: FONTS.bodyMedium,
     fontSize: FONT_SIZE.sm,
     color: colors.textSecondary,
-    marginTop: 2,
-    fontWeight: '500',
   },
-  deleteButton: {
-    width: 34,
-    height: 34,
-    borderRadius: RADIUS.full,
-    backgroundColor: colors.errorSoft,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-
-  // Details
-  detailsRow: {
+  chips: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    paddingHorizontal: SPACING.base,
-    paddingBottom: SPACING.sm,
-    gap: SPACING.sm,
+    gap: SPACING.xs,
+    marginTop: SPACING.xs,
   },
-  detailChip: {
+  chip: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: colors.background,
-    paddingHorizontal: SPACING.md,
-    paddingVertical: SPACING.xs + 2,
+    paddingHorizontal: SPACING.sm,
+    paddingVertical: 3,
     borderRadius: RADIUS.full,
-    gap: SPACING.xs,
+    gap: 4,
   },
-  detailChipText: {
+  chipGreen: { backgroundColor: '#EFF5F0' },
+  chipOrange: { backgroundColor: '#FDF5ED' },
+  chipText: {
+    fontFamily: FONTS.bodyMedium,
     fontSize: FONT_SIZE.xs,
-    fontWeight: '600',
     color: colors.textSecondary,
   },
-  vaccinatedChip: {
-    backgroundColor: colors.successSoft,
+  needsRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    marginTop: SPACING.xs,
   },
-  vaccinatedText: {
-    color: colors.success,
-  },
-  notVaccinatedChip: {
-    backgroundColor: colors.warningSoft,
-  },
-  notVaccinatedText: {
+  needsText: {
+    fontFamily: FONTS.body,
+    fontSize: FONT_SIZE.xs,
     color: colors.warning,
-  },
-
-  // Special Needs
-  specialNeedsContainer: {
-    marginHorizontal: SPACING.base,
-    marginBottom: SPACING.base,
-    padding: SPACING.md,
-    backgroundColor: colors.background,
-    borderRadius: RADIUS.md,
-    borderLeftWidth: 3,
-    borderLeftColor: colors.warning,
-  },
-  specialNeedsLabel: {
-    fontSize: FONT_SIZE.xs,
-    fontWeight: '700',
-    color: colors.textSecondary,
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
-    marginBottom: SPACING.xs,
-  },
-  specialNeedsText: {
-    fontSize: FONT_SIZE.sm,
-    color: colors.text,
-    fontWeight: '400',
-    lineHeight: 20,
-  },
-
-  // Empty State
-  emptyContainer: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingHorizontal: SPACING['3xl'],
   },
-  emptyIconContainer: {
+
+  // Actions
+  actions: {
+    gap: SPACING.sm,
+    alignItems: 'center',
+  },
+  editBtn: {
+    width: 36,
+    height: 36,
+    borderRadius: RADIUS.lg,
+    backgroundColor: colors.primarySoft,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  deleteBtn: {
+    width: 36,
+    height: 36,
+    borderRadius: RADIUS.lg,
+    backgroundColor: '#FBE8E4',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+
+  // Empty state
+  emptyWrap: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: SPACING['2xl'],
+  },
+  emptyIcon: {
+    width: 96,
+    height: 96,
+    borderRadius: 48,
+    alignItems: 'center',
+    justifyContent: 'center',
     marginBottom: SPACING.xl,
-    borderRadius: 50,
-    overflow: 'hidden',
-    ...SHADOWS.glow('#527A56'),
-  },
-  emptyIconGradient: {
-    width: 100,
-    height: 100,
-    borderRadius: 50,
-    alignItems: 'center',
-    justifyContent: 'center',
   },
   emptyTitle: {
+    fontFamily: FONTS.heading,
     fontSize: FONT_SIZE['2xl'],
-    fontWeight: '800',
     color: colors.text,
     marginBottom: SPACING.sm,
+    letterSpacing: -0.5,
   },
-  emptySubtitle: {
+  emptySub: {
+    fontFamily: FONTS.body,
     fontSize: FONT_SIZE.base,
     color: colors.textSecondary,
     textAlign: 'center',
     lineHeight: 22,
     marginBottom: SPACING['2xl'],
   },
-  emptyButton: {
+  emptyBtn: {
     borderRadius: RADIUS.xl,
     overflow: 'hidden',
-    ...SHADOWS.glow('#527A56'),
   },
-  emptyButtonGradient: {
+  emptyBtnGrad: {
     flexDirection: 'row',
     alignItems: 'center',
     paddingVertical: SPACING.base,
     paddingHorizontal: SPACING['2xl'],
-    borderRadius: RADIUS.xl,
     gap: SPACING.sm,
   },
-  emptyButtonText: {
+  emptyBtnText: {
+    fontFamily: FONTS.bodySemiBold,
     fontSize: FONT_SIZE.base,
-    fontWeight: '700',
-    color: colors.white,
-  },
-
-  // Error State
-  errorIconContainer: {
-    width: 100,
-    height: 100,
-    borderRadius: 50,
-    backgroundColor: colors.warningSoft,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: SPACING.xl,
-  },
-  retryButton: {
-    backgroundColor: colors.primary,
-    paddingVertical: SPACING.md,
-    paddingHorizontal: SPACING['2xl'],
-    borderRadius: RADIUS.xl,
-  },
-  retryButtonText: {
-    fontSize: FONT_SIZE.base,
-    fontWeight: '700',
-    color: colors.white,
-  },
-
-  // FAB
-  fab: {
-    position: 'absolute',
-    bottom: Platform.OS === 'ios' ? 32 : 24,
-    right: SPACING.lg,
-    ...SHADOWS.glow('#527A56'),
-  },
-  fabTouchable: {
-    borderRadius: 30,
-    overflow: 'hidden',
-  },
-  fabGradient: {
-    width: 60,
-    height: 60,
-    borderRadius: 30,
-    alignItems: 'center',
-    justifyContent: 'center',
+    color: '#FFF',
   },
 });
 

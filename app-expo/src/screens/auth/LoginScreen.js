@@ -1,190 +1,470 @@
-import React, { useState } from 'react';
+// ─────────────────────────────────────────────────────────────────────────────
+// Pépète — LoginScreen v3.0
+// DA premium unifiée — même système de design que les autres écrans de l'app
+// ─────────────────────────────────────────────────────────────────────────────
+import React, { useState, useRef, useEffect } from 'react';
 import {
-  View, Text, TextInput, TouchableOpacity,
-  StyleSheet, ScrollView, Platform, Alert, StatusBar,
+  View, Text, TextInput, TouchableOpacity, StyleSheet,
+  Platform, Alert, StatusBar, Animated, ActivityIndicator,
+  KeyboardAvoidingView, ScrollView, Dimensions,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Feather } from '@expo/vector-icons';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAuth } from '../../context/AuthContext';
 import { PawIcon } from '../../components/Logo';
 import useResponsive from '../../hooks/useResponsive';
+import { FONTS } from '../../utils/typography';
+const colors = require('../../utils/colors');
+const { SHADOWS, RADIUS, SPACING, FONT_SIZE } = require('../../utils/colors');
 
+const { height: SCREEN_H } = Dimensions.get('window');
+
+// ─── Champ de saisie unifié ──────────────────────────────────────────────────
+const Field = ({ label, icon, value, onChangeText, placeholder, focusedKey, setFocused, keyboardType, secureTextEntry, right, autoCapitalize, autoCorrect, onSubmitEditing, returnKeyType, inputRef }) => {
+  const isFocused = focusedKey === label;
+  return (
+    <View style={s.fieldWrap}>
+      <Text style={s.label}>{label}</Text>
+      <View style={[s.fieldRow, isFocused && s.fieldRowFocused]}>
+        <Feather name={icon} size={18} color={isFocused ? colors.primary : colors.textLight} style={s.fieldIcon} />
+        <TextInput
+          ref={inputRef}
+          style={s.input}
+          value={value}
+          onChangeText={onChangeText}
+          placeholder={placeholder}
+          placeholderTextColor={colors.placeholder}
+          keyboardType={keyboardType || 'default'}
+          secureTextEntry={secureTextEntry}
+          autoCapitalize={autoCapitalize || 'none'}
+          autoCorrect={autoCorrect !== undefined ? autoCorrect : true}
+          onFocus={() => setFocused(label)}
+          onBlur={() => setFocused(null)}
+          onSubmitEditing={onSubmitEditing}
+          returnKeyType={returnKeyType || 'next'}
+        />
+        {right}
+      </View>
+    </View>
+  );
+};
+
+// ─── Screen ──────────────────────────────────────────────────────────────────
 const LoginScreen = ({ navigation }) => {
   const { login } = useAuth();
   const { isTablet, contentWidth } = useResponsive();
-  const [email, setEmail]       = useState('');
+  const insets = useSafeAreaInsets();
+
+  const [email, setEmail]     = useState('');
   const [password, setPassword] = useState('');
-  const [loading, setLoading]   = useState(false);
-  const [showPwd, setShowPwd]   = useState(false);
-  const [focused, setFocused]   = useState(null);
-  const maxW = isTablet ? Math.min(contentWidth, 480) : '100%';
+  const [loading, setLoading] = useState(false);
+  const [showPwd, setShowPwd] = useState(false);
+  const [focused, setFocused] = useState(null);
+  const [errorMsg, setErrorMsg] = useState('');
+
+  // Animations
+  const heroScale  = useRef(new Animated.Value(0.92)).current;
+  const heroOpacity = useRef(new Animated.Value(0)).current;
+  const cardSlide  = useRef(new Animated.Value(40)).current;
+  const cardOpacity = useRef(new Animated.Value(0)).current;
+  const shakeAnim  = useRef(new Animated.Value(0)).current;
+
+  const pwdRef = useRef(null);
+
+  const maxW = isTablet ? Math.min(contentWidth, 520) : '100%';
+
+  useEffect(() => {
+    Animated.parallel([
+      Animated.spring(heroScale,  { toValue: 1, tension: 50, friction: 7, useNativeDriver: true }),
+      Animated.timing(heroOpacity, { toValue: 1, duration: 500, useNativeDriver: true }),
+    ]).start();
+    Animated.parallel([
+      Animated.spring(cardSlide, { toValue: 0, tension: 60, friction: 8, delay: 150, useNativeDriver: true }),
+      Animated.timing(cardOpacity, { toValue: 1, duration: 400, delay: 150, useNativeDriver: true }),
+    ]).start();
+  }, []);
+
+  const shake = () => {
+    Animated.sequence([
+      Animated.timing(shakeAnim, { toValue: 10,  duration: 60, useNativeDriver: true }),
+      Animated.timing(shakeAnim, { toValue: -10, duration: 60, useNativeDriver: true }),
+      Animated.timing(shakeAnim, { toValue: 8,   duration: 60, useNativeDriver: true }),
+      Animated.timing(shakeAnim, { toValue: -8,  duration: 60, useNativeDriver: true }),
+      Animated.timing(shakeAnim, { toValue: 0,   duration: 60, useNativeDriver: true }),
+    ]).start();
+  };
 
   const handleLogin = async () => {
-    if (!email || !password) {
-      Alert.alert('Oups !', 'Remplis tous les champs pour continuer');
+    setErrorMsg('');
+    if (!email.trim() || !password) {
+      shake();
+      setErrorMsg('Remplis tous les champs pour continuer');
       return;
     }
     setLoading(true);
     const result = await login(email.trim().toLowerCase(), password);
     setLoading(false);
-    if (!result.success) Alert.alert('Connexion impossible', result.error);
+    if (!result.success) {
+      shake();
+      setErrorMsg(result.error || 'Connexion impossible. Vérifie tes identifiants.');
+    }
   };
 
   return (
-    <View style={s.container}>
-      <StatusBar barStyle="dark-content" />
-      <ScrollView
-        style={s.scrollView}
-        contentContainerStyle={s.scroll}
-        keyboardShouldPersistTaps="handled"
-        showsVerticalScrollIndicator={false}
-        bounces={true}
-        alwaysBounceVertical={true}
+    <View style={s.root}>
+      <StatusBar barStyle="light-content" />
+
+      {/* ── Hero gradient ── */}
+      <LinearGradient
+        colors={['#1C2B1E', '#2C3E2F', '#3D5E41']}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+        style={[s.hero, { paddingTop: insets.top + 32 }]}
       >
-        {/* ── Blobs décoratifs ── */}
-        <View style={s.blob1} pointerEvents="none" />
-        <View style={s.blob2} pointerEvents="none" />
-        <View style={s.blob3} pointerEvents="none" />
+        {/* Décors lumineux */}
+        <View style={s.glow1} pointerEvents="none" />
+        <View style={s.glow2} pointerEvents="none" />
 
-        <View style={[s.inner, { maxWidth: maxW, alignSelf: 'center', width: '100%' }]}>
-
-          {/* ── Logo badge ── */}
-          <View style={s.logoArea}>
-            <View style={s.logoBadge}>
-              <PawIcon size={30} color="#FFF" />
-            </View>
-            <Text style={s.logoName}>pépète<Text style={s.logoDot}>.</Text></Text>
-            <Text style={s.logoTagline}>Le meilleur pour vos animaux</Text>
+        <Animated.View style={[s.heroInner, { transform: [{ scale: heroScale }], opacity: heroOpacity, maxWidth: maxW, alignSelf: 'center', width: '100%' }]}>
+          {/* Badge logo */}
+          <View style={s.logoBadge}>
+            <PawIcon size={28} color="#FFF" />
           </View>
+          <Text style={s.logoWord}>patoune</Text>
+          <Text style={s.heroTitle}>Bon retour <Text style={s.heroAccent}>!</Text></Text>
+          <Text style={s.heroSub}>Connectez-vous pour continuer</Text>
+        </Animated.View>
+      </LinearGradient>
 
-          {/* ── Titre ── */}
-          <Text style={s.title}>
-            Bon retour,{'\n'}<Text style={s.accent}>content de vous voir !</Text>
-          </Text>
-          <Text style={s.sub}>Connectez-vous pour continuer</Text>
+      {/* ── Card formulaire ── */}
+      <KeyboardAvoidingView
+        style={{ flex: 1 }}
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        keyboardVerticalOffset={0}
+      >
+        <ScrollView
+          style={s.scrollView}
+          contentContainerStyle={[s.scrollContent, { paddingBottom: insets.bottom + 40 }]}
+          keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={false}
+          bounces={false}
+        >
+          <Animated.View
+            style={[
+              s.card,
+              {
+                maxWidth: maxW,
+                alignSelf: 'center',
+                width: '100%',
+                transform: [{ translateY: cardSlide }, { translateX: shakeAnim }],
+                opacity: cardOpacity,
+              },
+            ]}
+          >
+            {/* Titre section */}
+            <Text style={s.cardTitle}>Connexion</Text>
 
-          {/* ── Email ── */}
-          <View style={s.fieldGroup}>
-            <Text style={s.label}>Adresse email</Text>
-            <View style={[s.row, focused === 'email' && s.rowFocused]}>
-              <Feather name="mail" size={17} color={focused === 'email' ? '#6B8F71' : '#C0C8C2'} style={{ marginRight: 10 }} />
-              <TextInput
-                style={s.input}
-                value={email}
-                onChangeText={setEmail}
-                placeholder="votre@email.com"
-                placeholderTextColor="#C8CEC9"
-                keyboardType="email-address"
-                autoCapitalize="none"
-                autoCorrect={false}
-                onFocus={() => setFocused('email')}
-                onBlur={() => setFocused(null)}
-              />
-            </View>
-          </View>
+            {/* Message d'erreur */}
+            {errorMsg ? (
+              <View style={s.errorBanner}>
+                <Feather name="alert-circle" size={15} color={colors.error} />
+                <Text style={s.errorBannerText}>{errorMsg}</Text>
+              </View>
+            ) : null}
 
-          {/* ── Mot de passe ── */}
-          <View style={s.fieldGroup}>
-            <Text style={s.label}>Mot de passe</Text>
-            <View style={[s.row, focused === 'pwd' && s.rowFocused]}>
-              <Feather name="lock" size={17} color={focused === 'pwd' ? '#6B8F71' : '#C0C8C2'} style={{ marginRight: 10 }} />
-              <TextInput
-                style={[s.input, { flex: 1 }]}
-                value={password}
-                onChangeText={setPassword}
-                placeholder="Votre mot de passe"
-                placeholderTextColor="#C8CEC9"
-                secureTextEntry={!showPwd}
-                onFocus={() => setFocused('pwd')}
-                onBlur={() => setFocused(null)}
-              />
-              <TouchableOpacity onPress={() => setShowPwd(!showPwd)} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
-                <Feather name={showPwd ? 'eye-off' : 'eye'} size={17} color="#C0C8C2" />
-              </TouchableOpacity>
-            </View>
-          </View>
+            {/* Email */}
+            <Field
+              label="email"
+              icon="mail"
+              value={email}
+              onChangeText={(v) => { setEmail(v); setErrorMsg(''); }}
+              placeholder="votre@email.com"
+              focusedKey={focused}
+              setFocused={setFocused}
+              keyboardType="email-address"
+              autoCorrect={false}
+              returnKeyType="next"
+              onSubmitEditing={() => pwdRef.current?.focus()}
+            />
 
-          {/* ── CTA ── */}
-          <TouchableOpacity onPress={handleLogin} disabled={loading} activeOpacity={0.88} style={{ marginTop: 8 }}>
-            <LinearGradient
-              colors={['#527A56', '#6B8F71']}
-              start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}
-              style={s.cta}
+            {/* Mot de passe */}
+            <Field
+              label="mot de passe"
+              icon="lock"
+              value={password}
+              onChangeText={(v) => { setPassword(v); setErrorMsg(''); }}
+              placeholder="Votre mot de passe"
+              focusedKey={focused}
+              setFocused={setFocused}
+              secureTextEntry={!showPwd}
+              inputRef={pwdRef}
+              returnKeyType="done"
+              onSubmitEditing={handleLogin}
+              right={
+                <TouchableOpacity
+                  onPress={() => setShowPwd(!showPwd)}
+                  hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+                >
+                  <Feather name={showPwd ? 'eye-off' : 'eye'} size={18} color={colors.textLight} />
+                </TouchableOpacity>
+              }
+            />
+
+            {/* CTA */}
+            <TouchableOpacity
+              onPress={handleLogin}
+              disabled={loading}
+              activeOpacity={0.88}
+              style={[s.ctaWrap, loading && s.ctaDisabled]}
             >
-              <Text style={s.ctaText}>{loading ? 'Connexion…' : 'Se connecter'}</Text>
-              {!loading && <Feather name="arrow-right" size={18} color="#FFF" />}
-            </LinearGradient>
-          </TouchableOpacity>
+              <LinearGradient
+                colors={loading ? [colors.textLight, colors.textTertiary] : [colors.primaryDark, colors.primary]}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 0 }}
+                style={s.cta}
+              >
+                {loading
+                  ? <ActivityIndicator size="small" color="#FFF" />
+                  : (
+                    <>
+                      <Text style={s.ctaText}>Se connecter</Text>
+                      <Feather name="arrow-right" size={20} color="#FFF" />
+                    </>
+                  )
+                }
+              </LinearGradient>
+            </TouchableOpacity>
 
-          {/* ── Séparateur ── */}
-          <View style={s.sep}>
-            <View style={s.sepLine} />
-            <Text style={s.sepText}>ou</Text>
-            <View style={s.sepLine} />
-          </View>
+            {/* Divider */}
+            <View style={s.divider}>
+              <View style={s.dividerLine} />
+              <Text style={s.dividerLabel}>ou</Text>
+              <View style={s.dividerLine} />
+            </View>
 
-          {/* ── Inscription ── */}
-          <TouchableOpacity style={s.link} onPress={() => navigation.navigate('Register')} activeOpacity={0.75}>
-            <Text style={s.linkText}>
-              Pas encore de compte ?{'  '}
-              <Text style={s.linkBold}>Créer un compte</Text>
-            </Text>
-          </TouchableOpacity>
-
-        </View>
-      </ScrollView>
+            {/* Lien inscription */}
+            <TouchableOpacity
+              style={s.linkRow}
+              onPress={() => navigation.navigate('Register')}
+              activeOpacity={0.7}
+            >
+              <Text style={s.linkText}>Pas encore de compte ?</Text>
+              <View style={s.linkBadge}>
+                <Text style={s.linkBadgeText}>Créer un compte</Text>
+                <Feather name="chevron-right" size={14} color={colors.primary} />
+              </View>
+            </TouchableOpacity>
+          </Animated.View>
+        </ScrollView>
+      </KeyboardAvoidingView>
     </View>
   );
 };
 
 const s = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#FAF6EE' },
-  scrollView: { flex: 1 },
-  scroll:    { paddingBottom: 100, flexGrow: 1 },
+  root: {
+    flex: 1,
+    backgroundColor: colors.background,
+  },
 
-  /* blobs */
-  blob1: { position: 'absolute', top: -80,  right: -60, width: 260, height: 260, borderRadius: 130, backgroundColor: 'rgba(107,143,113,0.07)' },
-  blob2: { position: 'absolute', top: 200,  right: -20, width: 120, height: 120, borderRadius: 60,  backgroundColor: 'rgba(196,149,106,0.07)' },
-  blob3: { position: 'absolute', bottom: 60, left: -60, width: 200, height: 200, borderRadius: 100, backgroundColor: 'rgba(107,143,113,0.05)' },
-
-  inner:    { paddingHorizontal: 28 },
-  logoArea: { paddingTop: Platform.OS === 'ios' ? 72 : 60, paddingBottom: 28, alignItems: 'center' },
+  // Hero
+  hero: {
+    paddingHorizontal: SPACING.xl,
+    paddingBottom: SPACING['2xl'] + 10,
+    overflow: 'hidden',
+  },
+  glow1: {
+    position: 'absolute', top: -80, right: -80,
+    width: 240, height: 240, borderRadius: 120,
+    backgroundColor: 'rgba(107,143,113,0.12)',
+  },
+  glow2: {
+    position: 'absolute', bottom: 20, left: -60,
+    width: 160, height: 160, borderRadius: 80,
+    backgroundColor: 'rgba(82,122,86,0.08)',
+  },
+  heroInner: {
+    alignItems: 'flex-start',
+  },
   logoBadge: {
-    width: 72, height: 72, borderRadius: 36,
-    backgroundColor: '#1C2B1E',
-    alignItems: 'center', justifyContent: 'center',
-    marginBottom: 14,
-    shadowColor: '#1C2B1E', shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.28, shadowRadius: 18, elevation: 8,
+    width: 56, height: 56, borderRadius: RADIUS.xl,
+    backgroundColor: 'rgba(255,255,255,0.12)',
+    borderWidth: 1.5,
+    borderColor: 'rgba(255,255,255,0.18)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: SPACING.base,
   },
-  logoName: {
-    fontSize: 30, fontWeight: '900', color: '#1C2B1E',
-    fontFamily: Platform.OS === 'ios' ? 'Georgia' : 'serif',
-    letterSpacing: -1, marginBottom: 4,
+  logoWord: {
+    fontFamily: FONTS.brand,
+    fontSize: FONT_SIZE.sm,
+    color: 'rgba(255,255,255,0.5)',
+    letterSpacing: 2,
+    textTransform: 'uppercase',
+    marginBottom: SPACING.lg,
   },
-  logoDot: { color: '#6B8F71' },
-  logoTagline: { fontSize: 13, color: '#96A89A', fontWeight: '500' },
+  heroTitle: {
+    fontFamily: FONTS.brand,
+    fontSize: FONT_SIZE['3xl'],
+    color: '#FFF',
+    letterSpacing: -1,
+    lineHeight: FONT_SIZE['3xl'] * 1.1,
+    marginBottom: SPACING.sm,
+  },
+  heroAccent: {
+    color: '#8CB092',
+  },
+  heroSub: {
+    fontFamily: FONTS.bodyMedium,
+    fontSize: FONT_SIZE.base,
+    color: 'rgba(255,255,255,0.55)',
+  },
 
-  title:  { fontSize: 34, fontWeight: '900', color: '#1C2B1E', letterSpacing: -1,   lineHeight: 40, marginBottom: 10 },
-  accent: { color: '#6B8F71' },
-  sub:    { fontSize: 15, color: '#96A89A', fontWeight: '500', marginBottom: 36 },
+  // Scroll
+  scrollView: { flex: 1 },
+  scrollContent: {
+    paddingTop: SPACING.xl,
+    paddingHorizontal: SPACING.lg,
+  },
 
-  fieldGroup: { marginBottom: 18 },
-  label:      { fontSize: 13, fontWeight: '700', color: '#4A5E4D', marginBottom: 8, letterSpacing: 0.2 },
-  row:        { flexDirection: 'row', alignItems: 'center', backgroundColor: '#F0EDE6', borderRadius: 14, paddingHorizontal: 16, height: 56, borderWidth: 1.5, borderColor: 'transparent' },
-  rowFocused: { borderColor: '#6B8F71', backgroundColor: '#EFF5F0' },
-  input:      { flex: 1, fontSize: 15, color: '#1C2B1E', fontWeight: '500' },
+  // Card
+  card: {
+    backgroundColor: colors.white,
+    borderRadius: RADIUS['2xl'],
+    padding: SPACING.xl,
+    ...SHADOWS.lg,
+  },
+  cardTitle: {
+    fontFamily: FONTS.heading,
+    fontSize: FONT_SIZE['2xl'],
+    color: colors.text,
+    letterSpacing: -0.5,
+    marginBottom: SPACING.xl,
+  },
 
-  cta:        { height: 58, borderRadius: 16, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 10 },
-  ctaText:    { fontSize: 17, fontWeight: '800', color: '#FFF', letterSpacing: 0.2 },
+  // Error banner
+  errorBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: SPACING.sm,
+    backgroundColor: colors.errorSoft || '#FBE8E4',
+    borderRadius: RADIUS.lg,
+    padding: SPACING.md,
+    marginBottom: SPACING.base,
+    borderLeftWidth: 3,
+    borderLeftColor: colors.error,
+  },
+  errorBannerText: {
+    flex: 1,
+    fontFamily: FONTS.bodyMedium,
+    fontSize: FONT_SIZE.sm,
+    color: colors.error,
+    lineHeight: 18,
+  },
 
-  sep:     { flexDirection: 'row', alignItems: 'center', marginVertical: 28, gap: 12 },
-  sepLine: { flex: 1, height: 1, backgroundColor: '#EAEEEA' },
-  sepText: { fontSize: 13, color: '#C0C8C2', fontWeight: '600' },
+  // Fields
+  fieldWrap: {
+    marginBottom: SPACING.base,
+  },
+  label: {
+    fontFamily: FONTS.bodySemiBold,
+    fontSize: FONT_SIZE.xs,
+    color: colors.textSecondary,
+    textTransform: 'uppercase',
+    letterSpacing: 0.8,
+    marginBottom: SPACING.sm,
+  },
+  fieldRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: colors.background,
+    borderRadius: RADIUS.lg,
+    paddingHorizontal: SPACING.base,
+    height: 54,
+    borderWidth: 1.5,
+    borderColor: colors.border,
+  },
+  fieldRowFocused: {
+    borderColor: colors.primary,
+    backgroundColor: colors.primaryUltra || '#F5FAF6',
+  },
+  fieldIcon: {
+    marginRight: SPACING.sm,
+  },
+  input: {
+    flex: 1,
+    fontFamily: FONTS.bodyMedium,
+    fontSize: FONT_SIZE.base,
+    color: colors.text,
+    paddingVertical: 0,
+  },
 
-  link:     { alignItems: 'center' },
-  linkText: { fontSize: 14, color: '#96A89A', fontWeight: '500' },
-  linkBold: { color: '#6B8F71', fontWeight: '800' },
+  // CTA
+  ctaWrap: {
+    marginTop: SPACING.sm,
+    borderRadius: RADIUS.xl,
+    overflow: 'hidden',
+    ...SHADOWS.glow ? SHADOWS.glow() : {},
+  },
+  ctaDisabled: { opacity: 0.7 },
+  cta: {
+    height: 56,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: SPACING.sm,
+    borderRadius: RADIUS.xl,
+  },
+  ctaText: {
+    fontFamily: FONTS.heading,
+    fontSize: FONT_SIZE.md,
+    color: '#FFF',
+    letterSpacing: 0.2,
+  },
+
+  // Divider
+  divider: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginVertical: SPACING.xl,
+    gap: SPACING.base,
+  },
+  dividerLine: {
+    flex: 1,
+    height: 1,
+    backgroundColor: colors.border,
+  },
+  dividerLabel: {
+    fontFamily: FONTS.bodyMedium,
+    fontSize: FONT_SIZE.sm,
+    color: colors.textLight,
+  },
+
+  // Link
+  linkRow: {
+    alignItems: 'center',
+    gap: SPACING.sm,
+  },
+  linkText: {
+    fontFamily: FONTS.body,
+    fontSize: FONT_SIZE.sm,
+    color: colors.textSecondary,
+  },
+  linkBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: colors.primarySoft,
+    paddingHorizontal: SPACING.base,
+    paddingVertical: SPACING.sm,
+    borderRadius: RADIUS.full,
+  },
+  linkBadgeText: {
+    fontFamily: FONTS.bodySemiBold,
+    fontSize: FONT_SIZE.sm,
+    color: colors.primary,
+  },
 });
 
 export default LoginScreen;

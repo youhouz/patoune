@@ -1,110 +1,113 @@
+// ─────────────────────────────────────────────────────────────────────────────
+// Pépète — AddPetScreen v3.0 — création + édition + photo picker
+// ─────────────────────────────────────────────────────────────────────────────
 import React, { useState, useRef } from 'react';
 import {
-  View,
-  Text,
-  TextInput,
-  ScrollView,
-  TouchableOpacity,
-  StyleSheet,
-  Alert,
-  Switch,
-  Platform,
-  StatusBar,
-  KeyboardAvoidingView,
-  ActivityIndicator,
-  Animated,
+  View, Text, TextInput, ScrollView, TouchableOpacity,
+  StyleSheet, Switch, Platform, StatusBar, KeyboardAvoidingView,
+  ActivityIndicator, Alert, Image,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Feather } from '@expo/vector-icons';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import * as ImagePicker from 'expo-image-picker';
 import { PawIcon } from '../../components/Logo';
-import { addPetAPI } from '../../api/pets';
+import { addPetAPI, updatePetAPI } from '../../api/pets';
+import { FONTS } from '../../utils/typography';
 const colors = require('../../utils/colors');
 const { SHADOWS, RADIUS, SPACING, FONT_SIZE } = require('../../utils/colors');
 
-const HEADER_PADDING_TOP = Platform.OS === 'ios' ? 56 : (StatusBar.currentHeight || 24) + 12;
-
 const SPECIES = [
-  { key: 'chien', label: 'Chien', letter: 'C', color: '#6B8F71' },
-  { key: 'chat', label: 'Chat', letter: 'Ch', color: '#527A56' },
-  { key: 'rongeur', label: 'Rongeur', letter: 'R', color: '#C4956A' },
-  { key: 'oiseau', label: 'Oiseau', letter: 'O', color: '#8CB092' },
-  { key: 'reptile', label: 'Reptile', letter: 'Re', color: '#527A56' },
-  { key: 'poisson', label: 'Poisson', letter: 'P', color: '#B8A88A' },
-  { key: 'autre', label: 'Autre', letter: '?', color: '#8A9A8C' },
+  { key: 'chien',   label: 'Chien',   emoji: '🐶', gradient: ['#527A56','#6B8F71'] },
+  { key: 'chat',    label: 'Chat',    emoji: '🐱', gradient: ['#6B8F71','#8CB092'] },
+  { key: 'rongeur', label: 'Rongeur', emoji: '🐹', gradient: ['#C4956A','#D4AD86'] },
+  { key: 'oiseau',  label: 'Oiseau',  emoji: '🦜', gradient: ['#8CB092','#B0BEB2'] },
+  { key: 'reptile', label: 'Reptile', emoji: '🦎', gradient: ['#3D5E41','#527A56'] },
+  { key: 'poisson', label: 'Poisson', emoji: '🐟', gradient: ['#B8A88A','#D4C8AE'] },
+  { key: 'autre',   label: 'Autre',   emoji: '🐾', gradient: ['#8A9A8C','#B0BEB2'] },
 ];
 
 const GENDERS = [
-  { key: 'male', label: 'Mâle', icon: '♂', color: '#8CB092', bgColor: '#EFF5F0' },
-  { key: 'femelle', label: 'Femelle', icon: '♀', color: '#C4956A', bgColor: '#FDF5ED' },
+  { key: 'male',    label: 'Mâle',   icon: '♂', color: '#8CB092', bg: '#EFF5F0' },
+  { key: 'femelle', label: 'Femelle', icon: '♀', color: '#C4956A', bg: '#FDF5ED' },
 ];
 
-const AddPetScreen = ({ navigation }) => {
-  const [name, setName] = useState('');
-  const [species, setSpecies] = useState('');
-  const [breed, setBreed] = useState('');
-  const [age, setAge] = useState('');
-  const [weight, setWeight] = useState('');
-  const [gender, setGender] = useState('');
-  const [vaccinated, setVaccinated] = useState(false);
-  const [specialNeeds, setSpecialNeeds] = useState('');
-  const [loading, setLoading] = useState(false);
+const AddPetScreen = ({ navigation, route }) => {
+  const editPet = route.params?.pet ?? null;
+  const isEdit = !!editPet;
 
-  // Validation state
+  const insets = useSafeAreaInsets();
+
+  // ─── State ────────────────────────────────────────────────────────────────
+  const [photoUri, setPhotoUri] = useState(editPet?.photos?.[0] ?? null);
+  const [name, setName] = useState(editPet?.name ?? '');
+  const [species, setSpecies] = useState(editPet?.species ?? '');
+  const [breed, setBreed] = useState(editPet?.breed ?? '');
+  const [age, setAge] = useState(editPet?.age != null ? String(editPet.age) : '');
+  const [weight, setWeight] = useState(editPet?.weight != null ? String(editPet.weight) : '');
+  const [gender, setGender] = useState(editPet?.gender ?? '');
+  const [vaccinated, setVaccinated] = useState(editPet?.vaccinated ?? false);
+  const [specialNeeds, setSpecialNeeds] = useState(editPet?.specialNeeds ?? '');
+  const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState({});
 
-  // Refs for focus management
   const scrollRef = useRef(null);
   const breedRef = useRef(null);
   const ageRef = useRef(null);
   const weightRef = useRef(null);
-  const specialNeedsRef = useRef(null);
 
-  // Success animation
-  const successAnim = useRef(new Animated.Value(0)).current;
-
-  const clearError = (field) => {
-    if (errors[field]) {
-      setErrors((prev) => {
-        const next = { ...prev };
-        delete next[field];
-        return next;
+  // ─── Photo picker ─────────────────────────────────────────────────────────
+  const pickPhoto = async () => {
+    try {
+      const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      if (status !== 'granted') {
+        Alert.alert('Permission requise', 'Autorisez l\'accès à la galerie pour choisir une photo.');
+        return;
+      }
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        allowsEditing: true,
+        aspect: [1, 1],
+        quality: 0.5,
+        base64: true,
       });
+      if (!result.canceled && result.assets?.[0]) {
+        const asset = result.assets[0];
+        const uri = asset.base64
+          ? `data:image/jpeg;base64,${asset.base64}`
+          : asset.uri;
+        setPhotoUri(uri);
+      }
+    } catch (err) {
+      console.log('Erreur photo picker:', err);
     }
+  };
+
+  // ─── Validation ───────────────────────────────────────────────────────────
+  const clearError = (field) => {
+    if (errors[field]) setErrors((p) => { const n = { ...p }; delete n[field]; return n; });
   };
 
   const validate = () => {
-    const newErrors = {};
-
-    if (!name.trim()) {
-      newErrors.name = 'Le nom est requis';
-    }
-    if (!species) {
-      newErrors.species = 'Choisissez une espèce';
-    }
-    if (!gender) {
-      newErrors.gender = 'Choisissez le genre';
-    }
-    if (age && (isNaN(parseInt(age, 10)) || parseInt(age, 10) < 0)) {
-      newErrors.age = 'Age invalide';
-    }
-    if (weight && (isNaN(parseFloat(weight)) || parseFloat(weight) < 0)) {
-      newErrors.weight = 'Poids invalide';
-    }
-
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
+    const e = {};
+    if (!name.trim()) e.name = 'Le nom est requis';
+    if (!species) e.species = 'Choisissez une espèce';
+    if (!gender) e.gender = 'Choisissez le genre';
+    if (age && (isNaN(parseInt(age, 10)) || parseInt(age, 10) < 0)) e.age = 'Âge invalide';
+    if (weight && (isNaN(parseFloat(weight)) || parseFloat(weight) < 0)) e.weight = 'Poids invalide';
+    setErrors(e);
+    return Object.keys(e).length === 0;
   };
 
+  // ─── Submit ───────────────────────────────────────────────────────────────
   const handleSubmit = async () => {
     if (!validate()) {
-      // Scroll to top to show errors
       scrollRef.current?.scrollTo({ y: 0, animated: true });
       return;
     }
-
     setLoading(true);
     try {
-      await addPetAPI({
+      const payload = {
         name: name.trim(),
         species,
         breed: breed.trim() || undefined,
@@ -113,418 +116,298 @@ const AddPetScreen = ({ navigation }) => {
         gender,
         vaccinated,
         specialNeeds: specialNeeds.trim() || undefined,
-      });
-
-      // Play success animation
-      Animated.spring(successAnim, {
-        toValue: 1,
-        tension: 50,
-        friction: 5,
-        useNativeDriver: true,
-      }).start();
-
-      Alert.alert(
-        'Félicitations !',
-        `${name.trim()} a été ajouté avec succès à votre famille.`,
-        [{ text: 'Super', onPress: () => navigation.goBack() }]
-      );
-    } catch (error) {
-      const msg =
-        error?.response?.data?.error ||
-        "Impossible d'ajouter l'animal. Vérifiez votre connexion et réessayez.";
+        photos: photoUri ? [photoUri] : (editPet?.photos ?? []),
+      };
+      if (isEdit) {
+        await updatePetAPI(editPet._id, payload);
+      } else {
+        await addPetAPI(payload);
+      }
+      navigation.goBack();
+    } catch (err) {
+      const msg = err?.response?.data?.message || 'Une erreur est survenue. Réessayez.';
       Alert.alert('Erreur', msg);
     } finally {
       setLoading(false);
     }
   };
 
-  // Computed: progress indicator
-  const filledCount = [name, species, gender].filter(Boolean).length;
-  const totalRequired = 3;
-  const progress = filledCount / totalRequired;
-
-  // Selected species config
   const selectedSpecies = SPECIES.find((s) => s.key === species);
 
+  // ─── Render ───────────────────────────────────────────────────────────────
   return (
-    <View style={styles.container}>
-      <StatusBar barStyle="dark-content" backgroundColor={colors.background} />
+    <View style={styles.root}>
+      <StatusBar barStyle="light-content" />
 
-      {/* Header */}
-      <View style={styles.header}>
+      {/* Header gradient */}
+      <LinearGradient
+        colors={['#1C2B1E', '#2C3E2F', '#3D5E41']}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+        style={[styles.header, { paddingTop: insets.top + 12 }]}
+      >
         <TouchableOpacity
-          style={styles.backButton}
+          style={styles.backBtn}
           onPress={() => navigation.goBack()}
           activeOpacity={0.7}
         >
-          <Feather name="chevron-left" size={24} color={colors.text} />
+          <Feather name="chevron-left" size={22} color="rgba(255,255,255,0.9)" />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Nouvel animal</Text>
-        {/* Progress indicator */}
-        <View style={styles.progressContainer}>
-          <View style={styles.progressTrack}>
-            <View
-              style={[
-                styles.progressFill,
-                {
-                  width: `${progress * 100}%`,
-                  backgroundColor:
-                    progress === 1 ? '#527A56' : '#6B8F71',
-                },
-              ]}
-            />
-          </View>
-          <Text style={styles.progressText}>
-            {filledCount}/{totalRequired}
-          </Text>
+        <Text style={styles.headerTitle}>
+          {isEdit ? `Modifier ${editPet.name}` : 'Nouvel animal'}
+        </Text>
+        <View style={styles.headerIcon}>
+          <PawIcon size={22} color="rgba(255,255,255,0.6)" />
         </View>
-      </View>
+      </LinearGradient>
 
       <KeyboardAvoidingView
-        style={styles.keyboardView}
+        style={{ flex: 1 }}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-        keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 0}
       >
         <ScrollView
           ref={scrollRef}
-          style={styles.scrollView}
-          contentContainerStyle={styles.scrollContent}
+          style={styles.scroll}
+          contentContainerStyle={[styles.scrollContent, { paddingBottom: insets.bottom + 48 }]}
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
         >
-          {/* Preview Card */}
-          {(name || selectedSpecies) && (
-            <View style={styles.previewCard}>
-              <LinearGradient
-                colors={
-                  selectedSpecies
-                    ? [selectedSpecies.color, selectedSpecies.color + 'CC']
-                    : ['#6B8F71', '#8CB092']
-                }
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 1 }}
-                style={styles.previewGradient}
-              >
-                <Text style={styles.previewIcon}>
-                  {selectedSpecies?.letter || '?'}
-                </Text>
-                <View style={styles.previewInfo}>
-                  <Text style={styles.previewName} numberOfLines={1}>
-                    {name || 'Nom de votre animal'}
-                  </Text>
-                  <Text style={styles.previewSpecies}>
-                    {selectedSpecies?.label || 'Espèce'}
-                    {breed ? ` - ${breed}` : ''}
-                  </Text>
-                </View>
-              </LinearGradient>
-            </View>
-          )}
+          {/* ── Photo picker ── */}
+          <View style={styles.photoSection}>
+            <TouchableOpacity
+              style={styles.photoCircle}
+              onPress={pickPhoto}
+              activeOpacity={0.85}
+            >
+              {photoUri ? (
+                <Image source={{ uri: photoUri }} style={styles.photoImage} resizeMode="cover" />
+              ) : selectedSpecies ? (
+                <LinearGradient
+                  colors={selectedSpecies.gradient}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 1 }}
+                  style={styles.photoPlaceholder}
+                >
+                  <Text style={styles.photoEmoji}>{selectedSpecies.emoji}</Text>
+                  <View style={styles.photoCameraOverlay}>
+                    <Feather name="camera" size={16} color="#FFF" />
+                  </View>
+                </LinearGradient>
+              ) : (
+                <LinearGradient
+                  colors={['#3D5E41', '#527A56']}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 1 }}
+                  style={styles.photoPlaceholder}
+                >
+                  <PawIcon size={36} color="rgba(255,255,255,0.5)" />
+                  <View style={styles.photoCameraOverlay}>
+                    <Feather name="camera" size={16} color="#FFF" />
+                  </View>
+                </LinearGradient>
+              )}
+            </TouchableOpacity>
+            <Text style={styles.photoHint}>
+              {photoUri ? 'Appuyez pour changer la photo' : 'Appuyez pour ajouter une photo'}
+            </Text>
+            {photoUri && (
+              <TouchableOpacity onPress={() => setPhotoUri(null)} hitSlop={{ top: 8, bottom: 8, left: 16, right: 16 }}>
+                <Text style={styles.photoRemove}>Supprimer la photo</Text>
+              </TouchableOpacity>
+            )}
+          </View>
 
-          {/* Section: Identity */}
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Identité</Text>
-            <View style={styles.sectionCard}>
-              {/* Name Input */}
-              <View style={styles.field}>
-                <Text style={styles.label}>
-                  Nom <Text style={styles.required}>*</Text>
-                </Text>
+          {/* ── Section Identité ── */}
+          <Text style={styles.sectionTitle}>Identité</Text>
+          <View style={styles.sectionCard}>
+            {/* Nom */}
+            <View style={styles.field}>
+              <Text style={styles.label}>Nom <Text style={styles.required}>*</Text></Text>
+              <TextInput
+                style={[styles.input, errors.name && styles.inputError]}
+                value={name}
+                onChangeText={(v) => { setName(v); clearError('name'); }}
+                placeholder="Ex : Luna, Max, Sushi…"
+                placeholderTextColor={colors.textLight}
+                returnKeyType="next"
+                onSubmitEditing={() => breedRef.current?.focus()}
+                autoCapitalize="words"
+              />
+              {errors.name && <Text style={styles.errorText}>{errors.name}</Text>}
+            </View>
+
+            {/* Espèce */}
+            <View style={styles.field}>
+              <Text style={styles.label}>Espèce <Text style={styles.required}>*</Text></Text>
+              <View style={styles.speciesGrid}>
+                {SPECIES.map((s) => {
+                  const active = species === s.key;
+                  return (
+                    <TouchableOpacity
+                      key={s.key}
+                      style={[styles.speciesChip, active && styles.speciesChipActive]}
+                      onPress={() => { setSpecies(s.key); clearError('species'); }}
+                      activeOpacity={0.7}
+                    >
+                      <Text style={styles.speciesEmoji}>{s.emoji}</Text>
+                      <Text style={[styles.speciesLabel, active && styles.speciesLabelActive]}>
+                        {s.label}
+                      </Text>
+                      {active && (
+                        <LinearGradient
+                          colors={s.gradient}
+                          start={{ x: 0, y: 0 }}
+                          end={{ x: 1, y: 0 }}
+                          style={styles.speciesCheck}
+                        >
+                          <Feather name="check" size={10} color="#FFF" />
+                        </LinearGradient>
+                      )}
+                    </TouchableOpacity>
+                  );
+                })}
+              </View>
+              {errors.species && <Text style={styles.errorText}>{errors.species}</Text>}
+            </View>
+
+            {/* Genre */}
+            <View style={[styles.field, { marginBottom: 0 }]}>
+              <Text style={styles.label}>Genre <Text style={styles.required}>*</Text></Text>
+              <View style={styles.genderRow}>
+                {GENDERS.map((g) => {
+                  const active = gender === g.key;
+                  return (
+                    <TouchableOpacity
+                      key={g.key}
+                      style={[
+                        styles.genderBtn,
+                        active && { backgroundColor: g.bg, borderColor: g.color },
+                      ]}
+                      onPress={() => { setGender(g.key); clearError('gender'); }}
+                      activeOpacity={0.7}
+                    >
+                      <Text style={[styles.genderIcon, active && { color: g.color }]}>{g.icon}</Text>
+                      <Text style={[styles.genderLabel, active && { color: g.color }]}>{g.label}</Text>
+                      {active && <Feather name="check-circle" size={16} color={g.color} />}
+                    </TouchableOpacity>
+                  );
+                })}
+              </View>
+              {errors.gender && <Text style={styles.errorText}>{errors.gender}</Text>}
+            </View>
+          </View>
+
+          {/* ── Section Détails ── */}
+          <Text style={styles.sectionTitle}>Détails</Text>
+          <View style={styles.sectionCard}>
+            {/* Race */}
+            <View style={styles.field}>
+              <Text style={styles.label}>Race</Text>
+              <TextInput
+                ref={breedRef}
+                style={styles.input}
+                value={breed}
+                onChangeText={setBreed}
+                placeholder="Ex : Berger australien, Siamois…"
+                placeholderTextColor={colors.textLight}
+                returnKeyType="next"
+                onSubmitEditing={() => ageRef.current?.focus()}
+                autoCapitalize="words"
+              />
+            </View>
+
+            {/* Âge + Poids en ligne */}
+            <View style={styles.row}>
+              <View style={[styles.field, styles.rowField]}>
+                <Text style={styles.label}>Âge (ans)</Text>
                 <TextInput
-                  style={[
-                    styles.input,
-                    errors.name && styles.inputError,
-                  ]}
-                  value={name}
-                  onChangeText={(val) => {
-                    setName(val);
-                    clearError('name');
-                  }}
-                  placeholder="ex: Rex, Minou, Bulle..."
-                  placeholderTextColor={colors.placeholder}
-                  autoCapitalize="words"
+                  ref={ageRef}
+                  style={[styles.input, errors.age && styles.inputError]}
+                  value={age}
+                  onChangeText={(v) => { setAge(v); clearError('age'); }}
+                  placeholder="Ex : 3"
+                  placeholderTextColor={colors.textLight}
+                  keyboardType="numeric"
                   returnKeyType="next"
-                  onSubmitEditing={() => breedRef.current?.focus()}
+                  onSubmitEditing={() => weightRef.current?.focus()}
                 />
-                {errors.name && (
-                  <Text style={styles.errorText}>{errors.name}</Text>
-                )}
+                {errors.age && <Text style={styles.errorText}>{errors.age}</Text>}
               </View>
-
-              {/* Species Grid */}
-              <View style={styles.field}>
-                <Text style={styles.label}>
-                  Espèce <Text style={styles.required}>*</Text>
-                </Text>
-                {errors.species && (
-                  <Text style={styles.errorText}>{errors.species}</Text>
-                )}
-                <View style={styles.speciesGrid}>
-                  {SPECIES.map((s) => {
-                    const isActive = species === s.key;
-                    return (
-                      <TouchableOpacity
-                        key={s.key}
-                        style={[
-                          styles.speciesChip,
-                          isActive && {
-                            backgroundColor: s.color + '15',
-                            borderColor: s.color,
-                          },
-                        ]}
-                        onPress={() => {
-                          setSpecies(s.key);
-                          clearError('species');
-                        }}
-                        activeOpacity={0.7}
-                      >
-                        <View style={[styles.speciesLetterBadge, { backgroundColor: s.color + '20' }]}>
-                          <Text style={[styles.speciesLetter, { color: s.color }]}>{s.letter}</Text>
-                        </View>
-                        <Text
-                          style={[
-                            styles.speciesLabel,
-                            isActive && { color: s.color, fontWeight: '700' },
-                          ]}
-                        >
-                          {s.label}
-                        </Text>
-                        {isActive && (
-                          <View
-                            style={[
-                              styles.speciesCheck,
-                              { backgroundColor: s.color },
-                            ]}
-                          >
-                            <Feather name="check" size={10} color="#FFF" />
-                          </View>
-                        )}
-                      </TouchableOpacity>
-                    );
-                  })}
-                </View>
-              </View>
-
-              {/* Gender Selector */}
-              <View style={styles.fieldLast}>
-                <Text style={styles.label}>
-                  Genre <Text style={styles.required}>*</Text>
-                </Text>
-                {errors.gender && (
-                  <Text style={styles.errorText}>{errors.gender}</Text>
-                )}
-                <View style={styles.genderRow}>
-                  {GENDERS.map((g) => {
-                    const isActive = gender === g.key;
-                    return (
-                      <TouchableOpacity
-                        key={g.key}
-                        style={[
-                          styles.genderOption,
-                          isActive && {
-                            backgroundColor: g.bgColor,
-                            borderColor: g.color,
-                          },
-                        ]}
-                        onPress={() => {
-                          setGender(g.key);
-                          clearError('gender');
-                        }}
-                        activeOpacity={0.7}
-                      >
-                        <Text
-                          style={[
-                            styles.genderIcon,
-                            isActive && { color: g.color },
-                          ]}
-                        >
-                          {g.icon}
-                        </Text>
-                        <Text
-                          style={[
-                            styles.genderLabel,
-                            isActive && {
-                              color: g.color,
-                              fontWeight: '700',
-                            },
-                          ]}
-                        >
-                          {g.label}
-                        </Text>
-                        {isActive && (
-                          <View
-                            style={[
-                              styles.genderCheck,
-                              { backgroundColor: g.color },
-                            ]}
-                          >
-                            <Feather name="check" size={11} color="#FFF" />
-                          </View>
-                        )}
-                      </TouchableOpacity>
-                    );
-                  })}
-                </View>
-              </View>
-            </View>
-          </View>
-
-          {/* Section: Characteristics */}
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Caractéristiques</Text>
-            <View style={styles.sectionCard}>
-              {/* Breed */}
-              <View style={styles.field}>
-                <Text style={styles.label}>Race</Text>
+              <View style={{ width: SPACING.md }} />
+              <View style={[styles.field, styles.rowField]}>
+                <Text style={styles.label}>Poids (kg)</Text>
                 <TextInput
-                  ref={breedRef}
-                  style={styles.input}
-                  value={breed}
-                  onChangeText={setBreed}
-                  placeholder="ex: Labrador, Siamois, Persan..."
-                  placeholderTextColor={colors.placeholder}
-                  autoCapitalize="words"
-                  returnKeyType="next"
-                  onSubmitEditing={() => ageRef.current?.focus()}
+                  ref={weightRef}
+                  style={[styles.input, errors.weight && styles.inputError]}
+                  value={weight}
+                  onChangeText={(v) => { setWeight(v); clearError('weight'); }}
+                  placeholder="Ex : 12.5"
+                  placeholderTextColor={colors.textLight}
+                  keyboardType="decimal-pad"
+                  returnKeyType="done"
                 />
+                {errors.weight && <Text style={styles.errorText}>{errors.weight}</Text>}
               </View>
+            </View>
 
-              {/* Age & Weight Row */}
-              <View style={styles.inlineRow}>
-                <View style={styles.inlineField}>
-                  <Text style={styles.label}>Age (annees)</Text>
-                  <TextInput
-                    ref={ageRef}
-                    style={[
-                      styles.input,
-                      errors.age && styles.inputError,
-                    ]}
-                    value={age}
-                    onChangeText={(val) => {
-                      setAge(val);
-                      clearError('age');
-                    }}
-                    placeholder="ex: 3"
-                    placeholderTextColor={colors.placeholder}
-                    keyboardType="numeric"
-                    returnKeyType="next"
-                    onSubmitEditing={() => weightRef.current?.focus()}
-                  />
-                  {errors.age && (
-                    <Text style={styles.errorText}>{errors.age}</Text>
-                  )}
-                </View>
-                <View style={styles.inlineSpacer} />
-                <View style={styles.inlineField}>
-                  <Text style={styles.label}>Poids (kg)</Text>
-                  <TextInput
-                    ref={weightRef}
-                    style={[
-                      styles.input,
-                      errors.weight && styles.inputError,
-                    ]}
-                    value={weight}
-                    onChangeText={(val) => {
-                      setWeight(val);
-                      clearError('weight');
-                    }}
-                    placeholder="ex: 12.5"
-                    placeholderTextColor={colors.placeholder}
-                    keyboardType="decimal-pad"
-                    returnKeyType="done"
-                  />
-                  {errors.weight && (
-                    <Text style={styles.errorText}>{errors.weight}</Text>
-                  )}
-                </View>
+            {/* Vacciné */}
+            <View style={[styles.switchRow, { marginBottom: 0 }]}>
+              <View style={styles.switchIconWrap}>
+                <Feather name="shield" size={18} color={vaccinated ? colors.success : colors.textTertiary} />
               </View>
-
-              {/* Vaccinated Switch */}
-              <View style={styles.switchRow}>
-                <View style={styles.switchIconContainer}>
-                  <Feather name="shield" size={18} color={colors.textTertiary} />
-                </View>
-                <View style={styles.switchInfo}>
-                  <Text style={styles.switchLabel}>Vacciné</Text>
-                  <Text style={styles.switchDescription}>
-                    A jour de ses vaccins
-                  </Text>
-                </View>
-                <Switch
-                  value={vaccinated}
-                  onValueChange={setVaccinated}
-                  trackColor={{
-                    false: colors.border,
-                    true: '#527A5670',
-                  }}
-                  thumbColor={vaccinated ? '#527A56' : '#f4f3f4'}
-                  ios_backgroundColor={colors.border}
-                />
+              <View style={styles.switchInfo}>
+                <Text style={styles.switchLabel}>Vacciné</Text>
+                <Text style={styles.switchSub}>Vaccins à jour</Text>
               </View>
+              <Switch
+                value={vaccinated}
+                onValueChange={setVaccinated}
+                trackColor={{ false: colors.border, true: colors.success }}
+                thumbColor={colors.white}
+              />
             </View>
           </View>
 
-          {/* Section: Additional Info */}
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Informations complémentaires</Text>
-            <View style={styles.sectionCard}>
-              <View style={styles.fieldLast}>
-                <Text style={styles.label}>Besoins spéciaux</Text>
-                <Text style={styles.labelHint}>
-                  Allergies, medicaments, regime alimentaire, habitudes...
-                </Text>
-                <TextInput
-                  ref={specialNeedsRef}
-                  style={[styles.input, styles.textArea]}
-                  value={specialNeeds}
-                  onChangeText={setSpecialNeeds}
-                  placeholder="Décrivez les besoins particuliers de votre animal..."
-                  placeholderTextColor={colors.placeholder}
-                  multiline
-                  textAlignVertical="top"
-                  numberOfLines={4}
-                />
-                <Text style={styles.charCount}>
-                  {specialNeeds.length}/500
-                </Text>
-              </View>
-            </View>
+          {/* ── Section Besoins spéciaux ── */}
+          <Text style={styles.sectionTitle}>Besoins particuliers</Text>
+          <View style={styles.sectionCard}>
+            <TextInput
+              style={[styles.input, styles.textArea]}
+              value={specialNeeds}
+              onChangeText={setSpecialNeeds}
+              placeholder="Allergies, régime alimentaire, traitement médical, comportement…"
+              placeholderTextColor={colors.textLight}
+              multiline
+              numberOfLines={3}
+              textAlignVertical="top"
+            />
           </View>
 
-          {/* Submit Button */}
+          {/* ── Bouton submit ── */}
           <TouchableOpacity
-            style={[
-              styles.submitButton,
-              loading && styles.submitButtonDisabled,
-            ]}
+            style={styles.submitBtn}
             onPress={handleSubmit}
             activeOpacity={0.85}
             disabled={loading}
           >
             <LinearGradient
-              colors={
-                loading
-                  ? [colors.textLight, colors.textTertiary]
-                  : ['#6B8F71', '#8CB092']
-              }
+              colors={loading ? [colors.textLight, colors.textTertiary] : [colors.primaryDark, colors.primary]}
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 0 }}
-              style={styles.submitGradient}
+              style={styles.submitGrad}
             >
               {loading ? (
-                <ActivityIndicator size="small" color={colors.white} />
+                <ActivityIndicator size="small" color="#FFF" />
               ) : (
                 <>
                   <PawIcon size={18} color="#FFF" />
                   <Text style={styles.submitText}>
-                    Ajouter {name.trim() || 'mon animal'}
+                    {isEdit ? 'Enregistrer les modifications' : `Ajouter ${name.trim() || 'mon animal'}`}
                   </Text>
                 </>
               )}
             </LinearGradient>
           </TouchableOpacity>
-
-          <View style={styles.bottomSpacer} />
         </ScrollView>
       </KeyboardAvoidingView>
     </View>
@@ -532,147 +415,123 @@ const AddPetScreen = ({ navigation }) => {
 };
 
 const styles = StyleSheet.create({
-  container: {
+  root: {
     flex: 1,
     backgroundColor: colors.background,
-  },
-  keyboardView: {
-    flex: 1,
-  },
-  scrollView: {
-    flex: 1,
-  },
-  scrollContent: {
-    paddingHorizontal: SPACING.lg,
-    paddingTop: SPACING.lg,
-    paddingBottom: SPACING['3xl'],
   },
 
   // Header
   header: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingTop: HEADER_PADDING_TOP,
-    paddingBottom: SPACING.base,
     paddingHorizontal: SPACING.lg,
-    backgroundColor: colors.background,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.border,
+    paddingBottom: SPACING.xl,
+    gap: SPACING.base,
   },
-  backButton: {
-    width: 44,
-    height: 44,
-    borderRadius: RADIUS.md,
-    backgroundColor: colors.white,
+  backBtn: {
+    width: 38,
+    height: 38,
+    borderRadius: RADIUS.lg,
+    backgroundColor: 'rgba(255,255,255,0.10)',
     alignItems: 'center',
     justifyContent: 'center',
-    ...SHADOWS.sm,
   },
   headerTitle: {
     flex: 1,
+    fontFamily: FONTS.brand,
     fontSize: FONT_SIZE.xl,
-    fontWeight: '800',
-    color: colors.text,
-    marginLeft: SPACING.base,
-    letterSpacing: 0.2,
+    color: '#FFF',
+    letterSpacing: -0.4,
   },
-  progressContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: SPACING.sm,
-  },
-  progressTrack: {
-    width: 40,
-    height: 4,
-    borderRadius: 2,
-    backgroundColor: colors.border,
-    overflow: 'hidden',
-  },
-  progressFill: {
-    height: '100%',
-    borderRadius: 2,
-  },
-  progressText: {
-    fontSize: FONT_SIZE.xs,
-    fontWeight: '600',
-    color: colors.textTertiary,
+  headerIcon: {
+    width: 38,
+    alignItems: 'flex-end',
   },
 
-  // Preview Card
-  previewCard: {
-    marginBottom: SPACING.xl,
-    borderRadius: RADIUS.xl,
+  // Scroll
+  scroll: { flex: 1 },
+  scrollContent: {
+    paddingHorizontal: SPACING.base,
+    paddingTop: SPACING.xl,
+  },
+
+  // Photo
+  photoSection: {
+    alignItems: 'center',
+    marginBottom: SPACING['2xl'],
+  },
+  photoCircle: {
+    width: 112,
+    height: 112,
+    borderRadius: 56,
     overflow: 'hidden',
     ...SHADOWS.md,
+    marginBottom: SPACING.md,
   },
-  previewGradient: {
-    flexDirection: 'row',
+  photoImage: {
+    width: 112,
+    height: 112,
+  },
+  photoPlaceholder: {
+    width: 112,
+    height: 112,
     alignItems: 'center',
-    padding: SPACING.base,
-    borderRadius: RADIUS.xl,
+    justifyContent: 'center',
   },
-  previewIcon: {
-    fontSize: 20,
-    fontWeight: '800',
-    color: '#FFF',
-    marginRight: SPACING.base,
-    width: 36,
-    textAlign: 'center',
+  photoEmoji: {
+    fontSize: 40,
   },
-  previewInfo: {
-    flex: 1,
+  photoCameraOverlay: {
+    position: 'absolute',
+    bottom: 10,
+    right: 10,
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: 'rgba(0,0,0,0.45)',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
-  previewName: {
-    fontSize: FONT_SIZE.lg,
-    fontWeight: '700',
-    color: colors.white,
-    marginBottom: 2,
-  },
-  previewSpecies: {
+  photoHint: {
+    fontFamily: FONTS.bodyMedium,
     fontSize: FONT_SIZE.sm,
-    color: 'rgba(255, 255, 255, 0.85)',
-    fontWeight: '500',
+    color: colors.textSecondary,
+    marginBottom: SPACING.xs,
+  },
+  photoRemove: {
+    fontFamily: FONTS.bodyMedium,
+    fontSize: FONT_SIZE.sm,
+    color: colors.error,
+    textDecorationLine: 'underline',
   },
 
   // Sections
-  section: {
-    marginBottom: SPACING.xl,
-  },
   sectionTitle: {
-    fontSize: FONT_SIZE.sm,
-    fontWeight: '700',
+    fontFamily: FONTS.bodySemiBold,
+    fontSize: FONT_SIZE.xs,
     color: colors.textSecondary,
     textTransform: 'uppercase',
-    letterSpacing: 0.8,
-    marginBottom: SPACING.md,
+    letterSpacing: 1,
+    marginBottom: SPACING.sm,
     marginLeft: SPACING.xs,
   },
   sectionCard: {
     backgroundColor: colors.white,
     borderRadius: RADIUS.xl,
     padding: SPACING.base,
+    marginBottom: SPACING.xl,
     ...SHADOWS.md,
   },
 
   // Fields
-  field: {
-    marginBottom: SPACING.lg,
-  },
-  fieldLast: {
-    marginBottom: 0,
-  },
+  field: { marginBottom: SPACING.base },
   label: {
+    fontFamily: FONTS.bodySemiBold,
     fontSize: FONT_SIZE.sm,
-    fontWeight: '600',
     color: colors.text,
     marginBottom: SPACING.sm,
-  },
-  labelHint: {
-    fontSize: FONT_SIZE.xs,
-    color: colors.textTertiary,
-    marginBottom: SPACING.sm,
-    marginTop: -SPACING.xs,
-    lineHeight: 16,
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
   },
   required: {
     color: colors.error,
@@ -682,7 +541,8 @@ const styles = StyleSheet.create({
     backgroundColor: colors.background,
     borderRadius: RADIUS.lg,
     paddingHorizontal: SPACING.base,
-    paddingVertical: SPACING.md + 2,
+    paddingVertical: Platform.OS === 'ios' ? SPACING.base : SPACING.md,
+    fontFamily: FONTS.body,
     fontSize: FONT_SIZE.base,
     color: colors.text,
     borderWidth: 1.5,
@@ -690,28 +550,26 @@ const styles = StyleSheet.create({
   },
   inputError: {
     borderColor: colors.error,
-    backgroundColor: colors.errorSoft,
   },
   textArea: {
-    minHeight: 100,
-    textAlignVertical: 'top',
+    minHeight: 80,
     paddingTop: SPACING.md,
+    textAlignVertical: 'top',
   },
   errorText: {
+    fontFamily: FONTS.bodyMedium,
     fontSize: FONT_SIZE.xs,
     color: colors.error,
-    fontWeight: '500',
-    marginTop: SPACING.xs,
-    marginLeft: SPACING.xs,
-  },
-  charCount: {
-    fontSize: FONT_SIZE.xs,
-    color: colors.textLight,
-    textAlign: 'right',
     marginTop: SPACING.xs,
   },
 
-  // Species Grid
+  row: {
+    flexDirection: 'row',
+    marginBottom: SPACING.base,
+  },
+  rowField: { flex: 1, marginBottom: 0 },
+
+  // Species
   speciesGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
@@ -721,36 +579,30 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: SPACING.md,
-    paddingVertical: SPACING.sm + 2,
+    paddingVertical: SPACING.sm,
     borderRadius: RADIUS.lg,
     backgroundColor: colors.background,
     borderWidth: 1.5,
     borderColor: colors.border,
     gap: SPACING.xs,
   },
-  speciesLetterBadge: {
-    width: 28,
-    height: 28,
-    borderRadius: 14,
-    alignItems: 'center',
-    justifyContent: 'center',
+  speciesChipActive: {
+    borderColor: colors.primary,
+    backgroundColor: colors.primarySoft,
   },
-  speciesLetter: {
-    fontSize: 12,
-    fontWeight: '800',
-  },
+  speciesEmoji: { fontSize: 16 },
   speciesLabel: {
+    fontFamily: FONTS.bodyMedium,
     fontSize: FONT_SIZE.sm,
-    fontWeight: '600',
     color: colors.textSecondary,
   },
+  speciesLabelActive: { color: colors.primaryDark },
   speciesCheck: {
     width: 18,
     height: 18,
     borderRadius: 9,
     alignItems: 'center',
     justifyContent: 'center',
-    marginLeft: 2,
   },
 
   // Gender
@@ -758,7 +610,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     gap: SPACING.md,
   },
-  genderOption: {
+  genderBtn: {
     flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
@@ -775,37 +627,18 @@ const styles = StyleSheet.create({
     color: colors.textSecondary,
   },
   genderLabel: {
+    fontFamily: FONTS.bodySemiBold,
     fontSize: FONT_SIZE.base,
-    fontWeight: '600',
     color: colors.textSecondary,
-  },
-  genderCheck: {
-    width: 20,
-    height: 20,
-    borderRadius: 10,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-
-  // Inline Row (Age + Weight)
-  inlineRow: {
-    flexDirection: 'row',
-    marginBottom: SPACING.lg,
-  },
-  inlineField: {
-    flex: 1,
-  },
-  inlineSpacer: {
-    width: SPACING.md,
   },
 
   // Switch
   switchRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: SPACING.sm,
+    marginBottom: SPACING.base,
   },
-  switchIconContainer: {
+  switchIconWrap: {
     width: 40,
     height: 40,
     borderRadius: RADIUS.md,
@@ -819,44 +652,36 @@ const styles = StyleSheet.create({
     marginRight: SPACING.base,
   },
   switchLabel: {
+    fontFamily: FONTS.bodySemiBold,
     fontSize: FONT_SIZE.base,
-    fontWeight: '600',
     color: colors.text,
-    marginBottom: 2,
   },
-  switchDescription: {
+  switchSub: {
+    fontFamily: FONTS.body,
     fontSize: FONT_SIZE.xs,
     color: colors.textTertiary,
-    fontWeight: '400',
+    marginTop: 1,
   },
 
   // Submit
-  submitButton: {
+  submitBtn: {
     borderRadius: RADIUS.xl,
     overflow: 'hidden',
     marginTop: SPACING.sm,
-    ...SHADOWS.glow('#6B8F71'),
+    ...SHADOWS.md,
   },
-  submitButtonDisabled: {
-    ...SHADOWS.sm,
-  },
-  submitGradient: {
+  submitGrad: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     paddingVertical: SPACING.base + 2,
-    borderRadius: RADIUS.xl,
     gap: SPACING.sm,
   },
   submitText: {
+    fontFamily: FONTS.bodySemiBold,
     fontSize: FONT_SIZE.md,
-    fontWeight: '700',
-    color: colors.white,
+    color: '#FFF',
     letterSpacing: 0.3,
-  },
-
-  bottomSpacer: {
-    height: SPACING['2xl'],
   },
 });
 
