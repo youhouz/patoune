@@ -97,7 +97,7 @@ const TabIcon = ({ routeName, focused }) => {
   );
 };
 
-const HIDDEN = { tabBarButton: () => null, tabBarItemStyle: { display: 'none' } };
+const HIDDEN = { tabBarButton: () => null, tabBarItemStyle: { width: 0, overflow: 'hidden' } };
 
 const TabNavigator = () => (
   <Tab.Navigator
@@ -106,7 +106,7 @@ const TabNavigator = () => (
       tabBarIcon: ({ focused }) => <TabIcon routeName={route.name} focused={focused} />,
       tabBarLabel: () => null,
       tabBarStyle: {
-        height: Platform.OS === 'ios' ? 82 : 64,
+        height: Platform.OS === 'ios' ? 84 : 68,
         paddingBottom: Platform.OS === 'ios' ? 24 : 0,
         paddingTop: 0,
         backgroundColor: '#FFFFFF',
@@ -122,6 +122,7 @@ const TabNavigator = () => (
         flex: 1,
         alignItems: 'center',
         justifyContent: 'center',
+        paddingVertical: 10,
       },
     })}
   >
@@ -141,7 +142,8 @@ const styles = StyleSheet.create({
   tabItem: {
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 4,
+    gap: 5,
+    paddingHorizontal: 16,
     position: 'relative',
   },
   tabLabel: {
