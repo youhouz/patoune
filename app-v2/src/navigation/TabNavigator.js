@@ -98,9 +98,9 @@ const ThreeTabs = () => (
       tabBarIcon: ({ focused }) => <TabIcon routeName={route.name} focused={focused} />,
       tabBarLabel: () => null,
       tabBarStyle: {
-        height: Platform.OS === 'ios' ? 84 : 68,
-        paddingBottom: Platform.OS === 'ios' ? 24 : 0,
-        paddingTop: 0,
+        height: Platform.OS === 'ios' ? 88 : 64,
+        paddingBottom: Platform.OS === 'ios' ? 28 : 8,
+        paddingTop: Platform.OS === 'ios' ? 10 : 6,
         backgroundColor: '#FFFFFF',
         borderTopWidth: 1,
         borderTopColor: 'rgba(0,0,0,0.06)',
@@ -114,7 +114,6 @@ const ThreeTabs = () => (
         flex: 1,
         alignItems: 'center',
         justifyContent: 'center',
-        paddingVertical: 8,
       },
     })}
   >
@@ -137,10 +136,10 @@ const styles = StyleSheet.create({
   tabItem: {
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 4,
-    paddingHorizontal: 18,
-    paddingVertical: 6,
-    borderRadius: 20,
+    gap: 3,
+    paddingHorizontal: 20,
+    paddingVertical: 8,
+    borderRadius: 22,
     position: 'relative',
   },
   tabItemActive: {
@@ -158,7 +157,7 @@ const styles = StyleSheet.create({
   },
   activeDot: {
     position: 'absolute',
-    bottom: 1,
+    bottom: 2,
     width: 18,
     height: 3,
     borderRadius: 1.5,

@@ -150,18 +150,7 @@ const BookingScreen = ({ route, navigation }) => {
     setter(formatted);
   };
 
-  const calculatePrice = () => {
-    if (!startDate || !endDate) return 0;
-    const start = new Date(startDate);
-    const end = new Date(endDate);
-    if (isNaN(start.getTime()) || isNaN(end.getTime())) return 0;
-    const days = Math.max(1, Math.ceil((end - start) / (1000 * 60 * 60 * 24)));
-
-    if (selectedService === 'promenade' || selectedService === 'visite') {
-      return days * (petsitter.pricePerHour || 0);
-    }
-    return days * (petsitter.pricePerDay || 0);
-  };
+  const isHourlyService = selectedService === 'promenade' || selectedService === 'visite';
 
   const getDays = () => {
     if (!startDate || !endDate) return 0;
@@ -171,16 +160,27 @@ const BookingScreen = ({ route, navigation }) => {
     return Math.max(1, Math.ceil((end - start) / (1000 * 60 * 60 * 24)));
   };
 
+  const calculatePrice = () => {
+    const days = getDays();
+    if (days === 0) return 0;
+
+    if (isHourlyService) {
+      // For hourly services: 1 session per day at the hourly rate
+      return days * (petsitter.pricePerHour || 0);
+    }
+    return days * (petsitter.pricePerDay || 0);
+  };
+
   const getUnitPrice = () => {
-    if (selectedService === 'promenade' || selectedService === 'visite') {
+    if (isHourlyService) {
       return petsitter.pricePerHour || 0;
     }
     return petsitter.pricePerDay || 0;
   };
 
   const getUnitLabel = () => {
-    if (selectedService === 'promenade' || selectedService === 'visite') {
-      return '\u20AC/h';
+    if (isHourlyService) {
+      return '\u20AC/seance';
     }
     return '\u20AC/j';
   };
@@ -209,10 +209,19 @@ const BookingScreen = ({ route, navigation }) => {
       return;
     }
 
+    const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
+    if (!dateRegex.test(startDate) || !dateRegex.test(endDate)) {
+      showAlert('Attention', 'Format de date invalide. Utilisez AAAA-MM-JJ');
+      return;
+    }
     const start = new Date(startDate);
     const end = new Date(endDate);
     if (isNaN(start.getTime()) || isNaN(end.getTime())) {
-      showAlert('Attention', 'Format de date invalide. Utilisez AAAA-MM-JJ');
+      showAlert('Attention', 'Date invalide. Verifiez le jour et le mois.');
+      return;
+    }
+    if (start < new Date(new Date().toDateString())) {
+      showAlert('Attention', 'La date de debut ne peut pas etre dans le passe');
       return;
     }
     if (end <= start) {
@@ -226,8 +235,8 @@ const BookingScreen = ({ route, navigation }) => {
         sitter: petsitter._id,
         pet: selectedPet,
         service: selectedService,
-        startDate: start,
-        endDate: end,
+        startDate: start.toISOString(),
+        endDate: end.toISOString(),
         totalPrice: calculatePrice(),
         notes,
       });

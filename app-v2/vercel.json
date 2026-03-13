@@ -1,0 +1,11 @@
+{
+  "name": "pepete-front",
+  "version": 2,
+  "buildCommand": "npx expo export --platform web && node scripts/inject-pwa-meta.js",
+  "outputDirectory": "dist",
+  "installCommand": "npm install",
+  "framework": null,
+  "rewrites": [
+    { "source": "/(.*)", "destination": "/index.html" }
+  ]
+}

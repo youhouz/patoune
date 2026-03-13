@@ -48,7 +48,7 @@ const GuestGateScreen = ({ route }) => {
               <View style={s.heroOrb1} />
               <View style={s.heroOrb2} />
               <View style={s.logoBadge}>
-                <PawIcon size={28} color="#FFF" />
+                <PawIcon size={42} color="#FFF" />
               </View>
               <Text style={s.logoWord}>pépète.</Text>
               <Text style={s.heroTitle}>Créez votre compte</Text>
@@ -111,8 +111,8 @@ const GuestGateScreen = ({ route }) => {
 
 const s = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.background },
-  scroll: { flexGrow: 1 },
-  content: { flex: 1, paddingBottom: 40 },
+  scroll: { flexGrow: 1, paddingBottom: 40 },
+  content: {},
 
   hero: { marginBottom: 28 },
   heroGrad: {
@@ -135,7 +135,7 @@ const s = StyleSheet.create({
     backgroundColor: 'rgba(255,255,255,0.05)',
   },
   logoBadge: {
-    width: 56, height: 56,
+    width: 72, height: 72,
     borderRadius: RADIUS.xl,
     backgroundColor: 'rgba(255,255,255,0.12)',
     borderWidth: 1.5,

@@ -129,12 +129,17 @@ const RegisterScreen = ({ navigation }) => {
       email: email.trim().toLowerCase(),
       password,
       phone: phone.trim(),
-      role: 'owner',
+      role: 'user',
     });
     setLoading(false);
     if (result.success) {
-      // Redirect to main app after successful registration
-      navigation.reset({ index: 0, routes: [{ name: 'Main' }] });
+      // Reset to root Tabs — must target the RootStack (parent of AuthStack)
+      const parent = navigation.getParent();
+      if (parent) {
+        parent.reset({ index: 0, routes: [{ name: 'Tabs' }] });
+      } else {
+        navigation.reset({ index: 0, routes: [{ name: 'Tabs' }] });
+      }
     } else {
       shake();
       setErrors({ global: result.error || "Impossible de créer le compte." });
@@ -164,7 +169,7 @@ const RegisterScreen = ({ navigation }) => {
             <Feather name="arrow-left" size={20} color="rgba(255,255,255,0.9)" />
           </TouchableOpacity>
           <View style={s.logoBadge}>
-            <PawIcon size={28} color="#FFF" />
+            <PawIcon size={42} color="#FFF" />
           </View>
           <Text style={s.logoWord}>pépète.</Text>
           <Text style={s.heroTitle}>Créer un compte <Text style={s.heroAccent}>!</Text></Text>
@@ -380,7 +385,7 @@ const s = StyleSheet.create({
     marginBottom: SPACING.base,
   },
   logoBadge: {
-    width: 56, height: 56,
+    width: 72, height: 72,
     borderRadius: RADIUS.xl,
     backgroundColor: 'rgba(255,255,255,0.12)',
     borderWidth: 1.5,

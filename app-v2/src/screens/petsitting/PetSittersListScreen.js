@@ -286,7 +286,7 @@ const PetSittersListScreen = ({ navigation }) => {
 
   useEffect(() => {
     loadPetSitters();
-  }, [selectedAnimal, location, selectedRadius, manualLocation]);
+  }, [selectedAnimal, location, selectedRadius, manualLocation, searchQuery]);
 
   const handleCitySearch = async () => {
     if (!citySearchValue.trim()) return;
@@ -340,14 +340,8 @@ const PetSittersListScreen = ({ navigation }) => {
     loadPetSitters();
   }, [selectedAnimal, searchQuery, location, selectedRadius, manualLocation]);
 
-  const filteredPetsitters = petsitters.filter((ps) => {
-    if (!searchQuery.trim()) return true;
-    const q = searchQuery.toLowerCase();
-    return (
-      ps.user?.name?.toLowerCase().includes(q) ||
-      ps.bio?.toLowerCase().includes(q)
-    );
-  });
+  // Use API results directly - filtering is done server-side via params.search and params.animal
+  const filteredPetsitters = petsitters;
 
   const renderFilterChip = ({ item }) => {
     const isActive = selectedAnimal === item.key;
@@ -613,7 +607,7 @@ const PetSittersListScreen = ({ navigation }) => {
               onPress={() => navigation.navigate('PetSitterDetail', { petsitter: item })}
             />
           )}
-          keyExtractor={(item) => item._id}
+          keyExtractor={(item, index) => item._id || String(index)}
           contentContainerStyle={styles.list}
           showsVerticalScrollIndicator={false}
           ListHeaderComponent={renderHeader}
