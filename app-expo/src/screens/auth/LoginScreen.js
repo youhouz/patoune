@@ -51,9 +51,9 @@ const LoginScreen = ({ navigation }) => {
           {/* ── Logo badge ── */}
           <View style={s.logoArea}>
             <View style={s.logoBadge}>
-              <PawIcon size={28} color="#6B8F71" />
+              <PawIcon size={30} color="#FFF" />
             </View>
-            <Text style={s.logoName}>pépète.</Text>
+            <Text style={s.logoName}>pépète<Text style={s.logoDot}>.</Text></Text>
             <Text style={s.logoTagline}>Le meilleur pour vos animaux</Text>
           </View>
 
@@ -149,8 +149,20 @@ const s = StyleSheet.create({
 
   inner:    { paddingHorizontal: 28 },
   logoArea: { paddingTop: Platform.OS === 'ios' ? 72 : 60, paddingBottom: 28, alignItems: 'center' },
-  logoBadge: { width: 68, height: 68, borderRadius: 34, backgroundColor: '#EFF5F0', alignItems: 'center', justifyContent: 'center', marginBottom: 12 },
-  logoName: { fontSize: 28, fontWeight: '900', color: '#1C2B1E', letterSpacing: -0.8, marginBottom: 4 },
+  logoBadge: {
+    width: 72, height: 72, borderRadius: 36,
+    backgroundColor: '#1C2B1E',
+    alignItems: 'center', justifyContent: 'center',
+    marginBottom: 14,
+    shadowColor: '#1C2B1E', shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.28, shadowRadius: 18, elevation: 8,
+  },
+  logoName: {
+    fontSize: 30, fontWeight: '900', color: '#1C2B1E',
+    fontFamily: Platform.OS === 'ios' ? 'Georgia' : 'serif',
+    letterSpacing: -1, marginBottom: 4,
+  },
+  logoDot: { color: '#6B8F71' },
   logoTagline: { fontSize: 13, color: '#96A89A', fontWeight: '500' },
 
   title:  { fontSize: 34, fontWeight: '900', color: '#1C2B1E', letterSpacing: -1,   lineHeight: 40, marginBottom: 10 },

@@ -318,7 +318,7 @@ const HomeScreen = ({ navigation }) => {
         {/* ── Contenu principal (masqué pendant la recherche) ── */}
         {query.trim().length === 0 && <>
 
-        {/* ── Mes animaux ── */}}
+        {/* ── Mes animaux ── */}
         {pets.length > 0 && (
           <View style={[s.petsSection, { paddingLeft: hPadding }]}>
             <View style={[s.sectionHeader, { paddingRight: hPadding, maxWidth: contentWidth, alignSelf: 'center', width: '100%' }]}>
@@ -353,14 +353,14 @@ const HomeScreen = ({ navigation }) => {
               >
                 <LinearGradient colors={f.gradient} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={s.featureCard}>
                   <View style={s.featureIconCircle}>
-                    <Feather name={f.icon} size={22} color="#FFF" />
+                    <Feather name={f.icon} size={24} color="#FFF" />
                   </View>
-                  <View style={{ flex: 1 }}>
+                  <View>
                     <Text style={s.featureTitle}>{f.title}</Text>
                     <Text style={s.featureSubtitle}>{f.subtitle}</Text>
                   </View>
                   <View style={s.featureArrow}>
-                    <Feather name="arrow-right" size={14} color="#FFF" />
+                    <Feather name="arrow-right" size={15} color="#FFF" />
                   </View>
                 </LinearGradient>
               </TouchableOpacity>
@@ -605,7 +605,7 @@ const s = StyleSheet.create({
 
   // Section header
   sectionHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 },
-  sectionTitle: { fontSize: 22, fontWeight: '900', color: COLORS.text, letterSpacing: -0.6 },
+  sectionTitle: { fontSize: 22, fontWeight: '900', color: COLORS.text, letterSpacing: -0.8 },
   seeAll: { fontSize: FONT_SIZE.sm, fontWeight: '700', color: COLORS.primary },
 
   // Pets
@@ -630,23 +630,23 @@ const s = StyleSheet.create({
 
   // Features — refined cards
   featuresSection: { marginTop: 28 },
-  featuresGrid: { flexDirection: 'row', gap: 10, marginTop: 16 },
+  featuresGrid: { flexDirection: 'row', gap: 12, marginTop: 16 },
   featuresGridTablet: { flexWrap: 'wrap' },
   featureCardWrapper: { flex: 1 },
   featureCard: {
-    borderRadius: RADIUS.xl, padding: 18,
-    height: 156, justifyContent: 'space-between',
+    borderRadius: RADIUS.xl, padding: 20,
+    height: 182, justifyContent: 'space-between',
     ...SHADOWS.lg,
   },
   featureIconCircle: {
-    width: 42, height: 42, borderRadius: 21,
+    width: 50, height: 50, borderRadius: 25,
     backgroundColor: 'rgba(255,255,255,0.22)',
     alignItems: 'center', justifyContent: 'center',
   },
-  featureTitle: { fontSize: FONT_SIZE.md, fontWeight: '800', color: '#FFF' },
-  featureSubtitle: { fontSize: FONT_SIZE.xs, color: 'rgba(255,255,255,0.78)', fontWeight: '500', marginTop: 3 },
+  featureTitle: { fontSize: 17, fontWeight: '800', color: '#FFF', letterSpacing: -0.3 },
+  featureSubtitle: { fontSize: FONT_SIZE.xs, color: 'rgba(255,255,255,0.80)', fontWeight: '500', marginTop: 4 },
   featureArrow: {
-    width: 32, height: 32, borderRadius: 16,
+    width: 34, height: 34, borderRadius: 17,
     backgroundColor: 'rgba(255,255,255,0.22)',
     alignItems: 'center', justifyContent: 'center', alignSelf: 'flex-end',
   },
@@ -654,18 +654,19 @@ const s = StyleSheet.create({
   // Stats — clean card
   statsSection: { marginTop: 32 },
   statsCard: {
-    backgroundColor: COLORS.white, borderRadius: RADIUS.xl,
+    backgroundColor: '#FEFCF7', borderRadius: RADIUS.xl,
     paddingVertical: 28, paddingHorizontal: 8,
     flexDirection: 'row', justifyContent: 'space-around',
     ...SHADOWS.card, marginTop: 16,
+    borderWidth: 1, borderColor: '#F0EDE4',
   },
   stat: { alignItems: 'center', flex: 1 },
-  statDivider: { width: 1, backgroundColor: COLORS.borderLight, marginVertical: 10 },
+  statDivider: { width: 1, backgroundColor: '#EDE9E1', marginVertical: 10 },
   statIconWrap: {
-    width: 48, height: 48, borderRadius: RADIUS.md,
+    width: 48, height: 48, borderRadius: 16,
     alignItems: 'center', justifyContent: 'center', marginBottom: 10,
   },
-  statValue: { fontSize: 34, fontWeight: '900', letterSpacing: -1 },
+  statValue: { fontSize: 36, fontWeight: '900', letterSpacing: -1.2 },
   statLabel: { fontSize: FONT_SIZE['2xs'], color: COLORS.textSecondary, fontWeight: '600', marginTop: 4, textAlign: 'center', lineHeight: 15 },
 
   // Booking — premium gradient

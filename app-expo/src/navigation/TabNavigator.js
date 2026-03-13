@@ -83,11 +83,11 @@ const TabIcon = ({ routeName, focused }) => {
   const config = VISIBLE_TABS[routeName];
   if (!config) return null;
   return (
-    <View style={styles.tabItem}>
+    <View style={[styles.tabItem, focused && styles.tabItemActive]}>
       <Feather
         name={config.icon}
-        size={23}
-        color={focused ? colors.primary : '#B0BAB3'}
+        size={22}
+        color={focused ? colors.primary : '#B8C4BC'}
       />
       <Text style={[styles.tabLabel, focused && styles.tabLabelActive]}>
         {config.label}
@@ -145,26 +145,31 @@ const styles = StyleSheet.create({
   tabItem: {
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 5,
-    paddingHorizontal: 16,
+    gap: 4,
+    paddingHorizontal: 18,
+    paddingVertical: 6,
+    borderRadius: 20,
     position: 'relative',
+  },
+  tabItemActive: {
+    backgroundColor: colors.primary + '12',
   },
   tabLabel: {
     fontSize: 10,
     fontWeight: '500',
-    color: '#B0BAB3',
-    letterSpacing: 0.2,
+    color: '#B8C4BC',
+    letterSpacing: 0.3,
   },
   tabLabelActive: {
     color: colors.primary,
-    fontWeight: '700',
+    fontWeight: '800',
   },
   activeDot: {
     position: 'absolute',
-    top: 0,
-    width: 4,
-    height: 4,
-    borderRadius: 2,
+    bottom: 1,
+    width: 18,
+    height: 3,
+    borderRadius: 1.5,
     backgroundColor: colors.primary,
   },
 });
