@@ -18,6 +18,8 @@ app/ios/build/
 .expo/
 app-expo/dist/
 app-expo/web-build/
+app-v2/dist/
+app-v2/web-build/
 
 # OS
 .DS_Store
