@@ -120,151 +120,165 @@ const LoginScreen = ({ navigation }) => {
     }
   };
 
+  const canGoBack = navigation.canGoBack();
+
   return (
     <View style={s.root}>
       <StatusBar barStyle="light-content" />
 
-      {/* ── Hero gradient ── */}
-      <LinearGradient
-        colors={['#1C2B1E', '#2C3E2F', '#3D5E41']}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1 }}
-        style={[s.hero, { paddingTop: insets.top + 32 }]}
-      >
-        {/* Décors lumineux */}
-        <View style={s.glow1} pointerEvents="none" />
-        <View style={s.glow2} pointerEvents="none" />
-
-        <Animated.View style={[s.heroInner, { transform: [{ scale: heroScale }], opacity: heroOpacity, maxWidth: maxW, alignSelf: 'center', width: '100%' }]}>
-          {/* Badge logo */}
-          <View style={s.logoBadge}>
-            <PawIcon size={42} color="#FFF" />
-          </View>
-          <Text style={s.logoWord}>pépète.</Text>
-          <Text style={s.heroTitle}>Bon retour <Text style={s.heroAccent}>!</Text></Text>
-          <Text style={s.heroSub}>Connectez-vous pour continuer</Text>
-        </Animated.View>
-      </LinearGradient>
-
-      {/* ── Card formulaire ── */}
       <KeyboardAvoidingView
         style={{ flex: 1 }}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
         keyboardVerticalOffset={0}
       >
         <ScrollView
-          style={s.scrollView}
-          contentContainerStyle={[s.scrollContent, { paddingBottom: insets.bottom + 40 }]}
+          contentContainerStyle={{ flexGrow: 1, paddingBottom: insets.bottom + 40 }}
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
-          bounces={false}
         >
-          <Animated.View
-            style={[
-              s.card,
-              {
-                maxWidth: maxW,
-                alignSelf: 'center',
-                width: '100%',
-                transform: [{ translateY: cardSlide }, { translateX: shakeAnim }],
-                opacity: cardOpacity,
-              },
-            ]}
+          {/* ── Hero gradient ── */}
+          <LinearGradient
+            colors={['#1C2B1E', '#2C3E2F', '#3D5E41']}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={[s.hero, { paddingTop: insets.top + 16 }]}
           >
-            {/* Titre section */}
-            <Text style={s.cardTitle}>Connexion</Text>
+            {/* Décors lumineux */}
+            <View style={s.glow1} pointerEvents="none" />
+            <View style={s.glow2} pointerEvents="none" />
 
-            {/* Message d'erreur */}
-            {errorMsg ? (
-              <View style={s.errorBanner}>
-                <Feather name="alert-circle" size={15} color={colors.error} />
-                <Text style={s.errorBannerText}>{errorMsg}</Text>
-              </View>
-            ) : null}
-
-            {/* Email */}
-            <Field
-              label="email"
-              icon="mail"
-              value={email}
-              onChangeText={(v) => { setEmail(v); setErrorMsg(''); }}
-              placeholder="votre@email.com"
-              focusedKey={focused}
-              setFocused={setFocused}
-              keyboardType="email-address"
-              autoCorrect={false}
-              returnKeyType="next"
-              onSubmitEditing={() => pwdRef.current?.focus()}
-            />
-
-            {/* Mot de passe */}
-            <Field
-              label="mot de passe"
-              icon="lock"
-              value={password}
-              onChangeText={(v) => { setPassword(v); setErrorMsg(''); }}
-              placeholder="Votre mot de passe"
-              focusedKey={focused}
-              setFocused={setFocused}
-              secureTextEntry={!showPwd}
-              inputRef={pwdRef}
-              returnKeyType="done"
-              onSubmitEditing={handleLogin}
-              right={
-                <TouchableOpacity
-                  onPress={() => setShowPwd(!showPwd)}
-                  hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
-                >
-                  <Feather name={showPwd ? 'eye-off' : 'eye'} size={18} color={colors.textLight} />
-                </TouchableOpacity>
-              }
-            />
-
-            {/* CTA */}
-            <TouchableOpacity
-              onPress={handleLogin}
-              disabled={loading}
-              activeOpacity={0.88}
-              style={[s.ctaWrap, loading && s.ctaDisabled]}
-            >
-              <LinearGradient
-                colors={loading ? [colors.textLight, colors.textTertiary] : [colors.primaryDark, colors.primary]}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 0 }}
-                style={s.cta}
+            {/* Bouton retour */}
+            {canGoBack && (
+              <TouchableOpacity
+                onPress={() => navigation.goBack()}
+                style={s.backBtn}
+                activeOpacity={0.7}
+                hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
               >
-                {loading
-                  ? <ActivityIndicator size="small" color="#FFF" />
-                  : (
-                    <>
-                      <Text style={s.ctaText}>Se connecter</Text>
-                      <Feather name="arrow-right" size={20} color="#FFF" />
-                    </>
-                  )
-                }
-              </LinearGradient>
-            </TouchableOpacity>
+                <Feather name="arrow-left" size={22} color="#FFF" />
+              </TouchableOpacity>
+            )}
 
-            {/* Divider */}
-            <View style={s.divider}>
-              <View style={s.dividerLine} />
-              <Text style={s.dividerLabel}>ou</Text>
-              <View style={s.dividerLine} />
-            </View>
-
-            {/* Lien inscription */}
-            <TouchableOpacity
-              style={s.linkRow}
-              onPress={() => navigation.navigate('Register')}
-              activeOpacity={0.7}
-            >
-              <Text style={s.linkText}>Pas encore de compte ?</Text>
-              <View style={s.linkBadge}>
-                <Text style={s.linkBadgeText}>Créer un compte</Text>
-                <Feather name="chevron-right" size={14} color={colors.primary} />
+            <Animated.View style={[s.heroInner, { transform: [{ scale: heroScale }], opacity: heroOpacity, maxWidth: maxW, alignSelf: 'center', width: '100%' }]}>
+              {/* Badge logo */}
+              <View style={s.logoBadge}>
+                <PawIcon size={42} color="#FFF" />
               </View>
-            </TouchableOpacity>
-          </Animated.View>
+              <Text style={s.logoWord}>pépète.</Text>
+              <Text style={s.heroTitle}>Bon retour <Text style={s.heroAccent}>!</Text></Text>
+              <Text style={s.heroSub}>Connectez-vous pour continuer</Text>
+            </Animated.View>
+          </LinearGradient>
+
+          {/* ── Card formulaire ── */}
+          <View style={s.scrollContent}>
+            <Animated.View
+              style={[
+                s.card,
+                {
+                  maxWidth: maxW,
+                  alignSelf: 'center',
+                  width: '100%',
+                  transform: [{ translateY: cardSlide }, { translateX: shakeAnim }],
+                  opacity: cardOpacity,
+                },
+              ]}
+            >
+              {/* Titre section */}
+              <Text style={s.cardTitle}>Connexion</Text>
+
+              {/* Message d'erreur */}
+              {errorMsg ? (
+                <View style={s.errorBanner}>
+                  <Feather name="alert-circle" size={15} color={colors.error} />
+                  <Text style={s.errorBannerText}>{errorMsg}</Text>
+                </View>
+              ) : null}
+
+              {/* Email */}
+              <Field
+                label="email"
+                icon="mail"
+                value={email}
+                onChangeText={(v) => { setEmail(v); setErrorMsg(''); }}
+                placeholder="votre@email.com"
+                focusedKey={focused}
+                setFocused={setFocused}
+                keyboardType="email-address"
+                autoCorrect={false}
+                returnKeyType="next"
+                onSubmitEditing={() => pwdRef.current?.focus()}
+              />
+
+              {/* Mot de passe */}
+              <Field
+                label="mot de passe"
+                icon="lock"
+                value={password}
+                onChangeText={(v) => { setPassword(v); setErrorMsg(''); }}
+                placeholder="Votre mot de passe"
+                focusedKey={focused}
+                setFocused={setFocused}
+                secureTextEntry={!showPwd}
+                inputRef={pwdRef}
+                returnKeyType="done"
+                onSubmitEditing={handleLogin}
+                right={
+                  <TouchableOpacity
+                    onPress={() => setShowPwd(!showPwd)}
+                    hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+                  >
+                    <Feather name={showPwd ? 'eye-off' : 'eye'} size={18} color={colors.textLight} />
+                  </TouchableOpacity>
+                }
+              />
+
+              {/* CTA */}
+              <TouchableOpacity
+                onPress={handleLogin}
+                disabled={loading}
+                activeOpacity={0.88}
+                style={[s.ctaWrap, loading && s.ctaDisabled]}
+              >
+                <LinearGradient
+                  colors={loading ? [colors.textLight, colors.textTertiary] : [colors.primaryDark, colors.primary]}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 0 }}
+                  style={s.cta}
+                >
+                  {loading
+                    ? <ActivityIndicator size="small" color="#FFF" />
+                    : (
+                      <>
+                        <Text style={s.ctaText}>Se connecter</Text>
+                        <Feather name="arrow-right" size={20} color="#FFF" />
+                      </>
+                    )
+                  }
+                </LinearGradient>
+              </TouchableOpacity>
+
+              {/* Divider */}
+              <View style={s.divider}>
+                <View style={s.dividerLine} />
+                <Text style={s.dividerLabel}>ou</Text>
+                <View style={s.dividerLine} />
+              </View>
+
+              {/* Lien inscription */}
+              <TouchableOpacity
+                style={s.linkRow}
+                onPress={() => navigation.navigate('Register')}
+                activeOpacity={0.7}
+              >
+                <Text style={s.linkText}>Pas encore de compte ?</Text>
+                <View style={s.linkBadge}>
+                  <Text style={s.linkBadgeText}>Créer un compte</Text>
+                  <Feather name="chevron-right" size={14} color={colors.primary} />
+                </View>
+              </TouchableOpacity>
+            </Animated.View>
+          </View>
         </ScrollView>
       </KeyboardAvoidingView>
     </View>
