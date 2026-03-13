@@ -205,14 +205,26 @@ const HomeScreen = ({ navigation }) => {
       gradient: ['#C4956A', '#D4AD86'],
       onPress: () => navigation.navigate('Profil', { screen: 'MyPets' }),
     },
+    {
+      icon: 'tag',
+      title: 'Marketplace',
+      subtitle: 'Acheter & vendre',
+      gradient: ['#B0BAB3', '#C8CFC9'],
+      disabled: true,
+      comingSoon: 'Q3 2026',
+    },
+    {
+      icon: 'map-pin',
+      title: 'Vétérinaires',
+      subtitle: 'Trouver un véto',
+      gradient: ['#B0BAB3', '#C8CFC9'],
+      disabled: true,
+      comingSoon: 'Q4 2026',
+    },
   ];
 
   // Responsive helpers
   const centerWrap = { maxWidth: contentWidth, alignSelf: 'center', width: '100%' };
-  // Feature card: 2-column grid on tablet, flex:1 on phone
-  const featureCardWidth = isTablet
-    ? (contentWidth - hPadding * 2 - 10) / 2
-    : undefined;
 
   return (
     <View style={s.container}>
@@ -337,30 +349,36 @@ const HomeScreen = ({ navigation }) => {
           </View>
         )}
 
-        {/* ── Que faire ? — Feature cards ── */}
+        {/* ── Que faire ? — Feature cards (grille 2 colonnes) ── */}
         <View style={[s.featuresSection, { paddingHorizontal: hPadding }, centerWrap]}>
           <Text style={s.sectionTitle}>Que voulez-vous faire ?</Text>
-          <View style={[s.featuresGrid, isTablet && s.featuresGridTablet]}>
+          <View style={s.featuresGrid}>
             {features.map((f, idx) => (
               <TouchableOpacity
                 key={idx}
-                onPress={f.onPress}
-                activeOpacity={0.85}
-                style={[
-                  s.featureCardWrapper,
-                  isTablet ? { width: featureCardWidth } : null,
-                ]}
+                onPress={f.disabled ? undefined : f.onPress}
+                activeOpacity={f.disabled ? 1 : 0.85}
+                style={s.featureCardWrapper}
               >
-                <LinearGradient colors={f.gradient} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={s.featureCard}>
-                  <View style={s.featureIconCircle}>
-                    <Feather name={f.icon} size={24} color="#FFF" />
+                <LinearGradient
+                  colors={f.gradient}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 1 }}
+                  style={[s.featureCard, f.disabled && s.featureCardDisabled]}
+                >
+                  <View style={s.featureCardTop}>
+                    <View style={[s.featureIconCircle, f.disabled && s.featureIconDisabled]}>
+                      <Feather name={f.icon} size={22} color={f.disabled ? 'rgba(255,255,255,0.5)' : '#FFF'} />
+                    </View>
+                    {f.comingSoon && (
+                      <View style={s.featureComingSoonPill}>
+                        <Text style={s.featureComingSoonText}>{f.comingSoon}</Text>
+                      </View>
+                    )}
                   </View>
                   <View>
-                    <Text style={s.featureTitle}>{f.title}</Text>
-                    <Text style={s.featureSubtitle}>{f.subtitle}</Text>
-                  </View>
-                  <View style={s.featureArrow}>
-                    <Feather name="arrow-right" size={15} color="#FFF" />
+                    <Text style={[s.featureTitle, f.disabled && s.featureTitleDisabled]}>{f.title}</Text>
+                    <Text style={[s.featureSubtitle, f.disabled && s.featureSubDisabled]}>{f.subtitle}</Text>
                   </View>
                 </LinearGradient>
               </TouchableOpacity>
@@ -471,53 +489,6 @@ const HomeScreen = ({ navigation }) => {
           </View>
         )}
 
-        {/* ── Bientôt disponible ── */}
-        <View style={[s.soonSection, { paddingHorizontal: hPadding }, centerWrap]}>
-          <View style={s.soonHeader}>
-            <View style={s.soonBadge}>
-              <Text style={s.soonBadgeText}>BIENTÔT</Text>
-            </View>
-            <Text style={s.sectionTitle}>Ce qui arrive prochainement</Text>
-          </View>
-
-          {/* Marketplace */}
-          <View style={s.soonCard}>
-            <View style={s.soonIconWrap}>
-              <Feather name="tag" size={22} color="#B0BAB3" />
-            </View>
-            <View style={s.soonBody}>
-              <View style={s.soonTitleRow}>
-                <Text style={s.soonCardTitle}>Marketplace animaux</Text>
-                <View style={s.soonPill}><Text style={s.soonPillText}>Q3 2026</Text></View>
-              </View>
-              <Text style={s.soonCardSub}>Achète, vends et adoptes : accessoires, nourriture, animaux — entre particuliers de confiance.</Text>
-              <View style={s.soonTags}>
-                {['Adoption', 'Vente', 'Échange', 'Occasion'].map(t => (
-                  <View key={t} style={s.soonTag}><Text style={s.soonTagText}>{t}</Text></View>
-                ))}
-              </View>
-            </View>
-          </View>
-
-          {/* Vétérinaires */}
-          <View style={s.soonCard}>
-            <View style={s.soonIconWrap}>
-              <Feather name="map-pin" size={22} color="#B0BAB3" />
-            </View>
-            <View style={s.soonBody}>
-              <View style={s.soonTitleRow}>
-                <Text style={s.soonCardTitle}>Vétérinaires proches</Text>
-                <View style={s.soonPill}><Text style={s.soonPillText}>Q4 2026</Text></View>
-              </View>
-              <Text style={s.soonCardSub}>Trouve un vétérinaire autour de toi — cliniques, urgences 24h/24, téléconsultation.</Text>
-              <View style={s.soonTags}>
-                {['Urgences', 'Téléconsult', 'Avis', 'Carte'].map(t => (
-                  <View key={t} style={s.soonTag}><Text style={s.soonTagText}>{t}</Text></View>
-                ))}
-              </View>
-            </View>
-          </View>
-        </View>
 
         {/* ── Bannière CTA — Premium gradient ── */}
         <View style={[s.bannerSection, { paddingHorizontal: hPadding }, centerWrap]}>
@@ -628,28 +599,49 @@ const s = StyleSheet.create({
   petMiniAddIcon: { fontSize: 24, color: COLORS.textTertiary },
   petMiniAddLabel: { fontSize: FONT_SIZE.xs, fontWeight: '600', color: COLORS.textTertiary },
 
-  // Features — refined cards
+  // Features — grille 2 colonnes
   featuresSection: { marginTop: 28 },
-  featuresGrid: { flexDirection: 'row', gap: 12, marginTop: 16 },
-  featuresGridTablet: { flexWrap: 'wrap' },
-  featureCardWrapper: { flex: 1 },
+  featuresGrid: {
+    flexDirection: 'row', flexWrap: 'wrap',
+    gap: 12, marginTop: 16,
+  },
+  featureCardWrapper: {
+    width: '47%', flexGrow: 1,
+  },
   featureCard: {
-    borderRadius: RADIUS.xl, padding: 20,
-    height: 182, justifyContent: 'space-between',
+    borderRadius: RADIUS.xl, padding: 16,
+    height: 140, justifyContent: 'space-between',
     ...SHADOWS.lg,
   },
+  featureCardDisabled: {
+    opacity: 0.65,
+  },
+  featureCardTop: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+  },
   featureIconCircle: {
-    width: 50, height: 50, borderRadius: 25,
+    width: 44, height: 44, borderRadius: 22,
     backgroundColor: 'rgba(255,255,255,0.22)',
     alignItems: 'center', justifyContent: 'center',
   },
-  featureTitle: { fontSize: 17, fontWeight: '800', color: '#FFF', letterSpacing: -0.3 },
-  featureSubtitle: { fontSize: FONT_SIZE.xs, color: 'rgba(255,255,255,0.80)', fontWeight: '500', marginTop: 4 },
-  featureArrow: {
-    width: 34, height: 34, borderRadius: 17,
-    backgroundColor: 'rgba(255,255,255,0.22)',
-    alignItems: 'center', justifyContent: 'center', alignSelf: 'flex-end',
+  featureIconDisabled: {
+    backgroundColor: 'rgba(255,255,255,0.12)',
   },
+  featureComingSoonPill: {
+    backgroundColor: 'rgba(255,255,255,0.25)',
+    borderRadius: RADIUS.pill,
+    paddingHorizontal: 8, paddingVertical: 3,
+  },
+  featureComingSoonText: {
+    fontSize: 9, fontWeight: '700', color: '#FFF',
+    letterSpacing: 0.5,
+  },
+  featureTitle: { fontSize: 15, fontWeight: '800', color: '#FFF', letterSpacing: -0.3 },
+  featureTitleDisabled: { color: 'rgba(255,255,255,0.7)' },
+  featureSubtitle: { fontSize: FONT_SIZE.xs, color: 'rgba(255,255,255,0.80)', fontWeight: '500', marginTop: 2 },
+  featureSubDisabled: { color: 'rgba(255,255,255,0.5)' },
 
   // Stats — clean card
   statsSection: { marginTop: 32 },
@@ -752,23 +744,6 @@ const s = StyleSheet.create({
   popLabel: { fontSize: 11, fontWeight: '800' },
   popScanBadge: { flexDirection: 'row', alignItems: 'center', gap: 3 },
   popScanCount: { fontSize: 10, color: COLORS.textTertiary, fontWeight: '600' },
-
-  // Coming soon
-  soonSection:    { marginTop: 32 },
-  soonHeader:     { marginBottom: 16, gap: 10 },
-  soonBadge:      { alignSelf: 'flex-start', backgroundColor: '#F0F0EE', borderRadius: RADIUS.pill, paddingHorizontal: 10, paddingVertical: 4, marginBottom: 6 },
-  soonBadgeText:  { fontSize: 10, fontWeight: '800', color: '#B0BAB3', letterSpacing: 1.5 },
-  soonCard:       { flexDirection: 'row', gap: 14, backgroundColor: '#FAFAFA', borderRadius: RADIUS.xl, padding: 18, marginBottom: 12, borderWidth: 1, borderColor: '#EBEBEB' },
-  soonIconWrap:   { width: 46, height: 46, borderRadius: 14, backgroundColor: '#F0F0EE', alignItems: 'center', justifyContent: 'center', flexShrink: 0, marginTop: 2 },
-  soonBody:       { flex: 1 },
-  soonTitleRow:   { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6, gap: 8 },
-  soonCardTitle:  { fontSize: 15, fontWeight: '800', color: '#B0BAB3', flex: 1 },
-  soonPill:       { backgroundColor: '#EBEBEB', borderRadius: RADIUS.pill, paddingHorizontal: 8, paddingVertical: 3 },
-  soonPillText:   { fontSize: 10, fontWeight: '700', color: '#C8C8C8' },
-  soonCardSub:    { fontSize: 13, color: '#C8C8C8', lineHeight: 19, marginBottom: 12, fontWeight: '500' },
-  soonTags:       { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
-  soonTag:        { backgroundColor: '#F0F0EE', borderRadius: RADIUS.pill, paddingHorizontal: 10, paddingVertical: 4 },
-  soonTagText:    { fontSize: 11, color: '#C0C0C0', fontWeight: '600' },
 
   // Banner — premium CTA
   bannerSection: { marginTop: 32 },
