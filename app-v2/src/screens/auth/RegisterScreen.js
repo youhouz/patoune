@@ -129,12 +129,17 @@ const RegisterScreen = ({ navigation }) => {
       email: email.trim().toLowerCase(),
       password,
       phone: phone.trim(),
-      role: 'owner',
+      role: 'user',
     });
     setLoading(false);
     if (result.success) {
-      // Redirect to main app after successful registration
-      navigation.reset({ index: 0, routes: [{ name: 'Main' }] });
+      // Reset to root Tabs — must target the RootStack (parent of AuthStack)
+      const parent = navigation.getParent();
+      if (parent) {
+        parent.reset({ index: 0, routes: [{ name: 'Tabs' }] });
+      } else {
+        navigation.reset({ index: 0, routes: [{ name: 'Tabs' }] });
+      }
     } else {
       shake();
       setErrors({ global: result.error || "Impossible de créer le compte." });

@@ -107,8 +107,13 @@ const LoginScreen = ({ navigation }) => {
     const result = await login(email.trim().toLowerCase(), password);
     setLoading(false);
     if (result.success) {
-      // Redirect to main app after successful login
-      navigation.reset({ index: 0, routes: [{ name: 'Main' }] });
+      // Reset to root Tabs — must target the RootStack (parent of AuthStack)
+      const parent = navigation.getParent();
+      if (parent) {
+        parent.reset({ index: 0, routes: [{ name: 'Tabs' }] });
+      } else {
+        navigation.reset({ index: 0, routes: [{ name: 'Tabs' }] });
+      }
     } else {
       shake();
       setErrorMsg(result.error || 'Connexion impossible. Vérifie tes identifiants.');
