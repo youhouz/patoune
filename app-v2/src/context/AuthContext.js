@@ -50,6 +50,11 @@ export const AuthProvider = ({ children }) => {
         }
       }
 
+      // Skip server refresh for demo token
+      if (storedToken === 'demo_token_pepete') {
+        return;
+      }
+
       // Refresh profile from server
       const response = await getMeAPI();
       const me = response.data?.user;
@@ -70,6 +75,20 @@ export const AuthProvider = ({ children }) => {
 
   const login = useCallback(async (email, password) => {
     try {
+      // Mode démo pour tester sans backend
+      if (email.toLowerCase() === 'demo@pepete.fr' && password === 'demo123') {
+        const demoUser = {
+          _id: 'demo_user_001',
+          name: 'Utilisateur Démo',
+          email: 'demo@pepete.fr',
+          role: 'user',
+          phone: '06 00 00 00 00',
+          createdAt: new Date().toISOString(),
+        };
+        await saveAuth('demo_token_pepete', demoUser);
+        return { success: true, user: demoUser };
+      }
+
       const response = await loginAPI(email, password);
       const { token: newToken, user: userData } = response.data;
 
