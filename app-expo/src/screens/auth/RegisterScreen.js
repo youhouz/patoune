@@ -68,10 +68,12 @@ const RegisterScreen = ({ navigation }) => {
     <View style={s.container}>
       <StatusBar barStyle="dark-content" />
       <ScrollView
-        style={{ flex: 1 }}
+        style={s.scrollView}
         contentContainerStyle={s.scroll}
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
+        bounces={true}
+        alwaysBounceVertical={true}
       >
         {/* ── Blobs décoratifs ── */}
         <View style={s.blob1} pointerEvents="none" />
@@ -162,7 +164,8 @@ const RegisterScreen = ({ navigation }) => {
 
 const s = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#FAF6EE' },
-  scroll:    { paddingBottom: 80 },
+  scrollView: { flex: 1 },
+  scroll:    { paddingBottom: 100, flexGrow: 1 },
 
   blob1: { position: 'absolute', top: -60,  right: -60, width: 220, height: 220, borderRadius: 110, backgroundColor: 'rgba(107,143,113,0.08)' },
   blob2: { position: 'absolute', top: 140,  right: -30, width: 140, height: 140, borderRadius: 70,  backgroundColor: 'rgba(196,149,106,0.07)' },

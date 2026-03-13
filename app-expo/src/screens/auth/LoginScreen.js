@@ -34,10 +34,12 @@ const LoginScreen = ({ navigation }) => {
     <View style={s.container}>
       <StatusBar barStyle="dark-content" />
       <ScrollView
-        style={{ flex: 1 }}
+        style={s.scrollView}
         contentContainerStyle={s.scroll}
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
+        bounces={true}
+        alwaysBounceVertical={true}
       >
         {/* ── Blobs décoratifs ── */}
         <View style={s.blob1} pointerEvents="none" />
@@ -137,7 +139,8 @@ const LoginScreen = ({ navigation }) => {
 
 const s = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#FAF6EE' },
-  scroll:    { paddingBottom: 80 },
+  scrollView: { flex: 1 },
+  scroll:    { paddingBottom: 100, flexGrow: 1 },
 
   /* blobs */
   blob1: { position: 'absolute', top: -80,  right: -60, width: 260, height: 260, borderRadius: 130, backgroundColor: 'rgba(107,143,113,0.07)' },
