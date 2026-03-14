@@ -221,7 +221,7 @@ const ProfileScreen = ({ navigation }) => {
               {user?.isPetSitter && (
                 <View style={styles.sitterBadge}>
                   <Feather name="check" size={10} color="#FFF" />
-                  <Text style={styles.sitterBadgeText}>Gardien</Text>
+                  <Text style={styles.sitterBadgeText}>Pet-sitter</Text>
                 </View>
               )}
             </View>

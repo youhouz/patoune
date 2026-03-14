@@ -17,7 +17,7 @@
       "bundleIdentifier": "com.pepete.app",
       "infoPlist": {
         "NSCameraUsageDescription": "Pépète utilise la camera pour scanner les codes-barres des produits pour animaux",
-        "NSLocationWhenInUseUsageDescription": "Pépète utilise ta position pour trouver des gardiens pres de chez toi"
+        "NSLocationWhenInUseUsageDescription": "Pépète utilise ta position pour trouver des pet-sitters pres de chez toi"
       }
     },
     "android": {
@@ -52,7 +52,7 @@
       [
         "expo-location",
         {
-          "locationWhenInUsePermission": "Pépète utilise ta position pour trouver des gardiens pres de chez toi"
+          "locationWhenInUsePermission": "Pépète utilise ta position pour trouver des pet-sitters pres de chez toi"
         }
       ]
     ]

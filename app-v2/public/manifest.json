@@ -47,7 +47,7 @@
       "icons": [{ "src": "/assets/icon.png", "sizes": "96x96" }]
     },
     {
-      "name": "Trouver un gardien",
+      "name": "Trouver un pet-sitter",
       "short_name": "Garde",
       "url": "/",
       "icons": [{ "src": "/assets/icon.png", "sizes": "96x96" }]

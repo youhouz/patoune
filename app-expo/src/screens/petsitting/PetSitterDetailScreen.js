@@ -23,7 +23,7 @@ const ANIMAL_ICON_MAP = {
 
 const SERVICE_ICONS = {
   garde_domicile: { icon: 'home', label: 'Garde a domicile', desc: 'Votre animal reste chez vous' },
-  garde_chez_sitter: { icon: 'home', label: 'Garde chez le gardien', desc: 'Votre animal sejourne chez le gardien' },
+  garde_chez_sitter: { icon: 'home', label: 'Garde chez le pet-sitter', desc: 'Votre animal sejourne chez le pet-sitter' },
   promenade: { icon: 'map-pin', label: 'Promenade', desc: 'Balade quotidienne' },
   visite: { icon: 'eye', label: 'Visite a domicile', desc: 'Passage pour nourrir et cajoler' },
   toilettage: { icon: 'scissors', label: 'Toilettage', desc: 'Soin et beaute' },
@@ -218,7 +218,7 @@ const PetSitterDetailScreen = ({ route, navigation }) => {
 
             {/* Name */}
             <Text style={styles.heroName}>
-              {petsitter.user?.name || 'Gardien'}
+              {petsitter.user?.name || 'Pet-sitter'}
             </Text>
 
             {/* Rating */}
@@ -385,7 +385,7 @@ const PetSitterDetailScreen = ({ route, navigation }) => {
               })}
             </View>
             <Text style={styles.availabilityHint}>
-              Contactez le gardien pour confirmer sa disponibilite
+              Contactez le pet-sitter pour confirmer sa disponibilite
             </Text>
           </SectionCard>
 

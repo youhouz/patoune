@@ -75,6 +75,7 @@ const RegisterScreen = ({ navigation }) => {
   const [phone,    setPhone]    = useState('');
   const [password, setPassword] = useState('');
   const [confirm,  setConfirm]  = useState('');
+  const [role,     setRole]     = useState('user');
   const [showPwd,  setShowPwd]  = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
   const [loading,  setLoading]  = useState(false);
@@ -124,7 +125,7 @@ const RegisterScreen = ({ navigation }) => {
   const handleRegister = async () => {
     if (!validate()) { shake(); return; }
     setLoading(true);
-    const result = await register(name.trim(), email.trim().toLowerCase(), password, phone.trim());
+    const result = await register(name.trim(), email.trim().toLowerCase(), password, phone.trim(), role);
     setLoading(false);
     if (result.success) {
       // Retour à l'accueil après inscription réussie
@@ -144,45 +145,44 @@ const RegisterScreen = ({ navigation }) => {
     <View style={s.root}>
       <StatusBar barStyle="light-content" />
 
-      {/* ── Hero gradient ── */}
-      <LinearGradient
-        colors={['#1C2B1E', '#2C3E2F', '#3D5E41']}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1 }}
-        style={[s.hero, { paddingTop: insets.top + 16 }]}
-      >
-        <View style={s.glow1} pointerEvents="none" />
-        <View style={s.glow2} pointerEvents="none" />
-        <View style={[s.heroInner, { maxWidth: maxW, alignSelf: 'center', width: '100%' }]}>
-          <TouchableOpacity
-            style={s.backBtn}
-            onPress={() => navigation.goBack()}
-            hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
-            activeOpacity={0.7}
-          >
-            <Feather name="arrow-left" size={20} color="rgba(255,255,255,0.9)" />
-          </TouchableOpacity>
-          <View style={s.logoBadge}>
-            <PawIcon size={28} color="#FFF" />
-          </View>
-          <Text style={s.logoWord}>pépète.</Text>
-          <Text style={s.heroTitle}>Créer un compte <Text style={s.heroAccent}>!</Text></Text>
-          <Text style={s.heroSub}>Compte gratuit · 30 secondes</Text>
-        </View>
-      </LinearGradient>
-
       {/* ── Formulaire ── */}
       <KeyboardAvoidingView
         style={{ flex: 1 }}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       >
         <ScrollView
-          style={s.scrollView}
-          contentContainerStyle={[s.scrollContent, { paddingBottom: insets.bottom + 48 }]}
+          contentContainerStyle={{ flexGrow: 1, paddingBottom: insets.bottom + 48 }}
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
-          bounces={false}
         >
+          {/* ── Hero gradient ── */}
+          <LinearGradient
+            colors={['#1C2B1E', '#2C3E2F', '#3D5E41']}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={[s.hero, { paddingTop: insets.top + 16 }]}
+          >
+            <View style={s.glow1} pointerEvents="none" />
+            <View style={s.glow2} pointerEvents="none" />
+            <View style={[s.heroInner, { maxWidth: maxW, alignSelf: 'center', width: '100%' }]}>
+              <TouchableOpacity
+                style={s.backBtn}
+                onPress={() => navigation.goBack()}
+                hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+                activeOpacity={0.7}
+              >
+                <Feather name="arrow-left" size={20} color="rgba(255,255,255,0.9)" />
+              </TouchableOpacity>
+              <View style={s.logoBadge}>
+                <PawIcon size={28} color="#FFF" />
+              </View>
+              <Text style={s.logoWord}>pépète.</Text>
+              <Text style={s.heroTitle}>Créer un compte <Text style={s.heroAccent}>!</Text></Text>
+              <Text style={s.heroSub}>Compte gratuit · 30 secondes</Text>
+            </View>
+          </LinearGradient>
+
+          <View style={s.scrollContent}>
           <Animated.View
             style={[
               s.card,
@@ -234,6 +234,36 @@ const RegisterScreen = ({ navigation }) => {
               returnKeyType="next"
               onSubmitEditing={() => pwdRef.current?.focus()}
             />
+
+            {/* Divider */}
+            <View style={s.sectionDivider} />
+
+            {/* Section rôle */}
+            <Text style={s.sectionLabel}>Je suis</Text>
+            <View style={s.roleRow}>
+              <TouchableOpacity
+                style={[s.roleOption, role === 'user' && s.roleOptionActive]}
+                onPress={() => setRole('user')}
+                activeOpacity={0.8}
+              >
+                <View style={[s.roleIconWrap, role === 'user' && s.roleIconWrapActive]}>
+                  <Feather name="heart" size={20} color={role === 'user' ? '#FFF' : colors.primary} />
+                </View>
+                <Text style={[s.roleLabel, role === 'user' && s.roleLabelActive]}>Propriétaire</Text>
+                <Text style={s.roleDesc}>J'ai un animal</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[s.roleOption, role === 'guardian' && s.roleOptionActive]}
+                onPress={() => setRole('guardian')}
+                activeOpacity={0.8}
+              >
+                <View style={[s.roleIconWrap, role === 'guardian' && s.roleIconWrapActive]}>
+                  <Feather name="home" size={20} color={role === 'guardian' ? '#FFF' : colors.primary} />
+                </View>
+                <Text style={[s.roleLabel, role === 'guardian' && s.roleLabelActive]}>Pet-sitter</Text>
+                <Text style={s.roleDesc}>Je garde des animaux</Text>
+              </TouchableOpacity>
+            </View>
 
             {/* Divider */}
             <View style={s.sectionDivider} />
@@ -339,6 +369,7 @@ const RegisterScreen = ({ navigation }) => {
               </View>
             </TouchableOpacity>
           </Animated.View>
+          </View>
         </ScrollView>
       </KeyboardAvoidingView>
     </View>
@@ -412,7 +443,6 @@ const s = StyleSheet.create({
   },
 
   // Scroll
-  scrollView: { flex: 1 },
   scrollContent: {
     paddingTop: SPACING.xl,
     paddingHorizontal: SPACING.lg,
@@ -554,6 +584,54 @@ const s = StyleSheet.create({
   matchText: {
     fontFamily: FONTS.bodyMedium,
     fontSize: FONT_SIZE.xs,
+  },
+
+  // Role selector
+  roleRow: {
+    flexDirection: 'row',
+    gap: SPACING.base,
+    marginBottom: SPACING.base,
+  },
+  roleOption: {
+    flex: 1,
+    alignItems: 'center',
+    paddingVertical: SPACING.base,
+    paddingHorizontal: SPACING.sm,
+    borderRadius: RADIUS.xl,
+    borderWidth: 2,
+    borderColor: colors.border,
+    backgroundColor: colors.background,
+  },
+  roleOptionActive: {
+    borderColor: colors.primary,
+    backgroundColor: colors.primarySoft,
+  },
+  roleIconWrap: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: colors.primarySoft,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: SPACING.sm,
+  },
+  roleIconWrapActive: {
+    backgroundColor: colors.primary,
+  },
+  roleLabel: {
+    fontFamily: FONTS.heading,
+    fontSize: FONT_SIZE.base,
+    color: colors.text,
+    marginBottom: 2,
+  },
+  roleLabelActive: {
+    color: colors.primaryDark,
+  },
+  roleDesc: {
+    fontFamily: FONTS.body,
+    fontSize: FONT_SIZE.xs,
+    color: colors.textSecondary,
+    textAlign: 'center',
   },
 
   // CTA

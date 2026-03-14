@@ -61,13 +61,13 @@ const SLIDES = [
   {
     key: 'garde',
     eyebrow: 'GARDE & PROMENADE',
-    title: 'Trouvez un\ngardien\nde confiance.',
-    desc: "Des gardiens vérifiés près de chez vous. Réservation simple, paiement sécurisé.",
+    title: 'Trouvez un\npet-sitter\nde confiance.',
+    desc: "Des pet-sitters vérifiés près de chez vous. Réservation simple, paiement sécurisé.",
     blobColors: ['#527A56', '#6B8F71', '#96A88A'],
     heroIcon: 'home',
     trust: null,
     features: [
-      { icon: 'shield',         text: 'Gardiens vérifiés & certifiés' },
+      { icon: 'shield',         text: 'Pet-sitters vérifiés & certifiés' },
       { icon: 'calendar',       text: 'Réservation en quelques clics' },
       { icon: 'message-circle', text: 'Messagerie intégrée' },
       { icon: 'map-pin',        text: 'Services proches de chez vous' },

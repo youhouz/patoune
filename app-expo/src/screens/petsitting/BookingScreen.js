@@ -25,7 +25,7 @@ const STEPS = [
 
 const SERVICES = [
   { key: 'garde_domicile', label: 'Garde a domicile', icon: 'home', desc: 'Chez vous' },
-  { key: 'garde_chez_sitter', label: 'Chez le gardien', icon: 'home', desc: 'Chez le gardien' },
+  { key: 'garde_chez_sitter', label: 'Chez le pet-sitter', icon: 'home', desc: 'Chez le pet-sitter' },
   { key: 'promenade', label: 'Promenade', icon: 'map-pin', desc: 'Balade quotidienne' },
   { key: 'visite', label: 'Visite a domicile', icon: 'eye', desc: 'Visite ponctuelle' },
   { key: 'toilettage', label: 'Toilettage', icon: 'scissors', desc: 'Soin & beaute' },
@@ -235,7 +235,7 @@ const BookingScreen = ({ route, navigation }) => {
 
       showAlert(
         'Reservation envoyee !',
-        'Le gardien va confirmer votre reservation sous peu.',
+        'Le pet-sitter va confirmer votre reservation sous peu.',
         [{ text: 'Super !', onPress: () => navigation.goBack() }]
       );
     } catch (error) {
@@ -284,7 +284,7 @@ const BookingScreen = ({ route, navigation }) => {
             </View>
             <View style={styles.headerSitterInfo}>
               <Text style={styles.headerSitterName}>
-                {petsitter.user?.name || 'Gardien'}
+                {petsitter.user?.name || 'Pet-sitter'}
               </Text>
               <Text style={styles.headerSitterPrice}>
                 {petsitter.pricePerHour || '--'} €/h  •  {petsitter.pricePerDay || '--'} €/jour
@@ -480,8 +480,8 @@ const BookingScreen = ({ route, navigation }) => {
               </View>
 
               <View style={styles.summaryRow}>
-                <Text style={styles.summaryLabel}>Gardien</Text>
-                <Text style={styles.summaryValue}>{petsitter.user?.name || 'Gardien'}</Text>
+                <Text style={styles.summaryLabel}>Pet-sitter</Text>
+                <Text style={styles.summaryValue}>{petsitter.user?.name || 'Pet-sitter'}</Text>
               </View>
 
               <View style={styles.summaryRow}>
@@ -556,7 +556,7 @@ const BookingScreen = ({ route, navigation }) => {
             </TouchableOpacity>
 
             <Text style={styles.confirmHint}>
-              Le gardien devra confirmer votre demande
+              Le pet-sitter devra confirmer votre demande
             </Text>
           </View>
 

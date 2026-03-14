@@ -12,10 +12,10 @@ const colors = require('../../utils/colors');
 const { RADIUS, SHADOWS, SPACING, FONT_SIZE } = require('../../utils/colors');
 
 const FEATURES = [
-  { icon: 'heart', title: 'Trouvez un gardien', desc: 'Des gardiens vérifiés près de chez vous pour vos animaux.' },
+  { icon: 'heart', title: 'Trouvez un Pet-sitter', desc: 'Des Pet-sitters vérifiés près de chez vous pour vos animaux.' },
   { icon: 'camera', title: 'Historique des scans', desc: 'Retrouvez tous vos produits analysés en un clin d\'œil.' },
   { icon: 'users', title: 'Profil de vos animaux', desc: 'Enregistrez vos compagnons pour des conseils personnalisés.' },
-  { icon: 'message-circle', title: 'Messagerie', desc: 'Communiquez directement avec les gardiens.' },
+  { icon: 'message-circle', title: 'Messagerie', desc: 'Communiquez directement avec les pet-sitters.' },
 ];
 
 const GuestGateScreen = ({ route }) => {

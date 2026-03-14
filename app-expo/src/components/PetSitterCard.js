@@ -54,14 +54,14 @@ const PetSitterCard = ({ petsitter, onPress }) => {
       {/* Top row */}
       <View style={styles.header}>
         <Avatar
-          name={user?.name || 'Gardien'}
+          name={user?.name || 'Pet-sitter'}
           imageUri={user?.avatar}
           size="md"
           verified={petsitter.verified}
         />
         <View style={styles.info}>
           <View style={styles.nameRow}>
-            <Text style={styles.name} numberOfLines={1}>{user?.name || 'Gardien'}</Text>
+            <Text style={styles.name} numberOfLines={1}>{user?.name || 'Pet-sitter'}</Text>
             {petsitter.verified && (
               <View style={styles.verifiedBadge}>
                 <Feather name="check-circle" size={14} color={colors.secondary} />
