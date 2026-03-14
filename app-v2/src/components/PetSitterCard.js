@@ -43,7 +43,7 @@ const StarRating = ({ value = 0, count, size = 13 }) => {
 
 const PetSitterCard = ({ petsitter, onPress }) => {
   const { user, bio, pricePerDay, rating, reviewCount, acceptedAnimals, services } = petsitter;
-  const displayName = user?.name || 'Gardien';
+  const displayName = user?.name || 'Pet-sitter';
 
   return (
     <TouchableOpacity

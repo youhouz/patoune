@@ -175,7 +175,7 @@ const PetSitterCard = ({ petsitter, onPress, index }) => {
           <View style={styles.cardInfo}>
             <View style={styles.cardNameRow}>
               <Text style={styles.cardName} numberOfLines={1}>
-                {petsitter.user?.name || 'Gardien'}
+                {petsitter.user?.name || 'Pet-sitter'}
               </Text>
               {petsitter.verified && (
                 <View style={styles.verifiedBadge}>
@@ -384,7 +384,7 @@ const PetSittersListScreen = ({ navigation }) => {
       >
         <View style={styles.headerTopRow}>
           <View>
-            <Text style={styles.headerTitle}>Gardiens</Text>
+            <Text style={styles.headerTitle}>Pet-sitters</Text>
             <Text style={styles.headerSubtitle}>
               De confiance pour vos compagnons
             </Text>
@@ -530,7 +530,7 @@ const PetSittersListScreen = ({ navigation }) => {
       {!loading && (
         <View style={styles.resultsCount}>
           <Text style={styles.resultsText}>
-            {filteredPetsitters.length} gardien{filteredPetsitters.length !== 1 ? 's' : ''} disponible{filteredPetsitters.length !== 1 ? 's' : ''}
+            {filteredPetsitters.length} pet-sitter{filteredPetsitters.length !== 1 ? 's' : ''} disponible{filteredPetsitters.length !== 1 ? 's' : ''}
           </Text>
           {selectedAnimal !== 'Tous' && (
             <TouchableOpacity
@@ -563,7 +563,7 @@ const PetSittersListScreen = ({ navigation }) => {
         <View style={styles.emptyIconCircle}>
           <Feather name="search" size={40} color={colors.primary} />
         </View>
-        <Text style={styles.emptyTitle}>Aucun gardien trouve</Text>
+        <Text style={styles.emptyTitle}>Aucun pet-sitter trouve</Text>
         <Text style={styles.emptySubtext}>
           Essayez de modifier vos filtres{'\n'}ou d'elargir votre recherche
         </Text>

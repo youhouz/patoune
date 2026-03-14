@@ -331,7 +331,7 @@ const SettingsScreen = ({ navigation }) => {
                   </View>
                   {user?.isPetSitter && (
                     <View style={styles.sitterTag}>
-                      <Text style={styles.sitterTagText}>Gardien</Text>
+                      <Text style={styles.sitterTagText}>Pet-sitter</Text>
                     </View>
                   )}
                 </View>
@@ -498,7 +498,7 @@ const SettingsScreen = ({ navigation }) => {
                 {renderSettingRow({
                   icon: 'message-circle',
                   label: 'Messages',
-                  description: 'Nouveaux messages de gardiens',
+                  description: 'Nouveaux messages de pet-sitters',
                   value: notifMessages,
                   onValueChange: setNotifMessages,
                   accentColor: '#8CB092',

@@ -43,7 +43,7 @@ const NextBookingCard = ({ booking }) => {
   const dayLabel = daysUntil <= 0 ? "Aujourd'hui" : daysUntil === 1 ? 'Demain' : `Dans ${daysUntil}j`;
   const serviceLabels = {
     garde_domicile: 'Garde à domicile',
-    garde_chez_sitter: 'Chez le gardien',
+    garde_chez_sitter: 'Chez le pet-sitter',
     promenade: 'Promenade',
     visite: 'Visite à domicile',
     toilettage: 'Toilettage',
@@ -193,8 +193,8 @@ const HomeScreen = ({ navigation }) => {
     },
     {
       icon: 'heart',
-      title: 'Gardiens',
-      subtitle: 'Trouver un gardien',
+      title: 'Pet-sitters',
+      subtitle: 'Trouver un pet-sitter',
       gradient: ['#6B8F71', '#8CB092'],
       onPress: () => navigation.navigate('Garde'),
     },
@@ -275,7 +275,7 @@ const HomeScreen = ({ navigation }) => {
                 style={s.searchInput}
                 value={query}
                 onChangeText={setQuery}
-                placeholder="Rechercher un produit, un gardien…"
+                placeholder="Rechercher un produit, un pet-sitter…"
                 placeholderTextColor="rgba(255,255,255,0.55)"
                 returnKeyType="search"
                 clearButtonMode="while-editing"

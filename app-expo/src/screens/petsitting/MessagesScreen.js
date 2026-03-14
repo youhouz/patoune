@@ -284,7 +284,7 @@ const MessagesScreen = ({ route, navigation }) => {
         </View>
         <Text style={styles.emptyTitle}>Demarrez la conversation</Text>
         <Text style={styles.emptySubtext}>
-          Envoyez un message a {userName || 'ce gardien'}{'\n'}pour organiser la garde de votre animal
+          Envoyez un message a {userName || 'ce pet-sitter'}{'\n'}pour organiser la garde de votre animal
         </Text>
         <View style={styles.emptySuggestions}>
           {['Bonjour !', 'Disponible cette semaine ?', 'Tarifs pour 2 jours ?'].map((suggestion, idx) => (
