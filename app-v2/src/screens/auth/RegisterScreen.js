@@ -79,11 +79,11 @@ const RegisterScreen = ({ navigation }) => {
 
   const validate = () => {
     const errs = {};
-    if (!name.trim())     errs.name     = 'Le nom est requis';
-    if (!email.trim())    errs.email    = "L'email est requis";
-    else if (!/\S+@\S+\.\S+/.test(email)) errs.email = 'Email invalide';
-    if (!password)        errs.password = 'Le mot de passe est requis';
-    else if (password.length < 6) errs.password = '6 caractères minimum requis';
+    if (!name.trim())     errs.name     = 'Entre ton prénom et nom';
+    if (!email.trim())    errs.email    = "Entre ton adresse email";
+    else if (!/\S+@\S+\.\S+/.test(email.trim())) errs.email = 'Format email invalide (ex: nom@email.com)';
+    if (!password)        errs.password = 'Entre un mot de passe';
+    else if (password.length < 6) errs.password = `Trop court (${password.length}/6 caractères minimum)`;
     if (!confirm)         errs.confirm  = 'Confirme ton mot de passe';
     else if (password !== confirm) errs.confirm = 'Les mots de passe ne correspondent pas';
     setErrors(errs);

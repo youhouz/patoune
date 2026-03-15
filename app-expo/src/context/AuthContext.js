@@ -95,7 +95,10 @@ export const AuthProvider = ({ children }) => {
       if (error.response?.data?.error) {
           message = error.response.data.error;
       } else if (error.response?.data?.errors?.length > 0) {
-          message = error.response.data.errors.map(e => e.msg).join(', ');
+          message = error.response.data.errors
+            .map(e => typeof e === 'string' ? e : e.msg)
+            .filter(Boolean)
+            .join(', ');
       } else if (error.userMessage) {
           message = error.userMessage;
       }
