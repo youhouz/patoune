@@ -107,17 +107,18 @@ const LoginScreen = ({ navigation }) => {
     <View style={[s.root, { paddingTop: insets.top }]}>
       <StatusBar barStyle="light-content" />
 
-      <ScrollView
-        ref={scrollRef}
-        style={{ flex: 1 }}
-        bounces={true}
-        overScrollMode="always"
-        keyboardShouldPersistTaps="handled"
-        keyboardDismissMode="interactive"
-        showsVerticalScrollIndicator={false}
-        contentContainerStyle={{ paddingBottom: Math.max(insets.bottom, 20) + 40 }}
-        automaticallyAdjustKeyboardInsets={Platform.OS === 'ios'}
-      >
+      <View style={{ flex: 1 }}>
+        <ScrollView
+          ref={scrollRef}
+          style={StyleSheet.absoluteFill}
+          bounces={true}
+          overScrollMode="always"
+          keyboardShouldPersistTaps="handled"
+          keyboardDismissMode="interactive"
+          showsVerticalScrollIndicator={true}
+          contentContainerStyle={{ paddingBottom: Math.max(insets.bottom, 20) + 60 }}
+          automaticallyAdjustKeyboardInsets={Platform.OS === 'ios'}
+        >
           {/* ── Hero ── */}
           <LinearGradient
             colors={['#1C2B1E', '#2C3E2F', '#3D5E41']}
@@ -228,6 +229,7 @@ const LoginScreen = ({ navigation }) => {
             </Animated.View>
           </View>
         </ScrollView>
+      </View>
     </View>
   );
 };
