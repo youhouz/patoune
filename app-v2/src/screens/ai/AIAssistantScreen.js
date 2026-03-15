@@ -16,7 +16,6 @@ import {
   Animated,
   Keyboard,
   ActivityIndicator,
-  FlatList,
   TextInput,
 } from 'react-native';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
@@ -372,6 +371,7 @@ const AIAssistantScreen = () => {
           contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
+          nestedScrollEnabled
         >
           {/* Disclaimer banner */}
           <DisclaimerBanner />
@@ -380,20 +380,21 @@ const AIAssistantScreen = () => {
           {pets.length > 0 && (
             <View style={styles.petSelectorSection}>
               <Text style={styles.petSelectorLabel}>Contexte animal :</Text>
-              <FlatList
+              <ScrollView
                 horizontal
-                data={pets}
-                keyExtractor={(item) => item._id || item.name}
-                renderItem={({ item }) => (
+                showsHorizontalScrollIndicator={false}
+                contentContainerStyle={styles.petSelectorList}
+                nestedScrollEnabled
+              >
+                {pets.map((item) => (
                   <PetSelectorItem
+                    key={item._id || item.name}
                     pet={item}
                     isSelected={selectedPet?._id === item._id}
                     onSelect={handleSelectPet}
                   />
-                )}
-                showsHorizontalScrollIndicator={false}
-                contentContainerStyle={styles.petSelectorList}
-              />
+                ))}
+              </ScrollView>
               {selectedPet && (
                 <Text style={styles.petContextHint}>
                   Questions orientees pour {selectedPet.name} ({selectedPet.species}
