@@ -44,7 +44,7 @@ const ScannerScreen = ({ navigation }) => {
   const [permission, requestPermission] = useCameraPermissions();
   const [barcode, setBarcode] = useState('');
   const [scanning, setScanning] = useState(false);
-  const [manualMode, setManualMode] = useState(false);
+  const [manualMode, setManualMode] = useState(Platform.OS === 'web');
   const [scanned, setScanned] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
 

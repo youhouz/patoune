@@ -5,8 +5,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import {
   View, Text, TextInput, TouchableOpacity, StyleSheet,
-  Platform, StatusBar, Animated, ActivityIndicator,
-  KeyboardAvoidingView, ScrollView,
+  Platform, StatusBar, Animated, ActivityIndicator, ScrollView,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Feather } from '@expo/vector-icons';
@@ -143,19 +142,17 @@ const RegisterScreen = ({ navigation }) => {
     <View style={[s.root, { paddingTop: insets.top }]}>
       <StatusBar barStyle="light-content" />
 
-      <KeyboardAvoidingView
+      <ScrollView
+        ref={scrollRef}
         style={{ flex: 1 }}
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        bounces={true}
+        overScrollMode="always"
+        keyboardShouldPersistTaps="handled"
+        keyboardDismissMode="interactive"
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={{ paddingBottom: Math.max(insets.bottom, 20) + 40 }}
+        automaticallyAdjustKeyboardInsets={Platform.OS === 'ios'}
       >
-        <ScrollView
-          ref={scrollRef}
-          bounces={true}
-          overScrollMode="always"
-          keyboardShouldPersistTaps="handled"
-          keyboardDismissMode="interactive"
-          showsVerticalScrollIndicator={false}
-          contentContainerStyle={{ paddingBottom: Math.max(insets.bottom, 20) + 40 }}
-        >
           {/* ── Hero ── */}
           <LinearGradient
             colors={['#1C2B1E', '#2C3E2F', '#3D5E41']}
@@ -333,7 +330,6 @@ const RegisterScreen = ({ navigation }) => {
             </Animated.View>
           </View>
         </ScrollView>
-      </KeyboardAvoidingView>
     </View>
   );
 };
