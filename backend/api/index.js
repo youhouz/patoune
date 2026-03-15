@@ -52,7 +52,15 @@ let isForestStarted = false;
 
 module.exports = async (req, res) => {
   await connectDB();
-  
+
+  // Vercel pre-parses the body — tell body-parser to skip re-parsing
+  if (req.body !== undefined) {
+    req._body = true;
+    if (typeof req.body === 'string') {
+      try { req.body = JSON.parse(req.body); } catch (_) {}
+    }
+  }
+
   // Correction Vercel Serverless (Serverless functions restart from cold start)
   if (agent && !isForestStarted) {
     try {
