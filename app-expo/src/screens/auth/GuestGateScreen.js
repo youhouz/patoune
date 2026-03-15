@@ -6,7 +6,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { Feather } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
-import { PawIcon } from '../../components/Logo';
+import { PepeteIcon } from '../../components/PepeteLogo';
 import { FONTS } from '../../utils/typography';
 const colors = require('../../utils/colors');
 const { RADIUS, SHADOWS, SPACING, FONT_SIZE } = require('../../utils/colors');
@@ -54,7 +54,7 @@ const GuestGateScreen = ({ route }) => {
               </TouchableOpacity>
               <View style={{ height: SPACING.base }} />
               <View style={s.logoBadge}>
-                <PawIcon size={28} color="#FFF" />
+                <PepeteIcon size={44} color="#FFF" />
               </View>
               <Text style={s.logoWord}>pépète.</Text>
               <Text style={s.heroTitle}>Créez votre compte</Text>
