@@ -63,14 +63,20 @@ const LoginScreen = ({ navigation }) => {
       return;
     }
     setLoading(true);
-    const result = await login(email.trim().toLowerCase(), password);
-    setLoading(false);
-    if (result.success) {
-      const parent = navigation.getParent();
-      if (parent) parent.reset({ index: 0, routes: [{ name: 'Tabs' }] });
-    } else {
+    try {
+      const result = await login(email.trim().toLowerCase(), password);
+      setLoading(false);
+      if (result.success) {
+        const parent = navigation.getParent();
+        if (parent) parent.reset({ index: 0, routes: [{ name: 'Tabs' }] });
+      } else {
+        shake();
+        setErrorMsg(result.error || 'Connexion impossible. Vérifie tes identifiants.');
+      }
+    } catch (e) {
+      setLoading(false);
       shake();
-      setErrorMsg(result.error || 'Connexion impossible. Vérifie tes identifiants.');
+      setErrorMsg(`Erreur inattendue: ${e.message || e}`);
     }
   };
 
