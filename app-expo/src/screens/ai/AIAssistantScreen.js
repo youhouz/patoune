@@ -19,7 +19,7 @@ import {
   FlatList,
   TextInput,
 } from 'react-native';
-import { useFocusEffect } from '@react-navigation/native';
+import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import ScreenHeader from '../../components/ScreenHeader';
 import Icon from '../../components/Icon';
 import Card from '../../components/Card';
@@ -244,6 +244,7 @@ const SuggestedQuestion = ({ question, onPress }) => (
 // Main Screen
 // =========================================================================
 const AIAssistantScreen = () => {
+  const navigation = useNavigation();
   const { user } = useAuth();
   const scrollViewRef = useRef(null);
 
@@ -346,6 +347,7 @@ const AIAssistantScreen = () => {
         variant="light"
         title="Assistant Pépète"
         subtitle="Posez vos questions"
+        onBack={() => navigation.goBack()}
       />
 
       <KeyboardAvoidingView

@@ -44,6 +44,15 @@ const GuestGateScreen = ({ route }) => {
             >
               <View style={s.heroOrb1} />
               <View style={s.heroOrb2} />
+              <TouchableOpacity
+                style={s.backButton}
+                onPress={() => navigation.goBack()}
+                activeOpacity={0.7}
+                hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+              >
+                <Feather name="chevron-left" size={24} color="#FFF" />
+              </TouchableOpacity>
+              <View style={{ height: SPACING.base }} />
               <View style={s.logoBadge}>
                 <PawIcon size={28} color="#FFF" />
               </View>
@@ -120,6 +129,15 @@ const s = StyleSheet.create({
     borderBottomRightRadius: 36,
     alignItems: 'center',
     overflow: 'hidden',
+  },
+  backButton: {
+    alignSelf: 'flex-start',
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: 'rgba(255,255,255,0.15)',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   heroOrb1: {
     position: 'absolute', top: -50, right: -50,
