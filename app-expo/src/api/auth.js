@@ -6,11 +6,18 @@ export const registerAPI = async (name, email, password, phone, role, address, g
   if (address) body.address = address;
   if (guardianProfile) body.guardianProfile = guardianProfile;
 
-  const res = await fetch(`${API_URL}/auth/register`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(body),
-  });
+  let res;
+  try {
+    res = await fetch(`${API_URL}/auth/register`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    });
+  } catch (networkErr) {
+    const error = new Error('Network error');
+    error.userMessage = 'Impossible de joindre le serveur. Vérifie ta connexion internet.';
+    throw error;
+  }
 
   const data = await res.json();
   if (!res.ok) {
@@ -22,11 +29,18 @@ export const registerAPI = async (name, email, password, phone, role, address, g
 };
 
 export const loginAPI = async (email, password) => {
-  const res = await fetch(`${API_URL}/auth/login`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ email, password }),
-  });
+  let res;
+  try {
+    res = await fetch(`${API_URL}/auth/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password }),
+    });
+  } catch (networkErr) {
+    const error = new Error('Network error');
+    error.userMessage = 'Impossible de joindre le serveur. Vérifie ta connexion internet.';
+    throw error;
+  }
 
   const data = await res.json();
   if (!res.ok) {
