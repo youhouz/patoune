@@ -11,7 +11,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { Feather } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAuth } from '../../context/AuthContext';
-import { PawIcon } from '../../components/Logo';
+import { PepeteIcon } from '../../components/PepeteLogo';
 import useResponsive from '../../hooks/useResponsive';
 import { FONTS } from '../../utils/typography';
 const colors = require('../../utils/colors');
@@ -138,7 +138,7 @@ const LoginScreen = ({ navigation }) => {
                 <Feather name="arrow-left" size={20} color="rgba(255,255,255,0.9)" />
               </TouchableOpacity>
               <View style={s.logoBadge}>
-                <PawIcon size={28} color="#FFF" />
+                <PepeteIcon size={44} color="#FFF" />
               </View>
               <Text style={s.logoWord}>pépète.</Text>
               <Text style={s.heroTitle}>Bon retour <Text style={s.heroAccent}>!</Text></Text>
