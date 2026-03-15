@@ -11,7 +11,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { Feather } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAuth } from '../../context/AuthContext';
-import { PawIcon } from '../../components/Logo';
+import { PepeteIcon } from '../../components/PepeteLogo';
 import useResponsive from '../../hooks/useResponsive';
 import { FONTS } from '../../utils/typography';
 const colors = require('../../utils/colors');
@@ -43,7 +43,7 @@ const RegisterScreen = ({ navigation }) => {
   const [phone,    setPhone]    = useState('');
   const [password, setPassword] = useState('');
   const [confirm,  setConfirm]  = useState('');
-  const [role,     setRole]     = useState('user');
+  const [roles,    setRoles]    = useState({ user: true, guardian: false });
   const [showPwd,  setShowPwd]  = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
   const [loading,  setLoading]  = useState(false);
@@ -90,10 +90,24 @@ const RegisterScreen = ({ navigation }) => {
     return Object.keys(errs).length === 0;
   };
 
+  const toggleRole = (r) => {
+    setRoles(prev => {
+      const next = { ...prev, [r]: !prev[r] };
+      if (!next.user && !next.guardian) return prev;
+      return next;
+    });
+  };
+
+  const getFinalRole = () => {
+    if (roles.user && roles.guardian) return 'both';
+    if (roles.guardian) return 'guardian';
+    return 'user';
+  };
+
   const handleRegister = async () => {
     if (!validate()) { shake(); return; }
     setLoading(true);
-    const result = await register(name.trim(), email.trim().toLowerCase(), password, phone.trim(), role);
+    const result = await register(name.trim(), email.trim().toLowerCase(), password, phone.trim(), getFinalRole());
     setLoading(false);
     if (result.success) {
       const parent = navigation.getParent()?.getParent();
@@ -173,7 +187,7 @@ const RegisterScreen = ({ navigation }) => {
                 <Feather name="arrow-left" size={20} color="rgba(255,255,255,0.9)" />
               </TouchableOpacity>
               <View style={s.logoBadge}>
-                <PawIcon size={28} color="#FFF" />
+                <PepeteIcon size={44} color="#FFF" />
               </View>
               <Text style={s.logoWord}>pépète.</Text>
               <Text style={s.heroTitle}>Créer un compte <Text style={s.heroAccent}>!</Text></Text>
@@ -225,26 +239,37 @@ const RegisterScreen = ({ navigation }) => {
 
               {/* ── Rôle ── */}
               <Text style={s.sectionLabel}>Je suis</Text>
+              <Text style={s.roleHint}>Tu peux choisir les deux !</Text>
               <View style={s.roleRow}>
                 <TouchableOpacity
-                  style={[s.roleOption, role === 'user' && s.roleOptionActive]}
-                  onPress={() => setRole('user')} activeOpacity={0.8}
+                  style={[s.roleOption, roles.user && s.roleOptionActive]}
+                  onPress={() => toggleRole('user')} activeOpacity={0.8}
                 >
-                  <View style={[s.roleIconWrap, role === 'user' && s.roleIconWrapActive]}>
-                    <Feather name="heart" size={20} color={role === 'user' ? '#FFF' : colors.primary} />
+                  <View style={[s.roleIconWrap, roles.user && s.roleIconWrapActive]}>
+                    <Feather name="heart" size={20} color={roles.user ? '#FFF' : colors.primary} />
                   </View>
-                  <Text style={[s.roleLabel, role === 'user' && s.roleLabelActive]}>Propriétaire</Text>
+                  <Text style={[s.roleLabel, roles.user && s.roleLabelActive]}>Propriétaire</Text>
                   <Text style={s.roleDesc}>J'ai un animal</Text>
+                  {roles.user && (
+                    <View style={s.roleCheck}>
+                      <Feather name="check" size={14} color={colors.primary} />
+                    </View>
+                  )}
                 </TouchableOpacity>
                 <TouchableOpacity
-                  style={[s.roleOption, role === 'guardian' && s.roleOptionActive]}
-                  onPress={() => setRole('guardian')} activeOpacity={0.8}
+                  style={[s.roleOption, roles.guardian && s.roleOptionActive]}
+                  onPress={() => toggleRole('guardian')} activeOpacity={0.8}
                 >
-                  <View style={[s.roleIconWrap, role === 'guardian' && s.roleIconWrapActive]}>
-                    <Feather name="home" size={20} color={role === 'guardian' ? '#FFF' : colors.primary} />
+                  <View style={[s.roleIconWrap, roles.guardian && s.roleIconWrapActive]}>
+                    <Feather name="home" size={20} color={roles.guardian ? '#FFF' : colors.primary} />
                   </View>
-                  <Text style={[s.roleLabel, role === 'guardian' && s.roleLabelActive]}>Pet-sitter</Text>
+                  <Text style={[s.roleLabel, roles.guardian && s.roleLabelActive]}>Pet-sitter</Text>
                   <Text style={s.roleDesc}>Je garde des animaux</Text>
+                  {roles.guardian && (
+                    <View style={s.roleCheck}>
+                      <Feather name="check" size={14} color={colors.primary} />
+                    </View>
+                  )}
                 </TouchableOpacity>
               </View>
 
@@ -500,6 +525,17 @@ const s = StyleSheet.create({
   roleDesc: {
     fontFamily: FONTS.body, fontSize: FONT_SIZE.xs,
     color: colors.textSecondary, textAlign: 'center',
+  },
+  roleHint: {
+    fontFamily: FONTS.bodyMedium, fontSize: FONT_SIZE.xs,
+    color: colors.primary, marginBottom: SPACING.base,
+    fontStyle: 'italic',
+  },
+  roleCheck: {
+    position: 'absolute', top: 8, right: 8,
+    width: 22, height: 22, borderRadius: 11,
+    backgroundColor: colors.primarySoft,
+    alignItems: 'center', justifyContent: 'center',
   },
 
   // CTA
