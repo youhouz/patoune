@@ -121,41 +121,49 @@ const LoginScreen = ({ navigation }) => {
     <View style={s.root}>
       <StatusBar barStyle="light-content" />
 
-      {/* ── Hero gradient ── */}
-      <LinearGradient
-        colors={['#1C2B1E', '#2C3E2F', '#3D5E41']}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1 }}
-        style={[s.hero, { paddingTop: insets.top + 32 }]}
-      >
-        {/* Décors lumineux */}
-        <View style={s.glow1} pointerEvents="none" />
-        <View style={s.glow2} pointerEvents="none" />
-
-        <Animated.View style={[s.heroInner, { transform: [{ scale: heroScale }], opacity: heroOpacity, maxWidth: maxW, alignSelf: 'center', width: '100%' }]}>
-          {/* Badge logo */}
-          <View style={s.logoBadge}>
-            <PawIcon size={28} color="#FFF" />
-          </View>
-          <Text style={s.logoWord}>pépète.</Text>
-          <Text style={s.heroTitle}>Bon retour <Text style={s.heroAccent}>!</Text></Text>
-          <Text style={s.heroSub}>Connectez-vous pour continuer</Text>
-        </Animated.View>
-      </LinearGradient>
-
-      {/* ── Card formulaire ── */}
       <KeyboardAvoidingView
         style={{ flex: 1 }}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
         keyboardVerticalOffset={0}
       >
         <ScrollView
-          style={s.scrollView}
-          contentContainerStyle={[s.scrollContent, { paddingBottom: insets.bottom + 40 }]}
+          contentContainerStyle={{ flexGrow: 1, paddingBottom: insets.bottom + 40 }}
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
-          bounces={false}
         >
+          {/* ── Hero gradient ── */}
+          <LinearGradient
+            colors={['#1C2B1E', '#2C3E2F', '#3D5E41']}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={[s.hero, { paddingTop: insets.top + 16 }]}
+          >
+            {/* Décors lumineux */}
+            <View style={s.glow1} pointerEvents="none" />
+            <View style={s.glow2} pointerEvents="none" />
+
+            <Animated.View style={[s.heroInner, { transform: [{ scale: heroScale }], opacity: heroOpacity, maxWidth: maxW, alignSelf: 'center', width: '100%' }]}>
+              {/* Bouton retour */}
+              <TouchableOpacity
+                onPress={() => navigation.goBack()}
+                style={s.backBtn}
+                activeOpacity={0.7}
+                hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+              >
+                <Feather name="arrow-left" size={20} color="rgba(255,255,255,0.9)" />
+              </TouchableOpacity>
+              {/* Badge logo */}
+              <View style={s.logoBadge}>
+                <PawIcon size={28} color="#FFF" />
+              </View>
+              <Text style={s.logoWord}>pépète.</Text>
+              <Text style={s.heroTitle}>Bon retour <Text style={s.heroAccent}>!</Text></Text>
+              <Text style={s.heroSub}>Connectez-vous pour continuer</Text>
+            </Animated.View>
+          </LinearGradient>
+
+          {/* ── Card formulaire ── */}
+          <View style={s.scrollContent}>
           <Animated.View
             style={[
               s.card,
@@ -262,6 +270,7 @@ const LoginScreen = ({ navigation }) => {
               </View>
             </TouchableOpacity>
           </Animated.View>
+          </View>
         </ScrollView>
       </KeyboardAvoidingView>
     </View>
@@ -292,6 +301,14 @@ const s = StyleSheet.create({
   },
   heroInner: {
     alignItems: 'flex-start',
+  },
+  backBtn: {
+    width: 40, height: 40,
+    borderRadius: RADIUS.lg,
+    backgroundColor: 'rgba(255,255,255,0.10)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: SPACING.base,
   },
   logoBadge: {
     width: 56, height: 56, borderRadius: RADIUS.xl,

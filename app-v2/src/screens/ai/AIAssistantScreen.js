@@ -19,7 +19,8 @@ import {
   FlatList,
   TextInput,
 } from 'react-native';
-import { useFocusEffect } from '@react-navigation/native';
+import { useFocusEffect, useNavigation } from '@react-navigation/native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import ScreenHeader from '../../components/ScreenHeader';
 import Icon from '../../components/Icon';
 import Card from '../../components/Card';
@@ -234,6 +235,8 @@ const SuggestedQuestion = ({ question, onPress }) => (
 // Main Screen
 // =========================================================================
 const AIAssistantScreen = () => {
+  const navigation = useNavigation();
+  const insets = useSafeAreaInsets();
   const { user } = useAuth();
   const scrollViewRef = useRef(null);
 
@@ -354,6 +357,7 @@ const AIAssistantScreen = () => {
         variant="light"
         title="Assistant Pepete"
         subtitle="Posez vos questions"
+        onBack={() => navigation.goBack()}
       />
 
       <KeyboardAvoidingView
@@ -435,7 +439,7 @@ const AIAssistantScreen = () => {
         </ScrollView>
 
         {/* Sticky input bar */}
-        <View style={styles.inputBar}>
+        <View style={[styles.inputBar, { paddingBottom: Math.max(SPACING.sm, insets.bottom) }]}>
           <View style={styles.inputWrapper}>
             <TextInput
               style={styles.textInput}

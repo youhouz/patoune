@@ -383,7 +383,15 @@ const PetSittersListScreen = ({ navigation }) => {
         end={{ x: 1, y: 1 }}
       >
         <View style={styles.headerTopRow}>
-          <View>
+          <TouchableOpacity
+            style={styles.headerBackButton}
+            onPress={() => navigation.goBack()}
+            activeOpacity={0.7}
+            hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+          >
+            <Feather name="chevron-left" size={24} color={colors.white} />
+          </TouchableOpacity>
+          <View style={{ flex: 1 }}>
             <Text style={styles.headerTitle}>Pet-sitters</Text>
             <Text style={styles.headerSubtitle}>
               De confiance pour vos compagnons
@@ -642,10 +650,19 @@ const styles = StyleSheet.create({
     paddingBottom: SPACING.xl,
     paddingHorizontal: SPACING.lg,
   },
+  headerBackButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: 'rgba(255,255,255,0.15)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: SPACING.sm,
+  },
   headerTopRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'flex-start',
+    alignItems: 'center',
     marginBottom: SPACING.sm,
   },
   headerTitle: {

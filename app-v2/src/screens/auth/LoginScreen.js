@@ -147,19 +147,18 @@ const LoginScreen = ({ navigation }) => {
             <View style={s.glow1} pointerEvents="none" />
             <View style={s.glow2} pointerEvents="none" />
 
-            {/* Bouton retour */}
-            {canGoBack && (
-              <TouchableOpacity
-                onPress={() => navigation.goBack()}
-                style={s.backBtn}
-                activeOpacity={0.7}
-                hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-              >
-                <Feather name="arrow-left" size={22} color="#FFF" />
-              </TouchableOpacity>
-            )}
-
             <Animated.View style={[s.heroInner, { transform: [{ scale: heroScale }], opacity: heroOpacity, maxWidth: maxW, alignSelf: 'center', width: '100%' }]}>
+              {/* Bouton retour */}
+              {canGoBack && (
+                <TouchableOpacity
+                  onPress={() => navigation.goBack()}
+                  style={s.backBtn}
+                  activeOpacity={0.7}
+                  hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+                >
+                  <Feather name="arrow-left" size={20} color="rgba(255,255,255,0.9)" />
+                </TouchableOpacity>
+              )}
               {/* Badge logo */}
               <View style={s.logoBadge}>
                 <PawIcon size={42} color="#FFF" />
@@ -309,6 +308,14 @@ const s = StyleSheet.create({
   },
   heroInner: {
     alignItems: 'flex-start',
+  },
+  backBtn: {
+    width: 40, height: 40,
+    borderRadius: RADIUS.lg,
+    backgroundColor: 'rgba(255,255,255,0.10)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: SPACING.base,
   },
   logoBadge: {
     width: 72, height: 72, borderRadius: RADIUS.xl,
