@@ -3,7 +3,7 @@
 // Strategies: Shell cache + Network First (API) + Stale While Revalidate (assets)
 // ---------------------------------------------------------------------------
 
-const CACHE_VERSION = 'v2.3.0';
+const CACHE_VERSION = 'v2.4.0';
 const CACHE_NAME = `pepete-${CACHE_VERSION}`;
 const SHELL_CACHE = `pepete-shell-${CACHE_VERSION}`;
 
