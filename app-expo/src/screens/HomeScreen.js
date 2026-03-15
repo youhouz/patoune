@@ -206,6 +206,13 @@ const HomeScreen = ({ navigation }) => {
       onPress: () => navigation.navigate('Profil', { screen: 'MyPets' }),
     },
     {
+      icon: 'message-circle',
+      title: 'Assistant IA',
+      subtitle: 'Posez vos questions',
+      gradient: ['#527A56', '#8CB092'],
+      onPress: () => navigation.navigate('Assistant'),
+    },
+    {
       icon: 'tag',
       title: 'Marketplace',
       subtitle: 'Acheter & vendre',

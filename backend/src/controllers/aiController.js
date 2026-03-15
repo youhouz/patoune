@@ -1,4 +1,5 @@
 const Anthropic = require('@anthropic-ai/sdk');
+const Groq = require('groq-sdk');
 
 // Rate limiting en memoire : 10 requetes par utilisateur/IP par heure
 const rateLimitMap = new Map();
@@ -142,20 +143,7 @@ exports.ask = async (req, res, next) => {
     }
 
     // -----------------------------------------------------------------------
-    // Mode fallback : si pas de cle API, utiliser les reponses pre-ecrites
-    // -----------------------------------------------------------------------
-    if (!process.env.ANTHROPIC_API_KEY) {
-      const answer = getFallbackAnswer(question.trim(), petContext);
-      return res.json({
-        success: true,
-        answer,
-        disclaimer: DISCLAIMER,
-        mode: 'demo'
-      });
-    }
-
-    // -----------------------------------------------------------------------
-    // Mode normal : appel Claude API
+    // Construire le message utilisateur avec contexte animal
     // -----------------------------------------------------------------------
     let userMessage = question.trim();
     if (petContext && petContext.species) {
@@ -166,34 +154,75 @@ exports.ask = async (req, res, next) => {
       userMessage = `${parts.join(', ')}. Question: ${userMessage}`;
     }
 
-    const client = new Anthropic({
-      apiKey: process.env.ANTHROPIC_API_KEY
-    });
+    // -----------------------------------------------------------------------
+    // Mode 1 : Groq API gratuite (prioritaire si GROQ_API_KEY est defini)
+    // -----------------------------------------------------------------------
+    if (process.env.GROQ_API_KEY) {
+      const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
 
-    const message = await client.messages.create({
-      model: 'claude-sonnet-4-20250514',
-      max_tokens: 400,
-      system: SYSTEM_PROMPT,
-      messages: [
-        { role: 'user', content: userMessage }
-      ]
-    });
+      const chatCompletion = await groq.chat.completions.create({
+        model: 'llama-3.3-70b-versatile',
+        max_tokens: 500,
+        temperature: 0.7,
+        messages: [
+          { role: 'system', content: SYSTEM_PROMPT },
+          { role: 'user', content: userMessage },
+        ],
+      });
 
-    // Extraire la reponse texte
-    const answer = message.content
-      .filter(block => block.type === 'text')
-      .map(block => block.text)
-      .join('\n');
+      const answer = chatCompletion.choices?.[0]?.message?.content
+        || "Desole, je n'ai pas pu generer une reponse. Reessayez.";
 
+      return res.json({
+        success: true,
+        answer,
+        disclaimer: DISCLAIMER,
+      });
+    }
+
+    // -----------------------------------------------------------------------
+    // Mode 2 : Claude API (si ANTHROPIC_API_KEY est defini)
+    // -----------------------------------------------------------------------
+    if (process.env.ANTHROPIC_API_KEY) {
+      const client = new Anthropic({
+        apiKey: process.env.ANTHROPIC_API_KEY
+      });
+
+      const message = await client.messages.create({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 400,
+        system: SYSTEM_PROMPT,
+        messages: [
+          { role: 'user', content: userMessage }
+        ]
+      });
+
+      const answer = message.content
+        .filter(block => block.type === 'text')
+        .map(block => block.text)
+        .join('\n');
+
+      return res.json({
+        success: true,
+        answer,
+        disclaimer: DISCLAIMER
+      });
+    }
+
+    // -----------------------------------------------------------------------
+    // Mode 3 (fallback) : reponses pre-ecrites quand aucune cle API
+    // -----------------------------------------------------------------------
+    const answer = getFallbackAnswer(question.trim(), petContext);
     res.json({
       success: true,
       answer,
-      disclaimer: DISCLAIMER
+      disclaimer: DISCLAIMER,
+      mode: 'demo'
     });
   } catch (error) {
-    // Gerer les erreurs specifiques de l'API Anthropic
+    // Gerer les erreurs specifiques des API IA (Anthropic / Groq)
     if (error.status === 400) {
-      console.error('Anthropic API 400 error:', error.message);
+      console.error('AI API 400 error:', error.message);
       return res.status(400).json({
         success: false,
         error: 'La requete envoyee au service IA est invalide. Veuillez reformuler votre question.'
