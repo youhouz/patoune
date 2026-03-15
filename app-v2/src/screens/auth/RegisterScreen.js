@@ -1,12 +1,12 @@
 // ─────────────────────────────────────────────────────────────────────────────
 // Pépète — RegisterScreen v4.0
-// DA premium unifiée — même système que les autres écrans de l'app
+// Scroll garanti sur tous les écrans + clavier
 // ─────────────────────────────────────────────────────────────────────────────
 import React, { useState, useRef, useEffect } from 'react';
 import {
   View, Text, TextInput, TouchableOpacity, StyleSheet,
   Platform, StatusBar, Animated, ActivityIndicator,
-  KeyboardAvoidingView, ScrollView, Dimensions,
+  KeyboardAvoidingView, ScrollView,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Feather } from '@expo/vector-icons';
@@ -15,10 +15,10 @@ import { useAuth } from '../../context/AuthContext';
 import { PawIcon } from '../../components/Logo';
 import useResponsive from '../../hooks/useResponsive';
 import { FONTS } from '../../utils/typography';
-import { showAlert } from '../../utils/alert';
-import colors, { SHADOWS, RADIUS, SPACING, FONT_SIZE } from '../../utils/colors';
+const colors = require('../../utils/colors');
+const { SHADOWS, RADIUS, SPACING, FONT_SIZE } = require('../../utils/colors');
 
-// ─── Force + couleur du mot de passe ────────────────────────────────────────
+// ─── Password strength ──────────────────────────────────────────────────────
 const getPwdStrength = (pwd) => {
   if (!pwd) return null;
   const len = pwd.length;
@@ -26,42 +26,11 @@ const getPwdStrength = (pwd) => {
   const hasNum   = /[0-9]/.test(pwd);
   const hasSpec  = /[^A-Za-z0-9]/.test(pwd);
   const score = (len >= 8 ? 1 : 0) + (len >= 12 ? 1 : 0) + (hasUpper ? 1 : 0) + (hasNum ? 1 : 0) + (hasSpec ? 1 : 0);
-  if (len < 6)   return { level: 0, label: 'Trop court', color: colors.error,   width: '15%' };
-  if (score <= 2) return { level: 1, label: 'Faible',     color: '#E57373',      width: '33%' };
-  if (score <= 3) return { level: 2, label: 'Moyen',      color: '#FFB74D',      width: '60%' };
-  if (score <= 4) return { level: 3, label: 'Fort',       color: colors.primary, width: '82%' };
-  return             { level: 4, label: 'Excellent',  color: colors.primaryDark, width: '100%' };
-};
-
-// ─── Champ de saisie unifié ──────────────────────────────────────────────────
-const Field = ({ label, icon, value, onChangeText, placeholder, focusedKey, setFocused, fieldKey, keyboardType, secureTextEntry, right, autoCapitalize, onSubmitEditing, returnKeyType, inputRef, error }) => {
-  const isFocused = focusedKey === fieldKey;
-  return (
-    <View style={s.fieldWrap}>
-      <Text style={s.label}>{label}</Text>
-      <View style={[s.fieldRow, isFocused && s.fieldRowFocused, error && s.fieldRowError]}>
-        <Feather name={icon} size={18} color={error ? colors.error : isFocused ? colors.primary : colors.textLight} style={s.fieldIcon} />
-        <TextInput
-          ref={inputRef}
-          style={s.input}
-          value={value}
-          onChangeText={onChangeText}
-          placeholder={placeholder}
-          placeholderTextColor={colors.placeholder}
-          keyboardType={keyboardType || 'default'}
-          secureTextEntry={secureTextEntry}
-          autoCapitalize={autoCapitalize || 'none'}
-          autoCorrect={false}
-          onFocus={() => setFocused(fieldKey)}
-          onBlur={() => setFocused(null)}
-          onSubmitEditing={onSubmitEditing}
-          returnKeyType={returnKeyType || 'next'}
-        />
-        {right}
-      </View>
-      {error ? <Text style={s.fieldError}>{error}</Text> : null}
-    </View>
-  );
+  if (len < 6)   return { label: 'Trop court', color: colors.error,      width: '15%' };
+  if (score <= 2) return { label: 'Faible',     color: '#E57373',         width: '33%' };
+  if (score <= 3) return { label: 'Moyen',      color: '#FFB74D',         width: '60%' };
+  if (score <= 4) return { label: 'Fort',       color: colors.primary,    width: '82%' };
+  return             { label: 'Excellent',  color: colors.primaryDark, width: '100%' };
 };
 
 // ─── Screen ──────────────────────────────────────────────────────────────────
@@ -82,15 +51,15 @@ const RegisterScreen = ({ navigation }) => {
   const [focused,  setFocused]  = useState(null);
   const [errors,   setErrors]   = useState({});
 
-  // Animations
-  const slideAnim  = useRef(new Animated.Value(30)).current;
-  const fadeAnim   = useRef(new Animated.Value(0)).current;
-  const shakeAnim  = useRef(new Animated.Value(0)).current;
+  const slideAnim = useRef(new Animated.Value(30)).current;
+  const fadeAnim  = useRef(new Animated.Value(0)).current;
+  const shakeAnim = useRef(new Animated.Value(0)).current;
 
   const emailRef   = useRef(null);
   const phoneRef   = useRef(null);
   const pwdRef     = useRef(null);
   const confirmRef = useRef(null);
+  const scrollRef  = useRef(null);
 
   const maxW = isTablet ? Math.min(contentWidth, 520) : '100%';
   const strength = getPwdStrength(password);
@@ -125,21 +94,14 @@ const RegisterScreen = ({ navigation }) => {
   const handleRegister = async () => {
     if (!validate()) { shake(); return; }
     setLoading(true);
-    const result = await register({
-      name: name.trim(),
-      email: email.trim().toLowerCase(),
-      password,
-      phone: phone.trim(),
-      role,
-    });
+    const result = await register(name.trim(), email.trim().toLowerCase(), password, phone.trim(), role);
     setLoading(false);
     if (result.success) {
-      // Reset to root Tabs — must target the RootStack (parent of AuthStack)
-      const parent = navigation.getParent();
+      const parent = navigation.getParent()?.getParent();
       if (parent) {
         parent.reset({ index: 0, routes: [{ name: 'Tabs' }] });
       } else {
-        navigation.reset({ index: 0, routes: [{ name: 'Tabs' }] });
+        navigation.getParent()?.reset({ index: 0, routes: [{ name: 'Tabs' }] });
       }
     } else {
       shake();
@@ -147,26 +109,59 @@ const RegisterScreen = ({ navigation }) => {
     }
   };
 
+  const renderField = ({ label, icon, fieldKey, value, onChangeText, placeholder, keyboardType, secureTextEntry, right, autoCapitalize, returnKeyType, onSubmitEditing, inputRef, error }) => {
+    const isFocused = focused === fieldKey;
+    return (
+      <View style={s.fieldWrap}>
+        <Text style={s.label}>{label}</Text>
+        <View style={[s.fieldRow, isFocused && s.fieldRowFocused, error && s.fieldRowError]}>
+          <Feather name={icon} size={18} color={error ? colors.error : isFocused ? colors.primary : colors.textLight} style={{ marginRight: SPACING.sm }} />
+          <TextInput
+            ref={inputRef}
+            style={s.input}
+            value={value}
+            onChangeText={onChangeText}
+            placeholder={placeholder}
+            placeholderTextColor={colors.placeholder}
+            keyboardType={keyboardType || 'default'}
+            secureTextEntry={secureTextEntry}
+            autoCapitalize={autoCapitalize || 'none'}
+            autoCorrect={false}
+            onFocus={() => { setFocused(fieldKey); }}
+            onBlur={() => setFocused(null)}
+            onSubmitEditing={onSubmitEditing}
+            returnKeyType={returnKeyType || 'next'}
+          />
+          {right}
+        </View>
+        {error ? <Text style={s.fieldError}>{error}</Text> : null}
+      </View>
+    );
+  };
+
   return (
-    <View style={s.root}>
+    <View style={[s.root, { paddingTop: insets.top }]}>
       <StatusBar barStyle="light-content" />
 
-      {/* ── Formulaire ── */}
       <KeyboardAvoidingView
         style={{ flex: 1 }}
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       >
         <ScrollView
-          contentContainerStyle={{ flexGrow: 1, paddingBottom: insets.bottom + 48 }}
+          ref={scrollRef}
+          bounces={true}
+          overScrollMode="always"
           keyboardShouldPersistTaps="handled"
+          keyboardDismissMode="interactive"
           showsVerticalScrollIndicator={false}
+          contentContainerStyle={{ paddingBottom: Math.max(insets.bottom, 20) + 40 }}
         >
-          {/* ── Hero gradient ── */}
+          {/* ── Hero ── */}
           <LinearGradient
             colors={['#1C2B1E', '#2C3E2F', '#3D5E41']}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 1 }}
-            style={[s.hero, { paddingTop: insets.top + 16 }]}
+            style={s.hero}
           >
             <View style={s.glow1} pointerEvents="none" />
             <View style={s.glow2} pointerEvents="none" />
@@ -180,7 +175,7 @@ const RegisterScreen = ({ navigation }) => {
                 <Feather name="arrow-left" size={20} color="rgba(255,255,255,0.9)" />
               </TouchableOpacity>
               <View style={s.logoBadge}>
-                <PawIcon size={42} color="#FFF" />
+                <PawIcon size={28} color="#FFF" />
               </View>
               <Text style={s.logoWord}>pépète.</Text>
               <Text style={s.heroTitle}>Créer un compte <Text style={s.heroAccent}>!</Text></Text>
@@ -188,193 +183,154 @@ const RegisterScreen = ({ navigation }) => {
             </View>
           </LinearGradient>
 
-          <View style={s.scrollContent}>
-          <Animated.View
-            style={[
-              s.card,
-              { maxWidth: maxW, alignSelf: 'center', width: '100%' },
-              { opacity: fadeAnim, transform: [{ translateY: slideAnim }, { translateX: shakeAnim }] },
-            ]}
-          >
-            {/* Titre section */}
-            <Text style={s.cardTitle}>Inscription</Text>
-
-            {/* Erreur globale */}
-            {errors.global ? (
-              <View style={s.errorBanner}>
-                <Feather name="alert-circle" size={15} color={colors.error} />
-                <Text style={s.errorBannerText}>{errors.global}</Text>
-              </View>
-            ) : null}
-
-            {/* Section identité */}
-            <Text style={s.sectionLabel}>Identité</Text>
-            <Field
-              label="Nom complet" icon="user" fieldKey="name"
-              value={name} onChangeText={(v) => { setName(v); setErrors((e) => ({ ...e, name: null })); }}
-              placeholder="Votre prénom et nom"
-              focusedKey={focused} setFocused={setFocused}
-              autoCapitalize="words"
-              returnKeyType="next"
-              onSubmitEditing={() => emailRef.current?.focus()}
-              error={errors.name}
-            />
-            <Field
-              label="Adresse email" icon="mail" fieldKey="email"
-              value={email} onChangeText={(v) => { setEmail(v); setErrors((e) => ({ ...e, email: null })); }}
-              placeholder="votre@email.com"
-              focusedKey={focused} setFocused={setFocused}
-              keyboardType="email-address"
-              inputRef={emailRef}
-              returnKeyType="next"
-              onSubmitEditing={() => phoneRef.current?.focus()}
-              error={errors.email}
-            />
-            <Field
-              label="Téléphone (optionnel)" icon="phone" fieldKey="phone"
-              value={phone} onChangeText={setPhone}
-              placeholder="06 12 34 56 78"
-              focusedKey={focused} setFocused={setFocused}
-              keyboardType="phone-pad"
-              inputRef={phoneRef}
-              returnKeyType="next"
-              onSubmitEditing={() => pwdRef.current?.focus()}
-            />
-
-            {/* Divider */}
-            <View style={s.sectionDivider} />
-
-            {/* Section rôle */}
-            <Text style={s.sectionLabel}>Je suis</Text>
-            <View style={s.roleRow}>
-              <TouchableOpacity
-                style={[s.roleOption, role === 'user' && s.roleOptionActive]}
-                onPress={() => setRole('user')}
-                activeOpacity={0.8}
-              >
-                <View style={[s.roleIconWrap, role === 'user' && s.roleIconWrapActive]}>
-                  <Feather name="heart" size={20} color={role === 'user' ? '#FFF' : colors.primary} />
-                </View>
-                <Text style={[s.roleLabel, role === 'user' && s.roleLabelActive]}>Propriétaire</Text>
-                <Text style={s.roleDesc}>J'ai un animal</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={[s.roleOption, role === 'guardian' && s.roleOptionActive]}
-                onPress={() => setRole('guardian')}
-                activeOpacity={0.8}
-              >
-                <View style={[s.roleIconWrap, role === 'guardian' && s.roleIconWrapActive]}>
-                  <Feather name="home" size={20} color={role === 'guardian' ? '#FFF' : colors.primary} />
-                </View>
-                <Text style={[s.roleLabel, role === 'guardian' && s.roleLabelActive]}>Pet-sitter</Text>
-                <Text style={s.roleDesc}>Je garde des animaux</Text>
-              </TouchableOpacity>
-            </View>
-
-            {/* Divider */}
-            <View style={s.sectionDivider} />
-
-            {/* Section sécurité */}
-            <Text style={s.sectionLabel}>Sécurité</Text>
-            <Field
-              label="Mot de passe" icon="lock" fieldKey="password"
-              value={password}
-              onChangeText={(v) => { setPassword(v); setErrors((e) => ({ ...e, password: null })); }}
-              placeholder="Minimum 6 caractères"
-              focusedKey={focused} setFocused={setFocused}
-              secureTextEntry={!showPwd}
-              inputRef={pwdRef}
-              returnKeyType="next"
-              onSubmitEditing={() => confirmRef.current?.focus()}
-              error={errors.password}
-              right={
-                <TouchableOpacity onPress={() => setShowPwd(!showPwd)} hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}>
-                  <Feather name={showPwd ? 'eye-off' : 'eye'} size={18} color={colors.textLight} />
-                </TouchableOpacity>
-              }
-            />
-
-            {/* Barre de force */}
-            {strength && (
-              <View style={s.strengthRow}>
-                <View style={s.strengthTrack}>
-                  <View style={[s.strengthFill, { width: strength.width, backgroundColor: strength.color }]} />
-                </View>
-                <Text style={[s.strengthLabel, { color: strength.color }]}>{strength.label}</Text>
-              </View>
-            )}
-
-            <Field
-              label="Confirmer le mot de passe" icon="shield" fieldKey="confirm"
-              value={confirm}
-              onChangeText={(v) => { setConfirm(v); setErrors((e) => ({ ...e, confirm: null })); }}
-              placeholder="Retape ton mot de passe"
-              focusedKey={focused} setFocused={setFocused}
-              secureTextEntry={!showConfirm}
-              inputRef={confirmRef}
-              returnKeyType="done"
-              onSubmitEditing={handleRegister}
-              error={errors.confirm}
-              right={
-                <TouchableOpacity onPress={() => setShowConfirm(!showConfirm)} hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}>
-                  <Feather name={showConfirm ? 'eye-off' : 'eye'} size={18} color={colors.textLight} />
-                </TouchableOpacity>
-              }
-            />
-
-            {/* Confirmation match */}
-            {confirm.length > 0 && password.length > 0 && (
-              <View style={[s.matchRow, password === confirm ? s.matchOk : s.matchFail]}>
-                <Feather name={password === confirm ? 'check-circle' : 'x-circle'} size={14} color={password === confirm ? colors.success : colors.error} />
-                <Text style={[s.matchText, { color: password === confirm ? colors.success : colors.error }]}>
-                  {password === confirm ? 'Les mots de passe correspondent' : 'Les mots de passe ne correspondent pas'}
-                </Text>
-              </View>
-            )}
-
-            {/* CTA */}
-            <TouchableOpacity
-              onPress={handleRegister}
-              disabled={loading}
-              activeOpacity={0.88}
-              style={[s.ctaWrap, loading && { opacity: 0.75 }]}
+          {/* ── Formulaire ── */}
+          <View style={s.formArea}>
+            <Animated.View
+              style={[
+                s.card,
+                { maxWidth: maxW, alignSelf: 'center', width: '100%' },
+                { opacity: fadeAnim, transform: [{ translateY: slideAnim }, { translateX: shakeAnim }] },
+              ]}
             >
-              <LinearGradient
-                colors={loading ? [colors.textLight, colors.textTertiary] : [colors.primaryDark, colors.primary]}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 0 }}
-                style={s.cta}
-              >
-                {loading
-                  ? <ActivityIndicator size="small" color="#FFF" />
-                  : (
-                    <>
-                      <Text style={s.ctaText}>Créer mon compte</Text>
-                      <Feather name="arrow-right" size={20} color="#FFF" />
-                    </>
-                  )
-                }
-              </LinearGradient>
-            </TouchableOpacity>
+              <Text style={s.cardTitle}>Inscription</Text>
 
-            {/* Lien connexion */}
-            <View style={s.divider}>
-              <View style={s.dividerLine} />
-              <Text style={s.dividerLabel}>ou</Text>
-              <View style={s.dividerLine} />
-            </View>
-            <TouchableOpacity
-              style={s.linkRow}
-              onPress={() => navigation.goBack()}
-              activeOpacity={0.7}
-            >
-              <Text style={s.linkText}>Déjà un compte ?</Text>
-              <View style={s.linkBadge}>
-                <Text style={s.linkBadgeText}>Se connecter</Text>
-                <Feather name="chevron-right" size={14} color={colors.primary} />
+              {errors.global ? (
+                <View style={s.errorBanner}>
+                  <Feather name="alert-circle" size={15} color={colors.error} />
+                  <Text style={s.errorBannerText}>{errors.global}</Text>
+                </View>
+              ) : null}
+
+              {/* ── Identité ── */}
+              <Text style={s.sectionLabel}>Identité</Text>
+
+              {renderField({
+                label: 'Nom complet', icon: 'user', fieldKey: 'name',
+                value: name, onChangeText: (v) => { setName(v); setErrors(e => ({ ...e, name: null })); },
+                placeholder: 'Votre prénom et nom', autoCapitalize: 'words',
+                onSubmitEditing: () => emailRef.current?.focus(), error: errors.name,
+              })}
+              {renderField({
+                label: 'Adresse email', icon: 'mail', fieldKey: 'email',
+                value: email, onChangeText: (v) => { setEmail(v); setErrors(e => ({ ...e, email: null })); },
+                placeholder: 'votre@email.com', keyboardType: 'email-address', inputRef: emailRef,
+                onSubmitEditing: () => phoneRef.current?.focus(), error: errors.email,
+              })}
+              {renderField({
+                label: 'Téléphone (optionnel)', icon: 'phone', fieldKey: 'phone',
+                value: phone, onChangeText: setPhone,
+                placeholder: '06 12 34 56 78', keyboardType: 'phone-pad', inputRef: phoneRef,
+                onSubmitEditing: () => pwdRef.current?.focus(),
+              })}
+
+              <View style={s.sectionDivider} />
+
+              {/* ── Rôle ── */}
+              <Text style={s.sectionLabel}>Je suis</Text>
+              <View style={s.roleRow}>
+                <TouchableOpacity
+                  style={[s.roleOption, role === 'user' && s.roleOptionActive]}
+                  onPress={() => setRole('user')} activeOpacity={0.8}
+                >
+                  <View style={[s.roleIconWrap, role === 'user' && s.roleIconWrapActive]}>
+                    <Feather name="heart" size={20} color={role === 'user' ? '#FFF' : colors.primary} />
+                  </View>
+                  <Text style={[s.roleLabel, role === 'user' && s.roleLabelActive]}>Propriétaire</Text>
+                  <Text style={s.roleDesc}>J'ai un animal</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[s.roleOption, role === 'guardian' && s.roleOptionActive]}
+                  onPress={() => setRole('guardian')} activeOpacity={0.8}
+                >
+                  <View style={[s.roleIconWrap, role === 'guardian' && s.roleIconWrapActive]}>
+                    <Feather name="home" size={20} color={role === 'guardian' ? '#FFF' : colors.primary} />
+                  </View>
+                  <Text style={[s.roleLabel, role === 'guardian' && s.roleLabelActive]}>Pet-sitter</Text>
+                  <Text style={s.roleDesc}>Je garde des animaux</Text>
+                </TouchableOpacity>
               </View>
-            </TouchableOpacity>
-          </Animated.View>
+
+              <View style={s.sectionDivider} />
+
+              {/* ── Sécurité ── */}
+              <Text style={s.sectionLabel}>Sécurité</Text>
+
+              {renderField({
+                label: 'Mot de passe', icon: 'lock', fieldKey: 'password',
+                value: password, onChangeText: (v) => { setPassword(v); setErrors(e => ({ ...e, password: null })); },
+                placeholder: 'Minimum 6 caractères', secureTextEntry: !showPwd, inputRef: pwdRef,
+                onSubmitEditing: () => confirmRef.current?.focus(), error: errors.password,
+                right: (
+                  <TouchableOpacity onPress={() => setShowPwd(!showPwd)} hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}>
+                    <Feather name={showPwd ? 'eye-off' : 'eye'} size={18} color={colors.textLight} />
+                  </TouchableOpacity>
+                ),
+              })}
+
+              {strength && (
+                <View style={s.strengthRow}>
+                  <View style={s.strengthTrack}>
+                    <View style={[s.strengthFill, { width: strength.width, backgroundColor: strength.color }]} />
+                  </View>
+                  <Text style={[s.strengthLabel, { color: strength.color }]}>{strength.label}</Text>
+                </View>
+              )}
+
+              {renderField({
+                label: 'Confirmer le mot de passe', icon: 'shield', fieldKey: 'confirm',
+                value: confirm, onChangeText: (v) => { setConfirm(v); setErrors(e => ({ ...e, confirm: null })); },
+                placeholder: 'Retape ton mot de passe', secureTextEntry: !showConfirm, inputRef: confirmRef,
+                returnKeyType: 'done', onSubmitEditing: handleRegister, error: errors.confirm,
+                right: (
+                  <TouchableOpacity onPress={() => setShowConfirm(!showConfirm)} hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}>
+                    <Feather name={showConfirm ? 'eye-off' : 'eye'} size={18} color={colors.textLight} />
+                  </TouchableOpacity>
+                ),
+              })}
+
+              {confirm.length > 0 && password.length > 0 && (
+                <View style={[s.matchRow, password === confirm ? s.matchOk : s.matchFail]}>
+                  <Feather name={password === confirm ? 'check-circle' : 'x-circle'} size={14} color={password === confirm ? colors.success : colors.error} />
+                  <Text style={[s.matchText, { color: password === confirm ? colors.success : colors.error }]}>
+                    {password === confirm ? 'Les mots de passe correspondent' : 'Les mots de passe ne correspondent pas'}
+                  </Text>
+                </View>
+              )}
+
+              {/* CTA */}
+              <TouchableOpacity
+                onPress={handleRegister} disabled={loading} activeOpacity={0.88}
+                style={[s.ctaWrap, loading && { opacity: 0.75 }]}
+              >
+                <LinearGradient
+                  colors={loading ? [colors.textLight, colors.textTertiary] : [colors.primaryDark, colors.primary]}
+                  start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}
+                  style={s.cta}
+                >
+                  {loading
+                    ? <ActivityIndicator size="small" color="#FFF" />
+                    : <>
+                        <Text style={s.ctaText}>Créer mon compte</Text>
+                        <Feather name="arrow-right" size={20} color="#FFF" />
+                      </>
+                  }
+                </LinearGradient>
+              </TouchableOpacity>
+
+              <View style={s.divider}>
+                <View style={s.dividerLine} />
+                <Text style={s.dividerLabel}>ou</Text>
+                <View style={s.dividerLine} />
+              </View>
+
+              <TouchableOpacity style={s.linkRow} onPress={() => navigation.goBack()} activeOpacity={0.7}>
+                <Text style={s.linkText}>Déjà un compte ?</Text>
+                <View style={s.linkBadge}>
+                  <Text style={s.linkBadgeText}>Se connecter</Text>
+                  <Feather name="chevron-right" size={14} color={colors.primary} />
+                </View>
+              </TouchableOpacity>
+            </Animated.View>
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
@@ -382,14 +338,13 @@ const RegisterScreen = ({ navigation }) => {
   );
 };
 
+// ─── Styles ──────────────────────────────────────────────────────────────────
 const s = StyleSheet.create({
-  root: {
-    flex: 1,
-    backgroundColor: colors.background,
-  },
+  root: { flex: 1, backgroundColor: '#1C2B1E' },
 
   // Hero
   hero: {
+    paddingTop: 16,
     paddingHorizontal: SPACING.xl,
     paddingBottom: SPACING['2xl'] + 10,
     overflow: 'hidden',
@@ -404,54 +359,42 @@ const s = StyleSheet.create({
     width: 160, height: 160, borderRadius: 80,
     backgroundColor: 'rgba(82,122,86,0.08)',
   },
-  heroInner: {
-    alignItems: 'flex-start',
-  },
+  heroInner: { alignItems: 'flex-start' },
   backBtn: {
-    width: 40, height: 40,
-    borderRadius: RADIUS.lg,
+    width: 40, height: 40, borderRadius: RADIUS.lg,
     backgroundColor: 'rgba(255,255,255,0.10)',
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: 'center', justifyContent: 'center',
     marginBottom: SPACING.base,
   },
   logoBadge: {
-    width: 72, height: 72,
-    borderRadius: RADIUS.xl,
+    width: 56, height: 56, borderRadius: RADIUS.xl,
     backgroundColor: 'rgba(255,255,255,0.12)',
-    borderWidth: 1.5,
-    borderColor: 'rgba(255,255,255,0.18)',
-    alignItems: 'center',
-    justifyContent: 'center',
+    borderWidth: 1.5, borderColor: 'rgba(255,255,255,0.18)',
+    alignItems: 'center', justifyContent: 'center',
     marginBottom: SPACING.base,
   },
   logoWord: {
-    fontFamily: FONTS.brand,
-    fontSize: FONT_SIZE.sm,
-    color: 'rgba(255,255,255,0.5)',
-    letterSpacing: 2,
-    textTransform: 'uppercase',
-    marginBottom: SPACING.lg,
+    fontFamily: FONTS.brand, fontSize: FONT_SIZE.sm,
+    color: 'rgba(255,255,255,0.5)', letterSpacing: 2,
+    textTransform: 'uppercase', marginBottom: SPACING.lg,
   },
   heroTitle: {
-    fontFamily: FONTS.brand,
-    fontSize: FONT_SIZE['3xl'],
-    color: '#FFF',
-    letterSpacing: -1,
-    lineHeight: FONT_SIZE['3xl'] * 1.1,
-    marginBottom: SPACING.sm,
+    fontFamily: FONTS.brand, fontSize: FONT_SIZE['3xl'],
+    color: '#FFF', letterSpacing: -1,
+    lineHeight: FONT_SIZE['3xl'] * 1.1, marginBottom: SPACING.sm,
   },
   heroAccent: { color: '#8CB092' },
   heroSub: {
-    fontFamily: FONTS.bodyMedium,
-    fontSize: FONT_SIZE.base,
+    fontFamily: FONTS.bodyMedium, fontSize: FONT_SIZE.base,
     color: 'rgba(255,255,255,0.55)',
   },
 
-  // Scroll
-  scrollContent: {
+  // Form area
+  formArea: {
+    backgroundColor: colors.background,
     paddingTop: SPACING.xl,
     paddingHorizontal: SPACING.lg,
+    paddingBottom: SPACING.xl,
   },
 
   // Card
@@ -461,241 +404,139 @@ const s = StyleSheet.create({
     padding: SPACING.xl,
     ...SHADOWS.lg,
   },
-
   cardTitle: {
-    fontFamily: FONTS.heading,
-    fontSize: FONT_SIZE['2xl'],
-    color: colors.text,
-    letterSpacing: -0.5,
-    marginBottom: SPACING.xl,
+    fontFamily: FONTS.heading, fontSize: FONT_SIZE['2xl'],
+    color: colors.text, letterSpacing: -0.5, marginBottom: SPACING.xl,
   },
 
-  // Error banner
+  // Error
   errorBanner: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: SPACING.sm,
+    flexDirection: 'row', alignItems: 'center', gap: SPACING.sm,
     backgroundColor: colors.errorSoft || '#FBE8E4',
-    borderRadius: RADIUS.lg,
-    padding: SPACING.md,
+    borderRadius: RADIUS.lg, padding: SPACING.md,
     marginBottom: SPACING.base,
-    borderLeftWidth: 3,
-    borderLeftColor: colors.error,
+    borderLeftWidth: 3, borderLeftColor: colors.error,
   },
   errorBannerText: {
-    flex: 1,
-    fontFamily: FONTS.bodyMedium,
-    fontSize: FONT_SIZE.sm,
-    color: colors.error,
+    flex: 1, fontFamily: FONTS.bodyMedium, fontSize: FONT_SIZE.sm, color: colors.error,
   },
 
-  // Section labels
+  // Section
   sectionLabel: {
-    fontFamily: FONTS.bodySemiBold,
-    fontSize: FONT_SIZE.xs,
-    color: colors.textSecondary,
-    textTransform: 'uppercase',
-    letterSpacing: 0.8,
-    marginBottom: SPACING.base,
+    fontFamily: FONTS.bodySemiBold, fontSize: FONT_SIZE.xs,
+    color: colors.textSecondary, textTransform: 'uppercase',
+    letterSpacing: 0.8, marginBottom: SPACING.base,
   },
-  sectionDivider: {
-    height: 1,
-    backgroundColor: colors.border,
-    marginVertical: SPACING.lg,
-  },
+  sectionDivider: { height: 1, backgroundColor: colors.border, marginVertical: SPACING.lg },
 
   // Fields
   fieldWrap: { marginBottom: SPACING.base },
   label: {
-    fontFamily: FONTS.bodySemiBold,
-    fontSize: FONT_SIZE.xs,
-    color: colors.textTertiary,
-    textTransform: 'uppercase',
-    letterSpacing: 0.6,
-    marginBottom: SPACING.sm,
+    fontFamily: FONTS.bodySemiBold, fontSize: FONT_SIZE.xs,
+    color: colors.textTertiary, textTransform: 'uppercase',
+    letterSpacing: 0.6, marginBottom: SPACING.sm,
   },
   fieldRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: 'row', alignItems: 'center',
     backgroundColor: colors.background,
-    borderRadius: RADIUS.lg,
-    paddingHorizontal: SPACING.base,
-    height: 54,
-    borderWidth: 1.5,
-    borderColor: colors.border,
+    borderRadius: RADIUS.lg, paddingHorizontal: SPACING.base,
+    height: 54, borderWidth: 1.5, borderColor: colors.border,
   },
   fieldRowFocused: {
     borderColor: colors.primary,
     backgroundColor: colors.primaryUltra || '#F5FAF6',
   },
-  fieldRowError: {
-    borderColor: colors.error,
-    backgroundColor: '#FFF5F5',
-  },
-  fieldIcon: { marginRight: SPACING.sm },
+  fieldRowError: { borderColor: colors.error, backgroundColor: '#FFF5F5' },
   input: {
-    flex: 1,
-    fontFamily: FONTS.bodyMedium,
-    fontSize: FONT_SIZE.base,
-    color: colors.text,
-    paddingVertical: 0,
+    flex: 1, fontFamily: FONTS.bodyMedium, fontSize: FONT_SIZE.base,
+    color: colors.text, paddingVertical: 0,
   },
   fieldError: {
-    fontFamily: FONTS.bodyMedium,
-    fontSize: FONT_SIZE.xs,
-    color: colors.error,
-    marginTop: 5,
-    marginLeft: 4,
+    fontFamily: FONTS.bodyMedium, fontSize: FONT_SIZE.xs,
+    color: colors.error, marginTop: 5, marginLeft: 4,
   },
 
   // Strength
   strengthRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: SPACING.md,
-    marginTop: -SPACING.sm,
-    marginBottom: SPACING.base,
+    flexDirection: 'row', alignItems: 'center', gap: SPACING.md,
+    marginTop: -SPACING.sm, marginBottom: SPACING.base,
   },
   strengthTrack: {
-    flex: 1,
-    height: 4,
-    backgroundColor: colors.border,
-    borderRadius: RADIUS.full,
-    overflow: 'hidden',
+    flex: 1, height: 4, backgroundColor: colors.border,
+    borderRadius: RADIUS.full, overflow: 'hidden',
   },
-  strengthFill: {
-    height: '100%',
-    borderRadius: RADIUS.full,
-  },
+  strengthFill: { height: '100%', borderRadius: RADIUS.full },
   strengthLabel: {
-    fontFamily: FONTS.bodySemiBold,
-    fontSize: FONT_SIZE.xs,
-    width: 58,
-    textAlign: 'right',
+    fontFamily: FONTS.bodySemiBold, fontSize: FONT_SIZE.xs, width: 58, textAlign: 'right',
   },
 
-  // Match indicator
+  // Match
   matchRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: SPACING.sm,
-    paddingHorizontal: SPACING.md,
-    paddingVertical: SPACING.sm,
-    borderRadius: RADIUS.md,
-    marginTop: -SPACING.sm,
-    marginBottom: SPACING.sm,
+    flexDirection: 'row', alignItems: 'center', gap: SPACING.sm,
+    paddingHorizontal: SPACING.md, paddingVertical: SPACING.sm,
+    borderRadius: RADIUS.md, marginTop: -SPACING.sm, marginBottom: SPACING.sm,
   },
   matchOk:   { backgroundColor: colors.successSoft || '#EFF5F0' },
   matchFail: { backgroundColor: colors.errorSoft || '#FBE8E4' },
-  matchText: {
-    fontFamily: FONTS.bodyMedium,
-    fontSize: FONT_SIZE.xs,
-  },
+  matchText: { fontFamily: FONTS.bodyMedium, fontSize: FONT_SIZE.xs },
 
-  // Role selector
-  roleRow: {
-    flexDirection: 'row',
-    gap: SPACING.base,
-    marginBottom: SPACING.base,
-  },
+  // Role
+  roleRow: { flexDirection: 'row', gap: SPACING.base, marginBottom: SPACING.base },
   roleOption: {
-    flex: 1,
-    alignItems: 'center',
-    paddingVertical: SPACING.base,
-    paddingHorizontal: SPACING.sm,
-    borderRadius: RADIUS.xl,
-    borderWidth: 2,
-    borderColor: colors.border,
-    backgroundColor: colors.background,
+    flex: 1, alignItems: 'center',
+    paddingVertical: SPACING.base, paddingHorizontal: SPACING.sm,
+    borderRadius: RADIUS.xl, borderWidth: 2,
+    borderColor: colors.border, backgroundColor: colors.background,
   },
-  roleOptionActive: {
-    borderColor: colors.primary,
-    backgroundColor: colors.primarySoft,
-  },
+  roleOptionActive: { borderColor: colors.primary, backgroundColor: colors.primarySoft },
   roleIconWrap: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
+    width: 44, height: 44, borderRadius: 22,
     backgroundColor: colors.primarySoft,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: SPACING.sm,
+    alignItems: 'center', justifyContent: 'center', marginBottom: SPACING.sm,
   },
-  roleIconWrapActive: {
-    backgroundColor: colors.primary,
-  },
+  roleIconWrapActive: { backgroundColor: colors.primary },
   roleLabel: {
-    fontFamily: FONTS.heading,
-    fontSize: FONT_SIZE.base,
-    color: colors.text,
-    marginBottom: 2,
+    fontFamily: FONTS.heading, fontSize: FONT_SIZE.base, color: colors.text, marginBottom: 2,
   },
-  roleLabelActive: {
-    color: colors.primaryDark,
-  },
+  roleLabelActive: { color: colors.primaryDark },
   roleDesc: {
-    fontFamily: FONTS.body,
-    fontSize: FONT_SIZE.xs,
-    color: colors.textSecondary,
-    textAlign: 'center',
+    fontFamily: FONTS.body, fontSize: FONT_SIZE.xs,
+    color: colors.textSecondary, textAlign: 'center',
   },
 
   // CTA
-  ctaWrap: {
-    marginTop: SPACING.sm,
-    borderRadius: RADIUS.xl,
-    overflow: 'hidden',
-  },
+  ctaWrap: { marginTop: SPACING.sm, borderRadius: RADIUS.xl, overflow: 'hidden' },
   cta: {
-    height: 56,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: SPACING.sm,
-    borderRadius: RADIUS.xl,
+    height: 56, flexDirection: 'row', alignItems: 'center',
+    justifyContent: 'center', gap: SPACING.sm, borderRadius: RADIUS.xl,
   },
   ctaText: {
-    fontFamily: FONTS.heading,
-    fontSize: FONT_SIZE.md,
-    color: '#FFF',
-    letterSpacing: 0.2,
+    fontFamily: FONTS.heading, fontSize: FONT_SIZE.md, color: '#FFF', letterSpacing: 0.2,
   },
 
-  // Divider / link
+  // Divider
   divider: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginVertical: SPACING.xl,
-    gap: SPACING.base,
+    flexDirection: 'row', alignItems: 'center',
+    marginVertical: SPACING.xl, gap: SPACING.base,
   },
   dividerLine: { flex: 1, height: 1, backgroundColor: colors.border },
   dividerLabel: {
-    fontFamily: FONTS.bodyMedium,
-    fontSize: FONT_SIZE.sm,
-    color: colors.textLight,
+    fontFamily: FONTS.bodyMedium, fontSize: FONT_SIZE.sm, color: colors.textLight,
   },
-  linkRow: {
-    alignItems: 'center',
-    gap: SPACING.sm,
-  },
+
+  // Link
+  linkRow: { alignItems: 'center', gap: SPACING.sm },
   linkText: {
-    fontFamily: FONTS.body,
-    fontSize: FONT_SIZE.sm,
-    color: colors.textSecondary,
+    fontFamily: FONTS.body, fontSize: FONT_SIZE.sm, color: colors.textSecondary,
   },
   linkBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
+    flexDirection: 'row', alignItems: 'center', gap: 4,
     backgroundColor: colors.primarySoft,
-    paddingHorizontal: SPACING.base,
-    paddingVertical: SPACING.sm,
+    paddingHorizontal: SPACING.base, paddingVertical: SPACING.sm,
     borderRadius: RADIUS.full,
   },
   linkBadgeText: {
-    fontFamily: FONTS.bodySemiBold,
-    fontSize: FONT_SIZE.sm,
-    color: colors.primary,
+    fontFamily: FONTS.bodySemiBold, fontSize: FONT_SIZE.sm, color: colors.primary,
   },
 });
 

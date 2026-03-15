@@ -1,12 +1,12 @@
 // ─────────────────────────────────────────────────────────────────────────────
-// Pépète — LoginScreen v3.0
-// DA premium unifiée — même système de design que les autres écrans de l'app
+// Pépète — LoginScreen v4.0
+// Scroll garanti sur tous les écrans + clavier
 // ─────────────────────────────────────────────────────────────────────────────
 import React, { useState, useRef, useEffect } from 'react';
 import {
   View, Text, TextInput, TouchableOpacity, StyleSheet,
-  Platform, Alert, StatusBar, Animated, ActivityIndicator,
-  KeyboardAvoidingView, ScrollView, Dimensions,
+  Platform, StatusBar, Animated, ActivityIndicator,
+  KeyboardAvoidingView, ScrollView,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Feather } from '@expo/vector-icons';
@@ -18,67 +18,28 @@ import { FONTS } from '../../utils/typography';
 const colors = require('../../utils/colors');
 const { SHADOWS, RADIUS, SPACING, FONT_SIZE } = require('../../utils/colors');
 
-const { height: SCREEN_H } = Dimensions.get('window');
-
-// ─── Champ de saisie unifié ──────────────────────────────────────────────────
-const Field = ({ label, icon, value, onChangeText, placeholder, focusedKey, setFocused, keyboardType, secureTextEntry, right, autoCapitalize, autoCorrect, onSubmitEditing, returnKeyType, inputRef }) => {
-  const isFocused = focusedKey === label;
-  return (
-    <View style={s.fieldWrap}>
-      <Text style={s.label}>{label}</Text>
-      <View style={[s.fieldRow, isFocused && s.fieldRowFocused]}>
-        <Feather name={icon} size={18} color={isFocused ? colors.primary : colors.textLight} style={s.fieldIcon} />
-        <TextInput
-          ref={inputRef}
-          style={s.input}
-          value={value}
-          onChangeText={onChangeText}
-          placeholder={placeholder}
-          placeholderTextColor={colors.placeholder}
-          keyboardType={keyboardType || 'default'}
-          secureTextEntry={secureTextEntry}
-          autoCapitalize={autoCapitalize || 'none'}
-          autoCorrect={autoCorrect !== undefined ? autoCorrect : true}
-          onFocus={() => setFocused(label)}
-          onBlur={() => setFocused(null)}
-          onSubmitEditing={onSubmitEditing}
-          returnKeyType={returnKeyType || 'next'}
-        />
-        {right}
-      </View>
-    </View>
-  );
-};
-
 // ─── Screen ──────────────────────────────────────────────────────────────────
 const LoginScreen = ({ navigation }) => {
   const { login } = useAuth();
   const { isTablet, contentWidth } = useResponsive();
   const insets = useSafeAreaInsets();
 
-  const [email, setEmail]     = useState('');
+  const [email, setEmail]       = useState('');
   const [password, setPassword] = useState('');
-  const [loading, setLoading] = useState(false);
-  const [showPwd, setShowPwd] = useState(false);
-  const [focused, setFocused] = useState(null);
+  const [loading, setLoading]   = useState(false);
+  const [showPwd, setShowPwd]   = useState(false);
+  const [focused, setFocused]   = useState(null);
   const [errorMsg, setErrorMsg] = useState('');
 
-  // Animations
-  const heroScale  = useRef(new Animated.Value(0.92)).current;
-  const heroOpacity = useRef(new Animated.Value(0)).current;
-  const cardSlide  = useRef(new Animated.Value(40)).current;
+  const cardSlide   = useRef(new Animated.Value(40)).current;
   const cardOpacity = useRef(new Animated.Value(0)).current;
-  const shakeAnim  = useRef(new Animated.Value(0)).current;
-
-  const pwdRef = useRef(null);
+  const shakeAnim   = useRef(new Animated.Value(0)).current;
+  const pwdRef      = useRef(null);
+  const scrollRef   = useRef(null);
 
   const maxW = isTablet ? Math.min(contentWidth, 520) : '100%';
 
   useEffect(() => {
-    Animated.parallel([
-      Animated.spring(heroScale,  { toValue: 1, tension: 50, friction: 7, useNativeDriver: true }),
-      Animated.timing(heroOpacity, { toValue: 1, duration: 500, useNativeDriver: true }),
-    ]).start();
     Animated.parallel([
       Animated.spring(cardSlide, { toValue: 0, tension: 60, friction: 8, delay: 150, useNativeDriver: true }),
       Animated.timing(cardOpacity, { toValue: 1, duration: 400, delay: 150, useNativeDriver: true }),
@@ -106,44 +67,70 @@ const LoginScreen = ({ navigation }) => {
     const result = await login(email.trim().toLowerCase(), password);
     setLoading(false);
     if (result.success) {
-      // Retour à l'accueil après connexion réussie
       const parent = navigation.getParent();
-      if (parent) {
-        parent.reset({ index: 0, routes: [{ name: 'Tabs' }] });
-      }
+      if (parent) parent.reset({ index: 0, routes: [{ name: 'Tabs' }] });
     } else {
       shake();
       setErrorMsg(result.error || 'Connexion impossible. Vérifie tes identifiants.');
     }
   };
 
+  const renderField = ({ label, icon, value, onChangeText, placeholder, keyboardType, secureTextEntry, right, autoCorrect, returnKeyType, onSubmitEditing, inputRef }) => {
+    const isFocused = focused === label;
+    return (
+      <View style={s.fieldWrap}>
+        <Text style={s.label}>{label}</Text>
+        <View style={[s.fieldRow, isFocused && s.fieldRowFocused]}>
+          <Feather name={icon} size={18} color={isFocused ? colors.primary : colors.textLight} style={{ marginRight: SPACING.sm }} />
+          <TextInput
+            ref={inputRef}
+            style={s.input}
+            value={value}
+            onChangeText={onChangeText}
+            placeholder={placeholder}
+            placeholderTextColor={colors.placeholder}
+            keyboardType={keyboardType || 'default'}
+            secureTextEntry={secureTextEntry}
+            autoCapitalize="none"
+            autoCorrect={autoCorrect ?? false}
+            onFocus={() => setFocused(label)}
+            onBlur={() => setFocused(null)}
+            onSubmitEditing={onSubmitEditing}
+            returnKeyType={returnKeyType || 'next'}
+          />
+          {right}
+        </View>
+      </View>
+    );
+  };
+
   return (
-    <View style={s.root}>
+    <View style={[s.root, { paddingTop: insets.top }]}>
       <StatusBar barStyle="light-content" />
 
       <KeyboardAvoidingView
         style={{ flex: 1 }}
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-        keyboardVerticalOffset={0}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       >
         <ScrollView
-          contentContainerStyle={{ flexGrow: 1, paddingBottom: insets.bottom + 40 }}
+          ref={scrollRef}
+          bounces={true}
+          overScrollMode="always"
           keyboardShouldPersistTaps="handled"
+          keyboardDismissMode="interactive"
           showsVerticalScrollIndicator={false}
+          contentContainerStyle={{ paddingBottom: Math.max(insets.bottom, 20) + 40 }}
         >
-          {/* ── Hero gradient ── */}
+          {/* ── Hero ── */}
           <LinearGradient
             colors={['#1C2B1E', '#2C3E2F', '#3D5E41']}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 1 }}
-            style={[s.hero, { paddingTop: insets.top + 16 }]}
+            style={s.hero}
           >
-            {/* Décors lumineux */}
             <View style={s.glow1} pointerEvents="none" />
             <View style={s.glow2} pointerEvents="none" />
-
-            <Animated.View style={[s.heroInner, { transform: [{ scale: heroScale }], opacity: heroOpacity, maxWidth: maxW, alignSelf: 'center', width: '100%' }]}>
-              {/* Bouton retour */}
+            <View style={[s.heroInner, { maxWidth: maxW, alignSelf: 'center', width: '100%' }]}>
               <TouchableOpacity
                 onPress={() => navigation.goBack()}
                 style={s.backBtn}
@@ -152,124 +139,96 @@ const LoginScreen = ({ navigation }) => {
               >
                 <Feather name="arrow-left" size={20} color="rgba(255,255,255,0.9)" />
               </TouchableOpacity>
-              {/* Badge logo */}
               <View style={s.logoBadge}>
                 <PawIcon size={28} color="#FFF" />
               </View>
               <Text style={s.logoWord}>pépète.</Text>
               <Text style={s.heroTitle}>Bon retour <Text style={s.heroAccent}>!</Text></Text>
               <Text style={s.heroSub}>Connectez-vous pour continuer</Text>
-            </Animated.View>
+            </View>
           </LinearGradient>
 
           {/* ── Card formulaire ── */}
-          <View style={s.scrollContent}>
-          <Animated.View
-            style={[
-              s.card,
-              {
-                maxWidth: maxW,
-                alignSelf: 'center',
-                width: '100%',
-                transform: [{ translateY: cardSlide }, { translateX: shakeAnim }],
-                opacity: cardOpacity,
-              },
-            ]}
-          >
-            {/* Titre section */}
-            <Text style={s.cardTitle}>Connexion</Text>
-
-            {/* Message d'erreur */}
-            {errorMsg ? (
-              <View style={s.errorBanner}>
-                <Feather name="alert-circle" size={15} color={colors.error} />
-                <Text style={s.errorBannerText}>{errorMsg}</Text>
-              </View>
-            ) : null}
-
-            {/* Email */}
-            <Field
-              label="email"
-              icon="mail"
-              value={email}
-              onChangeText={(v) => { setEmail(v); setErrorMsg(''); }}
-              placeholder="votre@email.com"
-              focusedKey={focused}
-              setFocused={setFocused}
-              keyboardType="email-address"
-              autoCorrect={false}
-              returnKeyType="next"
-              onSubmitEditing={() => pwdRef.current?.focus()}
-            />
-
-            {/* Mot de passe */}
-            <Field
-              label="mot de passe"
-              icon="lock"
-              value={password}
-              onChangeText={(v) => { setPassword(v); setErrorMsg(''); }}
-              placeholder="Votre mot de passe"
-              focusedKey={focused}
-              setFocused={setFocused}
-              secureTextEntry={!showPwd}
-              inputRef={pwdRef}
-              returnKeyType="done"
-              onSubmitEditing={handleLogin}
-              right={
-                <TouchableOpacity
-                  onPress={() => setShowPwd(!showPwd)}
-                  hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
-                >
-                  <Feather name={showPwd ? 'eye-off' : 'eye'} size={18} color={colors.textLight} />
-                </TouchableOpacity>
-              }
-            />
-
-            {/* CTA */}
-            <TouchableOpacity
-              onPress={handleLogin}
-              disabled={loading}
-              activeOpacity={0.88}
-              style={[s.ctaWrap, loading && s.ctaDisabled]}
+          <View style={s.formArea}>
+            <Animated.View
+              style={[
+                s.card,
+                { maxWidth: maxW, alignSelf: 'center', width: '100%' },
+                { transform: [{ translateY: cardSlide }, { translateX: shakeAnim }], opacity: cardOpacity },
+              ]}
             >
-              <LinearGradient
-                colors={loading ? [colors.textLight, colors.textTertiary] : [colors.primaryDark, colors.primary]}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 0 }}
-                style={s.cta}
+              <Text style={s.cardTitle}>Connexion</Text>
+
+              {errorMsg ? (
+                <View style={s.errorBanner}>
+                  <Feather name="alert-circle" size={15} color={colors.error} />
+                  <Text style={s.errorBannerText}>{errorMsg}</Text>
+                </View>
+              ) : null}
+
+              {renderField({
+                label: 'Email',
+                icon: 'mail',
+                value: email,
+                onChangeText: (v) => { setEmail(v); setErrorMsg(''); },
+                placeholder: 'votre@email.com',
+                keyboardType: 'email-address',
+                returnKeyType: 'next',
+                onSubmitEditing: () => pwdRef.current?.focus(),
+              })}
+
+              {renderField({
+                label: 'Mot de passe',
+                icon: 'lock',
+                value: password,
+                onChangeText: (v) => { setPassword(v); setErrorMsg(''); },
+                placeholder: 'Votre mot de passe',
+                secureTextEntry: !showPwd,
+                inputRef: pwdRef,
+                returnKeyType: 'done',
+                onSubmitEditing: handleLogin,
+                right: (
+                  <TouchableOpacity onPress={() => setShowPwd(!showPwd)} hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}>
+                    <Feather name={showPwd ? 'eye-off' : 'eye'} size={18} color={colors.textLight} />
+                  </TouchableOpacity>
+                ),
+              })}
+
+              <TouchableOpacity
+                onPress={handleLogin}
+                disabled={loading}
+                activeOpacity={0.88}
+                style={[s.ctaWrap, loading && { opacity: 0.7 }]}
               >
-                {loading
-                  ? <ActivityIndicator size="small" color="#FFF" />
-                  : (
-                    <>
-                      <Text style={s.ctaText}>Se connecter</Text>
-                      <Feather name="arrow-right" size={20} color="#FFF" />
-                    </>
-                  )
-                }
-              </LinearGradient>
-            </TouchableOpacity>
+                <LinearGradient
+                  colors={loading ? [colors.textLight, colors.textTertiary] : [colors.primaryDark, colors.primary]}
+                  start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}
+                  style={s.cta}
+                >
+                  {loading
+                    ? <ActivityIndicator size="small" color="#FFF" />
+                    : <>
+                        <Text style={s.ctaText}>Se connecter</Text>
+                        <Feather name="arrow-right" size={20} color="#FFF" />
+                      </>
+                  }
+                </LinearGradient>
+              </TouchableOpacity>
 
-            {/* Divider */}
-            <View style={s.divider}>
-              <View style={s.dividerLine} />
-              <Text style={s.dividerLabel}>ou</Text>
-              <View style={s.dividerLine} />
-            </View>
-
-            {/* Lien inscription */}
-            <TouchableOpacity
-              style={s.linkRow}
-              onPress={() => navigation.navigate('Register')}
-              activeOpacity={0.7}
-            >
-              <Text style={s.linkText}>Pas encore de compte ?</Text>
-              <View style={s.linkBadge}>
-                <Text style={s.linkBadgeText}>Créer un compte</Text>
-                <Feather name="chevron-right" size={14} color={colors.primary} />
+              <View style={s.divider}>
+                <View style={s.dividerLine} />
+                <Text style={s.dividerLabel}>ou</Text>
+                <View style={s.dividerLine} />
               </View>
-            </TouchableOpacity>
-          </Animated.View>
+
+              <TouchableOpacity style={s.linkRow} onPress={() => navigation.navigate('Register')} activeOpacity={0.7}>
+                <Text style={s.linkText}>Pas encore de compte ?</Text>
+                <View style={s.linkBadge}>
+                  <Text style={s.linkBadgeText}>Créer un compte</Text>
+                  <Feather name="chevron-right" size={14} color={colors.primary} />
+                </View>
+              </TouchableOpacity>
+            </Animated.View>
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
@@ -277,14 +236,13 @@ const LoginScreen = ({ navigation }) => {
   );
 };
 
+// ─── Styles ──────────────────────────────────────────────────────────────────
 const s = StyleSheet.create({
-  root: {
-    flex: 1,
-    backgroundColor: colors.background,
-  },
+  root: { flex: 1, backgroundColor: '#1C2B1E' },
 
   // Hero
   hero: {
+    paddingTop: 16,
     paddingHorizontal: SPACING.xl,
     paddingBottom: SPACING['2xl'] + 10,
     overflow: 'hidden',
@@ -299,56 +257,43 @@ const s = StyleSheet.create({
     width: 160, height: 160, borderRadius: 80,
     backgroundColor: 'rgba(82,122,86,0.08)',
   },
-  heroInner: {
-    alignItems: 'flex-start',
-  },
+  heroInner: { alignItems: 'flex-start' },
   backBtn: {
-    width: 40, height: 40,
-    borderRadius: RADIUS.lg,
+    width: 40, height: 40, borderRadius: RADIUS.lg,
     backgroundColor: 'rgba(255,255,255,0.10)',
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: 'center', justifyContent: 'center',
     marginBottom: SPACING.base,
   },
   logoBadge: {
     width: 56, height: 56, borderRadius: RADIUS.xl,
     backgroundColor: 'rgba(255,255,255,0.12)',
-    borderWidth: 1.5,
-    borderColor: 'rgba(255,255,255,0.18)',
-    alignItems: 'center',
-    justifyContent: 'center',
+    borderWidth: 1.5, borderColor: 'rgba(255,255,255,0.18)',
+    alignItems: 'center', justifyContent: 'center',
     marginBottom: SPACING.base,
   },
   logoWord: {
-    fontFamily: FONTS.brand,
-    fontSize: FONT_SIZE.sm,
-    color: 'rgba(255,255,255,0.5)',
-    letterSpacing: 2,
-    textTransform: 'uppercase',
-    marginBottom: SPACING.lg,
+    fontFamily: FONTS.brand, fontSize: FONT_SIZE.sm,
+    color: 'rgba(255,255,255,0.5)', letterSpacing: 2,
+    textTransform: 'uppercase', marginBottom: SPACING.lg,
   },
   heroTitle: {
-    fontFamily: FONTS.brand,
-    fontSize: FONT_SIZE['3xl'],
-    color: '#FFF',
-    letterSpacing: -1,
-    lineHeight: FONT_SIZE['3xl'] * 1.1,
-    marginBottom: SPACING.sm,
+    fontFamily: FONTS.brand, fontSize: FONT_SIZE['3xl'],
+    color: '#FFF', letterSpacing: -1,
+    lineHeight: FONT_SIZE['3xl'] * 1.1, marginBottom: SPACING.sm,
   },
-  heroAccent: {
-    color: '#8CB092',
-  },
+  heroAccent: { color: '#8CB092' },
   heroSub: {
-    fontFamily: FONTS.bodyMedium,
-    fontSize: FONT_SIZE.base,
+    fontFamily: FONTS.bodyMedium, fontSize: FONT_SIZE.base,
     color: 'rgba(255,255,255,0.55)',
   },
 
-  // Scroll
-  scrollView: { flex: 1 },
-  scrollContent: {
+  // Form area
+  formArea: {
+    backgroundColor: colors.background,
     paddingTop: SPACING.xl,
     paddingHorizontal: SPACING.lg,
+    paddingBottom: SPACING.xl,
+    minHeight: 400,
   },
 
   // Card
@@ -359,134 +304,81 @@ const s = StyleSheet.create({
     ...SHADOWS.lg,
   },
   cardTitle: {
-    fontFamily: FONTS.heading,
-    fontSize: FONT_SIZE['2xl'],
-    color: colors.text,
-    letterSpacing: -0.5,
-    marginBottom: SPACING.xl,
+    fontFamily: FONTS.heading, fontSize: FONT_SIZE['2xl'],
+    color: colors.text, letterSpacing: -0.5, marginBottom: SPACING.xl,
   },
 
-  // Error banner
+  // Error
   errorBanner: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: SPACING.sm,
+    flexDirection: 'row', alignItems: 'center', gap: SPACING.sm,
     backgroundColor: colors.errorSoft || '#FBE8E4',
-    borderRadius: RADIUS.lg,
-    padding: SPACING.md,
+    borderRadius: RADIUS.lg, padding: SPACING.md,
     marginBottom: SPACING.base,
-    borderLeftWidth: 3,
-    borderLeftColor: colors.error,
+    borderLeftWidth: 3, borderLeftColor: colors.error,
   },
   errorBannerText: {
-    flex: 1,
-    fontFamily: FONTS.bodyMedium,
-    fontSize: FONT_SIZE.sm,
-    color: colors.error,
-    lineHeight: 18,
+    flex: 1, fontFamily: FONTS.bodyMedium, fontSize: FONT_SIZE.sm,
+    color: colors.error, lineHeight: 18,
   },
 
   // Fields
-  fieldWrap: {
-    marginBottom: SPACING.base,
-  },
+  fieldWrap: { marginBottom: SPACING.base },
   label: {
-    fontFamily: FONTS.bodySemiBold,
-    fontSize: FONT_SIZE.xs,
-    color: colors.textSecondary,
-    textTransform: 'uppercase',
-    letterSpacing: 0.8,
-    marginBottom: SPACING.sm,
+    fontFamily: FONTS.bodySemiBold, fontSize: FONT_SIZE.xs,
+    color: colors.textSecondary, textTransform: 'uppercase',
+    letterSpacing: 0.8, marginBottom: SPACING.sm,
   },
   fieldRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: 'row', alignItems: 'center',
     backgroundColor: colors.background,
-    borderRadius: RADIUS.lg,
-    paddingHorizontal: SPACING.base,
-    height: 54,
-    borderWidth: 1.5,
-    borderColor: colors.border,
+    borderRadius: RADIUS.lg, paddingHorizontal: SPACING.base,
+    height: 54, borderWidth: 1.5, borderColor: colors.border,
   },
   fieldRowFocused: {
     borderColor: colors.primary,
     backgroundColor: colors.primaryUltra || '#F5FAF6',
   },
-  fieldIcon: {
-    marginRight: SPACING.sm,
-  },
   input: {
-    flex: 1,
-    fontFamily: FONTS.bodyMedium,
-    fontSize: FONT_SIZE.base,
-    color: colors.text,
-    paddingVertical: 0,
+    flex: 1, fontFamily: FONTS.bodyMedium, fontSize: FONT_SIZE.base,
+    color: colors.text, paddingVertical: 0,
   },
 
   // CTA
   ctaWrap: {
-    marginTop: SPACING.sm,
-    borderRadius: RADIUS.xl,
-    overflow: 'hidden',
-    ...SHADOWS.glow ? SHADOWS.glow() : {},
+    marginTop: SPACING.sm, borderRadius: RADIUS.xl, overflow: 'hidden',
   },
-  ctaDisabled: { opacity: 0.7 },
   cta: {
-    height: 56,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: SPACING.sm,
-    borderRadius: RADIUS.xl,
+    height: 56, flexDirection: 'row', alignItems: 'center',
+    justifyContent: 'center', gap: SPACING.sm, borderRadius: RADIUS.xl,
   },
   ctaText: {
-    fontFamily: FONTS.heading,
-    fontSize: FONT_SIZE.md,
-    color: '#FFF',
-    letterSpacing: 0.2,
+    fontFamily: FONTS.heading, fontSize: FONT_SIZE.md,
+    color: '#FFF', letterSpacing: 0.2,
   },
 
   // Divider
   divider: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginVertical: SPACING.xl,
-    gap: SPACING.base,
+    flexDirection: 'row', alignItems: 'center',
+    marginVertical: SPACING.xl, gap: SPACING.base,
   },
-  dividerLine: {
-    flex: 1,
-    height: 1,
-    backgroundColor: colors.border,
-  },
+  dividerLine: { flex: 1, height: 1, backgroundColor: colors.border },
   dividerLabel: {
-    fontFamily: FONTS.bodyMedium,
-    fontSize: FONT_SIZE.sm,
-    color: colors.textLight,
+    fontFamily: FONTS.bodyMedium, fontSize: FONT_SIZE.sm, color: colors.textLight,
   },
 
   // Link
-  linkRow: {
-    alignItems: 'center',
-    gap: SPACING.sm,
-  },
+  linkRow: { alignItems: 'center', gap: SPACING.sm },
   linkText: {
-    fontFamily: FONTS.body,
-    fontSize: FONT_SIZE.sm,
-    color: colors.textSecondary,
+    fontFamily: FONTS.body, fontSize: FONT_SIZE.sm, color: colors.textSecondary,
   },
   linkBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
+    flexDirection: 'row', alignItems: 'center', gap: 4,
     backgroundColor: colors.primarySoft,
-    paddingHorizontal: SPACING.base,
-    paddingVertical: SPACING.sm,
+    paddingHorizontal: SPACING.base, paddingVertical: SPACING.sm,
     borderRadius: RADIUS.full,
   },
   linkBadgeText: {
-    fontFamily: FONTS.bodySemiBold,
-    fontSize: FONT_SIZE.sm,
-    color: colors.primary,
+    fontFamily: FONTS.bodySemiBold, fontSize: FONT_SIZE.sm, color: colors.primary,
   },
 });
 
