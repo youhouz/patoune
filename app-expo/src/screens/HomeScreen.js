@@ -1,9 +1,33 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useRef } from 'react';
 import {
   View, Text, ScrollView, TouchableOpacity, StyleSheet,
-  Platform, StatusBar, RefreshControl, TextInput
+  Platform, StatusBar, RefreshControl, TextInput, Animated,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
+
+// ─── Animated Pressable Card ─────────────────────────────
+const PressableCard = ({ onPress, disabled, style, children }) => {
+  const scale = useRef(new Animated.Value(1)).current;
+  const onPressIn = () => {
+    Animated.spring(scale, { toValue: 0.95, useNativeDriver: true, speed: 50, bounciness: 4 }).start();
+  };
+  const onPressOut = () => {
+    Animated.spring(scale, { toValue: 1, useNativeDriver: true, speed: 14, bounciness: 6 }).start();
+  };
+  return (
+    <TouchableOpacity
+      onPress={disabled ? undefined : onPress}
+      onPressIn={disabled ? undefined : onPressIn}
+      onPressOut={disabled ? undefined : onPressOut}
+      activeOpacity={1}
+      style={style}
+    >
+      <Animated.View style={{ transform: [{ scale }] }}>
+        {children}
+      </Animated.View>
+    </TouchableOpacity>
+  );
+};
 import { useFocusEffect } from '@react-navigation/native';
 import { Feather } from '@expo/vector-icons';
 import { useAuth } from '../context/AuthContext';
@@ -361,10 +385,10 @@ const HomeScreen = ({ navigation }) => {
           <Text style={s.sectionTitle}>Que voulez-vous faire ?</Text>
           <View style={s.featuresGrid}>
             {features.map((f, idx) => (
-              <TouchableOpacity
+              <PressableCard
                 key={idx}
-                onPress={f.disabled ? undefined : f.onPress}
-                activeOpacity={f.disabled ? 1 : 0.85}
+                onPress={f.onPress}
+                disabled={f.disabled}
                 style={s.featureCardWrapper}
               >
                 <LinearGradient
@@ -388,7 +412,7 @@ const HomeScreen = ({ navigation }) => {
                     <Text style={[s.featureSubtitle, f.disabled && s.featureSubDisabled]}>{f.subtitle}</Text>
                   </View>
                 </LinearGradient>
-              </TouchableOpacity>
+              </PressableCard>
             ))}
           </View>
         </View>
