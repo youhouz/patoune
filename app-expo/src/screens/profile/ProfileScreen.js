@@ -16,7 +16,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { Feather } from '@expo/vector-icons';
 import { useFocusEffect } from '@react-navigation/native';
 import { useAuth } from '../../context/AuthContext';
-import { PawIcon } from '../../components/Logo';
+import { PepeteIcon } from '../../components/PepeteLogo';
 import { getMyPetsAPI } from '../../api/pets';
 import { getScanHistoryAPI } from '../../api/products';
 import { getMyBookingsAPI } from '../../api/petsitters';
@@ -336,7 +336,7 @@ const ProfileScreen = ({ navigation }) => {
         {/* App footer */}
         <View style={styles.footer}>
           <View style={styles.footerBadge}>
-            <PawIcon size={16} color={colors.primary} />
+            <PepeteIcon size={16} color={colors.primary} />
             <Text style={styles.footerText}>pépète.</Text>
           </View>
           <Text style={styles.footerVersion}>v1.0.0 — Le meilleur pour vos animaux</Text>
