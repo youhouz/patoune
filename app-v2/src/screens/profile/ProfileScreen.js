@@ -136,7 +136,7 @@ const ProfileScreen = ({ navigation }) => {
     { label: 'Gardes', value: bookingsCount, icon: 'calendar', color: '#C4956A' },
   ];
 
-  const menuSections = [
+  const ownerSections = [
     {
       title: 'Mes compagnons',
       items: [
@@ -158,6 +158,34 @@ const ProfileScreen = ({ navigation }) => {
         },
       ],
     },
+  ];
+
+  const sitterSections = [
+    {
+      title: 'Mon activite pet-sitter',
+      items: [
+        {
+          icon: 'edit-3',
+          label: 'Mon annonce',
+          subtitle: 'Creer ou modifier mon profil pet-sitter',
+          screen: 'PetSitterProfile',
+          accentColor: '#527A56',
+          bgColor: colors.primarySoft,
+        },
+        {
+          icon: 'inbox',
+          label: 'Mes reservations',
+          subtitle: 'Voir les demandes des proprietaires',
+          screen: 'PetSitterBookings',
+          accentColor: '#C4956A',
+          bgColor: colors.accentSoft,
+        },
+      ],
+    },
+  ];
+
+  const menuSections = [
+    ...(activeMode === 'petsitter' ? sitterSections : ownerSections),
     {
       title: 'Parametres',
       items: [
