@@ -8,9 +8,13 @@ export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [token, setToken] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [activeMode, setActiveMode] = useState('owner'); // 'owner' | 'petsitter'
 
   useEffect(() => {
     checkAuth();
+    AsyncStorage.getItem('activeMode').then(mode => {
+      if (mode === 'owner' || mode === 'petsitter') setActiveMode(mode);
+    });
   }, []);
 
   const clearStoredAuth = async () => {
@@ -120,11 +124,18 @@ export const AuthProvider = ({ children }) => {
     await AsyncStorage.setItem('user', JSON.stringify(userData));
   };
 
+  const switchMode = async (mode) => {
+    setActiveMode(mode);
+    await AsyncStorage.setItem('activeMode', mode);
+  };
+
   return (
     <AuthContext.Provider value={{
       user,
       token,
       loading,
+      activeMode,
+      switchMode,
       login,
       register,
       logout,
