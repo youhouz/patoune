@@ -108,7 +108,7 @@ const RegisterScreen = ({ navigation }) => {
     if (!validate()) { shake(); return; }
     setLoading(true);
     try {
-      const result = await register(name.trim(), email.trim().toLowerCase(), password, phone.trim(), getFinalRole());
+      const result = await register({ name: name.trim(), email: email.trim().toLowerCase(), password, phone: phone.trim(), role: getFinalRole() });
       setLoading(false);
       if (result.success) {
         const parent = navigation.getParent()?.getParent();
