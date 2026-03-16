@@ -66,7 +66,8 @@ export const AuthProvider = ({ children }) => {
 
       return { success: true };
     } catch (error) {
-      const message = error.userMessage || error.response?.data?.error || 'Erreur de connexion. Verifie que tu es sur le meme reseau Wi-Fi que le serveur.';
+      console.error('Login failed:', JSON.stringify(error.response?.data), 'status:', error.response?.status);
+      const message = error.userMessage || error.response?.data?.error || 'Identifiants incorrects ou serveur injoignable.';
       return { success: false, error: message };
     }
   };
@@ -89,18 +90,21 @@ export const AuthProvider = ({ children }) => {
 
       return { success: true };
     } catch (error) {
-      console.error('Register failed:', error.response?.data || error.message);
+      const respData = error.response?.data;
+      console.error('Register failed:', JSON.stringify(respData), 'status:', error.response?.status);
       let message = "Erreur d'inscription";
-      
-      if (error.response?.data?.error) {
-          message = error.response.data.error;
-      } else if (error.response?.data?.errors?.length > 0) {
-          message = error.response.data.errors
+
+      if (respData?.error) {
+          message = respData.error;
+      } else if (respData?.errors?.length > 0) {
+          message = respData.errors
             .map(e => typeof e === 'string' ? e : e.msg)
             .filter(Boolean)
             .join(', ');
       } else if (error.userMessage) {
           message = error.userMessage;
+      } else if (error.message && error.message !== 'Register failed') {
+          message = error.message;
       }
 
       return { success: false, error: message };
