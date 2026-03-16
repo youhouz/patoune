@@ -29,7 +29,7 @@ import colors, { SHADOWS, RADIUS, SPACING, FONT_SIZE } from '../../utils/colors'
 const HEADER_PADDING_TOP = Platform.OS === 'ios' ? 60 : (StatusBar.currentHeight || 24) + 20;
 
 const ProfileScreen = ({ navigation }) => {
-  const { user, logout, activeMode, switchMode } = useAuth();
+  const { user, logout, updateUser, activeMode, switchMode } = useAuth();
   const canSwitch = user?.role === 'both' || user?.role === 'guardian';
 
   // Animations
