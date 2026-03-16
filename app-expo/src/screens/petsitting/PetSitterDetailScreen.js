@@ -102,7 +102,6 @@ const PetSitterDetailScreen = ({ route, navigation }) => {
   const [reviews, setReviews] = useState([]);
   const [loadingReviews, setLoadingReviews] = useState(true);
   const [showAllReviews, setShowAllReviews] = useState(false);
-  const scrollY = useRef(new Animated.Value(0)).current;
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const slideAnim = useRef(new Animated.Value(30)).current;
 
@@ -176,11 +175,6 @@ const PetSitterDetailScreen = ({ route, navigation }) => {
         style={styles.scrollView}
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
-        scrollEventThrottle={16}
-        onScroll={Animated.event(
-          [{ nativeEvent: { contentOffset: { y: scrollY } } }],
-          { useNativeDriver: false }
-        )}
       >
         {/* Hero Section */}
         <LinearGradient
@@ -487,8 +481,6 @@ const PetSitterDetailScreen = ({ route, navigation }) => {
             )}
           </SectionCard>
 
-          {/* Bottom spacer for sticky bar */}
-          <View style={{ height: 110 }} />
         </Animated.View>
       </ScrollView>
 
@@ -546,7 +538,8 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   scrollContent: {
-    paddingBottom: 0,
+    paddingBottom: 120,
+    flexGrow: 1,
   },
   loadingFull: {
     flex: 1,

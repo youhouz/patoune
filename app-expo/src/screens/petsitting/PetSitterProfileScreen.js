@@ -134,6 +134,8 @@ const PetSitterProfileScreen = ({ navigation }) => {
         }
         showAlert('Annonce creee', 'Ton profil pet-sitter est maintenant en ligne !');
       }
+      // Navigate back to profile after successful save
+      navigation.goBack();
     } catch (err) {
       console.log('Erreur sauvegarde profil pet-sitter:', err?.response?.data);
       const msg = err?.response?.data?.error || 'Erreur lors de la sauvegarde.';
