@@ -53,3 +53,14 @@ export const loginAPI = async (email, password) => {
 
 export const getMeAPI = () =>
   api.get('/auth/me');
+
+export const uploadAvatarAPI = async (imageUri) => {
+  const formData = new FormData();
+  const filename = imageUri.split('/').pop() || 'avatar.jpg';
+  const match = /\.(\w+)$/.exec(filename);
+  const type = match ? `image/${match[1]}` : 'image/jpeg';
+  formData.append('avatar', { uri: imageUri, name: filename, type });
+  return api.put('/users/me/avatar', formData, {
+    headers: { 'Content-Type': 'multipart/form-data' },
+  });
+};

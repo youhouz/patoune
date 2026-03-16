@@ -10,15 +10,19 @@ import {
   Animated,
   ActivityIndicator,
   RefreshControl,
+  Image,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Feather } from '@expo/vector-icons';
 import { useFocusEffect } from '@react-navigation/native';
+import * as ImagePicker from 'expo-image-picker';
 import { useAuth } from '../../context/AuthContext';
 import { PepeteIcon } from '../../components/PepeteLogo';
 import { getMyPetsAPI } from '../../api/pets';
 import { getScanHistoryAPI } from '../../api/products';
 import { getMyBookingsAPI } from '../../api/petsitters';
+import { uploadAvatarAPI } from '../../api/auth';
+import { API_URL } from '../../api/client';
 import { showAlert } from '../../utils/alert';
 import colors, { SHADOWS, RADIUS, SPACING, FONT_SIZE } from '../../utils/colors';
 
@@ -39,6 +43,7 @@ const ProfileScreen = ({ navigation }) => {
   const [bookingsCount, setBookingsCount] = useState(0);
   const [statsLoading, setStatsLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [uploadingAvatar, setUploadingAvatar] = useState(false);
 
   useEffect(() => {
     Animated.parallel([
@@ -110,6 +115,39 @@ const ProfileScreen = ({ navigation }) => {
     }
     return parts[0].substring(0, 2).toUpperCase();
   };
+
+  const handlePickAvatar = useCallback(async () => {
+    try {
+      const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      if (status !== 'granted') {
+        showAlert('Permission requise', 'Autorisez l\'acces a vos photos pour changer votre avatar.');
+        return;
+      }
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ['images'],
+        allowsEditing: true,
+        aspect: [1, 1],
+        quality: 0.7,
+      });
+      if (result.canceled) return;
+      const uri = result.assets[0].uri;
+      setUploadingAvatar(true);
+      const res = await uploadAvatarAPI(uri);
+      const updatedUser = res.data?.user;
+      if (updatedUser) {
+        await updateUser(updatedUser);
+      }
+    } catch (err) {
+      console.log('Erreur upload avatar:', err);
+      showAlert('Erreur', 'Impossible de mettre a jour la photo de profil.');
+    } finally {
+      setUploadingAvatar(false);
+    }
+  }, [updateUser]);
+
+  const avatarUrl = user?.avatar
+    ? (user.avatar.startsWith('http') ? user.avatar : `${API_URL.replace('/api', '')}${user.avatar}`)
+    : null;
 
   const doLogout = async () => {
     try {
@@ -237,13 +275,22 @@ const ProfileScreen = ({ navigation }) => {
             ]}
           >
             {/* Double-ring Avatar */}
-            <View style={styles.avatarContainer}>
+            <TouchableOpacity style={styles.avatarContainer} onPress={handlePickAvatar} activeOpacity={0.8} disabled={uploadingAvatar}>
               <View style={styles.avatarOuterRing}>
                 <View style={styles.avatarInnerRing}>
                   <View style={styles.avatar}>
-                    <Text style={styles.avatarInitials}>{getInitials()}</Text>
+                    {uploadingAvatar ? (
+                      <ActivityIndicator size="small" color="#6B8F71" />
+                    ) : avatarUrl ? (
+                      <Image source={{ uri: avatarUrl }} style={styles.avatarImage} />
+                    ) : (
+                      <Text style={styles.avatarInitials}>{getInitials()}</Text>
+                    )}
                   </View>
                 </View>
+              </View>
+              <View style={styles.avatarEditBadge}>
+                <Feather name="camera" size={12} color="#FFF" />
               </View>
               {user?.isPetSitter && (
                 <View style={styles.sitterBadge}>
@@ -251,7 +298,7 @@ const ProfileScreen = ({ navigation }) => {
                   <Text style={styles.sitterBadgeText}>Pet-sitter</Text>
                 </View>
               )}
-            </View>
+            </TouchableOpacity>
 
             {/* User Info */}
             <Text style={styles.userName}>{user?.name || 'Utilisateur'}</Text>
@@ -447,11 +494,30 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
+  avatarImage: {
+    width: 84,
+    height: 84,
+    borderRadius: 42,
+  },
   avatarInitials: {
     fontSize: FONT_SIZE['3xl'],
     fontWeight: '800',
     color: '#6B8F71',
     letterSpacing: 1,
+  },
+  avatarEditBadge: {
+    position: 'absolute',
+    right: 0,
+    bottom: 4,
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: '#527A56',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 2,
+    borderColor: '#FFF',
+    ...SHADOWS.sm,
   },
   sitterBadge: {
     position: 'absolute',

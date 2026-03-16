@@ -12,12 +12,15 @@ import {
   KeyboardAvoidingView,
   ActivityIndicator,
   Animated,
+  Image,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Feather } from '@expo/vector-icons';
+import * as ImagePicker from 'expo-image-picker';
 import { useAuth } from '../../context/AuthContext';
 import { PepeteIcon } from '../../components/PepeteLogo';
-import api from '../../api/client';
+import api, { API_URL } from '../../api/client';
+import { uploadAvatarAPI } from '../../api/auth';
 import { geocodeCity } from '../../hooks/useLocation';
 import { updatePetSitterAPI } from '../../api/petsitters';
 import { showAlert } from '../../utils/alert';
@@ -38,6 +41,8 @@ const SettingsScreen = ({ navigation }) => {
   const [cityInput, setCityInput] = useState(user?.address?.city || '');
   const [cityCoords, setCityCoords] = useState(null);
   const [cityLoading, setCityLoading] = useState(false);
+
+  const [uploadingAvatar, setUploadingAvatar] = useState(false);
 
   // Notification preferences (local state)
   const [notifPush, setNotifPush] = useState(true);
@@ -135,6 +140,40 @@ const SettingsScreen = ({ navigation }) => {
       setCityLoading(false);
     }
   }, []);
+
+  const handlePickAvatar = useCallback(async () => {
+    try {
+      const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      if (status !== 'granted') {
+        showAlert('Permission requise', 'Autorisez l\'acces a vos photos pour changer votre avatar.');
+        return;
+      }
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ['images'],
+        allowsEditing: true,
+        aspect: [1, 1],
+        quality: 0.7,
+      });
+      if (result.canceled) return;
+      const uri = result.assets[0].uri;
+      setUploadingAvatar(true);
+      const res = await uploadAvatarAPI(uri);
+      const updatedUser = res.data?.user;
+      if (updatedUser) {
+        await updateUser(updatedUser);
+      }
+      showAlert('Photo mise a jour', 'Votre photo de profil a ete changee.');
+    } catch (err) {
+      console.log('Erreur upload avatar:', err);
+      showAlert('Erreur', 'Impossible de mettre a jour la photo.');
+    } finally {
+      setUploadingAvatar(false);
+    }
+  }, [updateUser]);
+
+  const avatarUrl = user?.avatar
+    ? (user.avatar.startsWith('http') ? user.avatar : `${API_URL.replace('/api', '')}${user.avatar}`)
+    : null;
 
   const handleSave = useCallback(async () => {
     if (!name.trim()) {
@@ -309,18 +348,31 @@ const SettingsScreen = ({ navigation }) => {
               <View style={styles.sectionCard}>
                 {/* Mini profile header */}
                 <View style={styles.accountHeader}>
-                  <View style={styles.accountAvatar}>
-                    <LinearGradient
-                      colors={['#527A56', '#6B8F71']}
-                      start={{ x: 0, y: 0 }}
-                      end={{ x: 1, y: 1 }}
-                      style={styles.accountAvatarGradient}
-                    >
-                      <Text style={styles.accountAvatarText}>
-                        {getInitials()}
-                      </Text>
-                    </LinearGradient>
-                  </View>
+                  <TouchableOpacity style={styles.accountAvatarWrap} onPress={handlePickAvatar} activeOpacity={0.8} disabled={uploadingAvatar}>
+                    <View style={styles.accountAvatar}>
+                      {uploadingAvatar ? (
+                        <View style={styles.accountAvatarGradient}>
+                          <ActivityIndicator size="small" color="#FFF" />
+                        </View>
+                      ) : avatarUrl ? (
+                        <Image source={{ uri: avatarUrl }} style={styles.accountAvatarImage} />
+                      ) : (
+                        <LinearGradient
+                          colors={['#527A56', '#6B8F71']}
+                          start={{ x: 0, y: 0 }}
+                          end={{ x: 1, y: 1 }}
+                          style={styles.accountAvatarGradient}
+                        >
+                          <Text style={styles.accountAvatarText}>
+                            {getInitials()}
+                          </Text>
+                        </LinearGradient>
+                      )}
+                    </View>
+                    <View style={styles.accountAvatarEditIcon}>
+                      <Feather name="camera" size={10} color="#FFF" />
+                    </View>
+                  </TouchableOpacity>
                   <View style={styles.accountInfo}>
                     <Text style={styles.accountName}>
                       {user?.name || 'Utilisateur'}
@@ -666,9 +718,17 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: SPACING.base,
   },
+  accountAvatarWrap: {
+    position: 'relative',
+  },
   accountAvatar: {
     borderRadius: 22,
     overflow: 'hidden',
+  },
+  accountAvatarImage: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
   },
   accountAvatarGradient: {
     width: 44,
@@ -682,6 +742,19 @@ const styles = StyleSheet.create({
     fontWeight: '800',
     color: colors.white,
     letterSpacing: 0.5,
+  },
+  accountAvatarEditIcon: {
+    position: 'absolute',
+    right: -2,
+    bottom: -2,
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    backgroundColor: '#527A56',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 2,
+    borderColor: colors.white,
   },
   accountInfo: {
     flex: 1,
