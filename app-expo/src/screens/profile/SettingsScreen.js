@@ -17,7 +17,7 @@ import {
 import { LinearGradient } from 'expo-linear-gradient';
 import { Feather } from '@expo/vector-icons';
 import { useAuth } from '../../context/AuthContext';
-import { PawIcon } from '../../components/Logo';
+import { PepeteIcon } from '../../components/PepeteLogo';
 import api from '../../api/client';
 import { geocodeCity } from '../../hooks/useLocation';
 import { updatePetSitterAPI } from '../../api/petsitters';
@@ -517,7 +517,7 @@ const SettingsScreen = ({ navigation }) => {
                       end={{ x: 1, y: 1 }}
                       style={styles.aboutLogoGradient}
                     >
-                      <PawIcon size={24} color="#FFF" />
+                      <PepeteIcon size={24} color="#FFF" />
                     </LinearGradient>
                   </View>
                   <View style={styles.aboutBrandInfo}>

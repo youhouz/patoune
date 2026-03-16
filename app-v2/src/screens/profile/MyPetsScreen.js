@@ -11,7 +11,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { Feather } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useFocusEffect } from '@react-navigation/native';
-import { PawIcon } from '../../components/Logo';
+import { PepeteIcon } from '../../components/PepeteLogo';
 import { getMyPetsAPI, deletePetAPI } from '../../api/pets';
 import { showAlert } from '../../utils/alert';
 import { FONTS } from '../../utils/typography';
@@ -208,7 +208,7 @@ const MyPetsScreen = ({ navigation }) => {
         end={{ x: 1, y: 1 }}
         style={styles.emptyIcon}
       >
-        <PawIcon size={44} color="#FFF" />
+        <PepeteIcon size={44} color="#FFF" />
       </LinearGradient>
       <Text style={styles.emptyTitle}>Aucun animal</Text>
       <Text style={styles.emptySub}>

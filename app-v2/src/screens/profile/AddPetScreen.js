@@ -11,7 +11,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { Feather } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import * as ImagePicker from 'expo-image-picker';
-import { PawIcon } from '../../components/Logo';
+import { PepeteIcon } from '../../components/PepeteLogo';
 import { addPetAPI, updatePetAPI } from '../../api/pets';
 import { showAlert } from '../../utils/alert';
 import { FONTS } from '../../utils/typography';
@@ -166,7 +166,7 @@ const AddPetScreen = ({ navigation, route }) => {
           {isEdit ? `Modifier ${editPet.name}` : 'Nouvel animal'}
         </Text>
         <View style={styles.headerIcon}>
-          <PawIcon size={22} color="rgba(255,255,255,0.6)" />
+          <PepeteIcon size={22} color="rgba(255,255,255,0.6)" />
         </View>
       </LinearGradient>
 
@@ -209,7 +209,7 @@ const AddPetScreen = ({ navigation, route }) => {
                   end={{ x: 1, y: 1 }}
                   style={styles.photoPlaceholder}
                 >
-                  <PawIcon size={36} color="rgba(255,255,255,0.5)" />
+                  <PepeteIcon size={36} color="rgba(255,255,255,0.5)" />
                   <View style={styles.photoCameraOverlay}>
                     <Feather name="camera" size={16} color="#FFF" />
                   </View>
@@ -426,7 +426,7 @@ const AddPetScreen = ({ navigation, route }) => {
                 <ActivityIndicator size="small" color="#FFF" />
               ) : (
                 <>
-                  <PawIcon size={18} color="#FFF" />
+                  <PepeteIcon size={18} color="#FFF" />
                   <Text style={styles.submitText}>
                     {isEdit ? 'Enregistrer les modifications' : `Ajouter ${name.trim() || 'mon animal'}`}
                   </Text>

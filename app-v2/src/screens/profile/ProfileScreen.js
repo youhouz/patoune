@@ -15,7 +15,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { Feather } from '@expo/vector-icons';
 import { useFocusEffect } from '@react-navigation/native';
 import { useAuth } from '../../context/AuthContext';
-import { PawIcon } from '../../components/Logo';
+import { PepeteIcon } from '../../components/PepeteLogo';
 import { getMyPetsAPI } from '../../api/pets';
 import { getScanHistoryAPI } from '../../api/products';
 import { getMyBookingsAPI } from '../../api/petsitters';
@@ -136,7 +136,7 @@ const ProfileScreen = ({ navigation }) => {
     { label: 'Gardes', value: bookingsCount, icon: 'calendar', color: '#C4956A' },
   ];
 
-  const menuSections = [
+  const ownerSections = [
     {
       title: 'Mes compagnons',
       items: [
@@ -158,6 +158,34 @@ const ProfileScreen = ({ navigation }) => {
         },
       ],
     },
+  ];
+
+  const sitterSections = [
+    {
+      title: 'Mon activite pet-sitter',
+      items: [
+        {
+          icon: 'edit-3',
+          label: 'Mon annonce',
+          subtitle: 'Creer ou modifier mon profil pet-sitter',
+          screen: 'PetSitterProfile',
+          accentColor: '#527A56',
+          bgColor: colors.primarySoft,
+        },
+        {
+          icon: 'inbox',
+          label: 'Mes reservations',
+          subtitle: 'Voir les demandes des proprietaires',
+          screen: 'PetSitterBookings',
+          accentColor: '#C4956A',
+          bgColor: colors.accentSoft,
+        },
+      ],
+    },
+  ];
+
+  const menuSections = [
+    ...(activeMode === 'petsitter' ? sitterSections : ownerSections),
     {
       title: 'Parametres',
       items: [
@@ -334,7 +362,7 @@ const ProfileScreen = ({ navigation }) => {
         {/* App footer */}
         <View style={styles.footer}>
           <View style={styles.footerBadge}>
-            <PawIcon size={16} color={colors.primary} />
+            <PepeteIcon size={16} color={colors.primary} />
             <Text style={styles.footerText}>pepete.</Text>
           </View>
           <Text style={styles.footerVersion}>v1.0.0 — Le meilleur pour vos animaux</Text>

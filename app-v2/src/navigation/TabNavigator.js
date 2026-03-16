@@ -11,6 +11,8 @@ import PetSittersListScreen from '../screens/petsitting/PetSittersListScreen';
 import PetSitterDetailScreen from '../screens/petsitting/PetSitterDetailScreen';
 import BookingScreen from '../screens/petsitting/BookingScreen';
 import MessagesScreen from '../screens/petsitting/MessagesScreen';
+import PetSitterProfileScreen from '../screens/petsitting/PetSitterProfileScreen';
+import PetSitterBookingsScreen from '../screens/petsitting/PetSitterBookingsScreen';
 import AIAssistantScreen from '../screens/ai/AIAssistantScreen';
 import GuestGateScreen from '../screens/auth/GuestGateScreen';
 import LoginScreen from '../screens/auth/LoginScreen';
@@ -61,6 +63,8 @@ const ProfileNavigator = () => {
       <ProfileStack.Screen name="MyPets" component={MyPetsScreen} options={{ title: 'Mes Animaux' }} />
       <ProfileStack.Screen name="AddPet" component={AddPetScreen} options={{ title: 'Nouvel Animal' }} />
       <ProfileStack.Screen name="Settings" component={SettingsScreen} options={{ title: 'Réglages' }} />
+      <ProfileStack.Screen name="PetSitterProfile" component={PetSitterProfileScreen} options={{ headerShown: false }} />
+      <ProfileStack.Screen name="PetSitterBookings" component={PetSitterBookingsScreen} options={{ headerShown: false }} />
     </ProfileStack.Navigator>
   );
 };
