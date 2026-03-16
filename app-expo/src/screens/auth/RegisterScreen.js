@@ -107,18 +107,24 @@ const RegisterScreen = ({ navigation }) => {
   const handleRegister = async () => {
     if (!validate()) { shake(); return; }
     setLoading(true);
-    const result = await register(name.trim(), email.trim().toLowerCase(), password, phone.trim(), getFinalRole());
-    setLoading(false);
-    if (result.success) {
-      const parent = navigation.getParent()?.getParent();
-      if (parent) {
-        parent.reset({ index: 0, routes: [{ name: 'Tabs' }] });
+    try {
+      const result = await register({ name: name.trim(), email: email.trim().toLowerCase(), password, phone: phone.trim(), role: getFinalRole() });
+      setLoading(false);
+      if (result.success) {
+        const parent = navigation.getParent()?.getParent();
+        if (parent) {
+          parent.reset({ index: 0, routes: [{ name: 'Tabs' }] });
+        } else {
+          navigation.getParent()?.reset({ index: 0, routes: [{ name: 'Tabs' }] });
+        }
       } else {
-        navigation.getParent()?.reset({ index: 0, routes: [{ name: 'Tabs' }] });
+        shake();
+        setErrors({ global: result.error || "Impossible de créer le compte." });
       }
-    } else {
+    } catch (e) {
+      setLoading(false);
       shake();
-      setErrors({ global: result.error || "Impossible de créer le compte." });
+      setErrors({ global: `Erreur inattendue: ${e.message || e}` });
     }
   };
 

@@ -42,6 +42,10 @@ const petSchema = new mongoose.Schema({
     type: Boolean,
     default: false
   },
+  sterilized: {
+    type: Boolean,
+    default: false
+  },
   photos: [{
     type: String
   }],

@@ -17,7 +17,13 @@ const corsOptions = allowedOrigins.includes('*') ? {} : { origin: allowedOrigins
 app.set('trust proxy', true);
 app.use(helmet());
 app.use(cors(corsOptions));
-app.use(express.json({ limit: '1mb' }));
+// Smart body parser: skip re-parsing if Vercel already parsed the body
+app.use((req, res, next) => {
+  if (req.body && typeof req.body === 'object' && Object.keys(req.body).length > 0) {
+    return next(); // Vercel already parsed it
+  }
+  express.json({ limit: '10mb' })(req, res, next); // Local dev fallback
+});
 
 app.use(async (req, res, next) => {
   try {

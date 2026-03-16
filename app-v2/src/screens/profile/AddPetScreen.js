@@ -47,6 +47,7 @@ const AddPetScreen = ({ navigation, route }) => {
   const [weight, setWeight] = useState(editPet?.weight != null ? String(editPet.weight) : '');
   const [gender, setGender] = useState(editPet?.gender ?? '');
   const [vaccinated, setVaccinated] = useState(editPet?.vaccinated ?? false);
+  const [sterilized, setSterilized] = useState(editPet?.sterilized ?? false);
   const [specialNeeds, setSpecialNeeds] = useState(editPet?.specialNeeds ?? '');
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState({});
@@ -121,6 +122,7 @@ const AddPetScreen = ({ navigation, route }) => {
         weight: weight ? parseFloat(weight) : undefined,
         gender,
         vaccinated,
+        sterilized,
         specialNeeds: specialNeeds.trim() || undefined,
         photos: photoUri ? [photoUri] : (editPet?.photos ?? []),
       };
@@ -131,7 +133,8 @@ const AddPetScreen = ({ navigation, route }) => {
       }
       navigation.goBack();
     } catch (err) {
-      const msg = err?.response?.data?.message || 'Une erreur est survenue. Reessayez.';
+      console.log('Erreur ajout animal:', err?.response?.status, JSON.stringify(err?.response?.data));
+      const msg = err?.response?.data?.error || err?.response?.data?.message || err?.userMessage || 'Une erreur est survenue. Reessayez.';
       showAlert('Erreur', msg);
     } finally {
       setLoading(false);
@@ -357,7 +360,7 @@ const AddPetScreen = ({ navigation, route }) => {
             </View>
 
             {/* Vaccine */}
-            <View style={[styles.switchRow, { marginBottom: 0 }]}>
+            <View style={styles.switchRow}>
               <View style={styles.switchIconWrap}>
                 <Feather name="shield" size={18} color={vaccinated ? colors.success : colors.textTertiary} />
               </View>
@@ -368,6 +371,23 @@ const AddPetScreen = ({ navigation, route }) => {
               <Switch
                 value={vaccinated}
                 onValueChange={setVaccinated}
+                trackColor={{ false: colors.border, true: colors.success }}
+                thumbColor={colors.white}
+              />
+            </View>
+
+            {/* Sterilise / Castre */}
+            <View style={[styles.switchRow, { marginBottom: 0 }]}>
+              <View style={styles.switchIconWrap}>
+                <Feather name="scissors" size={18} color={sterilized ? colors.success : colors.textTertiary} />
+              </View>
+              <View style={styles.switchInfo}>
+                <Text style={styles.switchLabel}>Sterilise / Castre</Text>
+                <Text style={styles.switchSub}>Animal sterilise ou castre</Text>
+              </View>
+              <Switch
+                value={sterilized}
+                onValueChange={setSterilized}
                 trackColor={{ false: colors.border, true: colors.success }}
                 thumbColor={colors.white}
               />

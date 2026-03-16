@@ -25,7 +25,8 @@ import colors, { SHADOWS, RADIUS, SPACING, FONT_SIZE } from '../../utils/colors'
 const HEADER_PADDING_TOP = Platform.OS === 'ios' ? 60 : (StatusBar.currentHeight || 24) + 20;
 
 const ProfileScreen = ({ navigation }) => {
-  const { user, logout } = useAuth();
+  const { user, logout, activeMode, switchMode } = useAuth();
+  const canSwitch = user?.role === 'both' || user?.role === 'guardian';
 
   // Animations
   const fadeAnim = useRef(new Animated.Value(0)).current;
@@ -233,6 +234,27 @@ const ProfileScreen = ({ navigation }) => {
                 <Text style={styles.phoneText}>{user.phone}</Text>
               </View>
             ) : null}
+            {/* Mode Switcher */}
+            {canSwitch && (
+              <View style={styles.modeSwitcher}>
+                <TouchableOpacity
+                  style={[styles.modeBtn, activeMode === 'owner' && styles.modeBtnActive]}
+                  onPress={() => switchMode('owner')}
+                  activeOpacity={0.7}
+                >
+                  <Feather name="heart" size={14} color={activeMode === 'owner' ? '#527A56' : 'rgba(255,255,255,0.7)'} />
+                  <Text style={[styles.modeBtnText, activeMode === 'owner' && styles.modeBtnTextActive]}>Proprietaire</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[styles.modeBtn, activeMode === 'petsitter' && styles.modeBtnActive]}
+                  onPress={() => switchMode('petsitter')}
+                  activeOpacity={0.7}
+                >
+                  <Feather name="shield" size={14} color={activeMode === 'petsitter' ? '#527A56' : 'rgba(255,255,255,0.7)'} />
+                  <Text style={[styles.modeBtnText, activeMode === 'petsitter' && styles.modeBtnTextActive]}>Pet-sitter</Text>
+                </TouchableOpacity>
+              </View>
+            )}
           </Animated.View>
 
           {/* Stats Row */}
@@ -449,6 +471,36 @@ const styles = StyleSheet.create({
     fontSize: FONT_SIZE.sm,
     color: 'rgba(255, 255, 255, 0.9)',
     fontWeight: '500',
+  },
+
+  // Mode Switcher
+  modeSwitcher: {
+    flexDirection: 'row',
+    backgroundColor: 'rgba(255,255,255,0.15)',
+    borderRadius: RADIUS.full,
+    padding: 3,
+    marginTop: SPACING.base,
+    gap: 2,
+  },
+  modeBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: SPACING.base,
+    paddingVertical: SPACING.sm,
+    borderRadius: RADIUS.full,
+    gap: 6,
+  },
+  modeBtnActive: {
+    backgroundColor: 'rgba(255,255,255,0.95)',
+  },
+  modeBtnText: {
+    fontSize: FONT_SIZE.sm,
+    fontWeight: '600',
+    color: 'rgba(255,255,255,0.7)',
+  },
+  modeBtnTextActive: {
+    color: '#527A56',
+    fontWeight: '700',
   },
 
   // Stats
