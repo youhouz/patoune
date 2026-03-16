@@ -133,7 +133,8 @@ const AddPetScreen = ({ navigation, route }) => {
       }
       navigation.goBack();
     } catch (err) {
-      const msg = err?.response?.data?.message || 'Une erreur est survenue. Reessayez.';
+      console.log('Erreur ajout animal:', err?.response?.status, JSON.stringify(err?.response?.data));
+      const msg = err?.response?.data?.error || err?.response?.data?.message || err?.userMessage || 'Une erreur est survenue. Reessayez.';
       showAlert('Erreur', msg);
     } finally {
       setLoading(false);

@@ -22,7 +22,7 @@ app.use((req, res, next) => {
   if (req.body && typeof req.body === 'object' && Object.keys(req.body).length > 0) {
     return next(); // Vercel already parsed it
   }
-  express.json({ limit: '1mb' })(req, res, next); // Local dev fallback
+  express.json({ limit: '10mb' })(req, res, next); // Local dev fallback
 });
 
 app.use(async (req, res, next) => {
