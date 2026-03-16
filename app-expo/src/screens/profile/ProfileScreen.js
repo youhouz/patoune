@@ -9,19 +9,22 @@ import {
   StatusBar,
   Animated,
   ActivityIndicator,
-  Alert,
   RefreshControl,
+  Image,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Feather } from '@expo/vector-icons';
 import { useFocusEffect } from '@react-navigation/native';
+import * as ImagePicker from 'expo-image-picker';
 import { useAuth } from '../../context/AuthContext';
 import { PepeteIcon } from '../../components/PepeteLogo';
 import { getMyPetsAPI } from '../../api/pets';
 import { getScanHistoryAPI } from '../../api/products';
 import { getMyBookingsAPI } from '../../api/petsitters';
-const colors = require('../../utils/colors');
-const { SHADOWS, RADIUS, SPACING, FONT_SIZE } = require('../../utils/colors');
+import { uploadAvatarAPI } from '../../api/auth';
+import { API_URL } from '../../api/client';
+import { showAlert } from '../../utils/alert';
+import colors, { SHADOWS, RADIUS, SPACING, FONT_SIZE } from '../../utils/colors';
 
 const HEADER_PADDING_TOP = Platform.OS === 'ios' ? 60 : (StatusBar.currentHeight || 24) + 20;
 
@@ -40,6 +43,7 @@ const ProfileScreen = ({ navigation }) => {
   const [bookingsCount, setBookingsCount] = useState(0);
   const [statsLoading, setStatsLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [uploadingAvatar, setUploadingAvatar] = useState(false);
 
   useEffect(() => {
     Animated.parallel([
@@ -112,24 +116,56 @@ const ProfileScreen = ({ navigation }) => {
     return parts[0].substring(0, 2).toUpperCase();
   };
 
+  const handlePickAvatar = useCallback(async () => {
+    try {
+      const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      if (status !== 'granted') {
+        showAlert('Permission requise', 'Autorisez l\'acces a vos photos pour changer votre avatar.');
+        return;
+      }
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ['images'],
+        allowsEditing: true,
+        aspect: [1, 1],
+        quality: 0.7,
+      });
+      if (result.canceled) return;
+      const uri = result.assets[0].uri;
+      setUploadingAvatar(true);
+      const res = await uploadAvatarAPI(uri);
+      const updatedUser = res.data?.user;
+      if (updatedUser) {
+        await updateUser(updatedUser);
+      }
+    } catch (err) {
+      console.log('Erreur upload avatar:', err);
+      showAlert('Erreur', 'Impossible de mettre a jour la photo de profil.');
+    } finally {
+      setUploadingAvatar(false);
+    }
+  }, [updateUser]);
+
+  const avatarUrl = user?.avatar
+    ? (user.avatar.startsWith('http') ? user.avatar : `${API_URL.replace('/api', '')}${user.avatar}`)
+    : null;
+
   const doLogout = async () => {
-    await logout();
+    try {
+      await logout();
+    } catch (err) {
+      console.log('Erreur logout:', err);
+    }
   };
 
   const handleLogout = () => {
-    if (Platform.OS === 'web') {
-      // Alert.alert ne fonctionne pas sur web
-      doLogout();
-    } else {
-      Alert.alert(
-        'Déconnexion',
-        'Voulez-vous vraiment vous déconnecter ?',
-        [
-          { text: 'Annuler', style: 'cancel' },
-          { text: 'Se déconnecter', style: 'destructive', onPress: doLogout },
-        ]
-      );
-    }
+    showAlert(
+      'Deconnexion',
+      'Voulez-vous vraiment vous deconnecter ?',
+      [
+        { text: 'Annuler', style: 'cancel' },
+        { text: 'Se deconnecter', style: 'destructive', onPress: doLogout },
+      ]
+    );
   };
 
   const stats = [
@@ -145,7 +181,7 @@ const ProfileScreen = ({ navigation }) => {
         {
           icon: 'heart',
           label: 'Mes animaux',
-          subtitle: `${petsCount} compagnon${petsCount !== 1 ? 's' : ''} enregistré${petsCount !== 1 ? 's' : ''}`,
+          subtitle: `${petsCount} compagnon${petsCount !== 1 ? 's' : ''} enregistre${petsCount !== 1 ? 's' : ''}`,
           screen: 'MyPets',
           accentColor: '#6B8F71',
           bgColor: colors.primarySoft,
@@ -164,20 +200,20 @@ const ProfileScreen = ({ navigation }) => {
 
   const sitterSections = [
     {
-      title: 'Mon activité pet-sitter',
+      title: 'Mon activite pet-sitter',
       items: [
         {
           icon: 'edit-3',
           label: 'Mon annonce',
-          subtitle: 'Créer ou modifier mon profil pet-sitter',
+          subtitle: 'Creer ou modifier mon profil pet-sitter',
           screen: 'PetSitterProfile',
           accentColor: '#527A56',
           bgColor: colors.primarySoft,
         },
         {
           icon: 'inbox',
-          label: 'Mes réservations',
-          subtitle: 'Voir les demandes des propriétaires',
+          label: 'Mes reservations',
+          subtitle: 'Voir les demandes des proprietaires',
           screen: 'PetSitterBookings',
           accentColor: '#C4956A',
           bgColor: colors.accentSoft,
@@ -189,12 +225,12 @@ const ProfileScreen = ({ navigation }) => {
   const menuSections = [
     ...(activeMode === 'petsitter' ? sitterSections : ownerSections),
     {
-      title: 'Paramètres',
+      title: 'Parametres',
       items: [
         {
           icon: 'settings',
-          label: 'Réglages',
-          subtitle: 'Compte, préférences, à propos',
+          label: 'Reglages',
+          subtitle: 'Compte, preferences, a propos',
           screen: 'Settings',
           accentColor: '#C4956A',
           bgColor: colors.accentSoft,
@@ -239,13 +275,22 @@ const ProfileScreen = ({ navigation }) => {
             ]}
           >
             {/* Double-ring Avatar */}
-            <View style={styles.avatarContainer}>
+            <TouchableOpacity style={styles.avatarContainer} onPress={handlePickAvatar} activeOpacity={0.8} disabled={uploadingAvatar}>
               <View style={styles.avatarOuterRing}>
                 <View style={styles.avatarInnerRing}>
                   <View style={styles.avatar}>
-                    <Text style={styles.avatarInitials}>{getInitials()}</Text>
+                    {uploadingAvatar ? (
+                      <ActivityIndicator size="small" color="#6B8F71" />
+                    ) : avatarUrl ? (
+                      <Image source={{ uri: avatarUrl }} style={styles.avatarImage} />
+                    ) : (
+                      <Text style={styles.avatarInitials}>{getInitials()}</Text>
+                    )}
                   </View>
                 </View>
+              </View>
+              <View style={styles.avatarEditBadge}>
+                <Feather name="camera" size={12} color="#FFF" />
               </View>
               {user?.isPetSitter && (
                 <View style={styles.sitterBadge}>
@@ -253,7 +298,7 @@ const ProfileScreen = ({ navigation }) => {
                   <Text style={styles.sitterBadgeText}>Pet-sitter</Text>
                 </View>
               )}
-            </View>
+            </TouchableOpacity>
 
             {/* User Info */}
             <Text style={styles.userName}>{user?.name || 'Utilisateur'}</Text>
@@ -273,7 +318,7 @@ const ProfileScreen = ({ navigation }) => {
                   activeOpacity={0.7}
                 >
                   <Feather name="heart" size={14} color={activeMode === 'owner' ? '#527A56' : 'rgba(255,255,255,0.7)'} />
-                  <Text style={[styles.modeBtnText, activeMode === 'owner' && styles.modeBtnTextActive]}>Propriétaire</Text>
+                  <Text style={[styles.modeBtnText, activeMode === 'owner' && styles.modeBtnTextActive]}>Proprietaire</Text>
                 </TouchableOpacity>
                 <TouchableOpacity
                   style={[styles.modeBtn, activeMode === 'petsitter' && styles.modeBtnActive]}
@@ -357,7 +402,7 @@ const ProfileScreen = ({ navigation }) => {
             activeOpacity={0.6}
           >
             <Feather name="log-out" size={18} color={colors.error} style={{ marginRight: SPACING.sm }} />
-            <Text style={styles.logoutText}>Se déconnecter</Text>
+            <Text style={styles.logoutText}>Se deconnecter</Text>
           </TouchableOpacity>
         </Animated.View>
 
@@ -365,7 +410,7 @@ const ProfileScreen = ({ navigation }) => {
         <View style={styles.footer}>
           <View style={styles.footerBadge}>
             <PepeteIcon size={16} color={colors.primary} />
-            <Text style={styles.footerText}>pépète.</Text>
+            <Text style={styles.footerText}>pepete.</Text>
           </View>
           <Text style={styles.footerVersion}>v1.0.0 — Le meilleur pour vos animaux</Text>
         </View>
@@ -449,11 +494,30 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
+  avatarImage: {
+    width: 84,
+    height: 84,
+    borderRadius: 42,
+  },
   avatarInitials: {
     fontSize: FONT_SIZE['3xl'],
     fontWeight: '800',
     color: '#6B8F71',
     letterSpacing: 1,
+  },
+  avatarEditBadge: {
+    position: 'absolute',
+    right: 0,
+    bottom: 4,
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: '#527A56',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 2,
+    borderColor: '#FFF',
+    ...SHADOWS.sm,
   },
   sitterBadge: {
     position: 'absolute',

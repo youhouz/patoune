@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import {
   View,
   Text,
@@ -6,23 +6,25 @@ import {
   ScrollView,
   TouchableOpacity,
   StyleSheet,
-  Alert,
   Switch,
   Platform,
   StatusBar,
   KeyboardAvoidingView,
   ActivityIndicator,
   Animated,
+  Image,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Feather } from '@expo/vector-icons';
+import * as ImagePicker from 'expo-image-picker';
 import { useAuth } from '../../context/AuthContext';
 import { PepeteIcon } from '../../components/PepeteLogo';
-import api from '../../api/client';
+import api, { API_URL } from '../../api/client';
+import { uploadAvatarAPI } from '../../api/auth';
 import { geocodeCity } from '../../hooks/useLocation';
 import { updatePetSitterAPI } from '../../api/petsitters';
-const colors = require('../../utils/colors');
-const { SHADOWS, RADIUS, SPACING, FONT_SIZE } = require('../../utils/colors');
+import { showAlert } from '../../utils/alert';
+import colors, { SHADOWS, RADIUS, SPACING, FONT_SIZE } from '../../utils/colors';
 
 const HEADER_PADDING_TOP = Platform.OS === 'ios' ? 56 : (StatusBar.currentHeight || 24) + 12;
 const APP_VERSION = '1.0.0';
@@ -39,6 +41,8 @@ const SettingsScreen = ({ navigation }) => {
   const [cityInput, setCityInput] = useState(user?.address?.city || '');
   const [cityCoords, setCityCoords] = useState(null);
   const [cityLoading, setCityLoading] = useState(false);
+
+  const [uploadingAvatar, setUploadingAvatar] = useState(false);
 
   // Notification preferences (local state)
   const [notifPush, setNotifPush] = useState(true);
@@ -64,14 +68,14 @@ const SettingsScreen = ({ navigation }) => {
         useNativeDriver: true,
       }),
     ]).start();
-  }, []);
+  }, [fadeAnim, slideAnim]);
 
   const hasChanges =
     name.trim() !== (user?.name || '') ||
     phone.trim() !== (user?.phone || '') ||
     cityCoords !== null;
 
-  const handleGeocodeCityInput = async () => {
+  const handleGeocodeCityInput = useCallback(async () => {
     if (!cityInput.trim()) return;
     setCityLoading(true);
     try {
@@ -79,16 +83,16 @@ const SettingsScreen = ({ navigation }) => {
       if (result) {
         setCityCoords(result);
       } else {
-        Alert.alert('Ville introuvable', 'Impossible de localiser cette ville. Essayez le format "Paris", "Lyon 69"...');
+        showAlert('Ville introuvable', 'Impossible de localiser cette ville. Essayez le format "Paris", "Lyon 69"...');
       }
     } catch (_) {
-      Alert.alert('Erreur', 'Impossible de géocoder cette ville.');
+      showAlert('Erreur', 'Impossible de géocoder cette ville.');
     } finally {
       setCityLoading(false);
     }
-  };
+  }, [cityInput]);
 
-  const handleLocateMe = async () => {
+  const handleLocateMe = useCallback(async () => {
     setCityLoading(true);
     try {
       if (Platform.OS === 'web' && typeof navigator !== 'undefined' && navigator.geolocation) {
@@ -105,13 +109,15 @@ const SettingsScreen = ({ navigation }) => {
                 const data = await res.json();
                 cityName = data.city || data.locality || data.principalSubdivision || 'Ma position';
               }
-            } catch (_) {}
+            } catch (_) {
+              // Reverse geocode failed — use fallback name
+            }
             setCityInput(cityName);
             setCityCoords({ latitude, longitude, displayName: cityName });
             setCityLoading(false);
           },
           () => {
-            Alert.alert('GPS indisponible', 'Saisissez votre ville manuellement.');
+            showAlert('GPS indisponible', 'Saisissez votre ville manuellement.');
             setCityLoading(false);
           },
           { timeout: 10000 }
@@ -130,14 +136,48 @@ const SettingsScreen = ({ navigation }) => {
         setCityLoading(false);
       }
     } catch (_) {
-      Alert.alert('Erreur', 'Impossible de récupérer votre position.');
+      showAlert('Erreur', 'Impossible de récupérer votre position.');
       setCityLoading(false);
     }
-  };
+  }, []);
 
-  const handleSave = async () => {
+  const handlePickAvatar = useCallback(async () => {
+    try {
+      const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      if (status !== 'granted') {
+        showAlert('Permission requise', 'Autorisez l\'acces a vos photos pour changer votre avatar.');
+        return;
+      }
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ['images'],
+        allowsEditing: true,
+        aspect: [1, 1],
+        quality: 0.7,
+      });
+      if (result.canceled) return;
+      const uri = result.assets[0].uri;
+      setUploadingAvatar(true);
+      const res = await uploadAvatarAPI(uri);
+      const updatedUser = res.data?.user;
+      if (updatedUser) {
+        await updateUser(updatedUser);
+      }
+      showAlert('Photo mise a jour', 'Votre photo de profil a ete changee.');
+    } catch (err) {
+      console.log('Erreur upload avatar:', err);
+      showAlert('Erreur', 'Impossible de mettre a jour la photo.');
+    } finally {
+      setUploadingAvatar(false);
+    }
+  }, [updateUser]);
+
+  const avatarUrl = user?.avatar
+    ? (user.avatar.startsWith('http') ? user.avatar : `${API_URL.replace('/api', '')}${user.avatar}`)
+    : null;
+
+  const handleSave = useCallback(async () => {
     if (!name.trim()) {
-      Alert.alert('Champ requis', 'Le nom ne peut pas être vide');
+      showAlert('Champ requis', 'Le nom ne peut pas être vide');
       return;
     }
 
@@ -171,27 +211,29 @@ const SettingsScreen = ({ navigation }) => {
               coordinates: [cityCoords.longitude, cityCoords.latitude],
             },
           });
-        } catch (_) {}
+        } catch (_) {
+          // PetSitter profile update failed silently
+        }
       }
 
       setCityCoords(null);
-      Alert.alert('Succès', 'Votre profil a été mis à jour');
-    } catch (error) {
-      Alert.alert('Erreur', 'Impossible de mettre à jour le profil. Réessayez.');
+      showAlert('Succès', 'Votre profil a été mis à jour');
+    } catch (_) {
+      showAlert('Erreur', 'Impossible de mettre à jour le profil. Réessayez.');
     } finally {
       setSaving(false);
     }
-  };
+  }, [name, phone, cityCoords, cityInput, updateUser, user?.isPetSitter]);
 
-  const doLogout = async () => {
+  const doLogout = useCallback(async () => {
     await logout();
-  };
+  }, [logout]);
 
-  const handleLogout = () => {
+  const handleLogout = useCallback(() => {
     if (Platform.OS === 'web') {
       doLogout();
     } else {
-      Alert.alert(
+      showAlert(
         'Déconnexion',
         'Êtes-vous sûr de vouloir vous déconnecter ?',
         [
@@ -200,15 +242,15 @@ const SettingsScreen = ({ navigation }) => {
         ]
       );
     }
-  };
+  }, [doLogout]);
 
   // Build user initials
-  const getInitials = () => {
+  const getInitials = useCallback(() => {
     const n = user?.name || '';
     const parts = n.trim().split(/\s+/);
     if (parts.length >= 2) return (parts[0][0] + parts[1][0]).toUpperCase();
     return n.substring(0, 2).toUpperCase() || '?';
-  };
+  }, [user?.name]);
 
   // Grouped setting row renderer
   const renderSettingRow = ({
@@ -306,18 +348,31 @@ const SettingsScreen = ({ navigation }) => {
               <View style={styles.sectionCard}>
                 {/* Mini profile header */}
                 <View style={styles.accountHeader}>
-                  <View style={styles.accountAvatar}>
-                    <LinearGradient
-                      colors={['#527A56', '#6B8F71']}
-                      start={{ x: 0, y: 0 }}
-                      end={{ x: 1, y: 1 }}
-                      style={styles.accountAvatarGradient}
-                    >
-                      <Text style={styles.accountAvatarText}>
-                        {getInitials()}
-                      </Text>
-                    </LinearGradient>
-                  </View>
+                  <TouchableOpacity style={styles.accountAvatarWrap} onPress={handlePickAvatar} activeOpacity={0.8} disabled={uploadingAvatar}>
+                    <View style={styles.accountAvatar}>
+                      {uploadingAvatar ? (
+                        <View style={styles.accountAvatarGradient}>
+                          <ActivityIndicator size="small" color="#FFF" />
+                        </View>
+                      ) : avatarUrl ? (
+                        <Image source={{ uri: avatarUrl }} style={styles.accountAvatarImage} />
+                      ) : (
+                        <LinearGradient
+                          colors={['#527A56', '#6B8F71']}
+                          start={{ x: 0, y: 0 }}
+                          end={{ x: 1, y: 1 }}
+                          style={styles.accountAvatarGradient}
+                        >
+                          <Text style={styles.accountAvatarText}>
+                            {getInitials()}
+                          </Text>
+                        </LinearGradient>
+                      )}
+                    </View>
+                    <View style={styles.accountAvatarEditIcon}>
+                      <Feather name="camera" size={10} color="#FFF" />
+                    </View>
+                  </TouchableOpacity>
                   <View style={styles.accountInfo}>
                     <Text style={styles.accountName}>
                       {user?.name || 'Utilisateur'}
@@ -448,7 +503,7 @@ const SettingsScreen = ({ navigation }) => {
                 {cityCoords && (
                   <View style={styles.cityValidated}>
                     <Feather name="check-circle" size={14} color="#527A56" />
-                    <Text style={styles.cityValidatedText}>{cityInput} — localisé ✓</Text>
+                    <Text style={styles.cityValidatedText}>{cityInput} — localisé</Text>
                   </View>
                 )}
                 <TouchableOpacity
@@ -543,7 +598,7 @@ const SettingsScreen = ({ navigation }) => {
                 {renderInfoRow({
                   icon: 'monitor',
                   label: 'Plateforme',
-                  value: `${Platform.OS === 'ios' ? 'iOS' : 'Android'} ${Platform.Version}`,
+                  value: `${Platform.OS === 'ios' ? 'iOS' : Platform.OS === 'android' ? 'Android' : 'Web'} ${Platform.Version || ''}`.trim(),
                   isLast: true,
                 })}
               </View>
@@ -663,9 +718,17 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: SPACING.base,
   },
+  accountAvatarWrap: {
+    position: 'relative',
+  },
   accountAvatar: {
     borderRadius: 22,
     overflow: 'hidden',
+  },
+  accountAvatarImage: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
   },
   accountAvatarGradient: {
     width: 44,
@@ -679,6 +742,19 @@ const styles = StyleSheet.create({
     fontWeight: '800',
     color: colors.white,
     letterSpacing: 0.5,
+  },
+  accountAvatarEditIcon: {
+    position: 'absolute',
+    right: -2,
+    bottom: -2,
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    backgroundColor: '#527A56',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 2,
+    borderColor: colors.white,
   },
   accountInfo: {
     flex: 1,
