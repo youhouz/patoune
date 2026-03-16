@@ -157,6 +157,12 @@ const MyPetsScreen = ({ navigation }) => {
                   {item.vaccinated ? 'Vacciné' : 'Non vacciné'}
                 </Text>
               </View>
+              {item.sterilized && (
+                <View style={[styles.chip, styles.chipGreen]}>
+                  <Feather name="scissors" size={11} color={colors.success} />
+                  <Text style={[styles.chipText, { color: colors.success }]}>Stérilisé</Text>
+                </View>
+              )}
             </View>
             {item.specialNeeds ? (
               <View style={styles.needsRow}>

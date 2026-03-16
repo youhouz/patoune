@@ -127,7 +127,15 @@ const ThreeTabs = () => (
   >
     <Tab.Screen name="Accueil" component={HomeScreen} />
     <Tab.Screen name="Scanner" component={ScannerNavigator} />
-    <Tab.Screen name="Profil"  component={ProfileNavigator} />
+    <Tab.Screen
+      name="Profil"
+      component={ProfileNavigator}
+      listeners={({ navigation }) => ({
+        tabPress: () => {
+          navigation.navigate('Profil', { screen: 'ProfileMain' });
+        },
+      })}
+    />
   </Tab.Navigator>
 );
 
