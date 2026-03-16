@@ -128,11 +128,16 @@ const ProfileScreen = ({ navigation }) => {
         allowsEditing: true,
         aspect: [1, 1],
         quality: 0.7,
+        base64: true,
       });
       if (result.canceled) return;
-      const uri = result.assets[0].uri;
+      const base64 = result.assets[0].base64;
+      if (!base64) {
+        showAlert('Erreur', 'Impossible de lire l\'image selectionnee.');
+        return;
+      }
       setUploadingAvatar(true);
-      const res = await uploadAvatarAPI(uri);
+      const res = await uploadAvatarAPI(base64);
       const updatedUser = res.data?.user;
       if (updatedUser) {
         await updateUser(updatedUser);
@@ -146,7 +151,7 @@ const ProfileScreen = ({ navigation }) => {
   }, [updateUser]);
 
   const avatarUrl = user?.avatar
-    ? (user.avatar.startsWith('http') ? user.avatar : `${API_URL.replace('/api', '')}${user.avatar}`)
+    ? (user.avatar.startsWith('data:') || user.avatar.startsWith('http') ? user.avatar : `${API_URL.replace('/api', '')}${user.avatar}`)
     : null;
 
   const doLogout = async () => {

@@ -54,13 +54,8 @@ export const loginAPI = async (email, password) => {
 export const getMeAPI = () =>
   api.get('/auth/me');
 
-export const uploadAvatarAPI = async (imageUri) => {
-  const formData = new FormData();
-  const filename = imageUri.split('/').pop() || 'avatar.jpg';
-  const match = /\.(\w+)$/.exec(filename);
-  const type = match ? `image/${match[1]}` : 'image/jpeg';
-  formData.append('avatar', { uri: imageUri, name: filename, type });
-  return api.put('/users/me/avatar', formData, {
-    headers: { 'Content-Type': 'multipart/form-data' },
-  });
+export const uploadAvatarAPI = async (base64Data) => {
+  // base64Data should be the raw base64 string from image picker
+  const avatar = base64Data.startsWith('data:') ? base64Data : `data:image/jpeg;base64,${base64Data}`;
+  return api.put('/users/me/avatar', { avatar });
 };
