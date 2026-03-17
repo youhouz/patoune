@@ -65,6 +65,7 @@ app.use('/api/bookings', require('./src/routes/bookings'));
 app.use('/api/reviews', require('./src/routes/reviews'));
 app.use('/api/messages', require('./src/routes/messages'));
 app.use('/api/ai', require('./src/routes/ai'));
+app.use('/api/search', require('./src/routes/search'));
 
 // Route de test
 app.get('/', (req, res) => {
