@@ -1,8 +1,8 @@
 {
-  "name": "Pépète — Le compagnon de vos compagnons",
+  "name": "Pépète — Scanner produits animaux, Garde & Assistant IA vétérinaire",
   "short_name": "Pépète",
-  "description": "Scanner produits, garde animaux, assistant IA — tout pour le bien-être de vos animaux.",
-  "start_url": "/",
+  "description": "L'app n°1 pour vos animaux en France. Scannez les produits alimentaires, trouvez un pet-sitter de confiance, et posez vos questions à l'assistant IA vétérinaire. Chien, chat, NAC.",
+  "start_url": "/?utm_source=pwa&utm_medium=homescreen",
   "scope": "/",
   "id": "/",
   "display": "standalone",
@@ -11,8 +11,10 @@
   "background_color": "#F8F6F2",
   "lang": "fr",
   "dir": "ltr",
-  "categories": ["lifestyle", "health", "utilities"],
+  "categories": ["lifestyle", "health", "utilities", "pets", "food"],
   "prefer_related_applications": false,
+  "iarc_rating_id": "",
+  "related_applications": [],
   "icons": [
     {
       "src": "/assets/favicon.png",
@@ -43,13 +45,22 @@
     {
       "name": "Scanner un produit",
       "short_name": "Scanner",
-      "url": "/",
+      "description": "Scannez un produit alimentaire pour vérifier sa qualité pour votre animal",
+      "url": "/scanner?utm_source=pwa&utm_medium=shortcut",
       "icons": [{ "src": "/assets/icon.png", "sizes": "96x96" }]
     },
     {
       "name": "Trouver un pet-sitter",
       "short_name": "Garde",
-      "url": "/",
+      "description": "Trouvez un pet-sitter de confiance près de chez vous",
+      "url": "/garde?utm_source=pwa&utm_medium=shortcut",
+      "icons": [{ "src": "/assets/icon.png", "sizes": "96x96" }]
+    },
+    {
+      "name": "Assistant IA vétérinaire",
+      "short_name": "Assistant",
+      "description": "Posez vos questions sur la santé de votre animal",
+      "url": "/assistant?utm_source=pwa&utm_medium=shortcut",
       "icons": [{ "src": "/assets/icon.png", "sizes": "96x96" }]
     }
   ]

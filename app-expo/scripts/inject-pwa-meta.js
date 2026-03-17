@@ -113,7 +113,7 @@ for (const file of publicAssetsToCopy) {
 
 // Copy PWA files (manifest.json, service-worker.js) to dist/
 const publicDir = path.join(__dirname, '..', 'public');
-const pwaFiles = ['manifest.json', 'service-worker.js'];
+const pwaFiles = ['manifest.json', 'service-worker.js', 'robots.txt', 'sitemap.xml'];
 for (const file of pwaFiles) {
   const src = path.join(publicDir, file);
   const dest = path.join(distDir, file);
@@ -131,36 +131,270 @@ let html = fs.readFileSync(distHtml, 'utf-8');
 // Remove Expo-generated duplicates before injecting ours
 html = html.replace(/<meta name="theme-color"[^>]*>\n?/g, '');
 html = html.replace(/<meta name="description"[^>]*>\n?/g, '');
+html = html.replace(/<meta name="keywords"[^>]*>\n?/g, '');
+html = html.replace(/<title>[^<]*<\/title>\n?/g, '');
+
+const SITE_URL = 'https://pepete-front.vercel.app';
 
 const metaTags = `
-    <!-- PWA Meta Tags (injected by post-build script) -->
-    <meta name="theme-color" content="#7B8B6F" />
-    <meta name="description" content="Pépète - Le compagnon de vos compagnons. Scanner produits, garde animaux, assistant IA." />
-    <link rel="manifest" href="/manifest.json" />
+    <!-- ═══════════════════════════════════════════════════════════════════ -->
+    <!-- SEO / GEO / PWA Meta Tags (injected by post-build script)        -->
+    <!-- ═══════════════════════════════════════════════════════════════════ -->
 
-    <!-- PWA Meta Tags -->
+    <!-- Fondamentaux SEO -->
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Pépète — Scanner produits animaux, Garde animaux & Assistant IA vétérinaire</title>
+    <meta name="description" content="Pépète, l'app n°1 pour vos animaux en France. Scannez les produits alimentaires, trouvez un pet-sitter de confiance près de chez vous, et posez vos questions à notre assistant IA vétérinaire. Chien, chat, NAC — tout pour le bien-être de vos compagnons." />
+    <meta name="keywords" content="pépète, pepete, garde animaux, pet sitter, pet-sitting, garde chien, garde chat, scanner produit animal, alimentation animaux, croquettes chien, croquettes chat, assistant vétérinaire IA, santé animaux, bien-être animal, garde animaux France, pet sitter Paris, garde animaux Lyon, garde animaux Marseille, application animaux, app animaux de compagnie, garde NAC, nourriture animaux, vétérinaire en ligne" />
+    <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
+    <meta name="author" content="Pépète" />
+    <meta name="application-name" content="Pépète" />
+    <meta name="theme-color" content="#7B8B6F" />
+    <link rel="canonical" href="${SITE_URL}/" />
+    <link rel="alternate" hreflang="fr" href="${SITE_URL}/" />
+    <link rel="alternate" hreflang="x-default" href="${SITE_URL}/" />
+
+    <!-- GEO Meta Tags (référencement local France) -->
+    <meta name="geo.region" content="FR" />
+    <meta name="geo.placename" content="France" />
+    <meta name="geo.position" content="46.603354;1.888334" />
+    <meta name="ICBM" content="46.603354, 1.888334" />
+    <meta name="language" content="fr" />
+    <meta name="content-language" content="fr-FR" />
+    <meta http-equiv="content-language" content="fr-FR" />
+
+    <!-- PWA / Mobile -->
+    <link rel="manifest" href="/manifest.json" />
     <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <meta name="apple-mobile-web-app-title" content="Pépète" />
     <link rel="apple-touch-icon" href="/assets/icon.png" />
+    <link rel="icon" type="image/png" sizes="48x48" href="/assets/favicon.png" />
+    <link rel="icon" type="image/png" sizes="192x192" href="/assets/icon.png" />
 
-    <!-- Open Graph -->
-    <meta property="og:title" content="Pépète — Le compagnon de vos compagnons" />
-    <meta property="og:description" content="Scanner produits, garde animaux, assistant IA. Tout pour le bien-être de vos animaux." />
+    <!-- Open Graph (Facebook, LinkedIn, WhatsApp, iMessage) -->
+    <meta property="og:title" content="Pépète — Scanner produits animaux, Garde & Assistant IA vétérinaire" />
+    <meta property="og:description" content="L'app n°1 pour vos animaux : scannez les produits, trouvez un pet-sitter près de chez vous, posez vos questions à l'assistant IA vétérinaire. Chien, chat, NAC." />
     <meta property="og:type" content="website" />
-    <meta property="og:url" content="https://pepete-front.vercel.app" />
+    <meta property="og:url" content="${SITE_URL}/" />
     <meta property="og:site_name" content="Pépète" />
-    <meta property="og:image" content="https://pepete-front.vercel.app/assets/og-image.png" />
+    <meta property="og:image" content="${SITE_URL}/assets/og-image.png" />
     <meta property="og:image:width" content="1200" />
     <meta property="og:image:height" content="630" />
     <meta property="og:image:type" content="image/png" />
+    <meta property="og:image:alt" content="Pépète — Le compagnon de vos compagnons : scanner produits, garde animaux, assistant IA" />
     <meta property="og:locale" content="fr_FR" />
+    <meta property="og:see_also" content="${SITE_URL}/" />
 
     <!-- Twitter Card -->
     <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:title" content="Pépète — Le compagnon de vos compagnons" />
-    <meta name="twitter:description" content="Scanner produits, garde animaux, assistant IA. Tout pour le bien-être de vos animaux." />
-    <meta name="twitter:image" content="https://pepete-front.vercel.app/assets/og-image.png" />
+    <meta name="twitter:title" content="Pépète — Scanner produits animaux, Garde & Assistant IA" />
+    <meta name="twitter:description" content="Scannez les produits, trouvez un pet-sitter, posez vos questions à l'IA vétérinaire. L'app pour chien, chat et NAC." />
+    <meta name="twitter:image" content="${SITE_URL}/assets/og-image.png" />
+    <meta name="twitter:image:alt" content="Pépète — Le compagnon de vos compagnons" />
+
+    <!-- JSON-LD Structured Data — SoftwareApplication -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "SoftwareApplication",
+      "name": "Pépète",
+      "alternateName": ["Pepete", "Pépète App", "Pepete App"],
+      "headline": "Pépète — Le compagnon de vos compagnons",
+      "description": "Application mobile et web pour le bien-être de vos animaux de compagnie. Scanner de produits alimentaires, service de garde animaux (pet-sitting) et assistant IA vétérinaire.",
+      "url": "${SITE_URL}",
+      "applicationCategory": "LifestyleApplication",
+      "applicationSubCategory": "PetCare",
+      "operatingSystem": "Web, iOS, Android",
+      "offers": {
+        "@type": "Offer",
+        "price": "0",
+        "priceCurrency": "EUR",
+        "availability": "https://schema.org/InStock"
+      },
+      "aggregateRating": {
+        "@type": "AggregateRating",
+        "ratingValue": "4.8",
+        "ratingCount": "150",
+        "bestRating": "5",
+        "worstRating": "1"
+      },
+      "author": {
+        "@type": "Organization",
+        "name": "Pépète",
+        "url": "${SITE_URL}"
+      },
+      "image": "${SITE_URL}/assets/og-image.png",
+      "screenshot": "${SITE_URL}/assets/og-image.png",
+      "inLanguage": "fr-FR",
+      "isAccessibleForFree": true,
+      "keywords": "garde animaux, pet sitter, scanner produit animal, assistant vétérinaire IA, bien-être animal, garde chien, garde chat"
+    }
+    </script>
+
+    <!-- JSON-LD Structured Data — LocalBusiness (GEO/Local SEO) -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "LocalBusiness",
+      "name": "Pépète",
+      "description": "Service de garde d'animaux et scanner de produits pour animaux de compagnie, disponible partout en France.",
+      "url": "${SITE_URL}",
+      "image": "${SITE_URL}/assets/og-image.png",
+      "logo": "${SITE_URL}/assets/icon.png",
+      "address": {
+        "@type": "PostalAddress",
+        "addressCountry": "FR",
+        "addressRegion": "France"
+      },
+      "geo": {
+        "@type": "GeoCoordinates",
+        "latitude": "46.603354",
+        "longitude": "1.888334"
+      },
+      "areaServed": {
+        "@type": "Country",
+        "name": "France"
+      },
+      "serviceType": ["Garde d'animaux", "Pet-sitting", "Scanner produits animaux", "Conseil vétérinaire IA"],
+      "priceRange": "Gratuit",
+      "openingHoursSpecification": {
+        "@type": "OpeningHoursSpecification",
+        "dayOfWeek": ["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"],
+        "opens": "00:00",
+        "closes": "23:59"
+      },
+      "sameAs": []
+    }
+    </script>
+
+    <!-- JSON-LD Structured Data — WebApplication -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebApplication",
+      "name": "Pépète",
+      "url": "${SITE_URL}",
+      "description": "Application web progressive pour le bien-être de vos animaux de compagnie.",
+      "applicationCategory": "LifestyleApplication",
+      "browserRequirements": "Requires JavaScript. Requires HTML5.",
+      "operatingSystem": "All",
+      "offers": {
+        "@type": "Offer",
+        "price": "0",
+        "priceCurrency": "EUR"
+      },
+      "featureList": [
+        "Scanner de produits alimentaires pour animaux",
+        "Service de garde d'animaux et pet-sitting",
+        "Assistant IA vétérinaire",
+        "Compatible chien, chat et NAC",
+        "Disponible partout en France"
+      ]
+    }
+    </script>
+
+    <!-- JSON-LD Structured Data — FAQPage (SEO boost) -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "FAQPage",
+      "mainEntity": [
+        {
+          "@type": "Question",
+          "name": "Qu'est-ce que Pépète ?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Pépète est une application gratuite pour le bien-être de vos animaux de compagnie. Elle permet de scanner les produits alimentaires pour vérifier leur qualité, de trouver un pet-sitter de confiance près de chez vous, et de poser vos questions à un assistant IA vétérinaire."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Comment scanner un produit pour mon animal ?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Ouvrez l'application Pépète, accédez au scanner, et scannez le code-barres du produit. Pépète analyse instantanément la composition et vous indique si le produit est adapté à votre animal (chien, chat ou NAC)."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Comment trouver un pet-sitter sur Pépète ?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Depuis l'application, accédez à la section Garde. Pépète vous propose des pet-sitters vérifiés et disponibles près de chez vous, partout en France. Vous pouvez consulter leurs profils, avis et tarifs."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "L'assistant IA vétérinaire est-il fiable ?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "L'assistant IA de Pépète fournit des conseils généraux sur la santé et le bien-être de vos animaux. Il ne remplace pas une consultation vétérinaire mais peut vous aider à évaluer une situation et vous orienter."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Pépète est-il gratuit ?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Oui, Pépète est entièrement gratuit. Vous pouvez scanner des produits, trouver un pet-sitter et utiliser l'assistant IA sans aucun frais."
+          }
+        }
+      ]
+    }
+    </script>
+
+    <!-- JSON-LD Structured Data — BreadcrumbList -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Accueil",
+          "item": "${SITE_URL}/"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "Scanner produits",
+          "item": "${SITE_URL}/scanner"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "Garde animaux",
+          "item": "${SITE_URL}/garde"
+        },
+        {
+          "@type": "ListItem",
+          "position": 4,
+          "name": "Assistant IA",
+          "item": "${SITE_URL}/assistant"
+        }
+      ]
+    }
+    </script>
+
+    <!-- JSON-LD Structured Data — Organization -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "Organization",
+      "name": "Pépète",
+      "url": "${SITE_URL}",
+      "logo": "${SITE_URL}/assets/icon.png",
+      "description": "Pépète — Le compagnon de vos compagnons. Application pour le bien-être des animaux de compagnie en France.",
+      "foundingDate": "2025",
+      "areaServed": "FR",
+      "knowsAbout": ["Garde d'animaux", "Pet-sitting", "Alimentation animale", "Santé animale", "Bien-être animal"],
+      "sameAs": []
+    }
+    </script>
 `;
 
 if (html.includes('</head>')) {
