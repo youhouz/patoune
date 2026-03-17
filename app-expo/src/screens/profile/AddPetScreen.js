@@ -13,6 +13,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import * as ImagePicker from 'expo-image-picker';
 import { PepeteIcon } from '../../components/PepeteLogo';
 import { addPetAPI, updatePetAPI } from '../../api/pets';
+import { compressImage } from '../../utils/imageCompressor';
 import { FONTS } from '../../utils/typography';
 const colors = require('../../utils/colors');
 const { SHADOWS, RADIUS, SPACING, FONT_SIZE } = require('../../utils/colors');
@@ -74,10 +75,8 @@ const AddPetScreen = ({ navigation, route }) => {
       });
       if (!result.canceled && result.assets?.[0]) {
         const asset = result.assets[0];
-        const uri = asset.base64
-          ? `data:image/jpeg;base64,${asset.base64}`
-          : asset.uri;
-        setPhotoUri(uri);
+        const compressed = await compressImage(asset, { maxDimension: 800, quality: 0.5 });
+        setPhotoUri(compressed);
       }
     } catch (err) {
       console.log('Erreur photo picker:', err);
