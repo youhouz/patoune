@@ -6,19 +6,15 @@ const { validationResult } = require('express-validator');
 // @route   POST /api/auth/register
 exports.register = async (req, res, next) => {
   try {
-    console.log('[REGISTER] Body received:', JSON.stringify(req.body));
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
-      console.log('[REGISTER] Validation errors:', JSON.stringify(errors.array()));
       return res.status(400).json({ success: false, errors: errors.array() });
     }
 
     const { name, email, password, phone, role, address, guardianProfile } = req.body;
-    console.log('[REGISTER] Attempting to create user:', { name, email, role });
 
     const userExists = await User.findOne({ email });
     if (userExists) {
-      console.log('[REGISTER] Email already exists:', email);
       return res.status(400).json({
         success: false,
         error: 'Cet email est déjà utilisé'

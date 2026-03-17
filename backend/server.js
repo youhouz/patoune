@@ -31,13 +31,21 @@ if (!fs.existsSync(uploadsDir)) {
 const app = express();
 const server = http.createServer(app);
 
-// CORS : restreindre les origines en production
+// CORS : origines strictement définies (jamais de wildcard)
 const allowedOrigins = process.env.CORS_ORIGINS
   ? process.env.CORS_ORIGINS.split(',').map(s => s.trim())
-  : ['*'];
-const corsOptions = allowedOrigins.includes('*')
-  ? {}
-  : { origin: allowedOrigins };
+  : ['http://localhost:8081', 'http://localhost:19006', 'http://localhost:3000'];
+const corsOptions = {
+  origin: (origin, callback) => {
+    // Autoriser les requêtes sans origin (apps mobiles, curl)
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error('Origine non autorisée par CORS'));
+    }
+  },
+  credentials: true,
+};
 
 const io = new Server(server, {
   cors: corsOptions
@@ -46,7 +54,7 @@ const io = new Server(server, {
 // Middleware
 app.use(helmet());
 app.use(cors(corsOptions));
-app.use(express.json({ limit: '10mb' }));
+app.use(express.json({ limit: '5mb' }));
 
 // Forest Admin
 const setupForestAdmin = require('./src/admin/forest');

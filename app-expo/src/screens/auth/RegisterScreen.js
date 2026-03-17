@@ -25,7 +25,7 @@ const getPwdStrength = (pwd) => {
   const hasNum   = /[0-9]/.test(pwd);
   const hasSpec  = /[^A-Za-z0-9]/.test(pwd);
   const score = (len >= 8 ? 1 : 0) + (len >= 12 ? 1 : 0) + (hasUpper ? 1 : 0) + (hasNum ? 1 : 0) + (hasSpec ? 1 : 0);
-  if (len < 6)   return { label: 'Trop court', color: colors.error,      width: '15%' };
+  if (len < 8)   return { label: 'Trop court', color: colors.error,      width: '15%' };
   if (score <= 2) return { label: 'Faible',     color: '#E57373',         width: '33%' };
   if (score <= 3) return { label: 'Moyen',      color: '#FFB74D',         width: '60%' };
   if (score <= 4) return { label: 'Fort',       color: colors.primary,    width: '82%' };
@@ -83,7 +83,7 @@ const RegisterScreen = ({ navigation }) => {
     if (!email.trim())    errs.email    = "Entre ton adresse email";
     else if (!/\S+@\S+\.\S+/.test(email.trim())) errs.email = 'Format email invalide (ex: nom@email.com)';
     if (!password)        errs.password = 'Entre un mot de passe';
-    else if (password.length < 6) errs.password = `Trop court (${password.length}/6 caractères minimum)`;
+    else if (password.length < 8) errs.password = `Trop court (${password.length}/8 caractères minimum)`;
     if (!confirm)         errs.confirm  = 'Confirme ton mot de passe';
     else if (password !== confirm) errs.confirm = 'Les mots de passe ne correspondent pas';
     setErrors(errs);
@@ -287,7 +287,7 @@ const RegisterScreen = ({ navigation }) => {
               {renderField({
                 label: 'Mot de passe', icon: 'lock', fieldKey: 'password',
                 value: password, onChangeText: (v) => { setPassword(v); setErrors(e => ({ ...e, password: null })); },
-                placeholder: 'Minimum 6 caractères', secureTextEntry: !showPwd, inputRef: pwdRef,
+                placeholder: 'Minimum 8 caractères', secureTextEntry: !showPwd, inputRef: pwdRef,
                 onSubmitEditing: () => confirmRef.current?.focus(), error: errors.password,
                 right: (
                   <TouchableOpacity onPress={() => setShowPwd(!showPwd)} hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}>

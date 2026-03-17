@@ -1,10 +1,11 @@
 const Booking = require('../models/Booking');
+const PetSitter = require('../models/PetSitter');
 
 // @desc    Créer une réservation
 // @route   POST /api/bookings
 exports.createBooking = async (req, res, next) => {
   try {
-    const { startDate, endDate, service, pet, sitter, totalPrice } = req.body;
+    const { startDate, endDate, service, pet, sitter } = req.body;
 
     if (!startDate || !endDate || !service || !pet || !sitter) {
       return res.status(400).json({ success: false, error: 'Champs obligatoires manquants (startDate, endDate, service, pet, sitter)' });
@@ -22,8 +23,24 @@ exports.createBooking = async (req, res, next) => {
       return res.status(400).json({ success: false, error: 'La date de debut ne peut pas etre dans le passe' });
     }
 
-    req.body.owner = req.user.id;
-    const booking = await Booking.create(req.body);
+    // Calculer le prix côté serveur (jamais faire confiance au client)
+    const petSitter = await PetSitter.findById(sitter);
+    if (!petSitter) {
+      return res.status(404).json({ success: false, error: 'Pet-sitter non trouvé' });
+    }
+    const days = Math.max(1, Math.ceil((end - start) / (1000 * 60 * 60 * 24)));
+    const totalPrice = days * (petSitter.pricePerDay || 0);
+
+    const booking = await Booking.create({
+      owner: req.user.id,
+      sitter,
+      pet,
+      service,
+      startDate: start,
+      endDate: end,
+      totalPrice,
+      notes: typeof req.body.notes === 'string' ? req.body.notes.slice(0, 500) : '',
+    });
 
     res.status(201).json({ success: true, booking });
   } catch (error) {
