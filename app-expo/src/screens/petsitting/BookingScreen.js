@@ -456,7 +456,7 @@ const BookingScreen = ({ route, navigation }) => {
             <TextInput
               style={styles.notesInput}
               value={notes}
-              onChangeText={setNotes}
+              onChangeText={(text) => setNotes(text.slice(0, 500))}
               placeholder="Instructions speciales, allergies, habitudes, regime alimentaire..."
               placeholderTextColor={colors.placeholder}
               multiline
