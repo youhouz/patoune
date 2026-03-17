@@ -4,8 +4,22 @@ const Groq = require('groq-sdk');
 // Rate limiting en memoire : 10 requetes par utilisateur/IP par heure
 const rateLimitMap = new Map();
 const RATE_LIMIT_MAX = 10;
-const RATE_LIMIT_GUEST_MAX = 5; // Guests get fewer requests
+const RATE_LIMIT_GUEST_MAX = 5;
 const RATE_LIMIT_WINDOW = 60 * 60 * 1000; // 1 heure en ms
+
+// Nettoyage périodique pour éviter les fuites mémoire
+const _cleanupInterval = setInterval(() => {
+  const now = Date.now();
+  for (const [key, timestamps] of rateLimitMap) {
+    const valid = timestamps.filter(ts => now - ts < RATE_LIMIT_WINDOW);
+    if (valid.length === 0) {
+      rateLimitMap.delete(key);
+    } else {
+      rateLimitMap.set(key, valid);
+    }
+  }
+}, RATE_LIMIT_WINDOW);
+_cleanupInterval.unref();
 
 function checkRateLimit(key, isGuest) {
   const now = Date.now();

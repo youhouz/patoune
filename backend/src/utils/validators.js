@@ -1,11 +1,22 @@
 const { body } = require('express-validator');
 
 exports.registerValidation = [
-  body('name').notEmpty().withMessage('Le nom est requis').trim(),
+  body('name')
+    .notEmpty().withMessage('Le nom est requis')
+    .trim()
+    .isLength({ max: 50 }).withMessage('Le nom ne peut pas dépasser 50 caractères')
+    .escape(),
   body('email').isEmail().withMessage('Email invalide').normalizeEmail(),
   body('password')
-    .isLength({ min: 6 })
-    .withMessage('Le mot de passe doit faire au moins 6 caractères'),
+    .isLength({ min: 8 })
+    .withMessage('Le mot de passe doit faire au moins 8 caractères'),
+  body('role')
+    .optional()
+    .isIn(['user', 'guardian', 'both']).withMessage('Rôle invalide'),
+  body('phone')
+    .optional()
+    .trim()
+    .isLength({ max: 20 }).withMessage('Numéro de téléphone trop long'),
 ];
 
 exports.loginValidation = [

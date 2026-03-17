@@ -1,7 +1,8 @@
-import React, { useState, useCallback, useRef } from 'react';
+import React, { useState, useCallback, useRef, useEffect } from 'react';
 import {
   View, Text, ScrollView, TouchableOpacity, StyleSheet,
   Platform, StatusBar, RefreshControl, TextInput, Animated,
+  ActivityIndicator,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 
@@ -34,6 +35,7 @@ import { useAuth } from '../context/AuthContext';
 import { getMyPetsAPI } from '../api/pets';
 import { getScanHistoryAPI, getPopularProductsAPI } from '../api/products';
 import { getMyBookingsAPI } from '../api/petsitters';
+import { searchGlobalAPI } from '../api/search';
 import { PawIcon } from '../components/Logo';
 import useResponsive from '../hooks/useResponsive';
 const { COLORS, SPACING, RADIUS, SHADOWS, FONT_SIZE, getScoreColor, getScoreLabel } = require('../utils/colors');
@@ -170,6 +172,9 @@ const HomeScreen = ({ navigation }) => {
   const [refreshing, setRefreshing] = useState(false);
   const [query, setQuery] = useState('');
   const [popularProducts, setPopularProducts] = useState([]);
+  const [searchResults, setSearchResults] = useState(null);
+  const [searchLoading, setSearchLoading] = useState(false);
+  const searchTimer = useRef(null);
 
   const fetchData = async () => {
     try {
@@ -202,6 +207,29 @@ const HomeScreen = ({ navigation }) => {
 
   useFocusEffect(useCallback(() => { fetchData(); }, []));
   const onRefresh = () => { setRefreshing(true); fetchData(); };
+
+  // ── Recherche intelligente avec debounce ──
+  const handleSearch = useCallback((text) => {
+    setQuery(text);
+    if (searchTimer.current) clearTimeout(searchTimer.current);
+    if (!text.trim() || text.trim().length < 2) {
+      setSearchResults(null);
+      setSearchLoading(false);
+      return;
+    }
+    setSearchLoading(true);
+    searchTimer.current = setTimeout(async () => {
+      try {
+        const res = await searchGlobalAPI(text.trim());
+        setSearchResults(res.data);
+      } catch (err) {
+        console.log('Search error:', err.message);
+        setSearchResults({ products: [], pets: [], petsitters: [] });
+      } finally {
+        setSearchLoading(false);
+      }
+    }, 350);
+  }, []);
 
   const firstName = user?.name?.split(' ')[0] || null;
   const hour = new Date().getHours();
@@ -305,14 +333,17 @@ const HomeScreen = ({ navigation }) => {
               <TextInput
                 style={s.searchInput}
                 value={query}
-                onChangeText={setQuery}
+                onChangeText={handleSearch}
                 placeholder="Rechercher un produit, un pet-sitter…"
                 placeholderTextColor="rgba(255,255,255,0.55)"
                 returnKeyType="search"
                 clearButtonMode="while-editing"
               />
+              {searchLoading && (
+                <ActivityIndicator size="small" color="rgba(255,255,255,0.7)" style={{ marginRight: 8 }} />
+              )}
               {query.length > 0 && (
-                <TouchableOpacity onPress={() => setQuery('')} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
+                <TouchableOpacity onPress={() => { handleSearch(''); }} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
                   <Feather name="x" size={16} color="rgba(255,255,255,0.7)" />
                 </TouchableOpacity>
               )}
@@ -320,39 +351,199 @@ const HomeScreen = ({ navigation }) => {
           </View>
         </LinearGradient>
 
-        {/* ── Résultats de recherche ── */}
+        {/* ── Résultats de recherche intelligente ── */}
         {query.trim().length > 0 && (() => {
+          // Quick actions matching
           const q = query.trim().toLowerCase();
-          const matchedScans = recentScans.filter(sc =>
-            sc.product?.name?.toLowerCase().includes(q) ||
-            sc.product?.brand?.toLowerCase().includes(q)
+          const quickActions = [
+            { icon: 'camera', title: 'Scanner', subtitle: 'Analyser un aliment', onPress: () => navigation.navigate('Scanner'), keywords: ['scan', 'scanner', 'barcode', 'code-barre', 'analyser', 'aliment'] },
+            { icon: 'heart', title: 'Pet-sitters', subtitle: 'Trouver un pet-sitter', onPress: () => navigation.navigate('Garde'), keywords: ['pet-sitter', 'sitter', 'garde', 'gardien', 'garder'] },
+            { icon: 'users', title: 'Mes animaux', subtitle: 'Gérer mes compagnons', onPress: () => navigation.navigate('Profil', { screen: 'MyPets' }), keywords: ['animal', 'animaux', 'chien', 'chat', 'compagnon', 'pet'] },
+            { icon: 'message-circle', title: 'Assistant IA', subtitle: 'Poser une question', onPress: () => navigation.navigate('Assistant'), keywords: ['ia', 'ai', 'assistant', 'question', 'aide', 'help'] },
+            { icon: 'calendar', title: 'Réservations', subtitle: 'Mes gardes à venir', onPress: () => navigation.navigate('Garde'), keywords: ['réservation', 'booking', 'garde', 'calendrier'] },
+            { icon: 'settings', title: 'Réglages', subtitle: 'Paramètres du compte', onPress: () => navigation.navigate('Profil', { screen: 'Settings' }), keywords: ['réglage', 'paramètre', 'settings', 'compte', 'profil'] },
+            { icon: 'list', title: 'Historique scans', subtitle: 'Tous les produits scannés', onPress: () => navigation.navigate('Scanner', { screen: 'ScanHistory' }), keywords: ['historique', 'scan', 'history', 'produit'] },
+            { icon: 'user', title: 'Mon profil', subtitle: 'Voir et modifier mon profil', onPress: () => navigation.navigate('Profil'), keywords: ['profil', 'profile', 'compte', 'mon'] },
+          ];
+          const matchedActions = quickActions.filter(a =>
+            a.title.toLowerCase().includes(q) ||
+            a.subtitle.toLowerCase().includes(q) ||
+            a.keywords.some(kw => kw.includes(q) || q.includes(kw))
           );
+
+          const sr = searchResults || { products: [], pets: [], petsitters: [] };
+          const totalResults = sr.products.length + sr.pets.length + sr.petsitters.length + matchedActions.length;
+
           return (
             <View style={[s.searchResults, { paddingHorizontal: hPadding }, centerWrap]}>
-              <Text style={s.searchResultsTitle}>
-                {matchedScans.length} résultat{matchedScans.length !== 1 ? 's' : ''} pour &quot;{query}&quot;
-              </Text>
-              {matchedScans.length === 0 ? (
-                <View style={s.searchEmpty}>
-                  <Feather name="search" size={32} color={COLORS.textTertiary} />
-                  <Text style={s.searchEmptyText}>Aucun produit trouvé</Text>
+              {/* Header */}
+              <View style={s.srHeader}>
+                <Text style={s.srHeaderTitle}>
+                  {searchLoading ? 'Recherche en cours…' : `${totalResults} résultat${totalResults !== 1 ? 's' : ''}`}
+                </Text>
+                {!searchLoading && <Text style={s.srHeaderQuery}>« {query.trim()} »</Text>}
+              </View>
+
+              {/* Quick actions */}
+              {matchedActions.length > 0 && (
+                <View style={s.srSection}>
+                  <View style={s.srSectionHeader}>
+                    <View style={[s.srSectionIcon, { backgroundColor: COLORS.primarySoft }]}>
+                      <Feather name="zap" size={14} color={COLORS.primary} />
+                    </View>
+                    <Text style={s.srSectionTitle}>Accès rapide</Text>
+                  </View>
+                  {matchedActions.slice(0, 4).map((action, idx) => (
+                    <TouchableOpacity
+                      key={idx}
+                      style={s.srActionRow}
+                      onPress={action.onPress}
+                      activeOpacity={0.7}
+                    >
+                      <View style={s.srActionIcon}>
+                        <Feather name={action.icon} size={18} color={COLORS.primary} />
+                      </View>
+                      <View style={s.srActionText}>
+                        <Text style={s.srActionTitle}>{action.title}</Text>
+                        <Text style={s.srActionSub}>{action.subtitle}</Text>
+                      </View>
+                      <Feather name="chevron-right" size={16} color={COLORS.textTertiary} />
+                    </TouchableOpacity>
+                  ))}
+                </View>
+              )}
+
+              {/* Produits */}
+              {sr.products.length > 0 && (
+                <View style={s.srSection}>
+                  <View style={s.srSectionHeader}>
+                    <View style={[s.srSectionIcon, { backgroundColor: '#EFF5F0' }]}>
+                      <Feather name="package" size={14} color="#527A56" />
+                    </View>
+                    <Text style={s.srSectionTitle}>Produits</Text>
+                    <View style={s.srBadge}>
+                      <Text style={s.srBadgeText}>{sr.products.length}</Text>
+                    </View>
+                  </View>
+                  {sr.products.slice(0, 5).map((product, idx) => {
+                    const score = product.nutritionScore || 0;
+                    const color = getScoreColor(score);
+                    return (
+                      <TouchableOpacity
+                        key={product._id || idx}
+                        style={s.srProductRow}
+                        onPress={() => navigation.navigate('Scanner', { screen: 'ProductResult', params: { product } })}
+                        activeOpacity={0.7}
+                      >
+                        <View style={[s.srProductScore, { backgroundColor: color + '14' }]}>
+                          <Text style={[s.srProductScoreNum, { color }]}>{score}</Text>
+                        </View>
+                        <View style={s.srProductInfo}>
+                          <Text style={s.srProductName} numberOfLines={1}>{product.name}</Text>
+                          <Text style={s.srProductBrand} numberOfLines={1}>{product.brand || 'Marque inconnue'}</Text>
+                        </View>
+                        <View style={[s.srProductLabel, { backgroundColor: color + '12' }]}>
+                          <Text style={[s.srProductLabelText, { color }]}>{getScoreLabel(score)}</Text>
+                        </View>
+                      </TouchableOpacity>
+                    );
+                  })}
+                </View>
+              )}
+
+              {/* Pet-sitters */}
+              {sr.petsitters.length > 0 && (
+                <View style={s.srSection}>
+                  <View style={s.srSectionHeader}>
+                    <View style={[s.srSectionIcon, { backgroundColor: '#FDF5ED' }]}>
+                      <Feather name="heart" size={14} color={COLORS.accent} />
+                    </View>
+                    <Text style={s.srSectionTitle}>Pet-sitters</Text>
+                    <View style={s.srBadge}>
+                      <Text style={s.srBadgeText}>{sr.petsitters.length}</Text>
+                    </View>
+                  </View>
+                  {sr.petsitters.slice(0, 5).map((sitter, idx) => (
+                    <TouchableOpacity
+                      key={sitter._id || idx}
+                      style={s.srSitterRow}
+                      onPress={() => navigation.navigate('Garde', { screen: 'PetSitterDetail', params: { sitterId: sitter._id } })}
+                      activeOpacity={0.7}
+                    >
+                      <View style={s.srSitterAvatar}>
+                        {sitter.user?.name ? (
+                          <Text style={s.srSitterAvatarText}>{sitter.user.name.charAt(0).toUpperCase()}</Text>
+                        ) : (
+                          <Feather name="user" size={18} color={COLORS.textTertiary} />
+                        )}
+                      </View>
+                      <View style={s.srSitterInfo}>
+                        <Text style={s.srSitterName} numberOfLines={1}>{sitter.user?.name || 'Pet-sitter'}</Text>
+                        <Text style={s.srSitterBio} numberOfLines={1}>{sitter.bio || 'Pet-sitter disponible'}</Text>
+                      </View>
+                      {sitter.pricePerDay > 0 && (
+                        <View style={s.srSitterPrice}>
+                          <Text style={s.srSitterPriceText}>{sitter.pricePerDay}€</Text>
+                          <Text style={s.srSitterPriceUnit}>/jour</Text>
+                        </View>
+                      )}
+                    </TouchableOpacity>
+                  ))}
+                </View>
+              )}
+
+              {/* Mes animaux */}
+              {sr.pets.length > 0 && (
+                <View style={s.srSection}>
+                  <View style={s.srSectionHeader}>
+                    <View style={[s.srSectionIcon, { backgroundColor: '#F0EFF5' }]}>
+                      <Feather name="github" size={14} color="#6B718F" />
+                    </View>
+                    <Text style={s.srSectionTitle}>Mes animaux</Text>
+                    <View style={s.srBadge}>
+                      <Text style={s.srBadgeText}>{sr.pets.length}</Text>
+                    </View>
+                  </View>
+                  {sr.pets.map((pet, idx) => {
+                    const speciesEmoji = { chien: '🐶', chat: '🐱', oiseau: '🐦', rongeur: '🐹', reptile: '🦎', poisson: '🐟' };
+                    return (
+                      <TouchableOpacity
+                        key={pet._id || idx}
+                        style={s.srPetRow}
+                        onPress={() => navigation.navigate('Profil', { screen: 'MyPets' })}
+                        activeOpacity={0.7}
+                      >
+                        <View style={s.srPetEmoji}>
+                          <Text style={{ fontSize: 22 }}>{speciesEmoji[pet.species] || '🐾'}</Text>
+                        </View>
+                        <View style={s.srPetInfo}>
+                          <Text style={s.srPetName}>{pet.name}</Text>
+                          <Text style={s.srPetSpecies}>{pet.breed || pet.species || 'Animal'}</Text>
+                        </View>
+                        <Feather name="chevron-right" size={16} color={COLORS.textTertiary} />
+                      </TouchableOpacity>
+                    );
+                  })}
+                </View>
+              )}
+
+              {/* Empty state */}
+              {!searchLoading && totalResults === 0 && (
+                <View style={s.srEmpty}>
+                  <View style={s.srEmptyIconWrap}>
+                    <Feather name="search" size={36} color={COLORS.textTertiary} />
+                  </View>
+                  <Text style={s.srEmptyTitle}>Aucun résultat</Text>
+                  <Text style={s.srEmptyText}>Essaie avec d'autres mots-clés</Text>
                   <TouchableOpacity
-                    style={s.searchScanBtn}
+                    style={s.srEmptyBtn}
                     onPress={() => navigation.navigate('Scanner')}
                     activeOpacity={0.8}
                   >
-                    <Feather name="maximize" size={15} color="#FFF" />
-                    <Text style={s.searchScanBtnText}>Scanner un produit</Text>
+                    <Feather name="camera" size={16} color="#FFF" />
+                    <Text style={s.srEmptyBtnText}>Scanner un produit</Text>
                   </TouchableOpacity>
                 </View>
-              ) : (
-                matchedScans.map((scan, idx) => (
-                  <RecentScanCard
-                    key={scan._id || idx}
-                    scan={scan}
-                    onPress={() => navigation.navigate('Scanner', { screen: 'ProductResult', params: { product: scan.product } })}
-                  />
-                ))
               )}
             </View>
           );
@@ -743,13 +934,114 @@ const s = StyleSheet.create({
   quickLabel: { fontSize: FONT_SIZE['2xs'], color: COLORS.textSecondary, fontWeight: '600', textAlign: 'center', lineHeight: 15 },
   quickLabelTablet: { fontSize: FONT_SIZE.xs, lineHeight: 17 },
 
-  // Search results
-  searchResults:      { marginTop: 20 },
-  searchResultsTitle: { fontSize: 13, fontWeight: '700', color: COLORS.textSecondary, letterSpacing: 0.2, marginBottom: 12 },
-  searchEmpty:        { alignItems: 'center', paddingVertical: 32, gap: 12 },
-  searchEmptyText:    { fontSize: 15, color: COLORS.textSecondary, fontWeight: '500' },
-  searchScanBtn:      { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: COLORS.primary, borderRadius: RADIUS.pill, paddingHorizontal: 20, paddingVertical: 12, marginTop: 4 },
-  searchScanBtnText:  { color: '#FFF', fontWeight: '700', fontSize: 14 },
+  // Smart search results
+  searchResults: { marginTop: 20, paddingBottom: 20 },
+
+  srHeader: { marginBottom: 16 },
+  srHeaderTitle: { fontSize: 15, fontWeight: '800', color: COLORS.text, letterSpacing: -0.3 },
+  srHeaderQuery: { fontSize: 13, fontWeight: '500', color: COLORS.textSecondary, marginTop: 2 },
+
+  srSection: {
+    backgroundColor: COLORS.white, borderRadius: RADIUS.xl,
+    padding: 16, marginBottom: 14,
+    ...SHADOWS.card, borderWidth: 1, borderColor: COLORS.borderLight,
+  },
+  srSectionHeader: { flexDirection: 'row', alignItems: 'center', marginBottom: 14, gap: 10 },
+  srSectionIcon: {
+    width: 30, height: 30, borderRadius: 10,
+    alignItems: 'center', justifyContent: 'center',
+  },
+  srSectionTitle: { fontSize: 14, fontWeight: '800', color: COLORS.text, flex: 1 },
+  srBadge: {
+    backgroundColor: COLORS.primarySoft, borderRadius: RADIUS.pill,
+    paddingHorizontal: 10, paddingVertical: 3,
+  },
+  srBadgeText: { fontSize: 12, fontWeight: '800', color: COLORS.primary },
+
+  // Quick actions
+  srActionRow: {
+    flexDirection: 'row', alignItems: 'center',
+    paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: COLORS.borderLight,
+    gap: 14,
+  },
+  srActionIcon: {
+    width: 42, height: 42, borderRadius: 14,
+    backgroundColor: COLORS.primarySoft,
+    alignItems: 'center', justifyContent: 'center',
+  },
+  srActionText: { flex: 1 },
+  srActionTitle: { fontSize: 15, fontWeight: '700', color: COLORS.text },
+  srActionSub: { fontSize: 12, color: COLORS.textSecondary, fontWeight: '500', marginTop: 1 },
+
+  // Products
+  srProductRow: {
+    flexDirection: 'row', alignItems: 'center',
+    paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: COLORS.borderLight,
+    gap: 12,
+  },
+  srProductScore: {
+    width: 46, height: 46, borderRadius: 14,
+    alignItems: 'center', justifyContent: 'center',
+  },
+  srProductScoreNum: { fontSize: 18, fontWeight: '900' },
+  srProductInfo: { flex: 1 },
+  srProductName: { fontSize: 14, fontWeight: '700', color: COLORS.text },
+  srProductBrand: { fontSize: 12, color: COLORS.textSecondary, fontWeight: '500', marginTop: 2 },
+  srProductLabel: { borderRadius: RADIUS.pill, paddingHorizontal: 10, paddingVertical: 4 },
+  srProductLabelText: { fontSize: 11, fontWeight: '700' },
+
+  // Pet-sitters
+  srSitterRow: {
+    flexDirection: 'row', alignItems: 'center',
+    paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: COLORS.borderLight,
+    gap: 12,
+  },
+  srSitterAvatar: {
+    width: 46, height: 46, borderRadius: 23,
+    backgroundColor: COLORS.primarySoft,
+    alignItems: 'center', justifyContent: 'center',
+    borderWidth: 2, borderColor: COLORS.primaryMuted,
+  },
+  srSitterAvatarText: { fontSize: 18, fontWeight: '800', color: COLORS.primary },
+  srSitterInfo: { flex: 1 },
+  srSitterName: { fontSize: 14, fontWeight: '700', color: COLORS.text },
+  srSitterBio: { fontSize: 12, color: COLORS.textSecondary, fontWeight: '500', marginTop: 2 },
+  srSitterPrice: { alignItems: 'flex-end' },
+  srSitterPriceText: { fontSize: 16, fontWeight: '900', color: COLORS.primary },
+  srSitterPriceUnit: { fontSize: 10, fontWeight: '600', color: COLORS.textTertiary },
+
+  // Pets
+  srPetRow: {
+    flexDirection: 'row', alignItems: 'center',
+    paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: COLORS.borderLight,
+    gap: 12,
+  },
+  srPetEmoji: {
+    width: 46, height: 46, borderRadius: 14,
+    backgroundColor: COLORS.background,
+    alignItems: 'center', justifyContent: 'center',
+    borderWidth: 1, borderColor: COLORS.borderLight,
+  },
+  srPetInfo: { flex: 1 },
+  srPetName: { fontSize: 14, fontWeight: '700', color: COLORS.text },
+  srPetSpecies: { fontSize: 12, color: COLORS.textSecondary, fontWeight: '500', marginTop: 2 },
+
+  // Empty
+  srEmpty: { alignItems: 'center', paddingVertical: 40, gap: 10 },
+  srEmptyIconWrap: {
+    width: 72, height: 72, borderRadius: 24,
+    backgroundColor: COLORS.background,
+    alignItems: 'center', justifyContent: 'center',
+    marginBottom: 8, borderWidth: 1, borderColor: COLORS.borderLight,
+  },
+  srEmptyTitle: { fontSize: 17, fontWeight: '800', color: COLORS.text },
+  srEmptyText: { fontSize: 14, color: COLORS.textSecondary, fontWeight: '500' },
+  srEmptyBtn: {
+    flexDirection: 'row', alignItems: 'center', gap: 8,
+    backgroundColor: COLORS.primary, borderRadius: RADIUS.pill,
+    paddingHorizontal: 22, paddingVertical: 13, marginTop: 8,
+  },
+  srEmptyBtnText: { color: '#FFF', fontWeight: '700', fontSize: 14 },
 
   // Popular products
   popularSection: { marginTop: 32 },

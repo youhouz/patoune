@@ -6,19 +6,15 @@ const { validationResult } = require('express-validator');
 // @route   POST /api/auth/register
 exports.register = async (req, res, next) => {
   try {
-    console.log('[REGISTER] Body received:', JSON.stringify(req.body));
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
-      console.log('[REGISTER] Validation errors:', JSON.stringify(errors.array()));
       return res.status(400).json({ success: false, errors: errors.array() });
     }
 
     const { name, email, password, phone, role, address, guardianProfile } = req.body;
-    console.log('[REGISTER] Attempting to create user:', { name, email, role });
 
     const userExists = await User.findOne({ email });
     if (userExists) {
-      console.log('[REGISTER] Email already exists:', email);
       return res.status(400).json({
         success: false,
         error: 'Cet email est déjà utilisé'
@@ -27,7 +23,8 @@ exports.register = async (req, res, next) => {
 
     // Créer l'utilisateur avec role et adresse
     const userData = { name, email, password, phone };
-    if (role) userData.role = role;
+    // Defense-in-depth : jamais accepter 'admin' depuis le register
+    if (role && ['user', 'guardian', 'both'].includes(role)) userData.role = role;
     if (address) userData.address = address;
 
     // Si role guardian ou both, marquer isPetSitter

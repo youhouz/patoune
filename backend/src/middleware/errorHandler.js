@@ -1,5 +1,8 @@
 const errorHandler = (err, req, res, next) => {
-  console.error(err.stack);
+  // Logger les erreurs uniquement en développement
+  if (process.env.NODE_ENV !== 'production') {
+    console.error(err.stack);
+  }
 
   // Erreur de validation Mongoose
   if (err.name === 'ValidationError') {
@@ -24,9 +27,15 @@ const errorHandler = (err, req, res, next) => {
     });
   }
 
-  res.status(err.statusCode || 500).json({
+  // En production, ne jamais renvoyer le message d'erreur interne
+  const statusCode = err.statusCode || 500;
+  const message = process.env.NODE_ENV === 'production' && statusCode === 500
+    ? 'Erreur serveur'
+    : err.message || 'Erreur serveur';
+
+  res.status(statusCode).json({
     success: false,
-    error: err.message || 'Erreur serveur'
+    error: message
   });
 };
 

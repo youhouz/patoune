@@ -31,13 +31,24 @@ if (!fs.existsSync(uploadsDir)) {
 const app = express();
 const server = http.createServer(app);
 
-// CORS : restreindre les origines en production
+// Trust proxy pour Vercel / reverse proxy (rate limiter, req.ip)
+app.set('trust proxy', 1);
+
+// CORS : origines strictement définies (jamais de wildcard)
 const allowedOrigins = process.env.CORS_ORIGINS
   ? process.env.CORS_ORIGINS.split(',').map(s => s.trim())
-  : ['*'];
-const corsOptions = allowedOrigins.includes('*')
-  ? {}
-  : { origin: allowedOrigins };
+  : ['http://localhost:8081', 'http://localhost:19006', 'http://localhost:3000'];
+const corsOptions = {
+  origin: (origin, callback) => {
+    // Autoriser les requêtes sans origin (apps mobiles, curl)
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error('Origine non autorisée par CORS'));
+    }
+  },
+  credentials: true,
+};
 
 const io = new Server(server, {
   cors: corsOptions
@@ -46,7 +57,7 @@ const io = new Server(server, {
 // Middleware
 app.use(helmet());
 app.use(cors(corsOptions));
-app.use(express.json({ limit: '10mb' }));
+app.use(express.json({ limit: '5mb' }));
 
 // Forest Admin
 const setupForestAdmin = require('./src/admin/forest');
@@ -65,6 +76,7 @@ app.use('/api/bookings', require('./src/routes/bookings'));
 app.use('/api/reviews', require('./src/routes/reviews'));
 app.use('/api/messages', require('./src/routes/messages'));
 app.use('/api/ai', require('./src/routes/ai'));
+app.use('/api/search', require('./src/routes/search'));
 
 // Route de test
 app.get('/', (req, res) => {
@@ -115,6 +127,8 @@ io.on('connection', (socket) => {
 
   socket.on('sendMessage', (data) => {
     if (data.receiver) {
+      // Toujours forcer le sender côté serveur (anti-spoofing)
+      data.sender = socket.userId;
       io.to(data.receiver).emit('newMessage', data);
     }
   });
@@ -128,3 +142,17 @@ const PORT = process.env.PORT || 5000;
 server.listen(PORT, '0.0.0.0', () => {
   console.log(`Serveur Pépète demarre sur le port ${PORT}`);
 });
+
+// Graceful shutdown
+const shutdown = (signal) => {
+  console.log(`${signal} recu, arret gracieux...`);
+  server.close(() => {
+    mongoose.connection.close(false, () => {
+      process.exit(0);
+    });
+  });
+  // Force exit après 10s
+  setTimeout(() => process.exit(1), 10000);
+};
+process.on('SIGTERM', () => shutdown('SIGTERM'));
+process.on('SIGINT', () => shutdown('SIGINT'));

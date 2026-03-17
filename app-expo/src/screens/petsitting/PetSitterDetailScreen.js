@@ -175,6 +175,8 @@ const PetSitterDetailScreen = ({ route, navigation }) => {
         style={styles.scrollView}
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
+        nestedScrollEnabled={true}
+        keyboardShouldPersistTaps="handled"
       >
         {/* Hero Section */}
         <LinearGradient
@@ -255,7 +257,7 @@ const PetSitterDetailScreen = ({ route, navigation }) => {
         {petsitter.photos?.length > 0 && (
           <View style={styles.photosSection}>
             <Text style={styles.photosSectionTitle}>Photos</Text>
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.photosScroll}>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} nestedScrollEnabled={true} contentContainerStyle={styles.photosScroll}>
               {petsitter.photos.map((photo, idx) => (
                 <Image key={idx} source={{ uri: photo }} style={styles.galleryPhoto} />
               ))}

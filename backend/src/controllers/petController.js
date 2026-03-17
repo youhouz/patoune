@@ -1,11 +1,25 @@
 const Pet = require('../models/Pet');
 const { validationResult } = require('express-validator');
 
+// Champs autorisés pour création/modification d'un animal
+const ALLOWED_PET_FIELDS = [
+  'name', 'species', 'breed', 'age', 'weight', 'gender',
+  'specialNeeds', 'vaccinated', 'sterilized', 'photos', 'description'
+];
+
+function pickFields(body, fields) {
+  const picked = {};
+  for (const key of fields) {
+    if (body[key] !== undefined) picked[key] = body[key];
+  }
+  return picked;
+}
+
 // @desc    Obtenir mes animaux
 // @route   GET /api/pets
 exports.getMyPets = async (req, res, next) => {
   try {
-    const pets = await Pet.find({ owner: req.user.id });
+    const pets = await Pet.find({ owner: req.user.id }).lean();
     res.json({ success: true, count: pets.length, pets });
   } catch (error) {
     next(error);
@@ -16,7 +30,7 @@ exports.getMyPets = async (req, res, next) => {
 // @route   GET /api/pets/:id
 exports.getPet = async (req, res, next) => {
   try {
-    const pet = await Pet.findById(req.params.id);
+    const pet = await Pet.findById(req.params.id).lean();
     if (!pet) {
       return res.status(404).json({ success: false, error: 'Animal non trouvé' });
     }
@@ -37,8 +51,9 @@ exports.addPet = async (req, res, next) => {
     if (!errors.isEmpty()) {
       return res.status(400).json({ success: false, errors: errors.array() });
     }
-    req.body.owner = req.user.id;
-    const pet = await Pet.create(req.body);
+    const petData = pickFields(req.body, ALLOWED_PET_FIELDS);
+    petData.owner = req.user.id;
+    const pet = await Pet.create(petData);
     res.status(201).json({ success: true, pet });
   } catch (error) {
     next(error);
@@ -58,7 +73,9 @@ exports.updatePet = async (req, res, next) => {
       return res.status(403).json({ success: false, error: 'Non autorisé' });
     }
 
-    pet = await Pet.findByIdAndUpdate(req.params.id, req.body, {
+    // Whitelist des champs (jamais owner, _id, etc.)
+    const updates = pickFields(req.body, ALLOWED_PET_FIELDS);
+    pet = await Pet.findByIdAndUpdate(req.params.id, updates, {
       new: true,
       runValidators: true
     });

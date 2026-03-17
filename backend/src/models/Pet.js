@@ -57,4 +57,6 @@ const petSchema = new mongoose.Schema({
   timestamps: true
 });
 
+petSchema.index({ owner: 1 });
+
 module.exports = mongoose.model('Pet', petSchema);

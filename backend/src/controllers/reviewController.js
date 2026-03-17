@@ -35,12 +35,23 @@ exports.createReview = async (req, res, next) => {
       return res.status(400).json({ success: false, error: 'Vous ne pouvez noter qu\'une réservation terminée' });
     }
 
+    // Vérifier que le petsitter correspond à la réservation
+    if (booking.sitter.toString() !== petsitter) {
+      return res.status(400).json({ success: false, error: 'Le pet-sitter ne correspond pas à cette réservation' });
+    }
+
+    // Vérifier qu'un avis n'a pas déjà été laissé pour cette réservation
+    const existingReview = await Review.findOne({ booking: bookingId });
+    if (existingReview) {
+      return res.status(400).json({ success: false, error: 'Un avis a déjà été laissé pour cette réservation' });
+    }
+
     const review = await Review.create({
       author: req.user.id,
       petsitter,
       booking: bookingId,
       rating: ratingNum,
-      comment: comment || ''
+      comment: typeof comment === 'string' ? comment.slice(0, 1000) : ''
     });
 
     // Recalculer la note moyenne du gardien
