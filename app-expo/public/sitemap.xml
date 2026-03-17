@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+        xmlns:xhtml="http://www.w3.org/1999/xhtml"
+        xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">
+
+  <!-- Page principale -->
+  <url>
+    <loc>https://pepete-front.vercel.app/</loc>
+    <lastmod>2026-03-17</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>1.0</priority>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://pepete-front.vercel.app/" />
+    <image:image>
+      <image:loc>https://pepete-front.vercel.app/assets/og-image.png</image:loc>
+      <image:title>Pépète — Le compagnon de vos compagnons</image:title>
+      <image:caption>Application Pépète : scanner produits animaux, garde animaux, assistant IA vétérinaire</image:caption>
+    </image:image>
+  </url>
+
+  <!-- Scanner produits -->
+  <url>
+    <loc>https://pepete-front.vercel.app/scanner</loc>
+    <lastmod>2026-03-17</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
+
+  <!-- Garde animaux / Pet-sitting -->
+  <url>
+    <loc>https://pepete-front.vercel.app/garde</loc>
+    <lastmod>2026-03-17</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
+
+  <!-- Assistant IA -->
+  <url>
+    <loc>https://pepete-front.vercel.app/assistant</loc>
+    <lastmod>2026-03-17</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+
+  <!-- Profil -->
+  <url>
+    <loc>https://pepete-front.vercel.app/profil</loc>
+    <lastmod>2026-03-17</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
+  </url>
+
+</urlset>

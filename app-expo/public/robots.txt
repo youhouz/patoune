@@ -1,0 +1,25 @@
+# Pépète — robots.txt
+# https://pepete-front.vercel.app
+
+User-agent: *
+Allow: /
+Disallow: /api/
+Disallow: /_expo/
+
+# Sitemaps
+Sitemap: https://pepete-front.vercel.app/sitemap.xml
+
+# Crawl-delay (politesse)
+Crawl-delay: 5
+
+# Google
+User-agent: Googlebot
+Allow: /
+Disallow: /api/
+Disallow: /_expo/
+
+# Bing
+User-agent: Bingbot
+Allow: /
+Disallow: /api/
+Disallow: /_expo/
