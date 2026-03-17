@@ -554,7 +554,6 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     paddingBottom: 120,
-    flexGrow: 1,
   },
   loadingFull: {
     flex: 1,
