@@ -3,6 +3,20 @@ const ScanHistory = require('../models/ScanHistory');
 const { calculateScore } = require('../utils/scoreCalculator');
 const { fetchProductFromOpenFoodFacts } = require('../utils/openFoodFacts');
 
+// Champs autorisés pour la contribution communautaire
+const ALLOWED_PRODUCT_FIELDS = [
+  'barcode', 'name', 'brand', 'category', 'targetAnimal',
+  'ingredients', 'additives', 'image', 'description'
+];
+
+function pickFields(body, fields) {
+  const picked = {};
+  for (const key of fields) {
+    if (body[key] !== undefined) picked[key] = body[key];
+  }
+  return picked;
+}
+
 // @desc    Scanner un produit par code-barres
 // @route   GET /api/products/scan/:barcode
 exports.scanProduct = async (req, res, next) => {
@@ -11,14 +25,11 @@ exports.scanProduct = async (req, res, next) => {
 
     // Si pas en base locale, chercher sur Open Food Facts
     if (!product) {
-      console.log(`Produit ${req.params.barcode} non trouve en local, recherche sur Open Food Facts...`);
       const offData = await fetchProductFromOpenFoodFacts(req.params.barcode);
 
       if (offData) {
-        // Sauvegarder en base pour les prochains scans
         offData.addedBy = req.user ? req.user.id : undefined;
         product = await Product.create(offData);
-        console.log(`Produit trouve et sauvegarde: ${product.name} (score: ${product.nutritionScore})`);
       } else {
         return res.status(404).json({
           success: false,
@@ -53,16 +64,18 @@ exports.addProduct = async (req, res, next) => {
       });
     }
 
-    req.body.addedBy = req.user.id;
+    // Whitelist des champs (jamais nutritionScore, scoreDetails, addedBy directement)
+    const productData = pickFields(req.body, ALLOWED_PRODUCT_FIELDS);
+    productData.addedBy = req.user.id;
 
     // Calculer le score automatiquement
-    if (req.body.ingredients || req.body.additives) {
-      const scoreData = calculateScore(req.body);
-      req.body.nutritionScore = scoreData.score;
-      req.body.scoreDetails = scoreData.details;
+    if (productData.ingredients || productData.additives) {
+      const scoreData = calculateScore(productData);
+      productData.nutritionScore = scoreData.score;
+      productData.scoreDetails = scoreData.details;
     }
 
-    const product = await Product.create(req.body);
+    const product = await Product.create(productData);
     res.status(201).json({ success: true, product });
   } catch (error) {
     next(error);
@@ -73,12 +86,19 @@ exports.addProduct = async (req, res, next) => {
 // @route   GET /api/products/history
 exports.getScanHistory = async (req, res, next) => {
   try {
+    const page = Math.max(1, parseInt(req.query.page) || 1);
+    const limit = Math.min(50, Math.max(1, parseInt(req.query.limit) || 50));
+    const skip = (page - 1) * limit;
+
+    const total = await ScanHistory.countDocuments({ user: req.user.id });
     const history = await ScanHistory.find({ user: req.user.id })
       .populate('product', 'name brand barcode nutritionScore image category')
       .sort({ scannedAt: -1 })
-      .limit(50);
+      .skip(skip)
+      .limit(limit)
+      .lean();
 
-    res.json({ success: true, count: history.length, history });
+    res.json({ success: true, count: history.length, total, page, history });
   } catch (error) {
     next(error);
   }
@@ -88,7 +108,7 @@ exports.getScanHistory = async (req, res, next) => {
 // @route   GET /api/products/popular
 exports.getPopularProducts = async (req, res, next) => {
   try {
-    const limit = parseInt(req.query.limit) || 12;
+    const limit = Math.min(parseInt(req.query.limit) || 12, 50);
     // Agréger ScanHistory pour compter les scans par produit
     const popular = await ScanHistory.aggregate([
       { $group: { _id: '$product', scanCount: { $sum: 1 } } },
@@ -118,11 +138,12 @@ exports.getPopularProducts = async (req, res, next) => {
       const topRated = await Product.find({})
         .sort({ nutritionScore: -1 })
         .limit(limit)
-        .select('name brand nutritionScore category targetAnimal image');
+        .select('name brand nutritionScore category targetAnimal image')
+        .lean();
       const existingIds = new Set(popular.map(p => p._id.toString()));
       const extras = topRated
         .filter(p => !existingIds.has(p._id.toString()))
-        .map(p => ({ ...p.toObject(), scanCount: 0 }));
+        .map(p => ({ ...p, scanCount: 0 }));
       popular.push(...extras.slice(0, limit - popular.length));
     }
 
@@ -137,6 +158,9 @@ exports.getPopularProducts = async (req, res, next) => {
 exports.searchProducts = async (req, res, next) => {
   try {
     const { q, category, animal } = req.query;
+    const page = Math.max(1, parseInt(req.query.page) || 1);
+    const limit = Math.min(50, Math.max(1, parseInt(req.query.limit) || 20));
+    const skip = (page - 1) * limit;
     const filter = {};
 
     if (q) {
@@ -149,11 +173,14 @@ exports.searchProducts = async (req, res, next) => {
     if (category) filter.category = category;
     if (animal) filter.targetAnimal = animal;
 
+    const total = await Product.countDocuments(filter);
     const products = await Product.find(filter)
       .sort({ nutritionScore: -1 })
-      .limit(20);
+      .skip(skip)
+      .limit(limit)
+      .lean();
 
-    res.json({ success: true, count: products.length, products });
+    res.json({ success: true, count: products.length, total, page, products });
   } catch (error) {
     next(error);
   }

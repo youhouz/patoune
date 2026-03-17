@@ -18,5 +18,6 @@ const scanHistorySchema = new mongoose.Schema({
 });
 
 scanHistorySchema.index({ user: 1, scannedAt: -1 });
+scanHistorySchema.index({ product: 1 });
 
 module.exports = mongoose.model('ScanHistory', scanHistorySchema);

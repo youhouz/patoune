@@ -21,7 +21,14 @@ exports.updateProfile = async (req, res, next) => {
 
     if (name && typeof name === 'string') updates.name = name.trim().slice(0, 50);
     if (phone && typeof phone === 'string') updates.phone = phone.trim().slice(0, 20);
-    if (location && location.coordinates) updates.location = location;
+    if (location && Array.isArray(location.coordinates)
+        && location.coordinates.length === 2
+        && typeof location.coordinates[0] === 'number'
+        && typeof location.coordinates[1] === 'number'
+        && location.coordinates[0] >= -180 && location.coordinates[0] <= 180
+        && location.coordinates[1] >= -90 && location.coordinates[1] <= 90) {
+      updates.location = { type: 'Point', coordinates: location.coordinates };
+    }
 
     const user = await User.findByIdAndUpdate(req.user.id, updates, {
       new: true,

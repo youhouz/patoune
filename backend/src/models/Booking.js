@@ -53,4 +53,7 @@ bookingSchema.pre('validate', function (next) {
   next();
 });
 
+bookingSchema.index({ owner: 1, createdAt: -1 });
+bookingSchema.index({ sitter: 1, createdAt: -1 });
+
 module.exports = mongoose.model('Booking', bookingSchema);

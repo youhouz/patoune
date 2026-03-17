@@ -23,7 +23,8 @@ exports.register = async (req, res, next) => {
 
     // Créer l'utilisateur avec role et adresse
     const userData = { name, email, password, phone };
-    if (role) userData.role = role;
+    // Defense-in-depth : jamais accepter 'admin' depuis le register
+    if (role && ['user', 'guardian', 'both'].includes(role)) userData.role = role;
     if (address) userData.address = address;
 
     // Si role guardian ou both, marquer isPetSitter

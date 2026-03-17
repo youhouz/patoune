@@ -31,6 +31,9 @@ if (!fs.existsSync(uploadsDir)) {
 const app = express();
 const server = http.createServer(app);
 
+// Trust proxy pour Vercel / reverse proxy (rate limiter, req.ip)
+app.set('trust proxy', 1);
+
 // CORS : origines strictement définies (jamais de wildcard)
 const allowedOrigins = process.env.CORS_ORIGINS
   ? process.env.CORS_ORIGINS.split(',').map(s => s.trim())
@@ -124,6 +127,8 @@ io.on('connection', (socket) => {
 
   socket.on('sendMessage', (data) => {
     if (data.receiver) {
+      // Toujours forcer le sender côté serveur (anti-spoofing)
+      data.sender = socket.userId;
       io.to(data.receiver).emit('newMessage', data);
     }
   });
@@ -137,3 +142,17 @@ const PORT = process.env.PORT || 5000;
 server.listen(PORT, '0.0.0.0', () => {
   console.log(`Serveur Pépète demarre sur le port ${PORT}`);
 });
+
+// Graceful shutdown
+const shutdown = (signal) => {
+  console.log(`${signal} recu, arret gracieux...`);
+  server.close(() => {
+    mongoose.connection.close(false, () => {
+      process.exit(0);
+    });
+  });
+  // Force exit après 10s
+  setTimeout(() => process.exit(1), 10000);
+};
+process.on('SIGTERM', () => shutdown('SIGTERM'));
+process.on('SIGINT', () => shutdown('SIGINT'));
