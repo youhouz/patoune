@@ -10,12 +10,23 @@ const OFF_API = 'https://world.openfoodfacts.org/api/v2/product';
 const OPFF_API = 'https://world.openpetfoodfacts.org/api/v2/product';
 
 // Lists for risk classification (mirrors scoreCalculator)
+const DANGEROUS_INGREDIENTS = [
+  'sous-produits animaux', 'farine animale', 'bha', 'bht', 'ethoxyquin',
+  'propylene glycol', 'by-products', 'animal meal', 'propylene'
+];
+
 const CONTROVERSIAL_INGREDIENTS = [
   'sous-produits animaux', 'farine animale', 'bha', 'bht', 'ethoxyquin',
   'propylene glycol', 'colorant', 'sucre', 'sel ajouté', 'sel ajoute', 'maïs', 'mais',
   'blé', 'ble', 'soja', 'gluten', 'carraghénane', 'carraghenane',
   'by-products', 'animal meal', 'corn', 'wheat', 'soy', 'sugar', 'salt',
   'propylene', 'colorant', 'carrageenan'
+];
+
+const MODERATE_INGREDIENTS = [
+  'colorant', 'sucre', 'sel ajouté', 'sel ajoute', 'maïs', 'mais',
+  'blé', 'ble', 'soja', 'gluten', 'carraghénane', 'carraghenane',
+  'corn', 'wheat', 'soy', 'sugar', 'salt', 'carrageenan', 'amidon'
 ];
 
 const DANGEROUS_ADDITIVES = [
@@ -29,6 +40,45 @@ const MODERATE_ADDITIVES = [
   'E330', 'E331', 'E332',
   'E414', 'E415', 'E440'
 ];
+
+// Noms lisibles des additifs courants
+const ADDITIVE_NAMES = {
+  'E320': 'BHA (Butylhydroxyanisole)',
+  'E321': 'BHT (Butylhydroxytoluène)',
+  'E324': 'Ethoxyquine',
+  'E310': 'Gallate de propyle',
+  'E311': 'Gallate d\'octyle',
+  'E312': 'Gallate de dodécyle',
+  'E102': 'Tartrazine (colorant jaune)',
+  'E110': 'Jaune orangé S (colorant)',
+  'E124': 'Ponceau 4R (colorant rouge)',
+  'E129': 'Rouge allura AC (colorant)',
+  'E131': 'Bleu patenté V (colorant)',
+  'E133': 'Bleu brillant FCF (colorant)',
+  'E250': 'Nitrite de sodium',
+  'E251': 'Nitrate de sodium',
+  'E252': 'Nitrate de potassium',
+  'E200': 'Acide sorbique (conservateur)',
+  'E202': 'Sorbate de potassium (conservateur)',
+  'E211': 'Benzoate de sodium (conservateur)',
+  'E212': 'Benzoate de potassium (conservateur)',
+  'E330': 'Acide citrique',
+  'E331': 'Citrate de sodium',
+  'E332': 'Citrate de potassium',
+  'E414': 'Gomme d\'acacia',
+  'E415': 'Gomme xanthane',
+  'E440': 'Pectine',
+  'E306': 'Tocophérols (vitamine E)',
+  'E307': 'Alpha-tocophérol',
+  'E300': 'Acide ascorbique (vitamine C)',
+  'E392': 'Extraits de romarin',
+  'E270': 'Acide lactique',
+  'E322': 'Lécithines',
+  'E412': 'Gomme de guar',
+  'E407': 'Carraghénanes',
+  'E508': 'Chlorure de potassium',
+  'E452': 'Polyphosphates',
+};
 
 /**
  * Recherche un produit sur Open Pet Food Facts puis Open Food Facts
@@ -65,16 +115,21 @@ async function fetchProductFromOpenFoodFacts(barcode) {
 function formatProduct(offProduct, barcode, source) {
   // Extraire les ingredients avec classification des risques
   const ingredients = [];
+  const classifyIngredient = (name) => {
+    const nameLower = (name || '').toLowerCase();
+    if (!nameLower) return { isControversial: false, risk: 'safe' };
+    const isDangerous = DANGEROUS_INGREDIENTS.some(c => nameLower.includes(c));
+    if (isDangerous) return { isControversial: true, risk: 'dangerous' };
+    const isModerate = MODERATE_INGREDIENTS.some(c => nameLower.includes(c));
+    if (isModerate) return { isControversial: true, risk: 'moderate' };
+    return { isControversial: false, risk: 'safe' };
+  };
+
   if (offProduct.ingredients) {
     offProduct.ingredients.slice(0, 15).forEach((ing) => {
       const name = (ing.text || ing.id || 'Inconnu');
-      const nameLower = name.toLowerCase();
-      const isControversial = CONTROVERSIAL_INGREDIENTS.some(c => nameLower.includes(c));
-      ingredients.push({
-        name,
-        isControversial,
-        risk: isControversial ? 'dangerous' : 'safe',
-      });
+      const { isControversial, risk } = classifyIngredient(name);
+      ingredients.push({ name, isControversial, risk });
     });
   }
   // Also check ingredients_text if structured ingredients are missing
@@ -82,13 +137,8 @@ function formatProduct(offProduct, barcode, source) {
     offProduct.ingredients_text.split(/[,;]/).slice(0, 15).forEach((text) => {
       const name = text.trim();
       if (!name) return;
-      const nameLower = name.toLowerCase();
-      const isControversial = CONTROVERSIAL_INGREDIENTS.some(c => nameLower.includes(c));
-      ingredients.push({
-        name,
-        isControversial,
-        risk: isControversial ? 'dangerous' : 'safe',
-      });
+      const { isControversial, risk } = classifyIngredient(name);
+      ingredients.push({ name, isControversial, risk });
     });
   }
 
@@ -102,7 +152,7 @@ function formatProduct(offProduct, barcode, source) {
       else if (MODERATE_ADDITIVES.includes(code)) risk = 'moderate';
       additives.push({
         code,
-        name: code,
+        name: ADDITIVE_NAMES[code] || code,
         risk,
       });
     });

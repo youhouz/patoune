@@ -33,16 +33,18 @@ function calculateScore(productData) {
     fat: 0,
     fiber: 0,
     additivesPenalty: 0,
-    qualityBonus: 0
+    qualityBonus: 0,
+    ingredientsScore: 0,
+    additivesScore: 0,
+    nutritionScore: 0
   };
 
   // === Analyse des ingrédients (40% du score) ===
+  let ingredientScore = 40;
   if (productData.ingredients && productData.ingredients.length > 0) {
-    let ingredientScore = 40;
-    let controversialCount = 0;
-
     productData.ingredients.forEach((ingredient) => {
-      const name = ingredient.name.toLowerCase();
+      const name = (ingredient.name || '').toLowerCase();
+      if (!name) return;
 
       // Vérifier si l'ingrédient est controversé
       const isControversial = CONTROVERSIAL_INGREDIENTS.some(c =>
@@ -50,31 +52,31 @@ function calculateScore(productData) {
       );
 
       if (isControversial || ingredient.isControversial) {
-        controversialCount++;
         ingredientScore -= 5;
       }
 
       // Bonus pour les bons ingrédients
-      if (name.includes('viande fraîche') || name.includes('poisson frais')) {
+      if (name.includes('viande fraîche') || name.includes('viande fraiche') || name.includes('poisson frais')) {
         details.qualityBonus += 5;
       }
-      if (name.includes('légume') || name.includes('fruit')) {
+      if (name.includes('légume') || name.includes('legume') || name.includes('fruit')) {
         details.qualityBonus += 2;
       }
     });
 
     // Le premier ingrédient est le plus important
-    if (productData.ingredients[0]) {
-      const firstIngredient = productData.ingredients[0].name.toLowerCase();
-      if (firstIngredient.includes('viande') || firstIngredient.includes('poisson') || firstIngredient.includes('poulet')) {
-        details.qualityBonus += 10;
-      }
+    const firstName = (productData.ingredients[0]?.name || '').toLowerCase();
+    if (firstName.includes('viande') || firstName.includes('poisson') || firstName.includes('poulet') || firstName.includes('saumon') || firstName.includes('dinde') || firstName.includes('agneau')) {
+      details.qualityBonus += 10;
     }
 
-    score = score - (40 - Math.max(ingredientScore, 0));
+    ingredientScore = Math.max(ingredientScore, 0);
+    score = score - (40 - ingredientScore);
   }
+  details.ingredientsScore = ingredientScore;
 
   // === Analyse des additifs (30% du score) ===
+  let additivePenalty = 0;
   if (productData.additives && productData.additives.length > 0) {
     productData.additives.forEach((additive) => {
       const code = (additive.code || '').toUpperCase();
@@ -86,13 +88,16 @@ function calculateScore(productData) {
       }
     });
 
-    score -= Math.min(details.additivesPenalty, 30);
+    additivePenalty = Math.min(details.additivesPenalty, 30);
+    score -= additivePenalty;
   }
+  details.additivesScore = 30 - additivePenalty;
 
   // === Bonus qualité ===
   score += Math.min(details.qualityBonus, 15);
 
   // === Score nutritionnel (basé sur les détails si fournis) ===
+  let nutritionBonus = 0;
   if (productData.scoreDetails) {
     const { protein, fat, fiber } = productData.scoreDetails;
     if (protein > 25) details.protein = 5;
@@ -104,8 +109,10 @@ function calculateScore(productData) {
     if (fiber > 3) details.fiber = 3;
     else if (fiber > 1) details.fiber = 1;
 
-    score += details.protein + details.fat + details.fiber;
+    nutritionBonus = details.protein + details.fat + details.fiber;
+    score += nutritionBonus;
   }
+  details.nutritionScore = Math.max(0, Math.min(30, 15 + nutritionBonus));
 
   // Borner le score entre 0 et 100
   score = Math.max(0, Math.min(100, Math.round(score)));

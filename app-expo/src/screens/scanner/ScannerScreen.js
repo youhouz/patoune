@@ -26,14 +26,14 @@ const { COLORS, SPACING, RADIUS, FONT_SIZE, SHADOWS } = require('../../utils/col
 const CORNER_SIZE = 28;
 const CORNER_WIDTH = 3.5;
 
-// Produits populaires avec vrais codes-barres (Open Food Facts / Open Pet Food Facts)
+// Produits populaires avec vrais codes-barres vérifiés sur Open Pet Food Facts
 const POPULAR_PRODUCTS = [
-  { barcode: '3182550710046', name: 'Royal Canin Medium Adult', brand: 'Royal Canin', icon: 'heart' },
-  { barcode: '3564700838297', name: 'Pro Plan Adult Chien', brand: 'Purina Pro Plan', icon: 'heart' },
-  { barcode: '4008429078811', name: 'Sheba Terrine Chat', brand: 'Sheba', icon: 'gitlab' },
-  { barcode: '5998749108574', name: 'Whiskas Poulet Chat', brand: 'Whiskas', icon: 'gitlab' },
-  { barcode: '3564700216125', name: 'Friskies Chien Boeuf', brand: 'Friskies', icon: 'heart' },
-  { barcode: '4008429073816', name: 'Pedigree Dentastix', brand: 'Pedigree', icon: 'gift' },
+  { barcode: '8410650238852', name: 'Ultima Croquettes', brand: 'Ultima', icon: 'heart' },
+  { barcode: '3065890135147', name: 'Cesar Légumes Chien', brand: 'Cesar', icon: 'heart' },
+  { barcode: '5000161021703', name: 'Purina One Poulet Chat', brand: 'Purina', icon: 'gitlab' },
+  { barcode: '5998749117798', name: 'Catisfactions Fromage', brand: 'Catisfactions', icon: 'gitlab' },
+  { barcode: '7613035939882', name: 'Felix Party Mix Océan', brand: 'Purina', icon: 'gitlab' },
+  { barcode: '4000487227361', name: 'Fido Fun Tastix Chien', brand: 'Purina', icon: 'heart' },
 ];
 
 const ScannerScreen = ({ navigation }) => {
