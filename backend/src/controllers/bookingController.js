@@ -56,6 +56,20 @@ exports.createBooking = async (req, res, next) => {
       return res.status(400).json({ success: false, error: 'Ce pet-sitter ne propose pas ce service' });
     }
 
+    // Vérifier qu'il n'y a pas déjà une réservation active pour ce sitter aux mêmes dates
+    const conflicting = await Booking.findOne({
+      sitter,
+      status: { $in: ['pending', 'confirmed', 'ongoing'] },
+      startDate: { $lt: end },
+      endDate: { $gt: start },
+    });
+    if (conflicting) {
+      return res.status(409).json({
+        success: false,
+        error: 'Ce pet-sitter a deja une reservation sur cette periode'
+      });
+    }
+
     // Calculer le prix côté serveur (jamais faire confiance au client)
     const days = Math.max(1, Math.ceil((end - start) / (1000 * 60 * 60 * 24)));
     const isHourlyService = ['promenade', 'visite'].includes(service);

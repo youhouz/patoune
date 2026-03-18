@@ -53,10 +53,18 @@ exports.addPet = async (req, res, next) => {
     }
     const petData = pickFields(req.body, ALLOWED_PET_FIELDS);
 
-    // Validate photo size (max 2MB base64 per photo)
+    // Validate photos format and size
     if (petData.photos && Array.isArray(petData.photos)) {
       for (const photo of petData.photos) {
-        if (typeof photo === 'string' && photo.length > 2 * 1024 * 1024) {
+        if (typeof photo !== 'string') continue;
+        // Accept data URIs and URLs only
+        if (!photo.startsWith('data:image/') && !photo.startsWith('http')) {
+          return res.status(400).json({
+            success: false,
+            error: 'Format de photo invalide. Seules les images JPEG, PNG et WebP sont acceptées.'
+          });
+        }
+        if (photo.length > 2 * 1024 * 1024) {
           return res.status(400).json({
             success: false,
             error: 'Photo trop volumineuse (max 1.5MB). Réessayez avec une photo plus petite.'

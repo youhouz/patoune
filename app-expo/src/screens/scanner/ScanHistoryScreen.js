@@ -253,7 +253,7 @@ const ScanHistoryScreen = ({ navigation }) => {
           </View>
           <Text style={styles.emptyTitle}>Erreur de chargement</Text>
           <Text style={styles.emptySubtitle}>
-            Impossible de recuperer l'historique. Verifiez votre connexion et reessayez.
+            Impossible de récupérer l'historique. Vérifiez votre connexion et réessayez.
           </Text>
           <TouchableOpacity
             style={styles.retryButton}

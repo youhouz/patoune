@@ -403,7 +403,7 @@ const MessagesScreen = ({ route, navigation }) => {
             placeholder="Votre message..."
             placeholderTextColor={colors.placeholder}
             multiline
-            maxLength={MAX_MESSAGE_LENGTH + 50}
+            maxLength={MAX_MESSAGE_LENGTH}
             onFocus={() => {
               setTimeout(() => {
                 flatListRef.current?.scrollToEnd({ animated: true });

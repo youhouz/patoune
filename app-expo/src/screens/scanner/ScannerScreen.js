@@ -157,21 +157,15 @@ const ScannerScreen = ({ navigation }) => {
       if (response.data && response.data.product) {
         navigation.navigate('ProductResult', { product: response.data.product });
       } else {
-        showError('Reponse inattendue du serveur');
+        showError('Réponse inattendue du serveur');
       }
     } catch (error) {
       if (error.response?.status === 404) {
         Alert.alert(
-          'Produit non trouve',
-          "Ce produit n'est pas encore dans notre base de donnees. Voulez-vous contribuer en l'ajoutant ?",
+          'Produit non trouvé',
+          "Ce produit n'est pas encore dans notre base de données.",
           [
-            { text: 'Non merci', style: 'cancel' },
-            {
-              text: 'Contribuer',
-              onPress: () => {
-                // TODO: navigate to add product screen
-              },
-            },
+            { text: 'OK', style: 'cancel' },
           ]
         );
       } else if (error.message === 'Network Error') {
