@@ -54,11 +54,12 @@ exports.createReview = async (req, res, next) => {
       comment: typeof comment === 'string' ? comment.slice(0, 1000) : ''
     });
 
-    // Recalculer la note moyenne du gardien
-    const reviews = await Review.find({ petsitter: req.body.petsitter });
+    // Recalculer la note moyenne du gardien (utiliser la valeur validée du booking)
+    const validatedSitterId = booking.sitter.toString();
+    const reviews = await Review.find({ petsitter: validatedSitterId });
     const avgRating = reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length;
 
-    await PetSitter.findByIdAndUpdate(req.body.petsitter, {
+    await PetSitter.findByIdAndUpdate(validatedSitterId, {
       rating: Math.round(avgRating * 10) / 10,
       reviewCount: reviews.length
     });

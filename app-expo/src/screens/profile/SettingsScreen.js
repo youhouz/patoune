@@ -21,6 +21,7 @@ import { useAuth } from '../../context/AuthContext';
 import { PepeteIcon } from '../../components/PepeteLogo';
 import api, { API_URL } from '../../api/client';
 import { uploadAvatarAPI } from '../../api/auth';
+import { compressAvatar } from '../../utils/imageCompressor';
 import { geocodeCity } from '../../hooks/useLocation';
 import { updatePetSitterAPI } from '../../api/petsitters';
 import { showAlert } from '../../utils/alert';
@@ -156,13 +157,16 @@ const SettingsScreen = ({ navigation }) => {
         base64: true,
       });
       if (result.canceled) return;
-      const base64 = result.assets[0].base64;
-      if (!base64) {
+      const asset = result.assets[0];
+      if (!asset.base64 && !asset.uri) {
         showAlert('Erreur', 'Impossible de lire l\'image selectionnee.');
         return;
       }
       setUploadingAvatar(true);
-      const res = await uploadAvatarAPI(base64);
+      const compressed = await compressAvatar(asset);
+      // Extract raw base64 from data URI
+      const raw = compressed.replace(/^data:image\/\w+;base64,/, '');
+      const res = await uploadAvatarAPI(raw);
       const updatedUser = res.data?.user;
       if (updatedUser) {
         await updateUser(updatedUser);

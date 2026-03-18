@@ -26,13 +26,14 @@ const { COLORS, SPACING, RADIUS, FONT_SIZE, SHADOWS } = require('../../utils/col
 const CORNER_SIZE = 28;
 const CORNER_WIDTH = 3.5;
 
-const DEMO_PRODUCTS = [
-  { barcode: '8710255130002', name: 'Orijen Original', brand: 'Orijen', icon: 'heart', score: 95 },
-  { barcode: '3017620422003', name: 'Royal Canin Maxi', brand: 'Royal Canin', icon: 'heart', score: 62 },
-  { barcode: '3564700266236', name: 'Pedigree Vital', brand: 'Pedigree', icon: 'heart', score: 31 },
-  { barcode: '4260215761024', name: 'Applaws Chat', brand: 'Applaws', icon: 'gitlab', score: 93 },
-  { barcode: '5410340620007', name: 'Whiskas Poisson', brand: 'Whiskas', icon: 'gitlab', score: 22 },
-  { barcode: '4047059414422', name: 'Kong Classic M', brand: 'Kong', icon: 'gift', score: 92 },
+// Produits populaires avec vrais codes-barres vérifiés sur Open Pet Food Facts
+const POPULAR_PRODUCTS = [
+  { barcode: '8410650238852', name: 'Ultima Croquettes', brand: 'Ultima', icon: 'heart' },
+  { barcode: '3065890135147', name: 'Cesar Légumes Chien', brand: 'Cesar', icon: 'heart' },
+  { barcode: '5000161021703', name: 'Purina One Poulet Chat', brand: 'Purina', icon: 'gitlab' },
+  { barcode: '5998749117798', name: 'Catisfactions Fromage', brand: 'Catisfactions', icon: 'gitlab' },
+  { barcode: '7613035939882', name: 'Felix Party Mix Océan', brand: 'Purina', icon: 'gitlab' },
+  { barcode: '4000487227361', name: 'Fido Fun Tastix Chien', brand: 'Purina', icon: 'heart' },
 ];
 
 const ScannerScreen = ({ navigation }) => {
@@ -40,7 +41,7 @@ const ScannerScreen = ({ navigation }) => {
   const { width, isTablet, contentWidth, hPadding } = useResponsive();
   const SCAN_FRAME_SIZE = Math.min(width * 0.62, isTablet ? 380 : width * 0.62);
   const CAMERA_HEIGHT = Math.min(width * 0.78, isTablet ? 460 : width * 0.78);
-  const DEMO_CARD_WIDTH = (contentWidth - hPadding * 2 - SPACING.md * 2) / 3;
+  const POPULAR_CARD_WIDTH = (contentWidth - hPadding * 2 - SPACING.md * 2) / 3;
   const [permission, requestPermission] = useCameraPermissions();
   const [barcode, setBarcode] = useState('');
   const [scanning, setScanning] = useState(false);
@@ -157,21 +158,15 @@ const ScannerScreen = ({ navigation }) => {
       if (response.data && response.data.product) {
         navigation.navigate('ProductResult', { product: response.data.product });
       } else {
-        showError('Reponse inattendue du serveur');
+        showError('Réponse inattendue du serveur');
       }
     } catch (error) {
       if (error.response?.status === 404) {
         Alert.alert(
-          'Produit non trouve',
-          "Ce produit n'est pas encore dans notre base de donnees. Voulez-vous contribuer en l'ajoutant ?",
+          'Produit non trouvé',
+          "Ce produit n'est pas encore dans notre base de données.",
           [
-            { text: 'Non merci', style: 'cancel' },
-            {
-              text: 'Contribuer',
-              onPress: () => {
-                // TODO: navigate to add product screen
-              },
-            },
+            { text: 'OK', style: 'cancel' },
           ]
         );
       } else if (error.message === 'Network Error') {
@@ -538,42 +533,24 @@ const ScannerScreen = ({ navigation }) => {
           </View>
         )}
 
-        {/* Demo products for quick testing */}
+        {/* Produits populaires */}
         <View style={[styles.demoSection, { paddingHorizontal: hPadding }]}>
-          <Text style={styles.demoTitle}>Produits demo</Text>
-          <Text style={styles.demoSubtitle}>Appuyez pour tester le scanner</Text>
+          <Text style={styles.demoTitle}>Produits populaires</Text>
+          <Text style={styles.demoSubtitle}>Scannez un produit pour l'analyser</Text>
           <View style={styles.demoGrid}>
-            {DEMO_PRODUCTS.map((item) => (
+            {POPULAR_PRODUCTS.map((item) => (
               <TouchableOpacity
                 key={item.barcode}
-                style={[styles.demoCard, { width: DEMO_CARD_WIDTH }]}
+                style={[styles.demoCard, { width: POPULAR_CARD_WIDTH }]}
                 onPress={() => handleBarcodeScan(item.barcode)}
                 disabled={scanning}
                 activeOpacity={0.7}
               >
-                <View style={[
-                  styles.demoIconCircle,
-                  { backgroundColor: item.score >= 70 ? COLORS.successSoft : item.score >= 40 ? COLORS.warningSoft : COLORS.errorSoft }
-                ]}>
-                  <Feather
-                    name={item.icon}
-                    size={18}
-                    color={item.score >= 70 ? COLORS.success : item.score >= 40 ? COLORS.warning : COLORS.error}
-                  />
+                <View style={[styles.demoIconCircle, { backgroundColor: COLORS.successSoft }]}>
+                  <Feather name={item.icon} size={18} color={COLORS.success} />
                 </View>
                 <Text style={styles.demoName} numberOfLines={1}>{item.name}</Text>
                 <Text style={styles.demoBrand}>{item.brand}</Text>
-                <View style={[
-                  styles.demoScoreBadge,
-                  { backgroundColor: item.score >= 70 ? COLORS.successSoft : item.score >= 40 ? COLORS.warningSoft : COLORS.errorSoft }
-                ]}>
-                  <Text style={[
-                    styles.demoScoreText,
-                    { color: item.score >= 70 ? COLORS.success : item.score >= 40 ? COLORS.warning : COLORS.error }
-                  ]}>
-                    {item.score}/100
-                  </Text>
-                </View>
               </TouchableOpacity>
             ))}
           </View>

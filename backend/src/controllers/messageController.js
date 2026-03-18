@@ -1,4 +1,6 @@
+const mongoose = require('mongoose');
 const Message = require('../models/Message');
+const User = require('../models/User');
 
 // Générer un ID de conversation unique et trié
 const getConversationId = (userId1, userId2) => {
@@ -14,8 +16,17 @@ exports.sendMessage = async (req, res, next) => {
     if (!receiver || !content || !content.trim()) {
       return res.status(400).json({ success: false, error: 'Destinataire et contenu requis' });
     }
+    if (!mongoose.Types.ObjectId.isValid(receiver)) {
+      return res.status(400).json({ success: false, error: 'Identifiant destinataire invalide' });
+    }
     if (receiver === req.user.id) {
       return res.status(400).json({ success: false, error: 'Impossible de s\'envoyer un message a soi-meme' });
+    }
+
+    // Vérifier que le destinataire existe
+    const receiverUser = await User.findById(receiver).select('_id').lean();
+    if (!receiverUser) {
+      return res.status(404).json({ success: false, error: 'Destinataire introuvable' });
     }
 
     const conversation = getConversationId(req.user.id, receiver);
@@ -24,7 +35,7 @@ exports.sendMessage = async (req, res, next) => {
       conversation,
       sender: req.user.id,
       receiver,
-      content
+      content: content.trim().slice(0, 1000)
     });
 
     const populated = await message.populate('sender', 'name avatar');

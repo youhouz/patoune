@@ -13,4 +13,4 @@ import api from './client';
  * @returns {Promise} Axios response with AI answer
  */
 export const askAIAPI = (question, petContext) =>
-  api.post('/ai/ask', { question, petContext });
+  api.post('/ai/ask', { question, petContext }, { timeout: 30000 });
