@@ -535,11 +535,14 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: colors.background,
+    ...(Platform.OS === 'web' ? { height: '100vh', overflow: 'hidden' } : {}),
   },
   scrollView: {
     flex: 1,
+    ...(Platform.OS === 'web' ? { overflow: 'auto' } : {}),
   },
   scrollContent: {
+    flexGrow: 1,
     paddingBottom: 120,
   },
   loadingFull: {
