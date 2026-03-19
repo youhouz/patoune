@@ -167,19 +167,11 @@ const PetSitterDetailScreen = ({ route, navigation }) => {
     count: reviews.filter(r => Math.floor(r.rating) === stars).length,
   }));
 
-  const ScrollContainer = Platform.OS === 'web'
-    ? ({ children, style, contentContainerStyle }) => (
-        <View style={[style, { overflow: 'auto', WebkitOverflowScrolling: 'touch' }]}>
-          <View style={contentContainerStyle}>{children}</View>
-        </View>
-      )
-    : ScrollView;
-
   return (
     <View style={styles.container}>
       <StatusBar barStyle="light-content" />
 
-      <ScrollContainer
+      <ScrollView
         style={styles.scrollView}
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
@@ -492,7 +484,7 @@ const PetSitterDetailScreen = ({ route, navigation }) => {
           </SectionCard>
 
         </Animated.View>
-      </ScrollContainer>
+      </ScrollView>
 
       {/* Sticky Bottom Bar */}
       <View style={styles.bottomBar}>
@@ -543,7 +535,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: colors.background,
-    ...(Platform.OS === 'web' ? { height: '100%' } : {}),
+    ...(Platform.OS === 'web' ? { height: '100vh', maxHeight: '100vh', overflow: 'hidden' } : {}),
   },
   scrollView: {
     flex: 1,
