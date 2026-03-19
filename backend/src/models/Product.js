@@ -51,7 +51,10 @@ const productSchema = new mongoose.Schema({
     fat: { type: Number, default: 0 },
     fiber: { type: Number, default: 0 },
     additivesPenalty: { type: Number, default: 0 },
-    qualityBonus: { type: Number, default: 0 }
+    qualityBonus: { type: Number, default: 0 },
+    ingredientsScore: { type: Number, default: 0 },
+    additivesScore: { type: Number, default: 0 },
+    nutritionScore: { type: Number, default: 0 }
   },
   image: {
     type: String,
