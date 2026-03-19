@@ -38,6 +38,14 @@ exports.scanProduct = async (req, res, next) => {
       }
     }
 
+    // Recalculer le score si les champs breakdown manquent (produits anciens)
+    if (product.scoreDetails && product.scoreDetails.ingredientsScore == null) {
+      const scoreResult = calculateScore(product.toObject ? product.toObject() : product);
+      product.nutritionScore = scoreResult.score;
+      product.scoreDetails = scoreResult.details;
+      await product.save();
+    }
+
     // Sauvegarder dans l'historique si l'utilisateur est connecte
     if (req.user) {
       await ScanHistory.create({
