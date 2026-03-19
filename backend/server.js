@@ -37,7 +37,11 @@ app.set('trust proxy', 1);
 // CORS : origines strictement définies (jamais de wildcard)
 const allowedOrigins = process.env.CORS_ORIGINS
   ? process.env.CORS_ORIGINS.split(',').map(s => s.trim())
-  : ['http://localhost:8081', 'http://localhost:19006', 'http://localhost:3000'];
+  : [
+      'http://localhost:8081', 'http://localhost:19006', 'http://localhost:3000',
+      'https://pepete.fr', 'https://www.pepete.fr',
+      'https://pepete-front.vercel.app',
+    ];
 const corsOptions = {
   origin: (origin, callback) => {
     // Autoriser les requêtes sans origin (apps mobiles, curl)

@@ -10,8 +10,12 @@ const app = express();
 
 const allowedOrigins = process.env.CORS_ORIGINS
   ? process.env.CORS_ORIGINS.split(',').map(s => s.trim())
-  : ['http://localhost:8081', 'http://localhost:19006', 'http://localhost:3000'];
-const corsOptions = { origin: allowedOrigins };
+  : [
+      'http://localhost:8081', 'http://localhost:19006', 'http://localhost:3000',
+      'https://pepete.fr', 'https://www.pepete.fr',
+      'https://pepete-front.vercel.app',
+    ];
+const corsOptions = { origin: allowedOrigins, credentials: true };
 
 // Trust Vercel/proxy headers so req.ip is the real client IP
 app.set('trust proxy', true);

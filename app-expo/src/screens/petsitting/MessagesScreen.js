@@ -55,11 +55,12 @@ const ScrollToBottomFAB = ({ visible, onPress, unreadCount }) => {
 /* ---------- Main Screen ---------- */
 const MessagesScreen = ({ route, navigation }) => {
   const insets = useSafeAreaInsets();
-  const { userId, userName } = route.params;
+  const { userId, userName } = route.params || {};
   const { user } = useAuth();
   const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState('');
   const [initialLoading, setInitialLoading] = useState(true);
+  const [loadError, setLoadError] = useState(null);
   const [sending, setSending] = useState(false);
   const [showScrollFab, setShowScrollFab] = useState(false);
   const [isNearBottom, setIsNearBottom] = useState(true);
@@ -69,23 +70,24 @@ const MessagesScreen = ({ route, navigation }) => {
   const prevMessageCount = useRef(0);
 
   useEffect(() => {
+    if (!userId) return;
     loadMessages(true);
     const interval = setInterval(() => loadMessages(false), 5000);
     Animated.timing(fadeAnim, {
       toValue: 1,
       duration: 400,
-      useNativeDriver: true,
+      useNativeDriver: Platform.OS !== 'web',
     }).start();
     return () => clearInterval(interval);
-  }, []);
+  }, [userId]);
 
   const loadMessages = async (isInitial = false) => {
     try {
       const response = await api.get(`/messages/${userId}`);
       const newMessages = response.data.messages || [];
+      if (isInitial) setLoadError(null);
       setMessages((prev) => {
         if (JSON.stringify(prev.map(m => m._id)) !== JSON.stringify(newMessages.map(m => m._id))) {
-          // If new messages arrived and user is at bottom, auto-scroll
           if (newMessages.length > prevMessageCount.current && isNearBottom) {
             setTimeout(() => {
               flatListRef.current?.scrollToEnd({ animated: true });
@@ -97,7 +99,14 @@ const MessagesScreen = ({ route, navigation }) => {
         return prev;
       });
     } catch (error) {
-      console.log('Erreur messages:', error);
+      console.log('Erreur messages:', error?.response?.status, error?.message);
+      if (isInitial) {
+        setLoadError(
+          error?.response?.status === 401
+            ? 'Vous devez être connecté pour accéder aux messages.'
+            : error?.userMessage || 'Impossible de charger les messages. Vérifiez votre connexion.'
+        );
+      }
     } finally {
       if (isInitial) setInitialLoading(false);
     }
@@ -120,8 +129,11 @@ const MessagesScreen = ({ route, navigation }) => {
         flatListRef.current?.scrollToEnd({ animated: true });
       }, 100);
     } catch (error) {
-      console.log('Erreur envoi message:', error);
+      console.log('Erreur envoi message:', error?.response?.status, error?.message);
       setNewMessage(messageText);
+      if (Platform.OS === 'web') {
+        alert(error?.response?.data?.error || 'Erreur lors de l\'envoi du message. Réessayez.');
+      }
     } finally {
       setSending(false);
     }
@@ -348,10 +360,34 @@ const MessagesScreen = ({ route, navigation }) => {
 
       {/* Messages */}
       <Animated.View style={{ flex: 1, opacity: fadeAnim }}>
-        {initialLoading ? (
+        {!userId ? (
+          <View style={styles.loadingContainer}>
+            <Feather name="alert-circle" size={36} color={colors.textSecondary} />
+            <Text style={styles.loadingText}>Conversation introuvable</Text>
+            <TouchableOpacity
+              style={styles.retryBtn}
+              onPress={() => navigation.goBack()}
+              activeOpacity={0.7}
+            >
+              <Text style={styles.retryBtnText}>Retour</Text>
+            </TouchableOpacity>
+          </View>
+        ) : initialLoading ? (
           <View style={styles.loadingContainer}>
             <ActivityIndicator size="large" color={colors.primary} />
             <Text style={styles.loadingText}>Chargement des messages...</Text>
+          </View>
+        ) : loadError ? (
+          <View style={styles.loadingContainer}>
+            <Feather name="wifi-off" size={36} color={colors.textSecondary} />
+            <Text style={styles.loadingText}>{loadError}</Text>
+            <TouchableOpacity
+              style={styles.retryBtn}
+              onPress={() => { setInitialLoading(true); setLoadError(null); loadMessages(true); }}
+              activeOpacity={0.7}
+            >
+              <Text style={styles.retryBtnText}>Réessayer</Text>
+            </TouchableOpacity>
           </View>
         ) : (
           <View style={{ flex: 1 }}>
@@ -446,6 +482,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: colors.cream,
+    ...(Platform.OS === 'web' ? { height: '100vh', maxHeight: '100vh', overflow: 'hidden' } : {}),
   },
 
   // Header
@@ -735,6 +772,20 @@ const styles = StyleSheet.create({
     fontSize: FONT_SIZE.sm,
     fontFamily: FONTS.bodyMedium,
     color: colors.textSecondary,
+    textAlign: 'center',
+    paddingHorizontal: SPACING.xl,
+  },
+  retryBtn: {
+    marginTop: SPACING.base,
+    backgroundColor: colors.primary,
+    paddingHorizontal: SPACING.xl,
+    paddingVertical: SPACING.md,
+    borderRadius: RADIUS.full,
+  },
+  retryBtnText: {
+    fontSize: FONT_SIZE.sm,
+    fontFamily: FONTS.bodySemiBold,
+    color: colors.white,
   },
 
   // Input Bar
