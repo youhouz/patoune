@@ -20,6 +20,7 @@ import { Feather } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { scanProductAPI } from '../../api/products';
 import useResponsive from '../../hooks/useResponsive';
+import WebBarcodeScanner from '../../components/WebBarcodeScanner';
 import { FONTS } from '../../utils/typography';
 const { COLORS, SPACING, RADIUS, FONT_SIZE, SHADOWS } = require('../../utils/colors');
 
@@ -45,7 +46,7 @@ const ScannerScreen = ({ navigation }) => {
   const [permission, requestPermission] = useCameraPermissions();
   const [barcode, setBarcode] = useState('');
   const [scanning, setScanning] = useState(false);
-  const [manualMode, setManualMode] = useState(Platform.OS === 'web');
+  const [manualMode, setManualMode] = useState(false);
   const [scanned, setScanned] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
 
@@ -392,7 +393,16 @@ const ScannerScreen = ({ navigation }) => {
         {/* Camera / Manual zone */}
         <View style={[styles.cameraContainer, { paddingHorizontal: hPadding }]}>
           <View style={[styles.cameraArea, { height: CAMERA_HEIGHT }]}>
-            {!manualMode && permission.granted ? (
+            {!manualMode && Platform.OS === 'web' ? (
+              <View style={StyleSheet.absoluteFillObject}>
+                <WebBarcodeScanner
+                  onBarcodeScanned={scanned ? undefined : handleBarcodeScanned}
+                  active={!scanned}
+                  style={StyleSheet.absoluteFillObject}
+                />
+                {renderScanFrame()}
+              </View>
+            ) : !manualMode && permission.granted ? (
               <CameraView
                 style={StyleSheet.absoluteFillObject}
                 barcodeScannerSettings={{
