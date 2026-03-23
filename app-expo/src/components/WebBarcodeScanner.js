@@ -3,7 +3,7 @@ import { View, Text, StyleSheet, Platform } from 'react-native';
 
 /**
  * Web barcode scanner using html5-qrcode (pure JS, works on ALL browsers).
- * Handles camera access + barcode decoding internally.
+ * Optimized for rapid multi-scan: keeps camera stream alive, large scan zone.
  */
 const WebBarcodeScanner = ({ onBarcodeScanned, active = true, style }) => {
   const containerRef = useRef(null);
@@ -17,7 +17,21 @@ const WebBarcodeScanner = ({ onBarcodeScanned, active = true, style }) => {
     onBarcodeScannedRef.current = onBarcodeScanned;
   }, [onBarcodeScanned]);
 
-  const stopScanner = useCallback(async () => {
+  // Only stop scanning but keep camera stream alive for fast restart
+  const pauseScanner = useCallback(async () => {
+    if (scannerRef.current) {
+      try {
+        const state = scannerRef.current.getState?.();
+        // 2 = SCANNING
+        if (state === 2) {
+          await scannerRef.current.pause(/* pauseVideo */ false);
+        }
+      } catch (_) {}
+    }
+  }, []);
+
+  // Full cleanup on unmount only
+  const destroyScanner = useCallback(async () => {
     if (scannerRef.current) {
       try {
         const state = scannerRef.current.getState?.();
@@ -30,13 +44,41 @@ const WebBarcodeScanner = ({ onBarcodeScanned, active = true, style }) => {
     }
   }, []);
 
-  useEffect(() => {
-    if (Platform.OS !== 'web' || !active) return;
+  // Resume from pause
+  const resumeScanner = useCallback(() => {
+    if (scannerRef.current) {
+      try {
+        const state = scannerRef.current.getState?.();
+        // 3 = PAUSED
+        if (state === 3) {
+          scannerRef.current.resume();
+          return true;
+        }
+      } catch (_) {}
+    }
+    return false;
+  }, []);
 
+  useEffect(() => {
+    if (Platform.OS !== 'web') return;
+
+    // When deactivated, pause (don't destroy)
+    if (!active) {
+      pauseScanner();
+      return;
+    }
+
+    // When reactivated, try to resume first (instant restart)
+    if (resumeScanner()) {
+      return;
+    }
+
+    // First time: create scanner
     let cancelled = false;
 
     const startScanner = async () => {
-      await new Promise(r => setTimeout(r, 300));
+      // Small delay for DOM to be ready on first mount
+      await new Promise(r => setTimeout(r, 100));
       if (cancelled) return;
 
       const containerId = 'web-barcode-scanner';
@@ -45,6 +87,9 @@ const WebBarcodeScanner = ({ onBarcodeScanned, active = true, style }) => {
         setError('nodom');
         return;
       }
+
+      // Clean any residual DOM from previous session
+      el.innerHTML = '';
 
       try {
         const { Html5Qrcode } = await import('html5-qrcode');
@@ -67,11 +112,26 @@ const WebBarcodeScanner = ({ onBarcodeScanned, active = true, style }) => {
         await scanner.start(
           { facingMode: 'environment' },
           {
-            fps: 5,
-            qrbox: { width: 280, height: 160 },
+            fps: 15,
+            qrbox: function(viewfinderWidth, viewfinderHeight) {
+              // Use 85% of the viewfinder — much bigger scan zone
+              return {
+                width: Math.floor(viewfinderWidth * 0.85),
+                height: Math.floor(viewfinderHeight * 0.7),
+              };
+            },
             aspectRatio: 1.5,
             disableFlip: false,
-            formatsToSupport: [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16],
+            formatsToSupport: [
+              0,  // QR_CODE
+              3,  // CODE_39
+              5,  // CODE_128
+              8,  // ITF
+              9,  // EAN_13
+              10, // EAN_8
+              14, // UPC_A
+              15, // UPC_E
+            ],
           },
           onSuccess,
           () => {}
@@ -95,11 +155,11 @@ const WebBarcodeScanner = ({ onBarcodeScanned, active = true, style }) => {
 
     return () => {
       cancelled = true;
-      stopScanner();
     };
-  }, [active, stopScanner]);
+  }, [active, pauseScanner, resumeScanner]);
 
-  useEffect(() => () => { stopScanner(); }, [stopScanner]);
+  // Full cleanup on unmount only
+  useEffect(() => () => { destroyScanner(); }, [destroyScanner]);
 
   if (Platform.OS !== 'web') return null;
 
