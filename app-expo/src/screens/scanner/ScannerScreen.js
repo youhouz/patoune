@@ -170,7 +170,7 @@ const ScannerScreen = ({ navigation }) => {
             { text: 'OK', style: 'cancel' },
           ]
         );
-      } else if (error.message === 'Network Error') {
+      } else if (!error.response) {
         showError('Pas de connexion internet');
       } else {
         showError('Impossible de scanner ce produit');

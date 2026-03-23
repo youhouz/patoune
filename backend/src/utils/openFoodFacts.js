@@ -88,17 +88,17 @@ const ADDITIVE_NAMES = {
 async function fetchProductFromOpenFoodFacts(barcode) {
   // 1. Essayer d'abord Open Pet Food Facts (specifique animaux)
   try {
-    const petResponse = await axios.get(`${OPFF_API}/${barcode}.json`, { timeout: 5000 });
+    const petResponse = await axios.get(`${OPFF_API}/${barcode}.json`, { timeout: 10000 });
     if (petResponse.data?.status === 1 && petResponse.data?.product) {
       return formatProduct(petResponse.data.product, barcode, 'openpetfoodfacts');
     }
   } catch (err) {
-    // Silencieux, on essaie l'autre API
+    console.log('Open Pet Food Facts API error:', err.message);
   }
 
   // 2. Fallback sur Open Food Facts (produits generaux)
   try {
-    const response = await axios.get(`${OFF_API}/${barcode}.json`, { timeout: 5000 });
+    const response = await axios.get(`${OFF_API}/${barcode}.json`, { timeout: 10000 });
     if (response.data?.status === 1 && response.data?.product) {
       return formatProduct(response.data.product, barcode, 'openfoodfacts');
     }
