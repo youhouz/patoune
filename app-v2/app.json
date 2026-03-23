@@ -23,7 +23,7 @@
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
-        "backgroundColor": "#C4704B"
+        "backgroundColor": "#8A9A7E"
       },
       "edgeToEdgeEnabled": true,
       "package": "com.pepete.app",
