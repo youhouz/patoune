@@ -20,6 +20,7 @@ import { Feather } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { scanProductAPI } from '../../api/products';
 import useResponsive from '../../hooks/useResponsive';
+import WebBarcodeScanner from '../../components/WebBarcodeScanner';
 import { FONTS } from '../../utils/typography';
 const { COLORS, SPACING, RADIUS, FONT_SIZE, SHADOWS } = require('../../utils/colors');
 
@@ -398,7 +399,13 @@ const ScannerScreen = ({ navigation }) => {
         {/* Camera / Manual zone */}
         <View style={[styles.cameraContainer, { paddingHorizontal: hPadding }]}>
           <View style={[styles.cameraArea, { height: CAMERA_HEIGHT }]}>
-            {!manualMode && permission.granted ? (
+            {!manualMode && Platform.OS === 'web' ? (
+              <WebBarcodeScanner
+                onBarcodeScanned={handleBarcodeScanned}
+                active={!scanned}
+                style={StyleSheet.absoluteFillObject}
+              />
+            ) : !manualMode && permission.granted ? (
               <CameraView
                 style={StyleSheet.absoluteFillObject}
                 facing="back"
