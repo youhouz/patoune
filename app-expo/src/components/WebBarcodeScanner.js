@@ -63,6 +63,7 @@ const WebBarcodeScanner = ({ onBarcodeScanned, active = true, style }) => {
       if (cancelled || !videoRef.current || !detectorRef.current) return;
       try {
         const barcodes = await detectorRef.current.detect(videoRef.current);
+        if (cancelled) return; // Re-check after async detect()
         if (barcodes.length > 0) {
           const code = barcodes[0].rawValue;
           // Debounce: don't fire same code within 3s
@@ -77,7 +78,9 @@ const WebBarcodeScanner = ({ onBarcodeScanned, active = true, style }) => {
       } catch (_) {
         // detect() can throw on some frames, ignore
       }
-      rafRef.current = requestAnimationFrame(scanLoop);
+      if (!cancelled) {
+        rafRef.current = requestAnimationFrame(scanLoop);
+      }
     };
 
     startCamera();
