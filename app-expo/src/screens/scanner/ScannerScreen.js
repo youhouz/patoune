@@ -181,9 +181,10 @@ const ScannerScreen = ({ navigation }) => {
     }
   };
 
-  const handleBarcodeScanned = ({ data }) => {
-    if (!scanned) {
-      handleBarcodeScan(data);
+  const handleBarcodeScanned = (result) => {
+    const code = result?.data ?? result?.rawValue;
+    if (!scanned && code) {
+      handleBarcodeScan(code);
     }
   };
 
@@ -394,20 +395,19 @@ const ScannerScreen = ({ navigation }) => {
         <View style={[styles.cameraContainer, { paddingHorizontal: hPadding }]}>
           <View style={[styles.cameraArea, { height: CAMERA_HEIGHT }]}>
             {!manualMode && Platform.OS === 'web' ? (
-              <View style={StyleSheet.absoluteFillObject}>
-                <WebBarcodeScanner
-                  onBarcodeScanned={handleBarcodeScanned}
-                  active={!scanned}
-                  style={StyleSheet.absoluteFillObject}
-                />
-                {renderScanFrame()}
-              </View>
+              <WebBarcodeScanner
+                onBarcodeScanned={handleBarcodeScanned}
+                active={!scanned}
+                style={StyleSheet.absoluteFillObject}
+              />
             ) : !manualMode && permission.granted ? (
               <CameraView
                 style={StyleSheet.absoluteFillObject}
                 facing="back"
+                autofocus="on"
                 barcodeScannerSettings={{
-                  barcodeTypes: ['ean13', 'ean8', 'upc_a', 'upc_e', 'code128', 'code39'],
+                  barcodeTypes: ['ean13', 'ean8', 'upc_a', 'upc_e', 'code128', 'code39', 'qr', 'codabar'],
+                  interval: 500,
                 }}
                 onBarcodeScanned={handleBarcodeScanned}
               >

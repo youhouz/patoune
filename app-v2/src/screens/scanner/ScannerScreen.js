@@ -20,6 +20,7 @@ import { Feather } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { scanProductAPI } from '../../api/products';
 import useResponsive from '../../hooks/useResponsive';
+import WebBarcodeScanner from '../../components/WebBarcodeScanner';
 import { FONTS } from '../../utils/typography';
 const { COLORS, SPACING, RADIUS, FONT_SIZE, SHADOWS } = require('../../utils/colors');
 
@@ -185,9 +186,10 @@ const ScannerScreen = ({ navigation }) => {
     }
   };
 
-  const handleBarcodeScanned = ({ data }) => {
-    if (!scanned) {
-      handleBarcodeScan(data);
+  const handleBarcodeScanned = (result) => {
+    const code = result?.data ?? result?.rawValue;
+    if (!scanned && code) {
+      handleBarcodeScan(code);
     }
   };
 
@@ -397,12 +399,20 @@ const ScannerScreen = ({ navigation }) => {
         {/* Camera / Manual zone */}
         <View style={[styles.cameraContainer, { paddingHorizontal: hPadding }]}>
           <View style={[styles.cameraArea, { height: CAMERA_HEIGHT }]}>
-            {!manualMode && permission.granted ? (
+            {!manualMode && Platform.OS === 'web' ? (
+              <WebBarcodeScanner
+                onBarcodeScanned={handleBarcodeScanned}
+                active={!scanned}
+                style={StyleSheet.absoluteFillObject}
+              />
+            ) : !manualMode && permission.granted ? (
               <CameraView
                 style={StyleSheet.absoluteFillObject}
                 facing="back"
+                autofocus="on"
                 barcodeScannerSettings={{
-                  barcodeTypes: ['ean13', 'ean8', 'upc_a', 'upc_e', 'code128', 'code39'],
+                  barcodeTypes: ['ean13', 'ean8', 'upc_a', 'upc_e', 'code128', 'code39', 'qr', 'codabar'],
+                  interval: 500,
                 }}
                 onBarcodeScanned={handleBarcodeScanned}
               >

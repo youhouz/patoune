@@ -274,21 +274,14 @@ const AppNavigator = () => {
 
   useEffect(() => {
     if (loading) return;
-    // On web: show onboarding whenever user is not logged in
-    // (prevents localStorage key from blocking the welcome slides)
-    if (Platform.OS === 'web') {
-      setShowOnboarding(!user);
-    } else {
-      AsyncStorage.getItem(ONBOARDING_KEY).then((val) => {
-        setShowOnboarding(!val);
-      });
-    }
-  }, [loading, user]);
+    // Check AsyncStorage on all platforms (including web/localStorage)
+    AsyncStorage.getItem(ONBOARDING_KEY).then((val) => {
+      setShowOnboarding(!val);
+    });
+  }, [loading]);
 
   const handleOnboardingComplete = async () => {
-    if (Platform.OS !== 'web') {
-      await AsyncStorage.setItem(ONBOARDING_KEY, 'true');
-    }
+    await AsyncStorage.setItem(ONBOARDING_KEY, 'true');
     setShowOnboarding(false);
   };
 

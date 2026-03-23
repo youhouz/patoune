@@ -3,7 +3,6 @@ import { View, Text, StyleSheet, Platform } from 'react-native';
 
 /**
  * Web barcode scanner using html5-qrcode (pure JS, works on ALL browsers).
- * Handles camera access + barcode decoding internally.
  */
 const WebBarcodeScanner = ({ onBarcodeScanned, active = true, style }) => {
   const containerRef = useRef(null);
@@ -41,10 +40,7 @@ const WebBarcodeScanner = ({ onBarcodeScanned, active = true, style }) => {
 
       const containerId = 'web-barcode-scanner';
       const el = document.getElementById(containerId);
-      if (!el) {
-        setError('nodom');
-        return;
-      }
+      if (!el) return;
 
       try {
         const { Html5Qrcode } = await import('html5-qrcode');
@@ -81,29 +77,19 @@ const WebBarcodeScanner = ({ onBarcodeScanned, active = true, style }) => {
       } catch (err) {
         if (cancelled) return;
         console.warn('[WebBarcodeScanner]', err?.message || err);
-        if (err?.message?.includes?.('permission') || err?.message?.includes?.('NotAllowed')) {
-          setError('camera');
-        } else if (err?.message?.includes?.('NotFound') || err?.message?.includes?.('device')) {
-          setError('nocamera');
-        } else {
-          setError('camera');
-        }
+        setError(err?.message?.includes?.('NotFound') ? 'nocamera' : 'camera');
       }
     };
 
     startScanner();
-
-    return () => {
-      cancelled = true;
-      stopScanner();
-    };
+    return () => { cancelled = true; stopScanner(); };
   }, [active, stopScanner]);
 
   useEffect(() => () => { stopScanner(); }, [stopScanner]);
 
   if (Platform.OS !== 'web') return null;
 
-  if (error === 'camera' || error === 'nocamera') {
+  if (error) {
     return (
       <View style={[styles.fallback, style]}>
         <Text style={styles.fallbackIcon}>{'🔒'}</Text>

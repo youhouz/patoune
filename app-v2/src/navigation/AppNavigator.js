@@ -262,19 +262,13 @@ const AppNavigator = () => {
 
   useEffect(() => {
     if (loading) return;
-    if (Platform.OS === 'web') {
-      setShowOnboarding(!isAuthenticated);
-    } else {
-      AsyncStorage.getItem(ONBOARDING_KEY).then((val) => {
-        setShowOnboarding(!val);
-      });
-    }
-  }, [loading, isAuthenticated]);
+    AsyncStorage.getItem(ONBOARDING_KEY).then((val) => {
+      setShowOnboarding(!val);
+    });
+  }, [loading]);
 
   const handleOnboardingComplete = async () => {
-    if (Platform.OS !== 'web') {
-      await AsyncStorage.setItem(ONBOARDING_KEY, 'true');
-    }
+    await AsyncStorage.setItem(ONBOARDING_KEY, 'true');
     setShowOnboarding(false);
   };
 
