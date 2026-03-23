@@ -56,6 +56,22 @@ const productSchema = new mongoose.Schema({
     additivesScore: { type: Number, default: 0 },
     nutritionScore: { type: Number, default: 0 }
   },
+  description: {
+    type: String,
+    default: ''
+  },
+  tips: [{
+    type: String
+  }],
+  targetAge: {
+    type: String,
+    enum: ['chiot', 'adulte', 'senior', 'chaton', 'tous', ''],
+    default: ''
+  },
+  servingAdvice: {
+    type: String,
+    default: ''
+  },
   image: {
     type: String,
     default: ''

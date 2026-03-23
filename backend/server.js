@@ -81,6 +81,12 @@ app.use('/api/reviews', require('./src/routes/reviews'));
 app.use('/api/messages', require('./src/routes/messages'));
 app.use('/api/ai', require('./src/routes/ai'));
 app.use('/api/search', require('./src/routes/search'));
+app.use('/api/prelaunch', require('./src/routes/prelaunch'));
+
+// Landing page pre-launch
+app.get('/landing', (req, res) => {
+  res.sendFile(path.join(__dirname, '..', 'landing', 'index.html'));
+});
 
 // Route de test
 app.get('/', (req, res) => {
