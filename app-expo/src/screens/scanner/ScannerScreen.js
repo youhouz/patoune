@@ -28,14 +28,14 @@ const { COLORS, SPACING, RADIUS, FONT_SIZE, SHADOWS } = require('../../utils/col
 const CORNER_SIZE = 28;
 const CORNER_WIDTH = 3.5;
 
-// Produits populaires avec vrais codes-barres vérifiés sur Open Pet Food Facts
+// Produits populaires — barcodes vérifiés sur Open Pet Food Facts
 const POPULAR_PRODUCTS = [
-  { barcode: '8410650238852', name: 'Ultima Croquettes', brand: 'Ultima', icon: 'heart' },
-  { barcode: '3065890135147', name: 'Cesar Légumes Chien', brand: 'Cesar', icon: 'heart' },
-  { barcode: '5000161021703', name: 'Purina One Poulet Chat', brand: 'Purina', icon: 'gitlab' },
-  { barcode: '5998749117798', name: 'Catisfactions Fromage', brand: 'Catisfactions', icon: 'gitlab' },
-  { barcode: '7613035939882', name: 'Felix Party Mix Océan', brand: 'Purina', icon: 'gitlab' },
-  { barcode: '4000487227361', name: 'Fido Fun Tastix Chien', brand: 'Purina', icon: 'heart' },
+  { barcode: '3182550737623', name: 'Sterilised 37', brand: 'Royal Canin', icon: 'gitlab', animal: 'chat' },
+  { barcode: '7613036758796', name: 'Purina One Chat', brand: 'Purina', icon: 'gitlab', animal: 'chat' },
+  { barcode: '4008429088490', name: 'Croquettes Junior', brand: 'Perfect Fit', icon: 'gitlab', animal: 'chat' },
+  { barcode: '5900951259418', name: 'Whiskas Sterile', brand: 'Whiskas', icon: 'gitlab', animal: 'chat' },
+  { barcode: '3010470154575', name: 'Vitafit Junior', brand: 'Friskies', icon: 'heart', animal: 'chien' },
+  { barcode: '3539370523903', name: 'Hobby Time', brand: 'Friskies', icon: 'heart', animal: 'chien' },
 ];
 
 const ScannerScreen = ({ navigation }) => {
