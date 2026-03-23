@@ -400,10 +400,11 @@ const ScannerScreen = ({ navigation }) => {
             {!manualMode && permission.granted ? (
               <CameraView
                 style={StyleSheet.absoluteFillObject}
+                facing="back"
                 barcodeScannerSettings={{
                   barcodeTypes: ['ean13', 'ean8', 'upc_a', 'upc_e', 'code128', 'code39'],
                 }}
-                onBarcodeScanned={scanned ? undefined : handleBarcodeScanned}
+                onBarcodeScanned={handleBarcodeScanned}
               >
                 {renderScanFrame()}
               </CameraView>
