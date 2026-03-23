@@ -395,14 +395,11 @@ const ScannerScreen = ({ navigation }) => {
         <View style={[styles.cameraContainer, { paddingHorizontal: hPadding }]}>
           <View style={[styles.cameraArea, { height: CAMERA_HEIGHT }]}>
             {!manualMode && Platform.OS === 'web' ? (
-              <View style={StyleSheet.absoluteFillObject}>
-                <WebBarcodeScanner
-                  onBarcodeScanned={handleBarcodeScanned}
-                  active={!scanned}
-                  style={StyleSheet.absoluteFillObject}
-                />
-                {renderScanFrame()}
-              </View>
+              <WebBarcodeScanner
+                onBarcodeScanned={handleBarcodeScanned}
+                active={!scanned}
+                style={StyleSheet.absoluteFillObject}
+              />
             ) : !manualMode && permission.granted ? (
               <CameraView
                 style={StyleSheet.absoluteFillObject}

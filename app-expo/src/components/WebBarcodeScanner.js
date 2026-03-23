@@ -2,27 +2,33 @@ import React, { useRef, useEffect, useState, useCallback } from 'react';
 import { View, Text, StyleSheet, Platform } from 'react-native';
 
 /**
- * Web barcode scanner that works on ALL browsers (Chrome, Safari, Firefox).
- * Uses the barcode-detector npm package as a polyfill for BarcodeDetector.
+ * Web barcode scanner using html5-qrcode (pure JS, works on ALL browsers).
+ * Handles camera access + barcode decoding internally.
  */
 const WebBarcodeScanner = ({ onBarcodeScanned, active = true, style }) => {
-  const videoRef = useRef(null);
-  const streamRef = useRef(null);
-  const intervalRef = useRef(null);
-  const detectorRef = useRef(null);
-  const canvasRef = useRef(null);
+  const containerRef = useRef(null);
+  const scannerRef = useRef(null);
   const [error, setError] = useState(null);
-  const [status, setStatus] = useState('init');
+  const [ready, setReady] = useState(false);
   const lastScannedRef = useRef(null);
+  const onBarcodeScannedRef = useRef(onBarcodeScanned);
 
-  const stopCamera = useCallback(() => {
-    if (intervalRef.current) {
-      clearInterval(intervalRef.current);
-      intervalRef.current = null;
-    }
-    if (streamRef.current) {
-      streamRef.current.getTracks().forEach((t) => t.stop());
-      streamRef.current = null;
+  // Keep callback ref up to date without re-triggering effect
+  useEffect(() => {
+    onBarcodeScannedRef.current = onBarcodeScanned;
+  }, [onBarcodeScanned]);
+
+  const stopScanner = useCallback(async () => {
+    if (scannerRef.current) {
+      try {
+        const state = scannerRef.current.getState?.();
+        // 2 = SCANNING, 3 = PAUSED
+        if (state === 2 || state === 3) {
+          await scannerRef.current.stop();
+        }
+        scannerRef.current.clear();
+      } catch (_) {}
+      scannerRef.current = null;
     }
   }, []);
 
@@ -31,166 +37,105 @@ const WebBarcodeScanner = ({ onBarcodeScanned, active = true, style }) => {
 
     let cancelled = false;
 
-    const startScanning = async () => {
-      // 1. Load BarcodeDetector (native or polyfill)
-      let DetectorClass = null;
-      try {
-        // Try native first
-        if (typeof window !== 'undefined' && 'BarcodeDetector' in window) {
-          DetectorClass = window.BarcodeDetector;
-        }
-      } catch (_) {}
-
-      // Use polyfill
-      if (!DetectorClass) {
-        try {
-          setStatus('loading');
-          const polyfill = require('barcode-detector/pure');
-          DetectorClass = polyfill.BarcodeDetector || polyfill.default;
-        } catch (_) {
-          try {
-            const polyfill = await import('barcode-detector/pure');
-            DetectorClass = polyfill.BarcodeDetector || polyfill.default;
-          } catch (_) {}
-        }
-      }
-
+    const startScanner = async () => {
+      // Wait for DOM element to be ready
+      await new Promise(r => setTimeout(r, 300));
       if (cancelled) return;
 
-      if (!DetectorClass) {
-        setError('noapi');
+      const containerId = 'web-barcode-scanner';
+      const el = document.getElementById(containerId);
+      if (!el) {
+        setError('nodom');
         return;
       }
 
-      // 2. Create detector with supported formats
       try {
-        const allFormats = ['ean_13', 'ean_8', 'upc_a', 'upc_e', 'code_128', 'code_39', 'qr_code'];
-        let formats = allFormats;
-        try {
-          const supported = await DetectorClass.getSupportedFormats();
-          formats = allFormats.filter(f => supported.includes(f));
-          if (formats.length === 0) formats = supported.slice(0, 10);
-        } catch (_) {}
-        detectorRef.current = new DetectorClass({ formats });
-      } catch (e) {
-        if (!cancelled) setError('noapi');
-        return;
-      }
-
-      // 3. Get camera stream
-      try {
-        setStatus('camera');
-        const stream = await navigator.mediaDevices.getUserMedia({
-          video: {
-            facingMode: { ideal: 'environment' },
-            width: { ideal: 1280 },
-            height: { ideal: 720 },
-          },
-        });
-        if (cancelled) {
-          stream.getTracks().forEach((t) => t.stop());
-          return;
-        }
-        streamRef.current = stream;
-
-        // Try to enable continuous autofocus
-        const track = stream.getVideoTracks()[0];
-        if (track) {
-          try {
-            const caps = track.getCapabilities?.();
-            if (caps?.focusMode?.includes?.('continuous')) {
-              await track.applyConstraints({ advanced: [{ focusMode: 'continuous' }] });
-            }
-          } catch (_) {}
-        }
-
-        const video = videoRef.current;
-        if (!video) return;
-
-        video.srcObject = stream;
-        video.setAttribute('playsinline', 'true');
-        video.setAttribute('autoplay', 'true');
-        await video.play();
-
-        setStatus('ready');
-
-        // Wait for camera to stabilize and autofocus
-        await new Promise(r => setTimeout(r, 800));
+        const { Html5Qrcode } = await import('html5-qrcode');
         if (cancelled) return;
 
-        setStatus('scanning');
+        const scanner = new Html5Qrcode(containerId, /* verbose */ false);
+        scannerRef.current = scanner;
 
-        // 4. Create canvas for frame capture (more reliable than passing video)
-        const canvas = document.createElement('canvas');
-        canvasRef.current = canvas;
+        const onSuccess = (decodedText, decodedResult) => {
+          if (decodedText && decodedText !== lastScannedRef.current) {
+            lastScannedRef.current = decodedText;
+            onBarcodeScannedRef.current?.({
+              data: decodedText,
+              type: decodedResult?.result?.format?.formatName || 'unknown',
+            });
+            setTimeout(() => { lastScannedRef.current = null; }, 3000);
+          }
+        };
 
-        // 5. Start scan loop
-        let isDetecting = false;
-        intervalRef.current = setInterval(async () => {
-          if (cancelled || isDetecting || !video.videoWidth || !detectorRef.current) return;
-          isDetecting = true;
-          try {
-            canvas.width = video.videoWidth;
-            canvas.height = video.videoHeight;
-            const ctx = canvas.getContext('2d', { willReadFrequently: true });
-            ctx.drawImage(video, 0, 0);
+        await scanner.start(
+          { facingMode: 'environment' },
+          {
+            fps: 5,
+            qrbox: { width: 280, height: 160 },
+            aspectRatio: 1.5,
+            disableFlip: false,
+            formatsToSupport: [
+              0,  // QR_CODE
+              1,  // AZTEC
+              2,  // CODABAR
+              3,  // CODE_39
+              4,  // CODE_93
+              5,  // CODE_128
+              6,  // DATA_MATRIX
+              7,  // MAXICODE
+              8,  // ITF
+              9,  // EAN_13
+              10, // EAN_8
+              11, // PDF_417
+              12, // RSS_14
+              13, // RSS_EXPANDED
+              14, // UPC_A
+              15, // UPC_E
+              16, // UPC_EAN_EXTENSION
+            ],
+          },
+          onSuccess,
+          () => {} // silently ignore scan failures (normal between frames)
+        );
 
-            const barcodes = await detectorRef.current.detect(canvas);
-            if (barcodes.length > 0) {
-              const code = barcodes[0].rawValue;
-              if (code && code !== lastScannedRef.current) {
-                lastScannedRef.current = code;
-                onBarcodeScanned?.({ data: code, type: barcodes[0].format });
-                setTimeout(() => { lastScannedRef.current = null; }, 3000);
-              }
-            }
-          } catch (_) {}
-          isDetecting = false;
-        }, 250);
-
+        if (!cancelled) setReady(true);
       } catch (err) {
-        if (!cancelled) {
-          console.warn('[WebBarcodeScanner] Camera error:', err.message);
+        if (cancelled) return;
+        console.warn('[WebBarcodeScanner]', err?.message || err);
+        if (err?.message?.includes?.('permission') || err?.message?.includes?.('NotAllowed')) {
+          setError('camera');
+        } else if (err?.message?.includes?.('NotFound') || err?.message?.includes?.('device')) {
+          setError('nocamera');
+        } else {
           setError('camera');
         }
       }
     };
 
-    startScanning();
+    startScanner();
 
     return () => {
       cancelled = true;
-      stopCamera();
+      stopScanner();
     };
-  }, [active, onBarcodeScanned, stopCamera]);
+  }, [active, stopScanner]);
 
-  useEffect(() => stopCamera, [stopCamera]);
+  useEffect(() => () => { stopScanner(); }, [stopScanner]);
 
   if (Platform.OS !== 'web') return null;
 
-  if (error === 'noapi') {
-    return (
-      <View style={[styles.fallback, style]}>
-        <Text style={styles.fallbackIcon}>{'📷'}</Text>
-        <Text style={styles.fallbackText}>
-          Le scan automatique n'est pas disponible.
-        </Text>
-        <Text style={styles.fallbackHint}>
-          Utilisez la saisie manuelle ci-dessous pour entrer le code-barres.
-        </Text>
-      </View>
-    );
-  }
-
-  if (error === 'camera') {
+  if (error === 'camera' || error === 'nocamera') {
     return (
       <View style={[styles.fallback, style]}>
         <Text style={styles.fallbackIcon}>{'🔒'}</Text>
         <Text style={styles.fallbackText}>
-          Impossible d'accéder à la caméra.
+          {error === 'nocamera'
+            ? 'Aucune camera detectee.'
+            : "Impossible d'acceder a la camera."}
         </Text>
         <Text style={styles.fallbackHint}>
-          Vérifiez les permissions dans les paramètres de votre navigateur, puis rechargez la page.
+          Verifiez les permissions dans votre navigateur, puis rechargez la page.
+          {'\n'}Ou utilisez la saisie manuelle ci-dessous.
         </Text>
       </View>
     );
@@ -198,24 +143,19 @@ const WebBarcodeScanner = ({ onBarcodeScanned, active = true, style }) => {
 
   return (
     <View style={[styles.container, style]}>
-      <video
-        ref={videoRef}
+      <div
+        id="web-barcode-scanner"
+        ref={containerRef}
         style={{
           width: '100%',
           height: '100%',
-          objectFit: 'cover',
+          position: 'relative',
+          overflow: 'hidden',
         }}
-        muted
-        playsInline
-        autoPlay
       />
-      {(status === 'loading' || status === 'camera' || status === 'ready') && (
+      {!ready && !error && (
         <View style={styles.loadingOverlay}>
-          <Text style={styles.loadingText}>
-            {status === 'loading' ? 'Chargement du scanner...' :
-             status === 'camera' ? 'Activation de la camera...' :
-             'Mise au point...'}
-          </Text>
+          <Text style={styles.loadingText}>Activation de la camera...</Text>
         </View>
       )}
     </View>
@@ -253,19 +193,18 @@ const styles = StyleSheet.create({
     lineHeight: 18,
   },
   loadingOverlay: {
-    position: 'absolute',
-    bottom: 12,
-    left: 0,
-    right: 0,
+    ...StyleSheet.absoluteFillObject,
     alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#0D0F1A',
   },
   loadingText: {
     color: 'rgba(255,255,255,0.7)',
-    fontSize: 12,
+    fontSize: 13,
     backgroundColor: 'rgba(0,0,0,0.5)',
-    paddingHorizontal: 12,
-    paddingVertical: 4,
-    borderRadius: 10,
+    paddingHorizontal: 14,
+    paddingVertical: 6,
+    borderRadius: 12,
     overflow: 'hidden',
   },
 });
