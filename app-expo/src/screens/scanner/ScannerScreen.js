@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import {
   View,
   Text,
@@ -18,6 +18,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { CameraView, useCameraPermissions } from 'expo-camera';
 import { Feather } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useFocusEffect } from '@react-navigation/native';
 import { scanProductAPI } from '../../api/products';
 import useResponsive from '../../hooks/useResponsive';
 import WebBarcodeScanner from '../../components/WebBarcodeScanner';
@@ -110,6 +111,14 @@ const ScannerScreen = ({ navigation }) => {
     };
   }, []);
 
+  // Reactivate scanner immediately when screen regains focus (back from ProductResult)
+  useFocusEffect(
+    useCallback(() => {
+      setScanned(false);
+      setScanning(false);
+    }, [])
+  );
+
   const showError = (msg) => {
     setErrorMessage(msg);
     Animated.sequence([
@@ -177,7 +186,8 @@ const ScannerScreen = ({ navigation }) => {
       }
     } finally {
       setScanning(false);
-      setTimeout(() => setScanned(false), 2500);
+      // Short delay to prevent double-scan; useFocusEffect handles reactivation on return
+      setTimeout(() => setScanned(false), 800);
     }
   };
 
