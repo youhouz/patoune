@@ -62,6 +62,96 @@ const getScoreGradient = (score) => {
   return [COLORS.scoreVeryBad, '#B86B4A'];
 };
 
+const DETAIL_ICONS = {
+  protein: 'trending-up',
+  fat: 'disc',
+  fiber: 'layers',
+  additivesPenalty: 'activity',
+  qualityBonus: 'star',
+};
+
+/**
+ * Génère des conseils personnalisés en fonction du produit scanné
+ */
+const getPersonalizedAdvice = (product) => {
+  const advice = [];
+  const score = product.nutritionScore ?? 50;
+  const ingredients = product.ingredients || [];
+  const additives = product.additives || [];
+  const details = product.scoreDetails || {};
+  const dangerousIngs = ingredients.filter(i => i.risk === 'dangerous');
+  const dangerousAdds = additives.filter(a => a.risk === 'dangerous');
+  const targetAnimal = (product.targetAnimal || ['tous'])[0];
+  const animalName = targetAnimal === 'chien' ? 'votre chien' :
+    targetAnimal === 'chat' ? 'votre chat' : 'votre animal';
+
+  if (score >= 80) {
+    advice.push({ icon: 'award', title: 'Excellent choix !', text: `Ce produit est de tres bonne qualite pour ${animalName}. Vous pouvez le donner en toute confiance.`, type: 'success' });
+  } else if (score >= 60) {
+    advice.push({ icon: 'thumbs-up', title: 'Bon produit', text: `Ce produit est correct pour ${animalName}, mais il existe des alternatives encore meilleures.`, type: 'info' });
+  } else if (score >= 40) {
+    advice.push({ icon: 'alert-circle', title: 'Qualite moyenne', text: `Ce produit contient des ingredients discutables. Privilegiez des produits avec un score superieur a 60.`, type: 'warning' });
+  } else {
+    advice.push({ icon: 'alert-triangle', title: 'Produit deconseille', text: `Ce produit est de mauvaise qualite pour ${animalName}. Nous recommandons de chercher une meilleure alternative.`, type: 'error' });
+  }
+
+  if (dangerousIngs.length > 0) {
+    const names = dangerousIngs.slice(0, 3).map(i => i.name).join(', ');
+    advice.push({ icon: 'x-circle', title: 'Ingredients a risque detectes', text: `Ce produit contient : ${names}. Ces ingredients peuvent etre nocifs a long terme. Verifiez aupres de votre veterinaire.`, type: 'error' });
+  }
+
+  if (dangerousAdds.length > 0) {
+    advice.push({ icon: 'slash', title: `${dangerousAdds.length} additif${dangerousAdds.length > 1 ? 's' : ''} dangereux`, text: `Les additifs comme ${dangerousAdds[0].name || dangerousAdds[0].code} sont controverses et potentiellement cancerigenes. Evitez les produits qui en contiennent.`, type: 'error' });
+  }
+
+  if (details.protein != null) {
+    if (details.protein >= 5) {
+      advice.push({ icon: 'trending-up', title: 'Riche en proteines', text: targetAnimal === 'chat' ? 'Les chats sont des carnivores stricts et ont besoin d\'un apport eleve en proteines. Ce produit repond bien a ce besoin.' : 'Bon apport en proteines animales, essentiel pour la masse musculaire et l\'energie.', type: 'success' });
+    } else if (details.protein <= 0 && score < 70) {
+      advice.push({ icon: 'trending-down', title: 'Faible en proteines', text: `${animalName.charAt(0).toUpperCase() + animalName.slice(1)} a besoin de proteines animales de qualite. Cherchez un produit avec de la vraie viande en premier ingredient.`, type: 'warning' });
+    }
+  }
+
+  if (details.fat != null && details.fat < 0) {
+    advice.push({ icon: 'disc', title: 'Taux de gras eleve', text: `Un exces de matieres grasses peut entrainer de l'obesite et des problemes pancreatiques. A donner avec moderation.`, type: 'warning' });
+  }
+
+  if (details.fiber != null && details.fiber >= 3) {
+    advice.push({ icon: 'layers', title: 'Bon apport en fibres', text: 'Les fibres favorisent une bonne digestion et un transit regulier. Excellent point pour ce produit.', type: 'success' });
+  }
+
+  if (ingredients.length > 0) {
+    const firstName = (ingredients[0].name || '').toLowerCase();
+    const isMeat = ['viande', 'poulet', 'saumon', 'dinde', 'agneau', 'poisson', 'boeuf', 'canard', 'thon'].some(m => firstName.includes(m));
+    if (isMeat) {
+      advice.push({ icon: 'check-circle', title: 'Viande en 1er ingredient', text: 'Le premier ingredient est une source de proteine animale, signe d\'un produit de qualite superieure.', type: 'success' });
+    } else if (score < 70) {
+      const isCereal = ['mais', 'ble', 'cereale', 'riz', 'amidon', 'farine'].some(c => firstName.includes(c));
+      if (isCereal) {
+        advice.push({ icon: 'info', title: 'Cereales en 1er ingredient', text: 'Le premier ingredient est une cereale, pas une proteine animale. Les animaux carnivores digerent mal les cereales en grande quantite.', type: 'warning' });
+      }
+    }
+  }
+
+  if (targetAnimal === 'chat' && score >= 50) {
+    advice.push({ icon: 'droplet', title: 'Hydratation du chat', text: 'Les chats boivent naturellement peu. Alternez croquettes et patee pour assurer une bonne hydratation.', type: 'info' });
+  }
+  if (targetAnimal === 'chien' && score >= 50) {
+    advice.push({ icon: 'clock', title: 'Conseil de distribution', text: 'Divisez la ration quotidienne en 2 repas. Evitez l\'exercice intense 1h apres le repas pour prevenir la torsion d\'estomac.', type: 'info' });
+  }
+
+  return advice;
+};
+
+const getAdviceColors = (type) => {
+  switch (type) {
+    case 'success': return { bg: COLORS.successSoft || '#E8F5E9', color: COLORS.success || '#2E7D32', icon: COLORS.scoreExcellent };
+    case 'error': return { bg: COLORS.errorSoft || '#FFEBEE', color: COLORS.error || '#C62828', icon: COLORS.scoreVeryBad };
+    case 'warning': return { bg: COLORS.warningSoft || '#FFF8E1', color: COLORS.warning || '#F57F17', icon: COLORS.scoreMediocre };
+    default: return { bg: COLORS.primarySoft || '#E3F2FD', color: COLORS.primary || '#1565C0', icon: COLORS.info || '#1976D2' };
+  }
+};
+
 const ProductResultScreen = ({ route, navigation }) => {
   const insets = useSafeAreaInsets();
   const { product } = route.params;
@@ -151,6 +241,13 @@ const ProductResultScreen = ({ route, navigation }) => {
   const dangerousCount = ingredients.filter(i => i.risk === 'dangerous').length;
   const moderateCount = ingredients.filter(i => i.risk === 'moderate').length;
   const safeCount = ingredients.filter(i => i.risk !== 'dangerous' && i.risk !== 'moderate').length;
+
+  const advice = getPersonalizedAdvice(product);
+  const targetAnimalLabels = {
+    chien: 'Chien', chat: 'Chat', rongeur: 'Rongeur',
+    oiseau: 'Oiseau', reptile: 'Reptile', poisson: 'Poisson', tous: 'Tous animaux',
+  };
+  const targetAnimals = (product.targetAnimal || []).map(a => targetAnimalLabels[a] || a);
 
   return (
     <View style={styles.container}>
@@ -496,6 +593,61 @@ const ProductResultScreen = ({ route, navigation }) => {
             </View>
           )}
 
+          {/* Product info card */}
+          {(product.brand || targetAnimals.length > 0 || product.category) && (
+            <View style={styles.card}>
+              <View style={styles.cardHeader}>
+                <Feather name="info" size={20} color={COLORS.primary} style={{ marginRight: SPACING.sm }} />
+                <Text style={styles.cardTitle}>Informations produit</Text>
+              </View>
+              {[
+                product.brand && { label: 'Marque', value: product.brand, icon: 'tag' },
+                product.category && { label: 'Categorie', value: product.category.charAt(0).toUpperCase() + product.category.slice(1), icon: 'grid' },
+                targetAnimals.length > 0 && { label: 'Animal cible', value: targetAnimals.join(', '), icon: 'heart' },
+                product.barcode && { label: 'Code-barres', value: product.barcode, icon: 'hash' },
+              ].filter(Boolean).map((item, idx, arr) => (
+                <View key={idx} style={[styles.detailRow, idx === arr.length - 1 && styles.lastRow]}>
+                  <View style={styles.detailLeft}>
+                    <Feather name={item.icon} size={16} color={COLORS.stone} />
+                    <Text style={styles.detailLabel}>{item.label}</Text>
+                  </View>
+                  <Text style={styles.infoValue}>{item.value}</Text>
+                </View>
+              ))}
+            </View>
+          )}
+
+          {/* Personalized advice card */}
+          {advice.length > 0 && (
+            <View style={styles.card}>
+              <View style={styles.cardHeader}>
+                <Feather name="message-circle" size={20} color={COLORS.primary} style={{ marginRight: SPACING.sm }} />
+                <Text style={styles.cardTitle}>Conseils personnalises</Text>
+              </View>
+              {advice.map((item, idx) => {
+                const colors = getAdviceColors(item.type);
+                return (
+                  <View
+                    key={idx}
+                    style={[
+                      styles.adviceItem,
+                      { backgroundColor: colors.bg },
+                      idx === advice.length - 1 && { marginBottom: 0 },
+                    ]}
+                  >
+                    <View style={[styles.adviceIconCircle, { backgroundColor: colors.color + '20' }]}>
+                      <Feather name={item.icon} size={18} color={colors.icon} />
+                    </View>
+                    <View style={styles.adviceContent}>
+                      <Text style={[styles.adviceTitle, { color: colors.color }]}>{item.title}</Text>
+                      <Text style={styles.adviceText}>{item.text}</Text>
+                    </View>
+                  </View>
+                );
+              })}
+            </View>
+          )}
+
           {/* No data fallback */}
           {!hasIngredients && !hasAdditives && !hasBreakdown && !hasScoreDetails && (
             <View style={styles.noDataCard}>
@@ -506,14 +658,6 @@ const ProductResultScreen = ({ route, navigation }) => {
               <Text style={styles.noDataText}>
                 Les details de ce produit ne sont pas encore disponibles dans notre base de donnees.
               </Text>
-            </View>
-          )}
-
-          {/* Barcode info */}
-          {product.barcode && (
-            <View style={styles.barcodeInfo}>
-              <Text style={styles.barcodeLabel}>Code-barres</Text>
-              <Text style={styles.barcodeValue}>{product.barcode}</Text>
             </View>
           )}
 
@@ -970,6 +1114,46 @@ const styles = StyleSheet.create({
     color: COLORS.stone,
     textAlign: 'center',
     lineHeight: 20,
+  },
+
+  // Product info value
+  infoValue: {
+    fontSize: FONT_SIZE.sm,
+    fontFamily: FONTS.bodySemiBold,
+    color: COLORS.charcoal,
+    maxWidth: '55%',
+    textAlign: 'right',
+  },
+
+  // Personalized advice
+  adviceItem: {
+    flexDirection: 'row',
+    padding: SPACING.base,
+    borderRadius: RADIUS.xl,
+    marginBottom: SPACING.sm,
+    gap: SPACING.md,
+  },
+  adviceIconCircle: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+    flexShrink: 0,
+  },
+  adviceContent: {
+    flex: 1,
+  },
+  adviceTitle: {
+    fontSize: FONT_SIZE.sm,
+    fontFamily: FONTS.heading,
+    marginBottom: 3,
+  },
+  adviceText: {
+    fontSize: FONT_SIZE.xs,
+    fontFamily: FONTS.bodyMedium,
+    color: COLORS.stone,
+    lineHeight: 18,
   },
 
   // Barcode footer

@@ -185,9 +185,10 @@ const ScannerScreen = ({ navigation }) => {
     }
   };
 
-  const handleBarcodeScanned = ({ data }) => {
-    if (!scanned) {
-      handleBarcodeScan(data);
+  const handleBarcodeScanned = (result) => {
+    const code = result?.data ?? result?.rawValue;
+    if (!scanned && code) {
+      handleBarcodeScan(code);
     }
   };
 
@@ -401,8 +402,10 @@ const ScannerScreen = ({ navigation }) => {
               <CameraView
                 style={StyleSheet.absoluteFillObject}
                 facing="back"
+                autofocus="on"
                 barcodeScannerSettings={{
-                  barcodeTypes: ['ean13', 'ean8', 'upc_a', 'upc_e', 'code128', 'code39'],
+                  barcodeTypes: ['ean13', 'ean8', 'upc_a', 'upc_e', 'code128', 'code39', 'qr', 'codabar'],
+                  interval: 500,
                 }}
                 onBarcodeScanned={handleBarcodeScanned}
               >
