@@ -111,6 +111,13 @@ const ScannerScreen = ({ navigation }) => {
     };
   }, []);
 
+  // Auto-request camera permission on mount (native only)
+  useEffect(() => {
+    if (Platform.OS !== 'web' && permission && !permission.granted) {
+      requestPermission();
+    }
+  }, [permission]);
+
   // Reactivate scanner immediately when screen regains focus (back from ProductResult)
   useFocusEffect(
     useCallback(() => {

@@ -38,6 +38,7 @@ import { getMyBookingsAPI } from '../api/petsitters';
 import { searchGlobalAPI } from '../api/search';
 import { PawIcon } from '../components/Logo';
 import useResponsive from '../hooks/useResponsive';
+import usePWAInstall from '../hooks/usePWAInstall';
 const { COLORS, SPACING, RADIUS, SHADOWS, FONT_SIZE, getScoreColor, getScoreLabel } = require('../utils/colors');
 
 // ─── Recent Scan Card — Glass morphism ─────────────────────
@@ -231,6 +232,7 @@ const HomeScreen = ({ navigation }) => {
     }, 350);
   }, []);
 
+  const { canInstall, isIOS, promptInstall } = usePWAInstall();
   const firstName = user?.name?.split(' ')[0] || null;
   const hour = new Date().getHours();
   const greetText = hour < 12 ? 'Bonjour' : hour < 18 ? 'Bonne journee' : 'Bonsoir';
@@ -607,6 +609,41 @@ const HomeScreen = ({ navigation }) => {
             ))}
           </View>
         </View>
+
+        {/* ── Installer l'app (PWA) ── */}
+        {canInstall && (
+          <View style={[s.installSection, { paddingHorizontal: hPadding }, centerWrap]}>
+            <TouchableOpacity
+              style={s.installCard}
+              onPress={isIOS ? undefined : promptInstall}
+              activeOpacity={0.85}
+            >
+              <LinearGradient
+                colors={['#527A56', '#6B8F71']}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 0 }}
+                style={s.installGradient}
+              >
+                <View style={s.installIconCircle}>
+                  <Feather name="download" size={22} color="#527A56" />
+                </View>
+                <View style={s.installTextWrap}>
+                  <Text style={s.installTitle}>Installer Pepete</Text>
+                  <Text style={s.installSubtitle}>
+                    {isIOS
+                      ? 'Appuyez sur Partager puis "Sur l\'ecran d\'accueil"'
+                      : 'Ajoutez l\'app sur votre ecran d\'accueil'}
+                  </Text>
+                </View>
+                {!isIOS && (
+                  <View style={s.installBtnInner}>
+                    <Text style={s.installBtnText}>Installer</Text>
+                  </View>
+                )}
+              </LinearGradient>
+            </TouchableOpacity>
+          </View>
+        )}
 
         {/* ── Tableau de bord — Stats cards ── */}
         <View style={[s.statsSection, { paddingHorizontal: hPadding }, centerWrap]}>
@@ -1090,6 +1127,48 @@ const s = StyleSheet.create({
     borderRadius: RADIUS.pill, paddingHorizontal: 18, paddingVertical: 10,
   },
   bannerBtnText: { color: '#FFF', fontWeight: '700', fontSize: FONT_SIZE.sm },
+
+  // Install PWA
+  installSection: { marginTop: SPACING.lg },
+  installCard: { borderRadius: RADIUS.xl, overflow: 'hidden', ...SHADOWS.lg },
+  installGradient: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 16,
+    paddingHorizontal: 18,
+    gap: 14,
+  },
+  installIconCircle: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: 'rgba(255,255,255,0.9)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  installTextWrap: { flex: 1 },
+  installTitle: {
+    color: '#FFF',
+    fontSize: 16,
+    fontWeight: '800',
+    letterSpacing: -0.2,
+  },
+  installSubtitle: {
+    color: 'rgba(255,255,255,0.75)',
+    fontSize: 12,
+    marginTop: 2,
+  },
+  installBtnInner: {
+    backgroundColor: 'rgba(255,255,255,0.22)',
+    borderRadius: RADIUS.pill,
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+  },
+  installBtnText: {
+    color: '#FFF',
+    fontWeight: '800',
+    fontSize: 13,
+  },
 });
 
 export default HomeScreen;
