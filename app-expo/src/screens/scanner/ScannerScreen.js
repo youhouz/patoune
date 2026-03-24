@@ -19,6 +19,7 @@ import { CameraView, useCameraPermissions } from 'expo-camera';
 import { Feather } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useFocusEffect } from '@react-navigation/native';
+import * as Haptics from 'expo-haptics';
 import { scanProductAPI } from '../../api/products';
 import useResponsive from '../../hooks/useResponsive';
 import WebBarcodeScanner from '../../components/WebBarcodeScanner';
@@ -27,6 +28,25 @@ const { COLORS, SPACING, RADIUS, FONT_SIZE, SHADOWS } = require('../../utils/col
 
 const CORNER_SIZE = 28;
 const CORNER_WIDTH = 3.5;
+
+// Beep sonore lors du scan (Web Audio API / pas de fichier externe)
+function playScanBeep() {
+  try {
+    if (Platform.OS === 'web' && typeof window !== 'undefined' && window.AudioContext) {
+      const ctx = new window.AudioContext();
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.frequency.value = 1200;
+      osc.type = 'sine';
+      gain.gain.setValueAtTime(0.18, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.15);
+      osc.start(ctx.currentTime);
+      osc.stop(ctx.currentTime + 0.15);
+    }
+  } catch (_) {}
+}
 
 // Produits populaires — barcodes vérifiés sur Open Pet Food Facts
 const POPULAR_PRODUCTS = [
@@ -165,11 +185,15 @@ const ScannerScreen = ({ navigation }) => {
     setScanned(true);
     triggerScanFlash();
 
+    // Feedback haptique + sonore
     try {
-      Vibration.vibrate(50);
-    } catch (_) {
-      // Vibration not available
-    }
+      if (Platform.OS === 'web') {
+        Vibration.vibrate(80);
+        playScanBeep();
+      } else {
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      }
+    } catch (_) {}
 
     try {
       const response = await scanProductAPI(code);
