@@ -252,6 +252,14 @@ const ProfileScreen = ({ navigation }) => {
           accentColor: '#6B8F71',
           bgColor: colors.primarySoft,
         },
+        ...(user?.role === 'admin' ? [{
+          icon: 'bar-chart-2',
+          label: 'Admin Dashboard',
+          subtitle: 'Analytics, utilisateurs, visiteurs',
+          screen: 'AdminDashboard',
+          accentColor: '#2C3E2F',
+          bgColor: '#EFF5F0',
+        }] : []),
       ],
     },
   ];

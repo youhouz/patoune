@@ -21,6 +21,8 @@ import MyPetsScreen from '../screens/profile/MyPetsScreen';
 import AddPetScreen from '../screens/profile/AddPetScreen';
 import SettingsScreen from '../screens/profile/SettingsScreen';
 import FeedbackScreen from '../screens/profile/FeedbackScreen';
+import AdminDashboardScreen from '../screens/admin/AdminDashboardScreen';
+import AdminUsersScreen from '../screens/admin/AdminUsersScreen';
 const colors = require('../utils/colors');
 
 const Tab = createBottomTabNavigator();
@@ -64,6 +66,8 @@ const ProfileNavigator = () => {
       <ProfileStack.Screen name="AddPet" component={AddPetScreen} options={{ title: 'Nouvel Animal' }} />
       <ProfileStack.Screen name="Settings" component={SettingsScreen} options={{ title: 'Réglages' }} />
       <ProfileStack.Screen name="Feedback" component={FeedbackScreen} options={{ headerShown: false }} />
+      <ProfileStack.Screen name="AdminDashboard" component={AdminDashboardScreen} options={{ headerShown: false }} />
+      <ProfileStack.Screen name="AdminUsers" component={AdminUsersScreen} options={{ headerShown: false }} />
       <ProfileStack.Screen name="PetSitterProfile" component={PetSitterProfileScreen} options={{ headerShown: false }} />
       <ProfileStack.Screen name="PetSitterBookings" component={PetSitterBookingsScreen} options={{ headerShown: false }} />
     </ProfileStack.Navigator>

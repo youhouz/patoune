@@ -40,6 +40,10 @@ app.use(async (req, res, next) => {
 
 app.get('/api/health', (req, res) => res.json({ success: true, service: 'pepete-api', status: 'ok' }));
 
+// Analytics tracking — log every API call
+const { analyticsTracker } = require('../src/middleware/analytics');
+app.use(analyticsTracker);
+
 // Forest Admin Initialisation (Mount)
 const agent = setupForestAdmin(app);
 
@@ -54,6 +58,7 @@ app.use('/api/bookings', require('../src/routes/bookings'));
 app.use('/api/reviews', require('../src/routes/reviews'));
 app.use('/api/messages', require('../src/routes/messages'));
 app.use('/api/ai', require('../src/routes/ai'));
+app.use('/api/feedback', require('../src/routes/feedback'));
 
 app.use(require('../src/middleware/errorHandler'));
 
