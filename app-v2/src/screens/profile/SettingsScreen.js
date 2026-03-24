@@ -607,6 +607,24 @@ const SettingsScreen = ({ navigation }) => {
                   isLast: true,
                 })}
               </View>
+
+              {/* Install guide link */}
+              <TouchableOpacity
+                style={styles.installGuideCard}
+                onPress={() => navigation.navigate('InstallGuide')}
+                activeOpacity={0.6}
+              >
+                <View style={styles.installGuideIconWrap}>
+                  <Feather name="download" size={20} color="#527A56" />
+                </View>
+                <View style={styles.installGuideInfo}>
+                  <Text style={styles.installGuideTitle}>Installer l'application</Text>
+                  <Text style={styles.installGuideSubtitle}>
+                    Comment ajouter Pepete sur votre ecran d'accueil
+                  </Text>
+                </View>
+                <Feather name="chevron-right" size={18} color={colors.textTertiary} />
+              </TouchableOpacity>
             </View>
 
             {/* Section: Danger Zone */}
@@ -954,6 +972,40 @@ const styles = StyleSheet.create({
     height: 1,
     backgroundColor: colors.border,
     marginBottom: SPACING.sm,
+  },
+
+  // Install guide
+  installGuideCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: colors.white,
+    borderRadius: RADIUS.xl,
+    padding: SPACING.base,
+    marginTop: SPACING.md,
+    ...SHADOWS.sm,
+  },
+  installGuideIconWrap: {
+    width: 44,
+    height: 44,
+    borderRadius: RADIUS.lg,
+    backgroundColor: colors.primarySoft,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  installGuideInfo: {
+    flex: 1,
+    marginLeft: SPACING.md,
+  },
+  installGuideTitle: {
+    fontSize: FONT_SIZE.base,
+    fontWeight: '700',
+    color: colors.text,
+    marginBottom: 1,
+  },
+  installGuideSubtitle: {
+    fontSize: FONT_SIZE.xs,
+    color: colors.textTertiary,
+    fontWeight: '400',
   },
 
   // Logout

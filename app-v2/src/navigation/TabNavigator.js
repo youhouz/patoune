@@ -21,6 +21,7 @@ import ProfileScreen from '../screens/profile/ProfileScreen';
 import MyPetsScreen from '../screens/profile/MyPetsScreen';
 import AddPetScreen from '../screens/profile/AddPetScreen';
 import SettingsScreen from '../screens/profile/SettingsScreen';
+import InstallGuideScreen from '../screens/profile/InstallGuideScreen';
 
 const Tab = createBottomTabNavigator();
 const RootStack = createStackNavigator();
@@ -65,6 +66,7 @@ const ProfileNavigator = () => {
       <ProfileStack.Screen name="Settings" component={SettingsScreen} options={{ title: 'Réglages' }} />
       <ProfileStack.Screen name="PetSitterProfile" component={PetSitterProfileScreen} options={{ headerShown: false }} />
       <ProfileStack.Screen name="PetSitterBookings" component={PetSitterBookingsScreen} options={{ headerShown: false }} />
+      <ProfileStack.Screen name="InstallGuide" component={InstallGuideScreen} options={{ headerShown: false }} />
     </ProfileStack.Navigator>
   );
 };

@@ -240,6 +240,14 @@ const ProfileScreen = ({ navigation }) => {
           accentColor: '#C4956A',
           bgColor: colors.accentSoft,
         },
+        {
+          icon: 'download',
+          label: 'Installer l\'application',
+          subtitle: 'Tuto pour ajouter Pepete sur votre telephone',
+          screen: 'InstallGuide',
+          accentColor: '#527A56',
+          bgColor: colors.primarySoft,
+        },
       ],
     },
   ];
