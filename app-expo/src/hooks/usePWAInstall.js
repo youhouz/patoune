@@ -72,7 +72,8 @@ export default function usePWAInstall() {
   }, []);
 
   return {
-    canInstall: Platform.OS === 'web' && !installed && (!!prompt || isIOSSafari()),
+    canInstall: Platform.OS === 'web' && !installed,
+    hasNativePrompt: !!prompt,
     isIOS: Platform.OS === 'web' && isIOSSafari(),
     isInstalled: installed,
     promptInstall,

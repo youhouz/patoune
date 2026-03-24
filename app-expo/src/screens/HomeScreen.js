@@ -232,7 +232,7 @@ const HomeScreen = ({ navigation }) => {
     }, 350);
   }, []);
 
-  const { canInstall, isIOS, promptInstall } = usePWAInstall();
+  const { canInstall, hasNativePrompt, isIOS, promptInstall } = usePWAInstall();
   const firstName = user?.name?.split(' ')[0] || null;
   const hour = new Date().getHours();
   const greetText = hour < 12 ? 'Bonjour' : hour < 18 ? 'Bonne journee' : 'Bonsoir';
@@ -615,8 +615,8 @@ const HomeScreen = ({ navigation }) => {
           <View style={[s.installSection, { paddingHorizontal: hPadding }, centerWrap]}>
             <TouchableOpacity
               style={s.installCard}
-              onPress={isIOS ? undefined : promptInstall}
-              activeOpacity={0.85}
+              onPress={hasNativePrompt ? promptInstall : undefined}
+              activeOpacity={hasNativePrompt ? 0.85 : 1}
             >
               <LinearGradient
                 colors={['#527A56', '#6B8F71']}
@@ -632,10 +632,12 @@ const HomeScreen = ({ navigation }) => {
                   <Text style={s.installSubtitle}>
                     {isIOS
                       ? 'Appuyez sur Partager puis "Sur l\'ecran d\'accueil"'
-                      : 'Ajoutez l\'app sur votre ecran d\'accueil'}
+                      : hasNativePrompt
+                        ? 'Un tap et c\'est installe sur votre telephone !'
+                        : 'Menu du navigateur > "Installer" ou "Ajouter a l\'ecran d\'accueil"'}
                   </Text>
                 </View>
-                {!isIOS && (
+                {hasNativePrompt && (
                   <View style={s.installBtnInner}>
                     <Text style={s.installBtnText}>Installer</Text>
                   </View>

@@ -19,6 +19,7 @@ import { CameraView, useCameraPermissions } from 'expo-camera';
 import { Feather } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useFocusEffect } from '@react-navigation/native';
+import * as Haptics from 'expo-haptics';
 import { scanProductAPI } from '../../api/products';
 import useResponsive from '../../hooks/useResponsive';
 import WebBarcodeScanner from '../../components/WebBarcodeScanner';
@@ -27,6 +28,25 @@ const { COLORS, SPACING, RADIUS, FONT_SIZE, SHADOWS } = require('../../utils/col
 
 const CORNER_SIZE = 28;
 const CORNER_WIDTH = 3.5;
+
+// Beep sonore lors du scan (Web Audio API / pas de fichier externe)
+function playScanBeep() {
+  try {
+    if (Platform.OS === 'web' && typeof window !== 'undefined' && window.AudioContext) {
+      const ctx = new window.AudioContext();
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.frequency.value = 1200;
+      osc.type = 'sine';
+      gain.gain.setValueAtTime(0.18, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.15);
+      osc.start(ctx.currentTime);
+      osc.stop(ctx.currentTime + 0.15);
+    }
+  } catch (_) {}
+}
 
 // Produits populaires — barcodes vérifiés sur Open Pet Food Facts
 const POPULAR_PRODUCTS = [
@@ -49,6 +69,7 @@ const ScannerScreen = ({ navigation }) => {
   const [scanning, setScanning] = useState(false);
   const [manualMode, setManualMode] = useState(false);
   const [scanned, setScanned] = useState(false);
+  const [torchOn, setTorchOn] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
 
   // Animations
@@ -164,11 +185,15 @@ const ScannerScreen = ({ navigation }) => {
     setScanned(true);
     triggerScanFlash();
 
+    // Feedback haptique + sonore
     try {
-      Vibration.vibrate(50);
-    } catch (_) {
-      // Vibration not available
-    }
+      if (Platform.OS === 'web') {
+        Vibration.vibrate(80);
+        playScanBeep();
+      } else {
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      }
+    } catch (_) {}
 
     try {
       const response = await scanProductAPI(code);
@@ -422,6 +447,7 @@ const ScannerScreen = ({ navigation }) => {
                 style={StyleSheet.absoluteFillObject}
                 facing="back"
                 autofocus="on"
+                enableTorch={torchOn}
                 barcodeScannerSettings={{
                   barcodeTypes: ['ean13', 'ean8', 'upc_a', 'upc_e', 'code128', 'code39', 'qr', 'codabar'],
                   interval: 500,
@@ -429,6 +455,15 @@ const ScannerScreen = ({ navigation }) => {
                 onBarcodeScanned={handleBarcodeScanned}
               >
                 {renderScanFrame()}
+                {/* Torch toggle */}
+                <TouchableOpacity
+                  style={styles.torchBtn}
+                  onPress={() => setTorchOn(prev => !prev)}
+                  activeOpacity={0.7}
+                  hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                >
+                  <Feather name={torchOn ? 'zap' : 'zap-off'} size={20} color="#FFF" />
+                </TouchableOpacity>
               </CameraView>
             ) : !manualMode && !permission.granted ? (
               renderPermissionRequest()
@@ -688,13 +723,27 @@ const styles = StyleSheet.create({
     ...SHADOWS.lg,
   },
 
+  // Torch button
+  torchBtn: {
+    position: 'absolute',
+    top: 12,
+    right: 12,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: 'rgba(0,0,0,0.45)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    zIndex: 10,
+  },
+
   // Scan overlay
   scanOverlay: {
     flex: 1,
   },
   overlayTop: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.55)',
+    backgroundColor: 'rgba(0,0,0,0.30)',
   },
   overlayMiddleRow: {
     flexDirection: 'row',
@@ -702,7 +751,7 @@ const styles = StyleSheet.create({
   },
   overlaySide: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.55)',
+    backgroundColor: 'rgba(0,0,0,0.30)',
   },
   scanFrameWrapper: {
     alignItems: 'center',
@@ -714,7 +763,7 @@ const styles = StyleSheet.create({
   },
   overlayBottom: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.55)',
+    backgroundColor: 'rgba(0,0,0,0.30)',
     alignItems: 'center',
     justifyContent: 'center',
     paddingTop: SPACING.sm,

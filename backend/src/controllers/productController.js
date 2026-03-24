@@ -33,7 +33,7 @@ exports.scanProduct = async (req, res, next) => {
       } else {
         return res.status(404).json({
           success: false,
-          error: 'Produit non trouve. Vous pouvez contribuer en ajoutant ce produit !'
+          error: 'Produit non trouve dans nos bases (Open Food Facts + Open Pet Food Facts). Verifiez le code-barres ou ajoutez ce produit !'
         });
       }
     }
