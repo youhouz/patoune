@@ -359,14 +359,14 @@ const MessagesScreen = ({ route, navigation }) => {
       </LinearGradient>
 
       {/* Messages */}
-      <Animated.View style={{ flex: 1, opacity: fadeAnim }}>
+      <Animated.View style={{ flex: 1, opacity: fadeAnim, ...(Platform.OS === 'web' ? { overflow: 'hidden' } : {}) }}>
         {initialLoading ? (
           <View style={styles.loadingContainer}>
             <ActivityIndicator size="large" color={colors.primary} />
             <Text style={styles.loadingText}>Chargement des messages...</Text>
           </View>
         ) : (
-          <View style={{ flex: 1 }}>
+          <View style={{ flex: 1, ...(Platform.OS === 'web' ? { overflow: 'hidden' } : {}) }}>
             <FlatList
               ref={flatListRef}
               data={messages}
@@ -376,6 +376,7 @@ const MessagesScreen = ({ route, navigation }) => {
                 styles.messagesList,
                 messages.length === 0 && styles.messagesListEmpty,
               ]}
+              style={Platform.OS === 'web' ? { overflow: 'auto' } : undefined}
               showsVerticalScrollIndicator={false}
               onScroll={onScroll}
               scrollEventThrottle={16}
