@@ -81,29 +81,52 @@ const ADDITIVE_NAMES = {
 };
 
 /**
+ * Normalise un code-barres : UPC-A (12 chiffres) -> EAN-13 (ajout 0 devant)
+ */
+function normalizeBarcode(barcode) {
+  const clean = (barcode || '').replace(/\s+/g, '').replace(/^0+/, '') || barcode;
+  // UPC-A (12 chiffres) -> EAN-13
+  if (/^\d{12}$/.test(barcode)) return '0' + barcode;
+  return barcode;
+}
+
+/**
+ * Essaie de recuperer un produit depuis une API donnee
+ */
+async function tryFetch(apiUrl, code, source) {
+  try {
+    const response = await axios.get(`${apiUrl}/${code}.json`, { timeout: 12000 });
+    if (response.data?.status === 1 && response.data?.product) {
+      return formatProduct(response.data.product, code, source);
+    }
+  } catch (err) {
+    console.log(`${source} API error for ${code}:`, err.message);
+  }
+  return null;
+}
+
+/**
  * Recherche un produit sur Open Pet Food Facts puis Open Food Facts
+ * Tente aussi les variantes de code-barres (UPC->EAN, avec/sans 0 devant)
  * @param {string} barcode
  * @returns {object|null} Donnees produit formatees pour notre schema
  */
 async function fetchProductFromOpenFoodFacts(barcode) {
-  // 1. Essayer d'abord Open Pet Food Facts (specifique animaux)
-  try {
-    const petResponse = await axios.get(`${OPFF_API}/${barcode}.json`, { timeout: 10000 });
-    if (petResponse.data?.status === 1 && petResponse.data?.product) {
-      return formatProduct(petResponse.data.product, barcode, 'openpetfoodfacts');
-    }
-  } catch (err) {
-    console.log('Open Pet Food Facts API error:', err.message);
-  }
+  const normalized = normalizeBarcode(barcode);
+  // Toutes les variantes de codes-barres a essayer
+  const variants = [barcode];
+  if (normalized !== barcode) variants.push(normalized);
+  // Si EAN-13 commence par 0, essayer aussi sans le 0 (UPC-A)
+  if (/^0\d{12}$/.test(barcode)) variants.push(barcode.slice(1));
 
-  // 2. Fallback sur Open Food Facts (produits generaux)
-  try {
-    const response = await axios.get(`${OFF_API}/${barcode}.json`, { timeout: 10000 });
-    if (response.data?.status === 1 && response.data?.product) {
-      return formatProduct(response.data.product, barcode, 'openfoodfacts');
-    }
-  } catch (err) {
-    console.log('Open Food Facts API error:', err.message);
+  for (const code of variants) {
+    // 1. Open Pet Food Facts (specifique animaux)
+    const petResult = await tryFetch(OPFF_API, code, 'openpetfoodfacts');
+    if (petResult) return petResult;
+
+    // 2. Open Food Facts (produits generaux — enorme base ~3M produits)
+    const offResult = await tryFetch(OFF_API, code, 'openfoodfacts');
+    if (offResult) return offResult;
   }
 
   return null;

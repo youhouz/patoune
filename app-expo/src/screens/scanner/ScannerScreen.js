@@ -49,6 +49,7 @@ const ScannerScreen = ({ navigation }) => {
   const [scanning, setScanning] = useState(false);
   const [manualMode, setManualMode] = useState(false);
   const [scanned, setScanned] = useState(false);
+  const [torchOn, setTorchOn] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
 
   // Animations
@@ -422,6 +423,7 @@ const ScannerScreen = ({ navigation }) => {
                 style={StyleSheet.absoluteFillObject}
                 facing="back"
                 autofocus="on"
+                enableTorch={torchOn}
                 barcodeScannerSettings={{
                   barcodeTypes: ['ean13', 'ean8', 'upc_a', 'upc_e', 'code128', 'code39', 'qr', 'codabar'],
                   interval: 500,
@@ -429,6 +431,15 @@ const ScannerScreen = ({ navigation }) => {
                 onBarcodeScanned={handleBarcodeScanned}
               >
                 {renderScanFrame()}
+                {/* Torch toggle */}
+                <TouchableOpacity
+                  style={styles.torchBtn}
+                  onPress={() => setTorchOn(prev => !prev)}
+                  activeOpacity={0.7}
+                  hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                >
+                  <Feather name={torchOn ? 'zap' : 'zap-off'} size={20} color="#FFF" />
+                </TouchableOpacity>
               </CameraView>
             ) : !manualMode && !permission.granted ? (
               renderPermissionRequest()
@@ -688,13 +699,27 @@ const styles = StyleSheet.create({
     ...SHADOWS.lg,
   },
 
+  // Torch button
+  torchBtn: {
+    position: 'absolute',
+    top: 12,
+    right: 12,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: 'rgba(0,0,0,0.45)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    zIndex: 10,
+  },
+
   // Scan overlay
   scanOverlay: {
     flex: 1,
   },
   overlayTop: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.55)',
+    backgroundColor: 'rgba(0,0,0,0.30)',
   },
   overlayMiddleRow: {
     flexDirection: 'row',
@@ -702,7 +727,7 @@ const styles = StyleSheet.create({
   },
   overlaySide: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.55)',
+    backgroundColor: 'rgba(0,0,0,0.30)',
   },
   scanFrameWrapper: {
     alignItems: 'center',
@@ -714,7 +739,7 @@ const styles = StyleSheet.create({
   },
   overlayBottom: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.55)',
+    backgroundColor: 'rgba(0,0,0,0.30)',
     alignItems: 'center',
     justifyContent: 'center',
     paddingTop: SPACING.sm,
