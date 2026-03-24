@@ -244,6 +244,14 @@ const ProfileScreen = ({ navigation }) => {
           accentColor: '#C4956A',
           bgColor: colors.accentSoft,
         },
+        {
+          icon: 'message-square',
+          label: 'Feedback',
+          subtitle: 'Signaler un bug ou suggerer une idee',
+          screen: 'Feedback',
+          accentColor: '#6B8F71',
+          bgColor: colors.primarySoft,
+        },
       ],
     },
   ];
