@@ -11,6 +11,8 @@ import {
 } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
+import { resetInstallBanner } from '../../components/PWAInstallBanner';
+import { showAlert } from '../../utils/alert';
 import colors, { SHADOWS, RADIUS, SPACING, FONT_SIZE } from '../../utils/colors';
 
 const HEADER_PADDING_TOP = Platform.OS === 'ios' ? 56 : (StatusBar.currentHeight || 24) + 12;
@@ -233,6 +235,33 @@ const InstallGuideScreen = ({ navigation }) => {
               </Text>
             </View>
           </View>
+
+          {/* Re-show install banner button (web only) */}
+          {Platform.OS === 'web' && (
+            <View style={styles.resetSection}>
+              <TouchableOpacity
+                style={styles.resetButton}
+                onPress={async () => {
+                  await resetInstallBanner();
+                  showAlert('Banner reactiver', 'Le message d\'installation va reapparaitre. Retournez a l\'accueil pour le voir.');
+                }}
+                activeOpacity={0.7}
+              >
+                <LinearGradient
+                  colors={['#527A56', '#6B8F71']}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 0 }}
+                  style={styles.resetButtonGradient}
+                >
+                  <Feather name="refresh-cw" size={16} color={colors.white} />
+                  <Text style={styles.resetButtonText}>Re-afficher le message d'installation</Text>
+                </LinearGradient>
+              </TouchableOpacity>
+              <Text style={styles.resetHint}>
+                Si vous avez ferme le message d'installation, appuyez ici pour le re-afficher sur l'accueil.
+              </Text>
+            </View>
+          )}
 
           <View style={styles.bottomSpacer} />
         </Animated.View>
@@ -479,6 +508,36 @@ const styles = StyleSheet.create({
     fontSize: FONT_SIZE.sm,
     color: colors.textSecondary,
     lineHeight: 20,
+  },
+
+  // Reset
+  resetSection: {
+    paddingHorizontal: SPACING.lg,
+    marginTop: SPACING.xl,
+  },
+  resetButton: {
+    borderRadius: RADIUS.xl,
+    overflow: 'hidden',
+  },
+  resetButtonGradient: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: SPACING.base,
+    borderRadius: RADIUS.xl,
+    gap: SPACING.sm,
+  },
+  resetButtonText: {
+    fontSize: FONT_SIZE.sm,
+    fontWeight: '700',
+    color: colors.white,
+  },
+  resetHint: {
+    fontSize: FONT_SIZE.xs,
+    color: colors.textTertiary,
+    textAlign: 'center',
+    marginTop: SPACING.sm,
+    lineHeight: 16,
   },
 
   bottomSpacer: {

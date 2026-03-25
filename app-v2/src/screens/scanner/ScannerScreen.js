@@ -48,6 +48,7 @@ const ScannerScreen = ({ navigation }) => {
   const [manualMode, setManualMode] = useState(Platform.OS === 'web');
   const [scanned, setScanned] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
+  const [torchOn, setTorchOn] = useState(false);
 
   // Animations
   const cornerPulse = useRef(new Animated.Value(1)).current;
@@ -304,6 +305,15 @@ const ScannerScreen = ({ navigation }) => {
         )}
       </View>
 
+      {/* Torch button */}
+      <TouchableOpacity
+        style={styles.torchButton}
+        onPress={() => setTorchOn((prev) => !prev)}
+        activeOpacity={0.7}
+      >
+        <Feather name={torchOn ? 'zap' : 'zap-off'} size={18} color={COLORS.white} />
+      </TouchableOpacity>
+
       {/* Scan flash overlay */}
       <Animated.View
         pointerEvents="none"
@@ -410,6 +420,7 @@ const ScannerScreen = ({ navigation }) => {
                 style={StyleSheet.absoluteFillObject}
                 facing="back"
                 autofocus="on"
+                enableTorch={torchOn}
                 barcodeScannerSettings={{
                   barcodeTypes: ['ean13', 'ean8', 'upc_a', 'upc_e', 'code128', 'code39', 'qr', 'codabar'],
                   interval: 500,
@@ -700,7 +711,7 @@ const styles = StyleSheet.create({
   },
   overlayTop: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.55)',
+    backgroundColor: 'rgba(0,0,0,0.25)',
   },
   overlayMiddleRow: {
     flexDirection: 'row',
@@ -708,7 +719,7 @@ const styles = StyleSheet.create({
   },
   overlaySide: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.55)',
+    backgroundColor: 'rgba(0,0,0,0.25)',
   },
   scanFrameWrapper: {
     alignItems: 'center',
@@ -720,7 +731,7 @@ const styles = StyleSheet.create({
   },
   overlayBottom: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.55)',
+    backgroundColor: 'rgba(0,0,0,0.25)',
     alignItems: 'center',
     justifyContent: 'center',
     paddingTop: SPACING.sm,
@@ -754,6 +765,20 @@ const styles = StyleSheet.create({
     color: COLORS.white,
     fontSize: FONT_SIZE.sm,
     fontFamily: FONTS.bodySemiBold,
+  },
+
+  // Torch button
+  torchButton: {
+    position: 'absolute',
+    top: SPACING.md,
+    right: SPACING.md,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: 'rgba(0,0,0,0.45)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    zIndex: 10,
   },
 
   // Corner styles

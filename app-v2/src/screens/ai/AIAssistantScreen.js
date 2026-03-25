@@ -367,7 +367,7 @@ const AIAssistantScreen = () => {
         {/* Scrollable content */}
         <ScrollView
           ref={scrollViewRef}
-          style={styles.flex}
+          style={[styles.flex, Platform.OS === 'web' && { overflow: 'auto' }]}
           contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
@@ -486,10 +486,12 @@ const styles = StyleSheet.create({
   },
   flex: {
     flex: 1,
+    ...(Platform.OS === 'web' ? { overflow: 'hidden' } : {}),
   },
   scrollContent: {
     paddingHorizontal: SPACING.base,
     paddingTop: SPACING.md,
+    flexGrow: 1,
   },
   bottomSpacer: {
     height: 100,

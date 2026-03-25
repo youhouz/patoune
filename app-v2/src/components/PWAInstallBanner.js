@@ -4,6 +4,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { COLORS, RADIUS, SHADOWS, SPACING } from '../utils/colors';
 
 const PWA_DISMISSED_KEY = 'pwa_install_dismissed';
+const DISMISS_COOLDOWN_DAYS = 3;
 
 const isIOSSafari = () => {
   if (typeof window === 'undefined' || typeof navigator === 'undefined') return false;
@@ -17,6 +18,25 @@ const isStandalone = () => {
     (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) ||
     (typeof navigator !== 'undefined' && navigator.standalone === true)
   );
+};
+
+/** Reset dismiss state so the banner can show again */
+export const resetInstallBanner = async () => {
+  await AsyncStorage.removeItem(PWA_DISMISSED_KEY);
+};
+
+/** Check if dismiss has expired (older than DISMISS_COOLDOWN_DAYS) */
+const isDismissExpired = async () => {
+  const val = await AsyncStorage.getItem(PWA_DISMISSED_KEY);
+  if (!val) return true; // never dismissed
+  const dismissedAt = parseInt(val, 10);
+  if (isNaN(dismissedAt)) {
+    // old format ('true'), treat as expired
+    await AsyncStorage.removeItem(PWA_DISMISSED_KEY);
+    return true;
+  }
+  const daysSince = (Date.now() - dismissedAt) / (1000 * 60 * 60 * 24);
+  return daysSince >= DISMISS_COOLDOWN_DAYS;
 };
 
 const HINTS = [
@@ -55,8 +75,8 @@ const PWAInstallBanner = () => {
 
     let fallbackTimer;
 
-    AsyncStorage.getItem(PWA_DISMISSED_KEY).then((val) => {
-      if (val) return;
+    isDismissExpired().then((expired) => {
+      if (!expired) return;
 
       if (isIOSSafari()) {
         setIsIOS(true);
@@ -95,7 +115,8 @@ const PWAInstallBanner = () => {
       Animated.timing(fadeAnim, { toValue: 0, duration: 200, useNativeDriver: true }),
     ]).start(() => {
       setShowBanner(false);
-      AsyncStorage.setItem(PWA_DISMISSED_KEY, 'true');
+      // Store timestamp instead of 'true' so we can re-show after cooldown
+      AsyncStorage.setItem(PWA_DISMISSED_KEY, Date.now().toString());
     });
   }, [slideAnim, fadeAnim]);
 
