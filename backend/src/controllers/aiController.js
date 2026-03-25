@@ -63,7 +63,7 @@ Ce que tu ne DOIS JAMAIS faire :
 - Remplacer une consultation veterinaire
 
 Ton style :
-- Concis mais complet (150-250 mots max)
+- Complet et structure (200-400 mots)
 - Utilise des listes a puces pour la clarte
 - Termine toujours par un petit rappel bienveillant si pertinent
 - Sois conversationnel : pose des questions de suivi si le contexte manque
@@ -200,7 +200,7 @@ exports.ask = async (req, res, next) => {
 
       const chatCompletion = await groq.chat.completions.create({
         model: 'llama-3.3-70b-versatile',
-        max_tokens: 600,
+        max_tokens: 1024,
         temperature: 0.7,
         messages: [
           { role: 'system', content: SYSTEM_PROMPT },
@@ -228,7 +228,7 @@ exports.ask = async (req, res, next) => {
 
       const message = await client.messages.create({
         model: 'claude-sonnet-4-20250514',
-        max_tokens: 600,
+        max_tokens: 1024,
         system: SYSTEM_PROMPT,
         messages: [
           { role: 'user', content: userMessage }
