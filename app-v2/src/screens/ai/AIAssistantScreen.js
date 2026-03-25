@@ -176,6 +176,92 @@ const PetSelectorItem = ({ pet, isSelected, onSelect }) => (
 
 
 // ---------------------------------------------------------------------------
+// Simple markdown renderer for AI responses
+// Handles: **bold**, bullet lists (- item), and line breaks
+// ---------------------------------------------------------------------------
+const renderMarkdownText = (text, textStyle) => {
+  const lines = text.split('\n');
+  const elements = [];
+
+  lines.forEach((line, lineIdx) => {
+    const trimmed = line.trim();
+
+    // Skip empty lines but add spacing
+    if (!trimmed) {
+      elements.push(<View key={`sp-${lineIdx}`} style={{ height: 8 }} />);
+      return;
+    }
+
+    // Bullet list items
+    const bulletMatch = trimmed.match(/^[-•]\s+(.*)/);
+    const isBullet = !!bulletMatch;
+    const content = isBullet ? bulletMatch[1] : trimmed;
+
+    // Parse inline **bold** within the line
+    const parts = [];
+    const boldRegex = /\*\*(.*?)\*\*/g;
+    let lastIndex = 0;
+    let match;
+
+    while ((match = boldRegex.exec(content)) !== null) {
+      if (match.index > lastIndex) {
+        parts.push({ text: content.slice(lastIndex, match.index), bold: false });
+      }
+      parts.push({ text: match[1], bold: true });
+      lastIndex = match.index + match[0].length;
+    }
+    if (lastIndex < content.length) {
+      parts.push({ text: content.slice(lastIndex), bold: false });
+    }
+
+    const textElements = parts.map((part, partIdx) => (
+      <Text
+        key={`${lineIdx}-${partIdx}`}
+        style={[textStyle, part.bold && { fontWeight: '700' }]}
+      >
+        {part.text}
+      </Text>
+    ));
+
+    if (isBullet) {
+      elements.push(
+        <View key={`line-${lineIdx}`} style={mdStyles.bulletRow}>
+          <Text style={[textStyle, mdStyles.bulletDot]}>{'\u2022'}</Text>
+          <Text style={[textStyle, mdStyles.bulletText]}>{textElements}</Text>
+        </View>
+      );
+    } else {
+      elements.push(
+        <Text key={`line-${lineIdx}`} style={textStyle}>
+          {textElements}
+        </Text>
+      );
+    }
+  });
+
+  return <View>{elements}</View>;
+};
+
+const mdStyles = StyleSheet.create({
+  bulletRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    marginTop: 3,
+    paddingLeft: 2,
+  },
+  bulletDot: {
+    marginRight: 8,
+    fontSize: 14,
+    lineHeight: 22,
+  },
+  bulletText: {
+    flex: 1,
+    lineHeight: 22,
+  },
+});
+
+
+// ---------------------------------------------------------------------------
 // Message bubble
 // ---------------------------------------------------------------------------
 const MessageBubble = ({ message }) => {
@@ -196,14 +282,16 @@ const MessageBubble = ({ message }) => {
           isUser ? styles.messageBubbleUser : styles.messageBubbleAI,
         ]}
       >
-        <Text
-          style={[
-            styles.messageText,
-            isUser ? styles.messageTextUser : styles.messageTextAI,
-          ]}
-        >
-          {message.text}
-        </Text>
+        {isUser ? (
+          <Text style={[styles.messageText, styles.messageTextUser]}>
+            {message.text}
+          </Text>
+        ) : (
+          renderMarkdownText(
+            message.text,
+            [styles.messageText, styles.messageTextAI]
+          )
+        )}
       </View>
     </View>
   );
@@ -282,10 +370,14 @@ const AIAssistantScreen = () => {
   // Scroll to bottom when messages change
   useEffect(() => {
     if (messages.length > 0) {
-      const timer = setTimeout(() => {
+      // Double scroll: once quickly, once after render settles (important for web)
+      const t1 = setTimeout(() => {
         scrollViewRef.current?.scrollToEnd?.({ animated: true });
-      }, 150);
-      return () => clearTimeout(timer);
+      }, 100);
+      const t2 = setTimeout(() => {
+        scrollViewRef.current?.scrollToEnd?.({ animated: true });
+      }, 400);
+      return () => { clearTimeout(t1); clearTimeout(t2); };
     }
   }, [messages, isLoading]);
 
@@ -494,7 +586,7 @@ const styles = StyleSheet.create({
     flexGrow: 1,
   },
   bottomSpacer: {
-    height: 100,
+    height: 120,
   },
 
   // -- Disclaimer --
