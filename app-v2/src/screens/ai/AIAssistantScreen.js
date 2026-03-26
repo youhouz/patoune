@@ -368,22 +368,6 @@ const AIAssistantScreen = () => {
     }, [user])
   );
 
-  // Fix iOS Safari PWA scrolling: walk up DOM tree and set min-height:0
-  useEffect(() => {
-    if (Platform.OS !== 'web' || !scrollViewRef.current) return;
-    const node = scrollViewRef.current?.getScrollableNode?.()
-      || scrollViewRef.current?._nativeRef?.current
-      || scrollViewRef.current;
-    if (!node) return;
-    node.style.overflowY = 'scroll';
-    node.style.webkitOverflowScrolling = 'touch';
-    let el = node.parentElement;
-    while (el && el.id !== 'root') {
-      el.style.minHeight = '0';
-      el = el.parentElement;
-    }
-  }, []);
-
   // Scroll to bottom when messages change
   useEffect(() => {
     if (messages.length > 0) {
@@ -509,87 +493,16 @@ const AIAssistantScreen = () => {
       />
 
       <View style={styles.flexWrapper}>
-        {/* Scrollable content - native div on web for iOS Safari PWA compat */}
-        {Platform.OS === 'web' ? (
-          <div
-            ref={(el) => { scrollViewRef.current = el; }}
-            style={{
-              flex: 1,
-              overflowY: 'auto',
-              WebkitOverflowScrolling: 'touch',
-            }}
-          >
-            <div style={{ padding: '12px 16px 120px 16px' }}>
-              <DisclaimerBanner />
-
-              {pets.length > 0 && (
-                <View style={styles.petSelectorSection}>
-                  <Text style={styles.petSelectorLabel}>Contexte animal :</Text>
-                  <ScrollView
-                    horizontal
-                    showsHorizontalScrollIndicator={false}
-                    contentContainerStyle={styles.petSelectorList}
-                    nestedScrollEnabled
-                  >
-                    {pets.map((item) => (
-                      <PetSelectorItem
-                        key={item._id || item.name}
-                        pet={item}
-                        isSelected={selectedPet?._id === item._id}
-                        onSelect={handleSelectPet}
-                      />
-                    ))}
-                  </ScrollView>
-                  {selectedPet && (
-                    <Text style={styles.petContextHint}>
-                      Questions orientees pour {selectedPet.name} ({selectedPet.species}
-                      {selectedPet.breed ? `, ${selectedPet.breed}` : ''})
-                    </Text>
-                  )}
-                </View>
-              )}
-
-              {!hasConversation && (
-                <View style={styles.suggestionsSection}>
-                  <Text style={styles.suggestionsTitle}>Questions frequentes</Text>
-                  {SUGGESTED_QUESTIONS.map((q) => (
-                    <SuggestedQuestion
-                      key={q.id}
-                      question={q}
-                      onPress={handleSend}
-                    />
-                  ))}
-                </View>
-              )}
-
-              {hasConversation && (
-                <View style={styles.messagesSection}>
-                  {messages.map((msg) => (
-                    <MessageBubble key={msg.id} message={msg} />
-                  ))}
-                  {isLoading && <TypingIndicator />}
-                  {messages.length > 0 &&
-                    messages[messages.length - 1].role === 'assistant' &&
-                    !isLoading && <DisclaimerBanner compact />}
-                </View>
-              )}
-
-              <View style={styles.bottomSpacer} />
-            </div>
-          </div>
-        ) : (
-          <ScrollView
-            ref={scrollViewRef}
-            style={styles.flexScroll}
-            contentContainerStyle={styles.scrollContent}
-            showsVerticalScrollIndicator={true}
-            keyboardShouldPersistTaps="handled"
-            keyboardDismissMode="on-drag"
-            bounces={true}
-            scrollEnabled={true}
-          >
+        {/* Scrollable content */}
+        <View
+          ref={scrollViewRef}
+          style={Platform.OS === 'web' ? styles.webScroll : styles.flexScroll}
+        >
+          <View style={styles.scrollContent}>
+            {/* Disclaimer banner */}
             <DisclaimerBanner />
 
+            {/* Pet selector ribbon */}
             {pets.length > 0 && (
               <View style={styles.petSelectorSection}>
                 <Text style={styles.petSelectorLabel}>Contexte animal :</Text>
@@ -617,6 +530,7 @@ const AIAssistantScreen = () => {
               </View>
             )}
 
+            {/* Suggested questions (only when no conversation) */}
             {!hasConversation && (
               <View style={styles.suggestionsSection}>
                 <Text style={styles.suggestionsTitle}>Questions frequentes</Text>
@@ -630,6 +544,7 @@ const AIAssistantScreen = () => {
               </View>
             )}
 
+            {/* Messages */}
             {hasConversation && (
               <View style={styles.messagesSection}>
                 {messages.map((msg) => (
@@ -643,8 +558,8 @@ const AIAssistantScreen = () => {
             )}
 
             <View style={styles.bottomSpacer} />
-          </ScrollView>
-        )}
+          </View>
+        </View>
 
         {/* Sticky input bar */}
         <View style={[styles.inputBar, { paddingBottom: Math.max(SPACING.sm, insets.bottom) }]}>
@@ -702,9 +617,15 @@ const styles = StyleSheet.create({
   },
   flexWrapper: {
     flex: 1,
+    ...(Platform.OS === 'web' ? { overflow: 'hidden', height: 0 } : {}),
   },
   flexScroll: {
     flex: 1,
+  },
+  webScroll: {
+    flex: 1,
+    overflowY: 'scroll',
+    WebkitOverflowScrolling: 'touch',
   },
   scrollContent: {
     paddingHorizontal: SPACING.base,
