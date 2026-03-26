@@ -45,7 +45,7 @@ const ScannerScreen = ({ navigation }) => {
   const [permission, requestPermission] = useCameraPermissions();
   const [barcode, setBarcode] = useState('');
   const [scanning, setScanning] = useState(false);
-  const [manualMode, setManualMode] = useState(Platform.OS === 'web');
+  const [manualMode, setManualMode] = useState(false);
   const [scanned, setScanned] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
   const [torchOn, setTorchOn] = useState(false);
@@ -212,8 +212,8 @@ const ScannerScreen = ({ navigation }) => {
     outputRange: [0, SCAN_FRAME_SIZE - 4],  // reactively sized
   });
 
-  // Loading permission state
-  if (!permission) {
+  // Loading permission state (skip on web — browser handles permissions)
+  if (!permission && Platform.OS !== 'web') {
     return (
       <View style={[styles.container, styles.centered]}>
         <StatusBar barStyle="dark-content" translucent backgroundColor="transparent" />
@@ -415,7 +415,7 @@ const ScannerScreen = ({ navigation }) => {
                 active={!scanned}
                 style={StyleSheet.absoluteFillObject}
               />
-            ) : !manualMode && permission.granted ? (
+            ) : !manualMode && permission?.granted ? (
               <CameraView
                 style={StyleSheet.absoluteFillObject}
                 facing="back"
@@ -429,7 +429,7 @@ const ScannerScreen = ({ navigation }) => {
               >
                 {renderScanFrame()}
               </CameraView>
-            ) : !manualMode && !permission.granted ? (
+            ) : !manualMode && !permission?.granted ? (
               renderPermissionRequest()
             ) : (
               renderManualMode()
@@ -701,7 +701,7 @@ const styles = StyleSheet.create({
   cameraArea: {
     borderRadius: RADIUS['2xl'],
     overflow: 'hidden',
-    backgroundColor: '#0D0F1A',
+    backgroundColor: '#1a1a2e',
     ...SHADOWS.lg,
   },
 
@@ -711,7 +711,7 @@ const styles = StyleSheet.create({
   },
   overlayTop: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.25)',
+    backgroundColor: 'rgba(0,0,0,0.12)',
   },
   overlayMiddleRow: {
     flexDirection: 'row',
@@ -719,7 +719,7 @@ const styles = StyleSheet.create({
   },
   overlaySide: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.25)',
+    backgroundColor: 'rgba(0,0,0,0.12)',
   },
   scanFrameWrapper: {
     alignItems: 'center',
@@ -731,7 +731,7 @@ const styles = StyleSheet.create({
   },
   overlayBottom: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.25)',
+    backgroundColor: 'rgba(0,0,0,0.12)',
     alignItems: 'center',
     justifyContent: 'center',
     paddingTop: SPACING.sm,
