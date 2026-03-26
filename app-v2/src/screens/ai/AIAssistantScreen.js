@@ -371,13 +371,22 @@ const AIAssistantScreen = () => {
   // Scroll to bottom when messages change
   useEffect(() => {
     if (messages.length > 0) {
-      // Double scroll: once quickly, once after render settles (important for web)
-      const t1 = setTimeout(() => {
-        scrollViewRef.current?.scrollToEnd?.({ animated: true });
-      }, 100);
-      const t2 = setTimeout(() => {
-        scrollViewRef.current?.scrollToEnd?.({ animated: true });
-      }, 400);
+      const scrollToBottom = () => {
+        const el = scrollViewRef.current;
+        if (!el) return;
+        // RN ScrollView
+        if (el.scrollToEnd) {
+          el.scrollToEnd({ animated: true });
+          return;
+        }
+        // Web: plain View renders as a DOM node
+        const node = el._nativeRef?.current || el;
+        if (node && node.scrollTop !== undefined) {
+          node.scrollTop = node.scrollHeight;
+        }
+      };
+      const t1 = setTimeout(scrollToBottom, 100);
+      const t2 = setTimeout(scrollToBottom, 400);
       return () => { clearTimeout(t1); clearTimeout(t2); };
     }
   }, [messages, isLoading]);
@@ -490,81 +499,77 @@ const AIAssistantScreen = () => {
 
       <View style={styles.flexWrapper}>
         {/* Scrollable content */}
-        <ScrollView
+        <View
           ref={scrollViewRef}
-          style={styles.flexScroll}
-          contentContainerStyle={styles.scrollContent}
-          showsVerticalScrollIndicator={true}
-          keyboardShouldPersistTaps="handled"
-          keyboardDismissMode="on-drag"
-          bounces={true}
-          scrollEnabled={true}
+          style={Platform.OS === 'web' ? styles.webScrollView : styles.flexScroll}
         >
-          {/* Disclaimer banner */}
-          <DisclaimerBanner />
+          <View style={styles.scrollContent}>
+            {/* Disclaimer banner */}
+            <DisclaimerBanner />
 
-          {/* Pet selector ribbon */}
-          {pets.length > 0 && (
-            <View style={styles.petSelectorSection}>
-              <Text style={styles.petSelectorLabel}>Contexte animal :</Text>
-              <ScrollView
-                horizontal
-                showsHorizontalScrollIndicator={false}
-                contentContainerStyle={styles.petSelectorList}
-                nestedScrollEnabled
-              >
-                {pets.map((item) => (
-                  <PetSelectorItem
-                    key={item._id || item.name}
-                    pet={item}
-                    isSelected={selectedPet?._id === item._id}
-                    onSelect={handleSelectPet}
+            {/* Pet selector ribbon */}
+            {pets.length > 0 && (
+              <View style={styles.petSelectorSection}>
+                <Text style={styles.petSelectorLabel}>Contexte animal :</Text>
+                <ScrollView
+                  horizontal
+                  showsHorizontalScrollIndicator={false}
+                  contentContainerStyle={styles.petSelectorList}
+                  nestedScrollEnabled
+                >
+                  {pets.map((item) => (
+                    <PetSelectorItem
+                      key={item._id || item.name}
+                      pet={item}
+                      isSelected={selectedPet?._id === item._id}
+                      onSelect={handleSelectPet}
+                    />
+                  ))}
+                </ScrollView>
+                {selectedPet && (
+                  <Text style={styles.petContextHint}>
+                    Questions orientees pour {selectedPet.name} ({selectedPet.species}
+                    {selectedPet.breed ? `, ${selectedPet.breed}` : ''})
+                  </Text>
+                )}
+              </View>
+            )}
+
+            {/* Suggested questions (only when no conversation) */}
+            {!hasConversation && (
+              <View style={styles.suggestionsSection}>
+                <Text style={styles.suggestionsTitle}>Questions frequentes</Text>
+                {SUGGESTED_QUESTIONS.map((q) => (
+                  <SuggestedQuestion
+                    key={q.id}
+                    question={q}
+                    onPress={handleSend}
                   />
                 ))}
-              </ScrollView>
-              {selectedPet && (
-                <Text style={styles.petContextHint}>
-                  Questions orientees pour {selectedPet.name} ({selectedPet.species}
-                  {selectedPet.breed ? `, ${selectedPet.breed}` : ''})
-                </Text>
-              )}
-            </View>
-          )}
+              </View>
+            )}
 
-          {/* Suggested questions (only when no conversation) */}
-          {!hasConversation && (
-            <View style={styles.suggestionsSection}>
-              <Text style={styles.suggestionsTitle}>Questions frequentes</Text>
-              {SUGGESTED_QUESTIONS.map((q) => (
-                <SuggestedQuestion
-                  key={q.id}
-                  question={q}
-                  onPress={handleSend}
-                />
-              ))}
-            </View>
-          )}
+            {/* Messages */}
+            {hasConversation && (
+              <View style={styles.messagesSection}>
+                {messages.map((msg) => (
+                  <MessageBubble key={msg.id} message={msg} />
+                ))}
 
-          {/* Messages */}
-          {hasConversation && (
-            <View style={styles.messagesSection}>
-              {messages.map((msg) => (
-                <MessageBubble key={msg.id} message={msg} />
-              ))}
+                {/* Typing indicator */}
+                {isLoading && <TypingIndicator />}
 
-              {/* Typing indicator */}
-              {isLoading && <TypingIndicator />}
+                {/* Post-answer disclaimer */}
+                {messages.length > 0 &&
+                  messages[messages.length - 1].role === 'assistant' &&
+                  !isLoading && <DisclaimerBanner compact />}
+              </View>
+            )}
 
-              {/* Post-answer disclaimer */}
-              {messages.length > 0 &&
-                messages[messages.length - 1].role === 'assistant' &&
-                !isLoading && <DisclaimerBanner compact />}
-            </View>
-          )}
-
-          {/* Bottom padding */}
-          <View style={styles.bottomSpacer} />
-        </ScrollView>
+            {/* Bottom padding */}
+            <View style={styles.bottomSpacer} />
+          </View>
+        </View>
 
         {/* Sticky input bar */}
         <View style={[styles.inputBar, { paddingBottom: Math.max(SPACING.sm, insets.bottom) }]}>
@@ -626,7 +631,11 @@ const styles = StyleSheet.create({
   },
   flexScroll: {
     flex: 1,
-    ...(Platform.OS === 'web' ? { overflowY: 'auto', WebkitOverflowScrolling: 'touch' } : {}),
+  },
+  webScrollView: {
+    flex: 1,
+    overflowY: 'scroll',
+    WebkitOverflowScrolling: 'touch',
   },
   scrollContent: {
     paddingHorizontal: SPACING.base,

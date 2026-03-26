@@ -186,11 +186,10 @@ const PetSitterDetailScreen = ({ route, navigation }) => {
     <View style={styles.container}>
       <StatusBar barStyle="light-content" />
 
-      <ScrollView
-        style={styles.scrollView}
-        contentContainerStyle={styles.scrollContent}
-        showsVerticalScrollIndicator={false}
+      <View
+        style={Platform.OS === 'web' ? styles.webScrollView : styles.scrollView}
       >
+        <View style={styles.scrollContent}>
         {/* Hero Section */}
         <LinearGradient
           colors={[colors.primary, colors.primaryDark]}
@@ -499,7 +498,8 @@ const PetSitterDetailScreen = ({ route, navigation }) => {
           </SectionCard>
 
         </Animated.View>
-      </ScrollView>
+        </View>
+      </View>
 
       {/* Sticky Bottom Bar */}
       <View style={styles.bottomBar}>
@@ -554,7 +554,11 @@ const styles = StyleSheet.create({
   },
   scrollView: {
     flex: 1,
-    ...(Platform.OS === 'web' ? { overflowY: 'auto', WebkitOverflowScrolling: 'touch' } : {}),
+  },
+  webScrollView: {
+    flex: 1,
+    overflowY: 'scroll',
+    WebkitOverflowScrolling: 'touch',
   },
   scrollContent: {
     paddingBottom: 120,
