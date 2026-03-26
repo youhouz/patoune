@@ -609,6 +609,24 @@ const PetSittersListScreen = ({ navigation }) => {
         <View style={{ flex: 1 }}>
           {renderSkeletons()}
         </View>
+      ) : Platform.OS === 'web' ? (
+        <View style={styles.webScroll}>
+          <View style={styles.list}>
+            {renderHeader()}
+            {filteredPetsitters.length === 0 ? (
+              renderEmpty()
+            ) : (
+              filteredPetsitters.map((item, index) => (
+                <PetSitterCard
+                  key={item._id || String(index)}
+                  petsitter={item}
+                  index={index}
+                  onPress={() => navigation.navigate('PetSitterDetail', { petsitter: item })}
+                />
+              ))
+            )}
+          </View>
+        </View>
       ) : (
         <FlatList
           key={String(numColumns)}
@@ -649,6 +667,12 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: colors.background,
+    ...(Platform.OS === 'web' ? { overflow: 'hidden', height: '100vh' } : {}),
+  },
+  webScroll: {
+    flex: 1,
+    overflowY: 'scroll',
+    WebkitOverflowScrolling: 'touch',
   },
 
   // Header
