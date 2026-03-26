@@ -841,10 +841,10 @@ const styles = StyleSheet.create({
   },
   inputWrapper: {
     flexDirection: 'row',
-    alignItems: 'flex-end',
+    alignItems: 'center',
     backgroundColor: COLORS.linen,
     borderRadius: RADIUS.xl,
-    paddingLeft: SPACING.base,
+    paddingLeft: SPACING.xs,
     paddingRight: SPACING.xs,
     paddingVertical: Platform.OS === 'ios' ? SPACING.sm : SPACING.xs,
     minHeight: 48,
