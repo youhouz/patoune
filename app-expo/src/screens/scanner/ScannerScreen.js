@@ -141,11 +141,12 @@ const ScannerScreen = ({ navigation }) => {
   }, [permission]);
 
   // Reactivate scanner immediately when screen regains focus (back from ProductResult)
-  // Force re-mount camera to fix black screen issue
+  // Force re-mount camera to fix black screen issue + always start in camera mode
   useFocusEffect(
     useCallback(() => {
       setScanned(false);
       setScanning(false);
+      setManualMode(false);
       if (Platform.OS !== 'web') {
         setCameraKey((prev) => prev + 1);
       }
@@ -253,8 +254,8 @@ const ScannerScreen = ({ navigation }) => {
     outputRange: [0, SCAN_FRAME_SIZE - 4],  // reactively sized
   });
 
-  // Loading permission state
-  if (!permission) {
+  // Loading permission state (native only — web handles permissions via browser)
+  if (!permission && Platform.OS !== 'web') {
     return (
       <View style={[styles.container, styles.centered]}>
         <StatusBar barStyle="dark-content" translucent backgroundColor="transparent" />
@@ -447,7 +448,7 @@ const ScannerScreen = ({ navigation }) => {
                 active={!scanned}
                 style={StyleSheet.absoluteFillObject}
               />
-            ) : !manualMode && permission.granted ? (
+            ) : !manualMode && permission?.granted ? (
               <CameraView
                 key={`camera-${cameraKey}`}
                 style={StyleSheet.absoluteFillObject}
@@ -471,7 +472,7 @@ const ScannerScreen = ({ navigation }) => {
                   <Feather name={torchOn ? 'zap' : 'zap-off'} size={20} color="#FFF" />
                 </TouchableOpacity>
               </CameraView>
-            ) : !manualMode && !permission.granted ? (
+            ) : !manualMode && !permission?.granted ? (
               renderPermissionRequest()
             ) : (
               renderManualMode()
@@ -725,7 +726,7 @@ const styles = StyleSheet.create({
   cameraArea: {
     borderRadius: RADIUS['2xl'],
     overflow: 'hidden',
-    backgroundColor: '#0D0F1A',
+    backgroundColor: '#1a1a2e',
     ...SHADOWS.lg,
   },
 
@@ -734,13 +735,15 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: 12,
     right: 12,
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: 'rgba(0,0,0,0.45)',
+    width: 46,
+    height: 46,
+    borderRadius: 23,
+    backgroundColor: 'rgba(255,255,255,0.25)',
     alignItems: 'center',
     justifyContent: 'center',
     zIndex: 10,
+    borderWidth: 1.5,
+    borderColor: 'rgba(255,255,255,0.4)',
   },
 
   // Scan overlay
@@ -749,7 +752,7 @@ const styles = StyleSheet.create({
   },
   overlayTop: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.30)',
+    backgroundColor: 'rgba(0,0,0,0.15)',
   },
   overlayMiddleRow: {
     flexDirection: 'row',
@@ -757,7 +760,7 @@ const styles = StyleSheet.create({
   },
   overlaySide: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.30)',
+    backgroundColor: 'rgba(0,0,0,0.15)',
   },
   scanFrameWrapper: {
     alignItems: 'center',
@@ -769,7 +772,7 @@ const styles = StyleSheet.create({
   },
   overlayBottom: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.30)',
+    backgroundColor: 'rgba(0,0,0,0.15)',
     alignItems: 'center',
     justifyContent: 'center',
     paddingTop: SPACING.sm,
