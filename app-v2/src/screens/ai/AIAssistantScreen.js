@@ -387,13 +387,17 @@ const AIAssistantScreen = () => {
   // Scroll to bottom when messages change
   useEffect(() => {
     if (messages.length > 0) {
-      // Double scroll: once quickly, once after render settles (important for web)
-      const t1 = setTimeout(() => {
-        scrollViewRef.current?.scrollToEnd?.({ animated: true });
-      }, 100);
-      const t2 = setTimeout(() => {
-        scrollViewRef.current?.scrollToEnd?.({ animated: true });
-      }, 400);
+      const scrollToBottom = () => {
+        const el = scrollViewRef.current;
+        if (!el) return;
+        if (el.scrollToEnd) {
+          el.scrollToEnd({ animated: true });
+        } else if (el.scrollTop !== undefined) {
+          el.scrollTop = el.scrollHeight;
+        }
+      };
+      const t1 = setTimeout(scrollToBottom, 100);
+      const t2 = setTimeout(scrollToBottom, 400);
       return () => { clearTimeout(t1); clearTimeout(t2); };
     }
   }, [messages, isLoading]);
@@ -505,82 +509,142 @@ const AIAssistantScreen = () => {
       />
 
       <View style={styles.flexWrapper}>
-        {/* Scrollable content */}
-        <ScrollView
-          ref={scrollViewRef}
-          style={styles.flexScroll}
-          contentContainerStyle={styles.scrollContent}
-          showsVerticalScrollIndicator={true}
-          keyboardShouldPersistTaps="handled"
-          keyboardDismissMode="on-drag"
-          bounces={true}
-          scrollEnabled={true}
-        >
-          {/* Disclaimer banner */}
-          <DisclaimerBanner />
+        {/* Scrollable content - native div on web for iOS Safari PWA compat */}
+        {Platform.OS === 'web' ? (
+          <div
+            ref={(el) => { scrollViewRef.current = el; }}
+            style={{
+              flex: 1,
+              overflowY: 'auto',
+              WebkitOverflowScrolling: 'touch',
+            }}
+          >
+            <div style={{ padding: '12px 16px 120px 16px' }}>
+              <DisclaimerBanner />
 
-          {/* Pet selector ribbon */}
-          {pets.length > 0 && (
-            <View style={styles.petSelectorSection}>
-              <Text style={styles.petSelectorLabel}>Contexte animal :</Text>
-              <ScrollView
-                horizontal
-                showsHorizontalScrollIndicator={false}
-                contentContainerStyle={styles.petSelectorList}
-                nestedScrollEnabled
-              >
-                {pets.map((item) => (
-                  <PetSelectorItem
-                    key={item._id || item.name}
-                    pet={item}
-                    isSelected={selectedPet?._id === item._id}
-                    onSelect={handleSelectPet}
+              {pets.length > 0 && (
+                <View style={styles.petSelectorSection}>
+                  <Text style={styles.petSelectorLabel}>Contexte animal :</Text>
+                  <ScrollView
+                    horizontal
+                    showsHorizontalScrollIndicator={false}
+                    contentContainerStyle={styles.petSelectorList}
+                    nestedScrollEnabled
+                  >
+                    {pets.map((item) => (
+                      <PetSelectorItem
+                        key={item._id || item.name}
+                        pet={item}
+                        isSelected={selectedPet?._id === item._id}
+                        onSelect={handleSelectPet}
+                      />
+                    ))}
+                  </ScrollView>
+                  {selectedPet && (
+                    <Text style={styles.petContextHint}>
+                      Questions orientees pour {selectedPet.name} ({selectedPet.species}
+                      {selectedPet.breed ? `, ${selectedPet.breed}` : ''})
+                    </Text>
+                  )}
+                </View>
+              )}
+
+              {!hasConversation && (
+                <View style={styles.suggestionsSection}>
+                  <Text style={styles.suggestionsTitle}>Questions frequentes</Text>
+                  {SUGGESTED_QUESTIONS.map((q) => (
+                    <SuggestedQuestion
+                      key={q.id}
+                      question={q}
+                      onPress={handleSend}
+                    />
+                  ))}
+                </View>
+              )}
+
+              {hasConversation && (
+                <View style={styles.messagesSection}>
+                  {messages.map((msg) => (
+                    <MessageBubble key={msg.id} message={msg} />
+                  ))}
+                  {isLoading && <TypingIndicator />}
+                  {messages.length > 0 &&
+                    messages[messages.length - 1].role === 'assistant' &&
+                    !isLoading && <DisclaimerBanner compact />}
+                </View>
+              )}
+
+              <View style={styles.bottomSpacer} />
+            </div>
+          </div>
+        ) : (
+          <ScrollView
+            ref={scrollViewRef}
+            style={styles.flexScroll}
+            contentContainerStyle={styles.scrollContent}
+            showsVerticalScrollIndicator={true}
+            keyboardShouldPersistTaps="handled"
+            keyboardDismissMode="on-drag"
+            bounces={true}
+            scrollEnabled={true}
+          >
+            <DisclaimerBanner />
+
+            {pets.length > 0 && (
+              <View style={styles.petSelectorSection}>
+                <Text style={styles.petSelectorLabel}>Contexte animal :</Text>
+                <ScrollView
+                  horizontal
+                  showsHorizontalScrollIndicator={false}
+                  contentContainerStyle={styles.petSelectorList}
+                  nestedScrollEnabled
+                >
+                  {pets.map((item) => (
+                    <PetSelectorItem
+                      key={item._id || item.name}
+                      pet={item}
+                      isSelected={selectedPet?._id === item._id}
+                      onSelect={handleSelectPet}
+                    />
+                  ))}
+                </ScrollView>
+                {selectedPet && (
+                  <Text style={styles.petContextHint}>
+                    Questions orientees pour {selectedPet.name} ({selectedPet.species}
+                    {selectedPet.breed ? `, ${selectedPet.breed}` : ''})
+                  </Text>
+                )}
+              </View>
+            )}
+
+            {!hasConversation && (
+              <View style={styles.suggestionsSection}>
+                <Text style={styles.suggestionsTitle}>Questions frequentes</Text>
+                {SUGGESTED_QUESTIONS.map((q) => (
+                  <SuggestedQuestion
+                    key={q.id}
+                    question={q}
+                    onPress={handleSend}
                   />
                 ))}
-              </ScrollView>
-              {selectedPet && (
-                <Text style={styles.petContextHint}>
-                  Questions orientees pour {selectedPet.name} ({selectedPet.species}
-                  {selectedPet.breed ? `, ${selectedPet.breed}` : ''})
-                </Text>
-              )}
-            </View>
-          )}
+              </View>
+            )}
 
-          {/* Suggested questions (only when no conversation) */}
-          {!hasConversation && (
-            <View style={styles.suggestionsSection}>
-              <Text style={styles.suggestionsTitle}>Questions frequentes</Text>
-              {SUGGESTED_QUESTIONS.map((q) => (
-                <SuggestedQuestion
-                  key={q.id}
-                  question={q}
-                  onPress={handleSend}
-                />
-              ))}
-            </View>
-          )}
+            {hasConversation && (
+              <View style={styles.messagesSection}>
+                {messages.map((msg) => (
+                  <MessageBubble key={msg.id} message={msg} />
+                ))}
+                {isLoading && <TypingIndicator />}
+                {messages.length > 0 &&
+                  messages[messages.length - 1].role === 'assistant' &&
+                  !isLoading && <DisclaimerBanner compact />}
+              </View>
+            )}
 
-          {/* Messages */}
-          {hasConversation && (
-            <View style={styles.messagesSection}>
-              {messages.map((msg) => (
-                <MessageBubble key={msg.id} message={msg} />
-              ))}
-
-              {/* Typing indicator */}
-              {isLoading && <TypingIndicator />}
-
-              {/* Post-answer disclaimer */}
-              {messages.length > 0 &&
-                messages[messages.length - 1].role === 'assistant' &&
-                !isLoading && <DisclaimerBanner compact />}
-            </View>
-          )}
-
-          {/* Bottom padding */}
-          <View style={styles.bottomSpacer} />
-        </ScrollView>
+            <View style={styles.bottomSpacer} />
+          </ScrollView>
+        )}
 
         {/* Sticky input bar */}
         <View style={[styles.inputBar, { paddingBottom: Math.max(SPACING.sm, insets.bottom) }]}>
