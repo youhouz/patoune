@@ -48,7 +48,14 @@ const userSchema = new mongoose.Schema({
     city: String,
     postalCode: String,
     country: { type: String, default: 'France' }
-  }
+  },
+  pushSubscriptions: [{
+    endpoint: String,
+    keys: {
+      p256dh: String,
+      auth: String,
+    },
+  }],
 }, {
   timestamps: true
 });

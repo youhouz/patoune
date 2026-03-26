@@ -97,3 +97,41 @@ self.addEventListener('fetch', (event) => {
     })
   );
 });
+
+// ---------------------------------------------------------------------------
+// Push Notifications
+// ---------------------------------------------------------------------------
+self.addEventListener('push', (event) => {
+  let data = { title: 'Pepete', body: 'Nouveau message', url: '/' };
+  try {
+    data = event.data?.json() || data;
+  } catch (_) {}
+
+  event.waitUntil(
+    self.registration.showNotification(data.title, {
+      body: data.body,
+      icon: '/assets/icon.png',
+      badge: '/assets/favicon.png',
+      vibrate: [200, 100, 200],
+      tag: 'pepete-message',
+      renotify: true,
+      data: { url: data.url },
+    })
+  );
+});
+
+self.addEventListener('notificationclick', (event) => {
+  event.notification.close();
+  const url = event.notification.data?.url || '/';
+  event.waitUntil(
+    clients.matchAll({ type: 'window', includeUncontrolled: true }).then((windowClients) => {
+      for (const client of windowClients) {
+        if (client.url.includes('pepete') && 'focus' in client) {
+          client.navigate(url);
+          return client.focus();
+        }
+      }
+      return clients.openWindow(url);
+    })
+  );
+});

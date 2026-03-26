@@ -80,6 +80,7 @@ app.use('/api/bookings', require('./src/routes/bookings'));
 app.use('/api/reviews', require('./src/routes/reviews'));
 app.use('/api/messages', require('./src/routes/messages'));
 app.use('/api/ai', require('./src/routes/ai'));
+app.use('/api/notifications', require('./src/routes/notifications'));
 app.use('/api/search', require('./src/routes/search'));
 app.use('/api/prelaunch', require('./src/routes/prelaunch'));
 

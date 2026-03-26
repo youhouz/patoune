@@ -59,6 +59,7 @@ app.use('/api/reviews', require('../src/routes/reviews'));
 app.use('/api/messages', require('../src/routes/messages'));
 app.use('/api/ai', require('../src/routes/ai'));
 app.use('/api/feedback', require('../src/routes/feedback'));
+app.use('/api/notifications', require('../src/routes/notifications'));
 
 app.use(require('../src/middleware/errorHandler'));
 

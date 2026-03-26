@@ -1,6 +1,7 @@
 const mongoose = require('mongoose');
 const Message = require('../models/Message');
 const User = require('../models/User');
+const { sendPushToUser } = require('./notificationController');
 
 // Générer un ID de conversation unique et trié
 const getConversationId = (userId1, userId2) => {
@@ -39,6 +40,14 @@ exports.sendMessage = async (req, res, next) => {
     });
 
     const populated = await message.populate('sender', 'name avatar');
+
+    // Send push notification to receiver
+    const senderUser = await User.findById(req.user.id).select('name').lean();
+    sendPushToUser(receiver, {
+      title: senderUser?.name || 'Nouveau message',
+      body: content.trim().slice(0, 100),
+      url: '/messages',
+    }).catch(() => {});
 
     res.status(201).json({ success: true, message: populated });
   } catch (error) {

@@ -45,7 +45,30 @@ const SettingsScreen = ({ navigation }) => {
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
 
   // Notification preferences (local state)
-  const [notifPush, setNotifPush] = useState(true);
+  const [notifPush, setNotifPush] = useState(false);
+
+  // Check push subscription status on mount
+  useEffect(() => {
+    if (Platform.OS === 'web') {
+      import('../../utils/pushNotifications').then(({ isPushSubscribed }) => {
+        isPushSubscribed().then(setNotifPush);
+      });
+    }
+  }, []);
+
+  // Handle push toggle
+  const handleNotifPushChange = async (value) => {
+    setNotifPush(value);
+    if (Platform.OS === 'web') {
+      const { subscribeToPush, unsubscribeFromPush } = await import('../../utils/pushNotifications');
+      if (value) {
+        const ok = await subscribeToPush();
+        if (!ok) setNotifPush(false);
+      } else {
+        await unsubscribeFromPush();
+      }
+    }
+  };
   const [notifScans, setNotifScans] = useState(true);
   const [notifBookings, setNotifBookings] = useState(true);
   const [notifMessages, setNotifMessages] = useState(true);
@@ -533,7 +556,7 @@ const SettingsScreen = ({ navigation }) => {
                   label: 'Notifications push',
                   description: 'Recevoir les notifications sur votre appareil',
                   value: notifPush,
-                  onValueChange: setNotifPush,
+                  onValueChange: handleNotifPushChange,
                   accentColor: '#6B8F71',
                 })}
                 {renderSettingRow({
