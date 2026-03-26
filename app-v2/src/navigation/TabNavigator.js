@@ -22,6 +22,8 @@ import MyPetsScreen from '../screens/profile/MyPetsScreen';
 import AddPetScreen from '../screens/profile/AddPetScreen';
 import SettingsScreen from '../screens/profile/SettingsScreen';
 import InstallGuideScreen from '../screens/profile/InstallGuideScreen';
+import AdminDashboardScreen from '../screens/admin/AdminDashboardScreen';
+import AdminUsersScreen from '../screens/admin/AdminUsersScreen';
 
 const Tab = createBottomTabNavigator();
 const RootStack = createStackNavigator();
@@ -143,6 +145,8 @@ const TabNavigator = () => (
     <RootStack.Screen name="Garde" component={PetSittingNavigator} />
     <RootStack.Screen name="Assistant" component={AIAssistantScreen} />
     <RootStack.Screen name="AuthStack" component={AuthNavigatorStack} />
+    <RootStack.Screen name="AdminDashboard" component={AdminDashboardScreen} />
+    <RootStack.Screen name="AdminUsers" component={AdminUsersScreen} />
   </RootStack.Navigator>
 );
 
