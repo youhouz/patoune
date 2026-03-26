@@ -70,6 +70,7 @@ const ScannerScreen = ({ navigation }) => {
   const [manualMode, setManualMode] = useState(false);
   const [scanned, setScanned] = useState(false);
   const [torchOn, setTorchOn] = useState(false);
+  const [cameraKey, setCameraKey] = useState(0);
   const [errorMessage, setErrorMessage] = useState('');
 
   // Animations
@@ -140,10 +141,14 @@ const ScannerScreen = ({ navigation }) => {
   }, [permission]);
 
   // Reactivate scanner immediately when screen regains focus (back from ProductResult)
+  // Force re-mount camera to fix black screen issue
   useFocusEffect(
     useCallback(() => {
       setScanned(false);
       setScanning(false);
+      if (Platform.OS !== 'web') {
+        setCameraKey((prev) => prev + 1);
+      }
     }, [])
   );
 
@@ -444,6 +449,7 @@ const ScannerScreen = ({ navigation }) => {
               />
             ) : !manualMode && permission.granted ? (
               <CameraView
+                key={`camera-${cameraKey}`}
                 style={StyleSheet.absoluteFillObject}
                 facing="back"
                 autofocus="on"

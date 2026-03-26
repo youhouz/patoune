@@ -353,7 +353,7 @@ const AIAssistantScreen = () => {
 
       <KeyboardAvoidingView
         style={styles.flex}
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 0}
       >
         {/* Scrollable content */}
@@ -363,7 +363,7 @@ const AIAssistantScreen = () => {
           contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
-          nestedScrollEnabled
+          keyboardDismissMode="interactive"
         >
           {/* Disclaimer banner */}
           <DisclaimerBanner />
@@ -482,6 +482,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   scrollContent: {
+    flexGrow: 1,
     paddingHorizontal: SPACING.base,
     paddingTop: SPACING.md,
   },

@@ -54,6 +54,10 @@ const WebBarcodeScanner = ({ onBarcodeScanned, active = true, style }) => {
           scannerRef.current.resume();
           return true;
         }
+        // 2 = SCANNING (already running)
+        if (state === 2) {
+          return true;
+        }
       } catch (_) {}
     }
     return false;
@@ -70,10 +74,16 @@ const WebBarcodeScanner = ({ onBarcodeScanned, active = true, style }) => {
 
     // When reactivated, try to resume first (instant restart)
     if (resumeScanner()) {
+      setReady(true);
       return;
     }
 
-    // First time: create scanner
+    // Scanner exists but in unknown state — destroy and recreate
+    if (scannerRef.current) {
+      destroyScanner();
+    }
+
+    // Create scanner
     let cancelled = false;
 
     const startScanner = async () => {
