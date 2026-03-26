@@ -415,18 +415,37 @@ const BookingScreen = ({ route, navigation }) => {
             <View style={styles.dateRow}>
               <View style={styles.dateField}>
                 <Text style={styles.dateLabel}>Debut</Text>
-                <View style={[styles.dateInputWrapper, startDate.length === 10 && styles.dateInputWrapperFilled]}>
-                  <Feather name="calendar" size={16} color={startDate.length === 10 ? '#527A56' : colors.textTertiary} style={{ marginRight: SPACING.sm }} />
-                  <TextInput
-                    style={styles.dateInput}
-                    value={startDate}
-                    onChangeText={(text) => formatDateInput(text, setStartDate)}
-                    placeholder="AAAA-MM-JJ"
-                    placeholderTextColor={colors.placeholder}
-                    maxLength={10}
-                    keyboardType="number-pad"
-                  />
-                </View>
+                <TouchableOpacity
+                  style={[styles.dateInputWrapper, startDate && styles.dateInputWrapperFilled]}
+                  onPress={() => { if (Platform.OS === 'web') document.getElementById('date-start')?.showPicker?.(); }}
+                  activeOpacity={0.7}
+                >
+                  <Feather name="calendar" size={16} color={startDate ? '#527A56' : colors.textTertiary} style={{ marginRight: SPACING.sm }} />
+                  {Platform.OS === 'web' ? (
+                    <input
+                      id="date-start"
+                      type="date"
+                      value={startDate}
+                      min={new Date().toISOString().split('T')[0]}
+                      onChange={(e) => setStartDate(e.target.value)}
+                      style={{
+                        flex: 1, border: 'none', outline: 'none', background: 'transparent',
+                        fontSize: 15, fontFamily: 'inherit', color: startDate ? '#2D3A2E' : '#999',
+                        padding: '12px 0', width: '100%',
+                      }}
+                    />
+                  ) : (
+                    <TextInput
+                      style={styles.dateInput}
+                      value={startDate}
+                      onChangeText={(text) => formatDateInput(text, setStartDate)}
+                      placeholder="AAAA-MM-JJ"
+                      placeholderTextColor={colors.placeholder}
+                      maxLength={10}
+                      keyboardType="number-pad"
+                    />
+                  )}
+                </TouchableOpacity>
               </View>
               <View style={styles.dateArrow}>
                 <View style={styles.dateArrowCircle}>
@@ -435,18 +454,37 @@ const BookingScreen = ({ route, navigation }) => {
               </View>
               <View style={styles.dateField}>
                 <Text style={styles.dateLabel}>Fin</Text>
-                <View style={[styles.dateInputWrapper, endDate.length === 10 && styles.dateInputWrapperFilled]}>
-                  <Feather name="calendar" size={16} color={endDate.length === 10 ? '#527A56' : colors.textTertiary} style={{ marginRight: SPACING.sm }} />
-                  <TextInput
-                    style={styles.dateInput}
-                    value={endDate}
-                    onChangeText={(text) => formatDateInput(text, setEndDate)}
-                    placeholder="AAAA-MM-JJ"
-                    placeholderTextColor={colors.placeholder}
-                    maxLength={10}
-                    keyboardType="number-pad"
-                  />
-                </View>
+                <TouchableOpacity
+                  style={[styles.dateInputWrapper, endDate && styles.dateInputWrapperFilled]}
+                  onPress={() => { if (Platform.OS === 'web') document.getElementById('date-end')?.showPicker?.(); }}
+                  activeOpacity={0.7}
+                >
+                  <Feather name="calendar" size={16} color={endDate ? '#527A56' : colors.textTertiary} style={{ marginRight: SPACING.sm }} />
+                  {Platform.OS === 'web' ? (
+                    <input
+                      id="date-end"
+                      type="date"
+                      value={endDate}
+                      min={startDate || new Date().toISOString().split('T')[0]}
+                      onChange={(e) => setEndDate(e.target.value)}
+                      style={{
+                        flex: 1, border: 'none', outline: 'none', background: 'transparent',
+                        fontSize: 15, fontFamily: 'inherit', color: endDate ? '#2D3A2E' : '#999',
+                        padding: '12px 0', width: '100%',
+                      }}
+                    />
+                  ) : (
+                    <TextInput
+                      style={styles.dateInput}
+                      value={endDate}
+                      onChangeText={(text) => formatDateInput(text, setEndDate)}
+                      placeholder="AAAA-MM-JJ"
+                      placeholderTextColor={colors.placeholder}
+                      maxLength={10}
+                      keyboardType="number-pad"
+                    />
+                  )}
+                </TouchableOpacity>
               </View>
             </View>
             {getDays() > 0 && (

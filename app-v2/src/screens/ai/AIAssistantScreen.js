@@ -332,6 +332,8 @@ const AIAssistantScreen = () => {
   const [messages, setMessages] = useState([]);
   const [inputText, setInputText] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [isListening, setIsListening] = useState(false);
+  const recognitionRef = useRef(null);
   const [petsLoading, setPetsLoading] = useState(true);
 
   // Fetch user's pets on screen focus (only if logged in)
@@ -439,7 +441,37 @@ const AIAssistantScreen = () => {
     } finally {
       setIsLoading(false);
     }
-  }, [inputText, isLoading, selectedPet]);
+  }, [inputText, isLoading, selectedPet, messages]);
+
+  // Voice input (Web Speech API)
+  const handleVoice = useCallback(() => {
+    if (Platform.OS !== 'web') return;
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SpeechRecognition) return;
+
+    if (isListening && recognitionRef.current) {
+      recognitionRef.current.stop();
+      setIsListening(false);
+      return;
+    }
+
+    const recognition = new SpeechRecognition();
+    recognition.lang = 'fr-FR';
+    recognition.continuous = false;
+    recognition.interimResults = false;
+    recognitionRef.current = recognition;
+
+    recognition.onresult = (event) => {
+      const transcript = event.results[0][0].transcript;
+      setInputText((prev) => (prev ? prev + ' ' + transcript : transcript));
+      setIsListening(false);
+    };
+    recognition.onerror = () => setIsListening(false);
+    recognition.onend = () => setIsListening(false);
+
+    recognition.start();
+    setIsListening(true);
+  }, [isListening]);
 
   const handleSelectPet = useCallback((pet) => {
     setSelectedPet((prev) => (prev?._id === pet._id ? null : pet));
@@ -537,9 +569,18 @@ const AIAssistantScreen = () => {
         {/* Sticky input bar */}
         <View style={[styles.inputBar, { paddingBottom: Math.max(SPACING.sm, insets.bottom) }]}>
           <View style={styles.inputWrapper}>
+            {Platform.OS === 'web' && (
+              <TouchableOpacity
+                style={[styles.micButton, isListening && styles.micButtonActive]}
+                onPress={handleVoice}
+                activeOpacity={0.7}
+              >
+                <Icon name={isListening ? 'mic-off' : 'mic'} size={20} color={isListening ? COLORS.textInverse : COLORS.pebble} />
+              </TouchableOpacity>
+            )}
             <TextInput
               style={styles.textInput}
-              placeholder="Posez votre question..."
+              placeholder={isListening ? 'Parlez...' : 'Posez votre question...'}
               placeholderTextColor={COLORS.placeholder}
               value={inputText}
               onChangeText={setInputText}
@@ -817,6 +858,17 @@ const styles = StyleSheet.create({
     maxHeight: 100,
     paddingVertical: Platform.OS === 'ios' ? 6 : 8,
     paddingRight: SPACING.sm,
+  },
+  micButton: {
+    width: 38,
+    height: 38,
+    borderRadius: 19,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 4,
+  },
+  micButtonActive: {
+    backgroundColor: COLORS.primary,
   },
   sendButton: {
     width: 38,
