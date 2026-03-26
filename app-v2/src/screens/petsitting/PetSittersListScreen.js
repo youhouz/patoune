@@ -191,13 +191,19 @@ const PetSitterCard = ({ petsitter, onPress, index }) => {
             </View>
 
             <View style={styles.ratingRow}>
-              <StarRating rating={petsitter.rating} size={13} />
-              <Text style={styles.ratingText}>
-                {petsitter.rating?.toFixed(1) || '0.0'}
-              </Text>
-              <Text style={styles.reviewCount}>
-                ({petsitter.reviewCount || 0})
-              </Text>
+              {petsitter.reviewCount > 0 ? (
+                <>
+                  <StarRating rating={petsitter.rating} size={13} />
+                  <Text style={styles.ratingText}>
+                    {petsitter.rating?.toFixed(1)}
+                  </Text>
+                  <Text style={styles.reviewCount}>
+                    ({petsitter.reviewCount})
+                  </Text>
+                </>
+              ) : (
+                <Text style={styles.reviewCount}>Nouveau</Text>
+              )}
               {petsitter.experience > 0 && (
                 <View style={styles.expBadge}>
                   <Text style={styles.expText}>{petsitter.experience} an{petsitter.experience > 1 ? 's' : ''}</Text>

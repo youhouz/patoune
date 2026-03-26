@@ -230,13 +230,15 @@ const PetSitterDetailScreen = ({ route, navigation }) => {
               {petsitter.user?.name || 'Pet-sitter'}
             </Text>
 
-            {/* Rating */}
-            <View style={styles.heroRatingRow}>
-              <StarRating rating={petsitter.rating} size={18} showValue light />
-              <Text style={styles.heroReviewCount}>
-                ({petsitter.reviewCount || 0} avis)
-              </Text>
-            </View>
+            {/* Rating - only show if there are reviews */}
+            {petsitter.reviewCount > 0 && (
+              <View style={styles.heroRatingRow}>
+                <StarRating rating={petsitter.rating} size={18} showValue light />
+                <Text style={styles.heroReviewCount}>
+                  ({petsitter.reviewCount} avis)
+                </Text>
+              </View>
+            )}
 
             {/* Verified Badge */}
             {petsitter.verified && (
@@ -551,6 +553,7 @@ const styles = StyleSheet.create({
   },
   scrollView: {
     flex: 1,
+    ...(Platform.OS === 'web' ? { overflowY: 'auto', WebkitOverflowScrolling: 'touch' } : {}),
   },
   scrollContent: {
     paddingBottom: 120,
