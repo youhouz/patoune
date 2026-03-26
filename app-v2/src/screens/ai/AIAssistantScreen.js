@@ -404,10 +404,16 @@ const AIAssistantScreen = () => {
         }
       : undefined;
 
+    // Build conversation history for AI context
+    const history = messages.map((m) => ({
+      role: m.role === 'assistant' ? 'assistant' : 'user',
+      content: m.text,
+    }));
+
     // Call API
     setIsLoading(true);
     try {
-      const res = await askAIAPI(question, petContext);
+      const res = await askAIAPI(question, petContext, history);
       const answer =
         res.data?.answer ||
         res.data?.message ||

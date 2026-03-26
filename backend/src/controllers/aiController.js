@@ -152,7 +152,7 @@ function getFallbackAnswer(question, petContext) {
 // @route   POST /api/ai/ask
 exports.ask = async (req, res, next) => {
   try {
-    const { question, petContext } = req.body;
+    const { question, petContext, history } = req.body;
 
     if (!question || typeof question !== 'string' || question.trim().length === 0) {
       return res.status(400).json({
@@ -193,6 +193,19 @@ exports.ask = async (req, res, next) => {
     }
 
     // -----------------------------------------------------------------------
+    // Construire l'historique de conversation (max 20 messages pour limiter les tokens)
+    // -----------------------------------------------------------------------
+    const conversationHistory = [];
+    if (Array.isArray(history)) {
+      const recentHistory = history.slice(-20);
+      for (const msg of recentHistory) {
+        if (msg.role === 'user' || msg.role === 'assistant') {
+          conversationHistory.push({ role: msg.role, content: msg.content });
+        }
+      }
+    }
+
+    // -----------------------------------------------------------------------
     // Mode 1 : Groq API gratuite (prioritaire si GROQ_API_KEY est defini)
     // -----------------------------------------------------------------------
     if (process.env.GROQ_API_KEY) {
@@ -204,6 +217,7 @@ exports.ask = async (req, res, next) => {
         temperature: 0.7,
         messages: [
           { role: 'system', content: SYSTEM_PROMPT },
+          ...conversationHistory,
           { role: 'user', content: userMessage },
         ],
       });
@@ -231,6 +245,7 @@ exports.ask = async (req, res, next) => {
         max_tokens: 1024,
         system: SYSTEM_PROMPT,
         messages: [
+          ...conversationHistory,
           { role: 'user', content: userMessage }
         ]
       });
