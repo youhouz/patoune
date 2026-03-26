@@ -23,15 +23,6 @@
         flex: 1;
       }
     </style>
-    <style id="ios-scroll-fix">
-      /* Fix iOS Safari PWA: match React Native Yoga default min-height behavior.
-         In CSS flexbox, min-height defaults to 'auto' which prevents flex items
-         from shrinking below content size. React Native's Yoga engine defaults
-         min-height to 0. This mismatch breaks scrolling in nested flex layouts. */
-      #root div {
-        min-height: 0;
-      }
-    </style>
   </head>
 
   <body>

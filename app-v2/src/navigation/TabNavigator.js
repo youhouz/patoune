@@ -41,10 +41,7 @@ const stackScreenOptions = {
   headerTintColor: COLORS.primary,
   headerTitleStyle: { fontWeight: '700', fontSize: 18, color: COLORS.text },
   headerBackTitleVisible: false,
-  cardStyle: {
-    backgroundColor: COLORS.background,
-    ...(Platform.OS === 'web' ? { minHeight: 0, overflow: 'hidden' } : {}),
-  },
+  cardStyle: { backgroundColor: COLORS.background },
 };
 
 const PetSittingNavigator = () => {

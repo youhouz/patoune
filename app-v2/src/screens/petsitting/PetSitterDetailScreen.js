@@ -106,23 +106,25 @@ const PetSitterDetailScreen = ({ route, navigation }) => {
   const slideAnim = useRef(new Animated.Value(30)).current;
   const scrollRef = useRef(null);
 
-  // Force native scroll styles on web (iOS Safari PWA fix)
+  // Fix iOS Safari PWA scrolling: walk up the DOM tree and set min-height:0
+  // on all ancestors up to #root. CSS flexbox defaults min-height to 'auto'
+  // which prevents flex children from shrinking, blocking scroll.
   useEffect(() => {
-    if (Platform.OS === 'web' && scrollRef.current) {
-      const node = scrollRef.current?.getScrollableNode?.() || scrollRef.current;
-      if (node && node.style) {
-        node.style.overflowY = 'scroll';
-        node.style.webkitOverflowScrolling = 'touch';
-        node.style.flex = '1';
-        // Also style the parent container
-        if (node.parentNode && node.parentNode.style) {
-          node.parentNode.style.display = 'flex';
-          node.parentNode.style.flexDirection = 'column';
-          node.parentNode.style.overflow = 'hidden';
-        }
-      }
+    if (Platform.OS !== 'web' || !scrollRef.current) return;
+    const node = scrollRef.current?.getScrollableNode?.()
+      || scrollRef.current?._nativeRef?.current
+      || scrollRef.current;
+    if (!node) return;
+    // Make the scroll node itself scrollable
+    node.style.overflowY = 'scroll';
+    node.style.webkitOverflowScrolling = 'touch';
+    // Walk up ancestors and set min-height:0 so flex shrinking works
+    let el = node.parentElement;
+    while (el && el.id !== 'root') {
+      el.style.minHeight = '0';
+      el = el.parentElement;
     }
-  }, []);
+  }, [petsitter]);
 
   useEffect(() => {
     const init = async () => {
@@ -570,20 +572,9 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: colors.background,
-    ...(Platform.OS === 'web' ? {
-      overflow: 'hidden',
-      height: '100vh',
-      display: 'flex',
-      flexDirection: 'column',
-    } : {}),
   },
   scrollView: {
     flex: 1,
-    ...(Platform.OS === 'web' ? {
-      overflowY: 'scroll',
-      WebkitOverflowScrolling: 'touch',
-      minHeight: 0,
-    } : {}),
   },
   scrollContent: {
     paddingBottom: 120,

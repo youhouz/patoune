@@ -27,18 +27,6 @@ if (Platform.OS === 'web' && typeof navigator !== 'undefined' && 'serviceWorker'
   });
 }
 
-// Fix iOS Safari PWA scrolling: CSS flexbox min-height defaults to 'auto',
-// preventing flex children from shrinking. React Native Yoga defaults to 0.
-if (Platform.OS === 'web' && typeof document !== 'undefined') {
-  const fixId = 'ios-scroll-fix';
-  if (!document.getElementById(fixId)) {
-    const style = document.createElement('style');
-    style.id = fixId;
-    style.textContent = '#root div { min-height: 0; }';
-    document.head.appendChild(style);
-  }
-}
-
 SplashScreen.preventAutoHideAsync();
 
 export default function App() {

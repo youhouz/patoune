@@ -368,16 +368,19 @@ const AIAssistantScreen = () => {
     }, [user])
   );
 
-  // Force native scroll styles on web (iOS Safari PWA fix)
+  // Fix iOS Safari PWA scrolling: walk up DOM tree and set min-height:0
   useEffect(() => {
-    if (Platform.OS === 'web' && scrollViewRef.current) {
-      const node = scrollViewRef.current?.getScrollableNode?.() || scrollViewRef.current;
-      if (node && node.style) {
-        node.style.overflowY = 'scroll';
-        node.style.webkitOverflowScrolling = 'touch';
-        node.style.flex = '1';
-        node.style.minHeight = '0';
-      }
+    if (Platform.OS !== 'web' || !scrollViewRef.current) return;
+    const node = scrollViewRef.current?.getScrollableNode?.()
+      || scrollViewRef.current?._nativeRef?.current
+      || scrollViewRef.current;
+    if (!node) return;
+    node.style.overflowY = 'scroll';
+    node.style.webkitOverflowScrolling = 'touch';
+    let el = node.parentElement;
+    while (el && el.id !== 'root') {
+      el.style.minHeight = '0';
+      el = el.parentElement;
     }
   }, []);
 
@@ -632,29 +635,12 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: COLORS.cream,
-    ...(Platform.OS === 'web' ? {
-      height: '100vh',
-      display: 'flex',
-      flexDirection: 'column',
-      overflow: 'hidden',
-    } : {}),
   },
   flexWrapper: {
     flex: 1,
-    ...(Platform.OS === 'web' ? {
-      overflow: 'hidden',
-      minHeight: 0,
-      display: 'flex',
-      flexDirection: 'column',
-    } : {}),
   },
   flexScroll: {
     flex: 1,
-    ...(Platform.OS === 'web' ? {
-      overflowY: 'scroll',
-      WebkitOverflowScrolling: 'touch',
-      minHeight: 0,
-    } : {}),
   },
   scrollContent: {
     paddingHorizontal: SPACING.base,
