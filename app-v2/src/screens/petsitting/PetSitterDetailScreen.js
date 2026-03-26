@@ -104,28 +104,6 @@ const PetSitterDetailScreen = ({ route, navigation }) => {
   const [showAllReviews, setShowAllReviews] = useState(false);
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const slideAnim = useRef(new Animated.Value(30)).current;
-  const scrollRef = useRef(null);
-
-  // Fix iOS Safari PWA scrolling: walk up the DOM tree and set min-height:0
-  // on all ancestors up to #root. CSS flexbox defaults min-height to 'auto'
-  // which prevents flex children from shrinking, blocking scroll.
-  useEffect(() => {
-    if (Platform.OS !== 'web' || !scrollRef.current) return;
-    const node = scrollRef.current?.getScrollableNode?.()
-      || scrollRef.current?._nativeRef?.current
-      || scrollRef.current;
-    if (!node) return;
-    // Make the scroll node itself scrollable
-    node.style.overflowY = 'scroll';
-    node.style.webkitOverflowScrolling = 'touch';
-    // Walk up ancestors and set min-height:0 so flex shrinking works
-    let el = node.parentElement;
-    while (el && el.id !== 'root') {
-      el.style.minHeight = '0';
-      el = el.parentElement;
-    }
-  }, [petsitter]);
-
   useEffect(() => {
     const init = async () => {
       if (!petsitter && route.params?.petsitterId) {
@@ -207,12 +185,10 @@ const PetSitterDetailScreen = ({ route, navigation }) => {
     <View style={styles.container}>
       <StatusBar barStyle="light-content" />
 
-      <ScrollView
-        ref={scrollRef}
-        style={styles.scrollView}
-        contentContainerStyle={styles.scrollContent}
-        showsVerticalScrollIndicator={false}
+      <View
+        style={Platform.OS === 'web' ? styles.webScroll : styles.scrollView}
       >
+        <View style={styles.scrollContent}>
         {/* Hero Section */}
         <LinearGradient
           colors={[colors.primary, colors.primaryDark]}
@@ -521,7 +497,8 @@ const PetSitterDetailScreen = ({ route, navigation }) => {
           </SectionCard>
 
         </Animated.View>
-      </ScrollView>
+        </View>
+      </View>
 
       {/* Sticky Bottom Bar */}
       <View style={styles.bottomBar}>
@@ -572,9 +549,15 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: colors.background,
+    ...(Platform.OS === 'web' ? { overflow: 'hidden', height: '100vh' } : {}),
   },
   scrollView: {
     flex: 1,
+  },
+  webScroll: {
+    flex: 1,
+    overflowY: 'scroll',
+    WebkitOverflowScrolling: 'touch',
   },
   scrollContent: {
     paddingBottom: 120,
