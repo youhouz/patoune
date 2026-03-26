@@ -63,8 +63,8 @@ const WebBarcodeScanner = ({ onBarcodeScanned, active = true, style }) => {
         await scanner.start(
           { facingMode: 'environment' },
           {
-            fps: 5,
-            qrbox: { width: 280, height: 160 },
+            fps: 15,
+            qrbox: { width: 320, height: 200 },
             aspectRatio: 1.5,
             disableFlip: false,
             formatsToSupport: [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16],
@@ -128,12 +128,12 @@ const WebBarcodeScanner = ({ onBarcodeScanned, active = true, style }) => {
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, overflow: 'hidden', backgroundColor: '#0D0F1A' },
-  fallback: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 24, backgroundColor: '#0D0F1A' },
+  container: { flex: 1, overflow: 'hidden', backgroundColor: 'transparent' },
+  fallback: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 24, backgroundColor: '#1a1a2e' },
   fallbackIcon: { fontSize: 40, marginBottom: 16 },
   fallbackText: { color: 'rgba(255,255,255,0.85)', fontSize: 15, textAlign: 'center', marginBottom: 8, fontWeight: '600' },
   fallbackHint: { color: 'rgba(255,255,255,0.5)', fontSize: 13, textAlign: 'center', lineHeight: 18 },
-  loadingOverlay: { ...StyleSheet.absoluteFillObject, alignItems: 'center', justifyContent: 'center', backgroundColor: '#0D0F1A' },
+  loadingOverlay: { ...StyleSheet.absoluteFillObject, alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(0,0,0,0.3)' },
   loadingText: { color: 'rgba(255,255,255,0.7)', fontSize: 13, backgroundColor: 'rgba(0,0,0,0.5)', paddingHorizontal: 14, paddingVertical: 6, borderRadius: 12, overflow: 'hidden' },
 });
 

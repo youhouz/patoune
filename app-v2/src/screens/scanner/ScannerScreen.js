@@ -701,7 +701,7 @@ const styles = StyleSheet.create({
   cameraArea: {
     borderRadius: RADIUS['2xl'],
     overflow: 'hidden',
-    backgroundColor: '#1a1a2e',
+    backgroundColor: 'transparent',
     ...SHADOWS.lg,
   },
 
@@ -711,7 +711,7 @@ const styles = StyleSheet.create({
   },
   overlayTop: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.12)',
+    backgroundColor: 'rgba(0,0,0,0.03)',
   },
   overlayMiddleRow: {
     flexDirection: 'row',
@@ -719,7 +719,7 @@ const styles = StyleSheet.create({
   },
   overlaySide: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.12)',
+    backgroundColor: 'rgba(0,0,0,0.03)',
   },
   scanFrameWrapper: {
     alignItems: 'center',
@@ -731,7 +731,7 @@ const styles = StyleSheet.create({
   },
   overlayBottom: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.12)',
+    backgroundColor: 'rgba(0,0,0,0.03)',
     alignItems: 'center',
     justifyContent: 'center',
     paddingTop: SPACING.sm,

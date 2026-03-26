@@ -450,11 +450,11 @@ const AIAssistantScreen = () => {
         onBack={() => navigation.goBack()}
       />
 
-      <View style={styles.flex}>
+      <View style={styles.flexWrapper}>
         {/* Scrollable content */}
         <ScrollView
           ref={scrollViewRef}
-          style={styles.flex}
+          style={styles.flexScroll}
           contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={true}
           keyboardShouldPersistTaps="handled"
@@ -573,8 +573,13 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: COLORS.cream,
   },
-  flex: {
+  flexWrapper: {
     flex: 1,
+    ...(Platform.OS === 'web' ? { overflow: 'hidden', minHeight: 0 } : {}),
+  },
+  flexScroll: {
+    flex: 1,
+    ...(Platform.OS === 'web' ? { overflow: 'auto' } : {}),
   },
   scrollContent: {
     paddingHorizontal: SPACING.base,
