@@ -30,6 +30,7 @@
       "permissions": ["CAMERA", "ACCESS_FINE_LOCATION", "ACCESS_COARSE_LOCATION"]
     },
     "web": {
+      "bundler": "metro",
       "favicon": "./assets/favicon.png",
       "name": "Pépète",
       "shortName": "Pépète",
