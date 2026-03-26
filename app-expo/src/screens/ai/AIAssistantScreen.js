@@ -11,7 +11,6 @@ import {
   StyleSheet,
   ScrollView,
   TouchableOpacity,
-  KeyboardAvoidingView,
   Platform,
   Animated,
   Keyboard,
@@ -351,19 +350,18 @@ const AIAssistantScreen = () => {
         onBack={() => navigation.goBack()}
       />
 
-      <KeyboardAvoidingView
-        style={styles.flex}
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 0}
-      >
+      <View style={styles.flex}>
         {/* Scrollable content */}
         <ScrollView
           ref={scrollViewRef}
           style={styles.flex}
           contentContainerStyle={styles.scrollContent}
-          showsVerticalScrollIndicator={false}
+          showsVerticalScrollIndicator={true}
           keyboardShouldPersistTaps="handled"
-          keyboardDismissMode="interactive"
+          keyboardDismissMode="on-drag"
+          bounces={true}
+          scrollEnabled={true}
+          overScrollMode="always"
         >
           {/* Disclaimer banner */}
           <DisclaimerBanner />
@@ -427,8 +425,6 @@ const AIAssistantScreen = () => {
             </View>
           ) : null}
 
-          {/* Bottom padding */}
-          <View style={{ height: 100 }} />
         </ScrollView>
 
         {/* Sticky input bar */}
@@ -464,7 +460,7 @@ const AIAssistantScreen = () => {
             </TouchableOpacity>
           </View>
         </View>
-      </KeyboardAvoidingView>
+      </View>
     </View>
   );
 };
@@ -482,9 +478,9 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   scrollContent: {
-    flexGrow: 1,
     paddingHorizontal: SPACING.base,
     paddingTop: SPACING.md,
+    paddingBottom: 120,
   },
 
   // -- Disclaimer --
