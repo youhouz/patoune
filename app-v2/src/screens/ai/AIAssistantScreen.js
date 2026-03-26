@@ -575,11 +575,11 @@ const styles = StyleSheet.create({
   },
   flexWrapper: {
     flex: 1,
-    ...(Platform.OS === 'web' ? { overflow: 'hidden', minHeight: 0 } : {}),
+    ...(Platform.OS === 'web' ? { overflow: 'hidden', height: 0 } : {}),
   },
   flexScroll: {
     flex: 1,
-    ...(Platform.OS === 'web' ? { overflow: 'auto' } : {}),
+    ...(Platform.OS === 'web' ? { overflowY: 'auto', WebkitOverflowScrolling: 'touch' } : {}),
   },
   scrollContent: {
     paddingHorizontal: SPACING.base,

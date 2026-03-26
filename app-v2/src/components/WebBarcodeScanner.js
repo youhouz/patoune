@@ -64,7 +64,10 @@ const WebBarcodeScanner = ({ onBarcodeScanned, active = true, style }) => {
           { facingMode: 'environment' },
           {
             fps: 15,
-            qrbox: { width: 320, height: 200 },
+            qrbox: (viewfinderWidth, viewfinderHeight) => ({
+              width: Math.floor(viewfinderWidth * 0.92),
+              height: Math.floor(viewfinderHeight * 0.92),
+            }),
             aspectRatio: 1.5,
             disableFlip: false,
             formatsToSupport: [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16],
@@ -72,6 +75,18 @@ const WebBarcodeScanner = ({ onBarcodeScanned, active = true, style }) => {
           onSuccess,
           () => {}
         );
+
+        // Remove html5-qrcode dark overlay around scan area
+        try {
+          const style = document.createElement('style');
+          style.textContent = `
+            #web-barcode-scanner video { object-fit: cover !important; }
+            #web-barcode-scanner img[alt="Info icon"] { display: none !important; }
+            #qr-shaded-region { border-color: transparent !important; }
+            #web-barcode-scanner > div { background: transparent !important; }
+          `;
+          document.head.appendChild(style);
+        } catch (_) {}
 
         if (!cancelled) setReady(true);
       } catch (err) {
