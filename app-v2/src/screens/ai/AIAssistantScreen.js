@@ -368,6 +368,19 @@ const AIAssistantScreen = () => {
     }, [user])
   );
 
+  // Force native scroll styles on web (iOS Safari PWA fix)
+  useEffect(() => {
+    if (Platform.OS === 'web' && scrollViewRef.current) {
+      const node = scrollViewRef.current?.getScrollableNode?.() || scrollViewRef.current;
+      if (node && node.style) {
+        node.style.overflowY = 'scroll';
+        node.style.webkitOverflowScrolling = 'touch';
+        node.style.flex = '1';
+        node.style.minHeight = '0';
+      }
+    }
+  }, []);
+
   // Scroll to bottom when messages change
   useEffect(() => {
     if (messages.length > 0) {
@@ -619,14 +632,29 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: COLORS.cream,
+    ...(Platform.OS === 'web' ? {
+      height: '100vh',
+      display: 'flex',
+      flexDirection: 'column',
+      overflow: 'hidden',
+    } : {}),
   },
   flexWrapper: {
     flex: 1,
-    ...(Platform.OS === 'web' ? { overflow: 'hidden', height: 0 } : {}),
+    ...(Platform.OS === 'web' ? {
+      overflow: 'hidden',
+      minHeight: 0,
+      display: 'flex',
+      flexDirection: 'column',
+    } : {}),
   },
   flexScroll: {
     flex: 1,
-    ...(Platform.OS === 'web' ? { overflowY: 'auto', WebkitOverflowScrolling: 'touch' } : {}),
+    ...(Platform.OS === 'web' ? {
+      overflowY: 'scroll',
+      WebkitOverflowScrolling: 'touch',
+      minHeight: 0,
+    } : {}),
   },
   scrollContent: {
     paddingHorizontal: SPACING.base,

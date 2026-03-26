@@ -104,6 +104,25 @@ const PetSitterDetailScreen = ({ route, navigation }) => {
   const [showAllReviews, setShowAllReviews] = useState(false);
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const slideAnim = useRef(new Animated.Value(30)).current;
+  const scrollRef = useRef(null);
+
+  // Force native scroll styles on web (iOS Safari PWA fix)
+  useEffect(() => {
+    if (Platform.OS === 'web' && scrollRef.current) {
+      const node = scrollRef.current?.getScrollableNode?.() || scrollRef.current;
+      if (node && node.style) {
+        node.style.overflowY = 'scroll';
+        node.style.webkitOverflowScrolling = 'touch';
+        node.style.flex = '1';
+        // Also style the parent container
+        if (node.parentNode && node.parentNode.style) {
+          node.parentNode.style.display = 'flex';
+          node.parentNode.style.flexDirection = 'column';
+          node.parentNode.style.overflow = 'hidden';
+        }
+      }
+    }
+  }, []);
 
   useEffect(() => {
     const init = async () => {
@@ -187,6 +206,7 @@ const PetSitterDetailScreen = ({ route, navigation }) => {
       <StatusBar barStyle="light-content" />
 
       <ScrollView
+        ref={scrollRef}
         style={styles.scrollView}
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
@@ -550,11 +570,20 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: colors.background,
-    ...(Platform.OS === 'web' ? { overflow: 'hidden', height: '100vh' } : {}),
+    ...(Platform.OS === 'web' ? {
+      overflow: 'hidden',
+      height: '100vh',
+      display: 'flex',
+      flexDirection: 'column',
+    } : {}),
   },
   scrollView: {
     flex: 1,
-    ...(Platform.OS === 'web' ? { overflowY: 'auto', WebkitOverflowScrolling: 'touch' } : {}),
+    ...(Platform.OS === 'web' ? {
+      overflowY: 'scroll',
+      WebkitOverflowScrolling: 'touch',
+      minHeight: 0,
+    } : {}),
   },
   scrollContent: {
     paddingBottom: 120,
