@@ -227,8 +227,24 @@ const ProfileScreen = ({ navigation }) => {
     },
   ];
 
+  const isAdmin = user?.role === 'admin';
+
   const menuSections = [
     ...(activeMode === 'petsitter' ? sitterSections : ownerSections),
+    ...(isAdmin ? [{
+      title: 'Administration',
+      items: [
+        {
+          icon: 'bar-chart-2',
+          label: 'Dashboard Admin',
+          subtitle: 'Analytics, utilisateurs, visiteurs',
+          screen: 'AdminDashboard',
+          accentColor: '#C25B4A',
+          bgColor: '#FBE8E4',
+          isRootNav: true,
+        },
+      ],
+    }] : []),
     {
       title: 'Parametres',
       items: [
@@ -384,7 +400,13 @@ const ProfileScreen = ({ navigation }) => {
               <TouchableOpacity
                 key={itemIndex}
                 style={styles.menuCard}
-                onPress={() => navigation.navigate(item.screen)}
+                onPress={() => {
+                  if (item.isRootNav) {
+                    navigation.getParent()?.getParent()?.navigate(item.screen);
+                  } else {
+                    navigation.navigate(item.screen);
+                  }
+                }}
                 activeOpacity={0.6}
               >
                 <View style={[styles.menuIconContainer, { backgroundColor: item.bgColor }]}>
