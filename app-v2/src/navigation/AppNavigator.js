@@ -10,26 +10,46 @@ import { PepeteIcon } from '../components/PepeteLogo';
 
 const ONBOARDING_KEY = 'onboarding_v3';
 
-// ─── Splash Screen — same DA as the rest of the app ─────
+// ─── Animated Dot ────────────────────────────────────────
+const LoadingDot = ({ delay }) => {
+  const anim = useRef(new Animated.Value(0.3)).current;
+  useEffect(() => {
+    const loop = Animated.loop(
+      Animated.sequence([
+        Animated.delay(delay),
+        Animated.timing(anim, { toValue: 1, duration: 400, useNativeDriver: true }),
+        Animated.timing(anim, { toValue: 0.3, duration: 400, useNativeDriver: true }),
+        Animated.delay(600 - delay),
+      ])
+    );
+    loop.start();
+    return () => loop.stop();
+  }, []);
+  return (
+    <Animated.View style={[st.loadDot, { opacity: anim, transform: [{ scale: anim }] }]} />
+  );
+};
+
+// ─── Splash Screen ───────────────────────────────────────
 const SplashLoader = () => {
-  const logoScale = useRef(new Animated.Value(0.8)).current;
+  const logoScale = useRef(new Animated.Value(0.6)).current;
   const logoOpacity = useRef(new Animated.Value(0)).current;
   const textOpacity = useRef(new Animated.Value(0)).current;
-  const loaderWidth = useRef(new Animated.Value(0)).current;
+  const pulse = useRef(new Animated.Value(1)).current;
 
   useEffect(() => {
     Animated.sequence([
       Animated.parallel([
-        Animated.spring(logoScale, { toValue: 1, tension: 50, friction: 7, useNativeDriver: true }),
-        Animated.timing(logoOpacity, { toValue: 1, duration: 600, useNativeDriver: true }),
+        Animated.spring(logoScale, { toValue: 1, tension: 40, friction: 6, useNativeDriver: true }),
+        Animated.timing(logoOpacity, { toValue: 1, duration: 700, useNativeDriver: true }),
       ]),
-      Animated.timing(textOpacity, { toValue: 1, duration: 400, useNativeDriver: true }),
+      Animated.timing(textOpacity, { toValue: 1, duration: 500, useNativeDriver: true }),
     ]).start();
 
     Animated.loop(
       Animated.sequence([
-        Animated.timing(loaderWidth, { toValue: 1, duration: 1800, useNativeDriver: false }),
-        Animated.timing(loaderWidth, { toValue: 0, duration: 0, useNativeDriver: false }),
+        Animated.timing(pulse, { toValue: 1.04, duration: 1200, useNativeDriver: true }),
+        Animated.timing(pulse, { toValue: 1, duration: 1200, useNativeDriver: true }),
       ])
     ).start();
   }, []);
@@ -37,23 +57,24 @@ const SplashLoader = () => {
   return (
     <View style={st.splash}>
       <StatusBar barStyle="dark-content" />
-      <View style={st.bgCircle1} />
-      <View style={st.bgCircle2} />
 
       <Animated.View style={[st.center, { opacity: logoOpacity, transform: [{ scale: logoScale }] }]}>
-        <View style={st.iconContainer}>
-          <PepeteIcon size={72} gradientColors={['#527A56', '#6B8F71']} />
-        </View>
+        <Animated.View style={[st.iconRing, { transform: [{ scale: pulse }] }]}>
+          <View style={st.iconContainer}>
+            <PepeteIcon size={56} gradientColors={['#527A56', '#6B8F71']} />
+          </View>
+        </Animated.View>
 
         <Animated.View style={{ opacity: textOpacity, alignItems: 'center' }}>
           <Text style={st.title}>
             p&#233;p&#232;te<Text style={st.titleDot}>.</Text>
           </Text>
+          <Text style={st.tagline}>Le compagnon de vos compagnons</Text>
 
-          <View style={st.loaderTrack}>
-            <Animated.View style={[st.loaderFill, {
-              width: loaderWidth.interpolate({ inputRange: [0, 1], outputRange: ['0%', '100%'] }),
-            }]} />
+          <View style={st.dotsRow}>
+            <LoadingDot delay={0} />
+            <LoadingDot delay={200} />
+            <LoadingDot delay={400} />
           </View>
         </Animated.View>
       </Animated.View>
@@ -64,41 +85,40 @@ const SplashLoader = () => {
 const st = StyleSheet.create({
   splash: {
     flex: 1, justifyContent: 'center', alignItems: 'center',
-    backgroundColor: '#FAF6EE', overflow: 'hidden',
+    backgroundColor: '#FAF6EE',
   },
-  bgCircle1: {
-    position: 'absolute', top: -100, right: -80,
-    width: 260, height: 260, borderRadius: 130,
-    backgroundColor: 'rgba(107,143,113,0.06)',
+  center: { alignItems: 'center' },
+  iconRing: {
+    width: 120, height: 120, borderRadius: 36,
+    borderWidth: 1.5, borderColor: 'rgba(82,122,86,0.1)',
+    alignItems: 'center', justifyContent: 'center',
+    marginBottom: 28,
   },
-  bgCircle2: {
-    position: 'absolute', bottom: -60, left: -60,
-    width: 200, height: 200, borderRadius: 100,
-    backgroundColor: 'rgba(107,143,113,0.04)',
-  },
-  center: { alignItems: 'center', zIndex: 2 },
   iconContainer: {
-    width: 110, height: 110, borderRadius: 32,
+    width: 96, height: 96, borderRadius: 28,
     backgroundColor: '#FFFFFF',
     alignItems: 'center', justifyContent: 'center',
-    marginBottom: 24,
-    shadowColor: '#527A56', shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.12, shadowRadius: 16, elevation: 6,
+    shadowColor: '#527A56', shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.1, shadowRadius: 20, elevation: 6,
   },
   title: {
     fontFamily: 'PlayfairDisplay_700Bold',
-    fontSize: 42, color: '#2C2825',
-    letterSpacing: 2, textAlign: 'center',
-    marginBottom: 28,
+    fontSize: 38, color: '#2C2825',
+    letterSpacing: 1, textAlign: 'center',
+    marginBottom: 6,
   },
   titleDot: { color: '#527A56' },
-  loaderTrack: {
-    width: 100, height: 3,
-    backgroundColor: 'rgba(107,143,113,0.12)', borderRadius: 2,
-    overflow: 'hidden',
+  tagline: {
+    fontFamily: 'DMSans_400Regular',
+    fontSize: 14, color: '#8A9A8C',
+    letterSpacing: 0.3, textAlign: 'center',
+    marginBottom: 32,
   },
-  loaderFill: {
-    height: '100%', borderRadius: 2,
+  dotsRow: {
+    flexDirection: 'row', gap: 8, alignItems: 'center',
+  },
+  loadDot: {
+    width: 7, height: 7, borderRadius: 4,
     backgroundColor: '#527A56',
   },
 });
