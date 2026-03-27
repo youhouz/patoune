@@ -134,15 +134,21 @@ const TypingIndicator = () => {
 // ---------------------------------------------------------------------------
 const DisclaimerBanner = ({ compact = false }) => (
   <View style={[styles.disclaimerCard, compact && styles.disclaimerCompact]}>
-    <Icon
-      name="alert-triangle"
-      size={compact ? 14 : 18}
-      color={COLORS.warning}
-      style={styles.disclaimerIcon}
-    />
-    <Text style={[styles.disclaimerText, compact && styles.disclaimerTextCompact]}>
-      Je ne remplace pas un veterinaire. Pour toute urgence, consultez un professionnel.
-    </Text>
+    <View style={[styles.disclaimerIconBadge, compact && styles.disclaimerIconBadgeCompact]}>
+      <Icon
+        name="shield"
+        size={compact ? 12 : 16}
+        color={COLORS.primary}
+      />
+    </View>
+    <View style={styles.disclaimerContent}>
+      <Text style={[styles.disclaimerTitle, compact && styles.disclaimerTitleCompact]}>
+        Assistant virtuel
+      </Text>
+      <Text style={[styles.disclaimerText, compact && styles.disclaimerTextCompact]}>
+        Je ne remplace pas un veterinaire. Pour toute urgence, consultez un professionnel.
+      </Text>
+    </View>
   </View>
 );
 
@@ -374,15 +380,10 @@ const AIAssistantScreen = () => {
       const scrollToBottom = () => {
         const el = scrollViewRef.current;
         if (!el) return;
-        // RN ScrollView
         if (el.scrollToEnd) {
           el.scrollToEnd({ animated: true });
-          return;
-        }
-        // Web: plain View renders as a DOM node
-        const node = el._nativeRef?.current || el;
-        if (node && node.scrollTop !== undefined) {
-          node.scrollTop = node.scrollHeight;
+        } else if (el.scrollTop !== undefined) {
+          el.scrollTop = el.scrollHeight;
         }
       };
       const t1 = setTimeout(scrollToBottom, 100);
@@ -501,7 +502,7 @@ const AIAssistantScreen = () => {
         {/* Scrollable content */}
         <View
           ref={scrollViewRef}
-          style={Platform.OS === 'web' ? styles.webScrollView : styles.flexScroll}
+          style={Platform.OS === 'web' ? styles.webScroll : styles.flexScroll}
         >
           <View style={styles.scrollContent}>
             {/* Disclaimer banner */}
@@ -555,18 +556,13 @@ const AIAssistantScreen = () => {
                 {messages.map((msg) => (
                   <MessageBubble key={msg.id} message={msg} />
                 ))}
-
-                {/* Typing indicator */}
                 {isLoading && <TypingIndicator />}
-
-                {/* Post-answer disclaimer */}
                 {messages.length > 0 &&
                   messages[messages.length - 1].role === 'assistant' &&
                   !isLoading && <DisclaimerBanner compact />}
               </View>
             )}
 
-            {/* Bottom padding */}
             <View style={styles.bottomSpacer} />
           </View>
         </View>
@@ -632,7 +628,7 @@ const styles = StyleSheet.create({
   flexScroll: {
     flex: 1,
   },
-  webScrollView: {
+  webScroll: {
     flex: 1,
     overflowY: 'scroll',
     WebkitOverflowScrolling: 'touch',
@@ -649,33 +645,59 @@ const styles = StyleSheet.create({
   // -- Disclaimer --
   disclaimerCard: {
     flexDirection: 'row',
-    alignItems: 'flex-start',
-    backgroundColor: COLORS.accentSoft,
-    borderRadius: RADIUS.md,
+    alignItems: 'center',
+    backgroundColor: COLORS.white,
+    borderRadius: RADIUS.lg,
     padding: SPACING.md,
     marginBottom: SPACING.base,
-    borderLeftWidth: 3,
-    borderLeftColor: COLORS.warning,
+    borderWidth: 1,
+    borderColor: COLORS.border,
+    ...SHADOWS.sm,
   },
   disclaimerCompact: {
     padding: SPACING.sm,
     marginTop: SPACING.md,
     marginBottom: SPACING.xs,
+    backgroundColor: COLORS.linen,
+    borderWidth: 0,
+    shadowOpacity: 0,
+    elevation: 0,
   },
-  disclaimerIcon: {
+  disclaimerIconBadge: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: COLORS.accentSoft,
+    alignItems: 'center',
+    justifyContent: 'center',
     marginRight: SPACING.sm,
-    marginTop: 1,
+  },
+  disclaimerIconBadgeCompact: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+  },
+  disclaimerContent: {
+    flex: 1,
+  },
+  disclaimerTitle: {
+    fontFamily: FONTS.bodySemiBold,
+    fontSize: 13,
+    color: COLORS.charcoal,
+    marginBottom: 2,
+  },
+  disclaimerTitleCompact: {
+    fontSize: 11,
   },
   disclaimerText: {
-    flex: 1,
     fontFamily: FONTS.body,
-    fontSize: 13,
+    fontSize: 12,
     color: COLORS.stone,
-    lineHeight: 18,
+    lineHeight: 17,
   },
   disclaimerTextCompact: {
-    fontSize: 11,
-    lineHeight: 15,
+    fontSize: 10,
+    lineHeight: 14,
     color: COLORS.pebble,
   },
 
@@ -851,10 +873,10 @@ const styles = StyleSheet.create({
   },
   inputWrapper: {
     flexDirection: 'row',
-    alignItems: 'flex-end',
+    alignItems: 'center',
     backgroundColor: COLORS.linen,
     borderRadius: RADIUS.xl,
-    paddingLeft: SPACING.base,
+    paddingLeft: SPACING.xs,
     paddingRight: SPACING.xs,
     paddingVertical: Platform.OS === 'ios' ? SPACING.sm : SPACING.xs,
     minHeight: 48,

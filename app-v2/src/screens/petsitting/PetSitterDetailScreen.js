@@ -104,7 +104,6 @@ const PetSitterDetailScreen = ({ route, navigation }) => {
   const [showAllReviews, setShowAllReviews] = useState(false);
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const slideAnim = useRef(new Animated.Value(30)).current;
-
   useEffect(() => {
     const init = async () => {
       if (!petsitter && route.params?.petsitterId) {
@@ -187,7 +186,7 @@ const PetSitterDetailScreen = ({ route, navigation }) => {
       <StatusBar barStyle="light-content" />
 
       <View
-        style={Platform.OS === 'web' ? styles.webScrollView : styles.scrollView}
+        style={Platform.OS === 'web' ? styles.webScroll : styles.scrollView}
       >
         <View style={styles.scrollContent}>
         {/* Hero Section */}
@@ -555,7 +554,7 @@ const styles = StyleSheet.create({
   scrollView: {
     flex: 1,
   },
-  webScrollView: {
+  webScroll: {
     flex: 1,
     overflowY: 'scroll',
     WebkitOverflowScrolling: 'touch',

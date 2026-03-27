@@ -22,6 +22,7 @@ import MyPetsScreen from '../screens/profile/MyPetsScreen';
 import AddPetScreen from '../screens/profile/AddPetScreen';
 import SettingsScreen from '../screens/profile/SettingsScreen';
 import InstallGuideScreen from '../screens/profile/InstallGuideScreen';
+import ContactScreen from '../screens/profile/ContactScreen';
 import AdminDashboardScreen from '../screens/admin/AdminDashboardScreen';
 import AdminUsersScreen from '../screens/admin/AdminUsersScreen';
 
@@ -69,6 +70,7 @@ const ProfileNavigator = () => {
       <ProfileStack.Screen name="PetSitterProfile" component={PetSitterProfileScreen} options={{ headerShown: false }} />
       <ProfileStack.Screen name="PetSitterBookings" component={PetSitterBookingsScreen} options={{ headerShown: false }} />
       <ProfileStack.Screen name="InstallGuide" component={InstallGuideScreen} options={{ headerShown: false }} />
+      <ProfileStack.Screen name="Contact" component={ContactScreen} options={{ headerShown: false }} />
     </ProfileStack.Navigator>
   );
 };

@@ -63,18 +63,41 @@ const WebBarcodeScanner = ({ onBarcodeScanned, active = true, style }) => {
         await scanner.start(
           { facingMode: 'environment' },
           {
-            fps: 15,
+            fps: 20,
             qrbox: (viewfinderWidth, viewfinderHeight) => ({
-              width: Math.floor(viewfinderWidth * 0.92),
-              height: Math.floor(viewfinderHeight * 0.92),
+              width: Math.floor(viewfinderWidth * 0.95),
+              height: Math.floor(viewfinderHeight * 0.95),
             }),
             aspectRatio: 1.5,
             disableFlip: false,
             formatsToSupport: [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16],
+            experimentalFeatures: {
+              useBarCodeDetectorIfSupported: true,
+            },
           },
           onSuccess,
           () => {}
         );
+
+        // Try to apply zoom for better distance scanning
+        try {
+          const videoEl = document.querySelector('#web-barcode-scanner video');
+          if (videoEl && videoEl.srcObject) {
+            const track = videoEl.srcObject.getVideoTracks()[0];
+            const caps = track.getCapabilities?.();
+            if (caps?.zoom) {
+              const targetZoom = Math.min(caps.zoom.max, caps.zoom.min + (caps.zoom.max - caps.zoom.min) * 0.3);
+              await track.applyConstraints({ advanced: [{ zoom: targetZoom }] });
+            }
+            // Request highest resolution
+            if (caps?.width?.max && caps?.height?.max) {
+              await track.applyConstraints({
+                width: { ideal: caps.width.max },
+                height: { ideal: caps.height.max },
+              });
+            }
+          }
+        } catch (_) {}
 
         // Remove html5-qrcode dark overlay around scan area
         try {
