@@ -83,6 +83,7 @@ app.use('/api/ai', require('./src/routes/ai'));
 app.use('/api/notifications', require('./src/routes/notifications'));
 app.use('/api/search', require('./src/routes/search'));
 app.use('/api/prelaunch', require('./src/routes/prelaunch'));
+app.use('/api/contact', require('./src/routes/contact'));
 
 // Landing page pre-launch
 app.get('/landing', (req, res) => {

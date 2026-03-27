@@ -264,6 +264,14 @@ const ProfileScreen = ({ navigation }) => {
           accentColor: '#527A56',
           bgColor: colors.primarySoft,
         },
+        {
+          icon: 'mail',
+          label: 'Nous contacter',
+          subtitle: 'Presse, partenariats, questions',
+          screen: 'Contact',
+          accentColor: '#5B7FC2',
+          bgColor: '#E4ECFB',
+        },
       ],
     },
   ];
