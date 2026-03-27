@@ -48,15 +48,28 @@ if (Platform.OS === 'web' && typeof document !== 'undefined') {
       display: flex !important;
       overflow: hidden;
     }
-    /* Allow ALL flex children inside #root to shrink — fixes scroll on every screen */
-    #root div {
+    /* Fix flex ancestor chain: direct-child selectors up to 15 levels deep.
+       React Navigation + Tab + Stack creates 10-12 levels of nested divs.
+       Only direct children are targeted so scroll content is not affected. */
+    #root > div,
+    #root > div > div,
+    #root > div > div > div,
+    #root > div > div > div > div,
+    #root > div > div > div > div > div,
+    #root > div > div > div > div > div > div,
+    #root > div > div > div > div > div > div > div,
+    #root > div > div > div > div > div > div > div > div,
+    #root > div > div > div > div > div > div > div > div > div,
+    #root > div > div > div > div > div > div > div > div > div > div,
+    #root > div > div > div > div > div > div > div > div > div > div > div,
+    #root > div > div > div > div > div > div > div > div > div > div > div > div,
+    #root > div > div > div > div > div > div > div > div > div > div > div > div > div,
+    #root > div > div > div > div > div > div > div > div > div > div > div > div > div > div,
+    #root > div > div > div > div > div > div > div > div > div > div > div > div > div > div > div {
       min-height: 0 !important;
     }
-    /* Ensure RN Web ScrollView inner container scrolls properly on iOS Safari */
-    [style*="overflow: auto"], [style*="overflow:auto"],
-    [style*="overflow: scroll"], [style*="overflow:scroll"],
-    [style*="overflowY: auto"], [style*="overflowY:auto"],
-    [style*="overflowY: scroll"], [style*="overflowY:scroll"] {
+    /* Ensure smooth scrolling on iOS Safari */
+    [style*="overflow"] {
       -webkit-overflow-scrolling: touch !important;
     }
   `;
