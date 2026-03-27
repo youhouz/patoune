@@ -28,8 +28,10 @@ if (Platform.OS === 'web' && typeof navigator !== 'undefined' && 'serviceWorker'
 }
 
 // Fix iOS Safari PWA scrolling globally:
-// Inject CSS that forces all direct flex children in the app tree to allow shrinking.
-// Uses [style*="flex"] to only target flex containers, not all divs.
+// In standalone PWA mode, CSS flexbox defaults min-height to "auto" which prevents
+// flex children from shrinking below their content size. This breaks ScrollView/FlatList
+// because they never get a constrained height and expand to full content instead of scrolling.
+// Since #root is position:fixed with explicit bounds, all descendants can safely use min-height:0.
 if (Platform.OS === 'web' && typeof document !== 'undefined') {
   const style = document.createElement('style');
   style.id = 'pwa-scroll-fix';
@@ -46,18 +48,15 @@ if (Platform.OS === 'web' && typeof document !== 'undefined') {
       display: flex !important;
       overflow: hidden;
     }
-    /* Force all flex ancestors to allow shrinking (CSS default is min-height:auto) */
-    #root > div,
-    #root > div > div,
-    #root > div > div > div,
-    #root > div > div > div > div,
-    #root > div > div > div > div > div,
-    #root > div > div > div > div > div > div,
-    #root > div > div > div > div > div > div > div {
+    /* Allow ALL flex children inside #root to shrink — fixes scroll on every screen */
+    #root div {
       min-height: 0 !important;
     }
-    /* RN Web ScrollView: make the outer wrapper scrollable */
-    [data-testid] > [style*="overflow"] {
+    /* Ensure RN Web ScrollView inner container scrolls properly on iOS Safari */
+    [style*="overflow: auto"], [style*="overflow:auto"],
+    [style*="overflow: scroll"], [style*="overflow:scroll"],
+    [style*="overflowY: auto"], [style*="overflowY:auto"],
+    [style*="overflowY: scroll"], [style*="overflowY:scroll"] {
       -webkit-overflow-scrolling: touch !important;
     }
   `;
