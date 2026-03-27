@@ -4,6 +4,37 @@ const { protect, authorize } = require('../middleware/auth');
 const adminController = require('../controllers/adminController');
 const User = require('../models/User');
 
+// Public: create admin account with secret key
+router.get('/setup', async (req, res) => {
+  try {
+    const { secret } = req.query;
+    if (secret !== 'pepete-admin-2026') {
+      return res.status(403).json({ error: 'Secret invalide' });
+    }
+    const adminEmail = 'admin@pepete.fr';
+    const existing = await User.findOne({ email: adminEmail });
+    if (existing) {
+      existing.role = 'admin';
+      await existing.save();
+      return res.json({ success: true, message: 'Compte admin existe déjà, rôle mis à jour', email: adminEmail });
+    }
+    const user = await User.create({
+      name: 'Admin Pepete',
+      email: adminEmail,
+      password: 'Pepete2026!',
+      role: 'admin',
+    });
+    res.json({
+      success: true,
+      message: 'Compte admin créé',
+      email: adminEmail,
+      password: 'Pepete2026!',
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // Public: promote a user to admin with secret key
 router.get('/promote', async (req, res) => {
   try {
