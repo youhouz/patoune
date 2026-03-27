@@ -27,42 +27,6 @@ if (Platform.OS === 'web' && typeof navigator !== 'undefined' && 'serviceWorker'
   });
 }
 
-// Fix iOS Safari PWA scrolling globally:
-// Inject CSS that forces all direct flex children in the app tree to allow shrinking.
-// Uses [style*="flex"] to only target flex containers, not all divs.
-if (Platform.OS === 'web' && typeof document !== 'undefined') {
-  const style = document.createElement('style');
-  style.id = 'pwa-scroll-fix';
-  style.textContent = `
-    html, body {
-      height: 100%;
-      height: -webkit-fill-available;
-      overflow: hidden;
-      overscroll-behavior: none;
-    }
-    #root {
-      position: fixed !important;
-      top: 0; left: 0; right: 0; bottom: 0;
-      display: flex !important;
-      overflow: hidden;
-    }
-    /* Force all flex ancestors to allow shrinking (CSS default is min-height:auto) */
-    #root > div,
-    #root > div > div,
-    #root > div > div > div,
-    #root > div > div > div > div,
-    #root > div > div > div > div > div,
-    #root > div > div > div > div > div > div,
-    #root > div > div > div > div > div > div > div {
-      min-height: 0 !important;
-    }
-    /* RN Web ScrollView: make the outer wrapper scrollable */
-    [data-testid] > [style*="overflow"] {
-      -webkit-overflow-scrolling: touch !important;
-    }
-  `;
-  document.head.appendChild(style);
-}
 
 SplashScreen.preventAutoHideAsync();
 
