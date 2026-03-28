@@ -1,15 +1,15 @@
 "use client";
 
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
-  Lock, Shield, Loader2, AlertCircle, Play, Pause, Settings2,
-  Terminal, Clock, CheckCircle2, ChevronRight, Power,
-  Copy, Check, RotateCcw, Zap, Eye, X, ChevronDown
+  Lock, Shield, Loader2, AlertCircle, Play,
+  Terminal, CheckCircle2, Power,
+  Copy, Check, RotateCcw, Zap, Eye
 } from "lucide-react";
 import {
   useCampaignStore, AgentId, AGENT_IDS, CATEGORIES,
-  type AgentConfig, type AgentState, type AgentLog
+  type AgentLog
 } from "@/store/campaign";
 import { cn } from "@/lib/utils";
 
@@ -462,17 +462,89 @@ function AgentTerminal({ logs, maxHeight = "h-48" }: { logs: AgentLog[]; maxHeig
 /* ══════════════════════════════════════════════
    AGENT DETAIL VIEW
    ══════════════════════════════════════════════ */
+/* Run a single agent via the /api/agents/execute endpoint */
+async function runSingleAgent(id: AgentId) {
+  const store = useCampaignStore.getState();
+  const av = AVATARS[id];
+
+  store.setAgentStatus(id, "running", `${av.name} demarre...`);
+  store.setAgentProgress(id, 10);
+  store.addAgentLog({
+    id: `${id}-start-${Date.now()}`,
+    agent: id,
+    level: "info",
+    message: `${av.name} (${av.role}) commence le travail...`,
+    timestamp: new Date().toISOString(),
+  });
+
+  // Simulate progress while waiting
+  const progressInterval = setInterval(() => {
+    const current = useCampaignStore.getState().agentStates[id].progress;
+    if (current < 85) {
+      store.setAgentProgress(id, current + Math.random() * 8);
+      const messages = [
+        `${av.name} analyse les donnees...`,
+        `${av.name} genere du contenu...`,
+        `${av.name} optimise les resultats...`,
+        `${av.name} compile les informations...`,
+        `${av.name} finalise...`,
+      ];
+      store.setAgentStatus(id, "running", messages[Math.floor(Math.random() * messages.length)]);
+    }
+  }, 3000);
+
+  try {
+    const res = await fetch("/api/agents/execute", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ agentId: id }),
+    });
+
+    clearInterval(progressInterval);
+
+    if (!res.ok) {
+      const err = await res.json();
+      throw new Error(err.error || "Erreur serveur");
+    }
+
+    const data = await res.json();
+
+    store.setAgentOutput(id, { text: data.result });
+    store.setAgentProgress(id, 100);
+    store.setAgentStatus(id, "done", `${av.name} a termine!`);
+    store.addAgentLog({
+      id: `${id}-done-${Date.now()}`,
+      agent: id,
+      level: "success",
+      message: `${av.name} a termine avec succes! Resultats disponibles dans l'onglet Resultats.`,
+      timestamp: new Date().toISOString(),
+    });
+  } catch (error: unknown) {
+    clearInterval(progressInterval);
+    const msg = error instanceof Error ? error.message : "Erreur inconnue";
+    store.setAgentStatus(id, "error", msg);
+    store.addAgentLog({
+      id: `${id}-error-${Date.now()}`,
+      agent: id,
+      level: "error",
+      message: `Erreur: ${msg}`,
+      timestamp: new Date().toISOString(),
+    });
+  }
+}
+
 function AgentDetailView({ id }: { id: AgentId }) {
   const config = useCampaignStore((s) => s.agentConfigs[id]);
   const state = useCampaignStore((s) => s.agentStates[id]);
   const isRunning = useCampaignStore((s) => s.isRunning);
-  const [tab, setTab] = useState<"logs" | "config" | "output">("logs");
+  const [tab, setTab] = useState<"output" | "logs" | "config">("output");
   const [copied, setCopied] = useState(false);
   const av = AVATARS[id];
 
   const copyOutput = () => {
-    if (state.output) {
-      navigator.clipboard.writeText(JSON.stringify(state.output, null, 2));
+    const text = state.output?.text ? String(state.output.text) : "";
+    if (text) {
+      navigator.clipboard.writeText(text);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     }
@@ -544,41 +616,68 @@ function AgentDetailView({ id }: { id: AgentId }) {
         </div>
       )}
 
-      {/* Tabs */}
-      <div className="flex gap-1 mb-4 bg-[var(--bg3)] rounded-xl p-1">
-        {(["logs", "config", "output"] as const).map((t) => (
+      {/* Tabs + Run button */}
+      <div className="flex items-center gap-2 mb-4">
+        <div className="flex gap-1 flex-1 bg-[var(--bg3)] rounded-xl p-1">
+          {(["output", "logs", "config"] as const).map((t) => (
+            <button
+              key={t}
+              onClick={() => setTab(t)}
+              className={cn(
+                "flex-1 text-xs font-bold py-2 rounded-lg transition",
+                tab === t ? "bg-[var(--bg2)] text-white" : "text-gray-600 hover:text-gray-400"
+              )}
+            >
+              {t === "output" ? "Resultats" : t === "logs" ? "Logs" : "Config"}
+            </button>
+          ))}
+        </div>
+        {state.status !== "running" && config.enabled && (
           <button
-            key={t}
-            onClick={() => setTab(t)}
-            className={cn(
-              "flex-1 text-xs font-bold py-2 rounded-lg transition",
-              tab === t ? "bg-[var(--bg2)] text-white" : "text-gray-600 hover:text-gray-400"
-            )}
+            onClick={() => runSingleAgent(id)}
+            className="flex items-center gap-1.5 bg-violet-600 hover:bg-violet-500 text-white text-[11px] font-bold px-3 py-2 rounded-lg transition flex-shrink-0"
           >
-            {t === "logs" ? "Logs" : t === "config" ? "Config" : "Output"}
+            <Play className="w-3 h-3" />
+            Lancer {av.name}
           </button>
-        ))}
+        )}
       </div>
 
       {/* Tab content */}
       <div className="flex-1 overflow-hidden">
-        {tab === "logs" && <AgentTerminal logs={state.logs} maxHeight="h-[calc(100vh-360px)]" />}
+        {tab === "logs" && <AgentTerminal logs={state.logs} maxHeight="h-[calc(100vh-400px)]" />}
         {tab === "config" && (
-          <div className="overflow-y-auto h-[calc(100vh-360px)] pr-1">
+          <div className="overflow-y-auto h-[calc(100vh-400px)] pr-1">
             <AgentConfigPanel id={id} />
           </div>
         )}
         {tab === "output" && (
-          <div className="h-[calc(100vh-360px)] overflow-hidden flex flex-col">
+          <div className="h-[calc(100vh-400px)] overflow-hidden flex flex-col">
             <div className="flex items-center justify-end gap-2 mb-2">
               <button onClick={copyOutput} className="flex items-center gap-1 text-xs text-gray-600 hover:text-violet-400 transition">
                 {copied ? <Check className="w-3 h-3 text-teal-400" /> : <Copy className="w-3 h-3" />}
-                {copied ? "Copie!" : "Copier"}
+                {copied ? "Copie!" : "Copier tout"}
               </button>
             </div>
-            <pre className="flex-1 overflow-auto bg-[#0D0D14] rounded-xl border border-[var(--border)] p-4 text-xs font-mono text-gray-500 whitespace-pre-wrap">
-              {state.output ? JSON.stringify(state.output, null, 2) : "Aucun resultat pour le moment."}
-            </pre>
+            {state.output?.text ? (
+              <div className="flex-1 overflow-auto bg-[#0D0D14] rounded-xl border border-[var(--border)] p-5 text-sm text-gray-300 whitespace-pre-wrap leading-relaxed agent-output-content">
+                {String(state.output.text)}
+              </div>
+            ) : state.status === "running" ? (
+              <div className="flex-1 flex items-center justify-center bg-[#0D0D14] rounded-xl border border-[var(--border)]">
+                <div className="text-center">
+                  <Loader2 className="w-6 h-6 text-violet-400 animate-spin mx-auto mb-2" />
+                  <p className="text-xs text-gray-600">{av.name} travaille...</p>
+                </div>
+              </div>
+            ) : (
+              <div className="flex-1 flex items-center justify-center bg-[#0D0D14] rounded-xl border border-[var(--border)]">
+                <div className="text-center">
+                  <AgentAvatar id={id} size={64} />
+                  <p className="text-xs text-gray-700 mt-3">Lance {av.name} pour voir les resultats</p>
+                </div>
+              </div>
+            )}
           </div>
         )}
       </div>
@@ -725,108 +824,31 @@ function CockpitView() {
     return () => clearInterval(t);
   }, [store.isRunning]);
 
-  // Polling for agent updates
+  // Check if all agents are done
   useEffect(() => {
-    if (!store.campaignId || !store.isRunning) return;
-    const interval = setInterval(async () => {
-      try {
-        const res = await fetch(`/api/campaigns/${store.campaignId}`);
-        if (!res.ok) return;
-        const data = await res.json();
-
-        // Map logs to agents
-        if (data.logs && Array.isArray(data.logs)) {
-          const mapped: AgentLog[] = data.logs.map((l: any) => ({
-            id: l.id,
-            agent: mapAgentName(l.agent_name || l.agent),
-            level: l.status || l.level || "info",
-            message: l.log_message || l.message || "",
-            timestamp: l.created_at,
-          }));
-          // Update per-agent logs
-          const byAgent: Record<string, AgentLog[]> = {};
-          for (const log of mapped) {
-            if (!byAgent[log.agent]) byAgent[log.agent] = [];
-            byAgent[log.agent].push(log);
-          }
-          for (const [agentId, logs] of Object.entries(byAgent)) {
-            if (AGENT_IDS.includes(agentId as AgentId)) {
-              const currentLogs = store.agentStates[agentId as AgentId].logs;
-              if (logs.length > currentLogs.length) {
-                for (const log of logs.slice(currentLogs.length)) {
-                  store.addAgentLog(log);
-                }
-                const last = logs[logs.length - 1];
-                if (last.level === "success") {
-                  store.setAgentStatus(agentId as AgentId, "done", last.message);
-                  store.setAgentProgress(agentId as AgentId, 100);
-                } else if (last.level === "error") {
-                  store.setAgentStatus(agentId as AgentId, "error", last.message);
-                } else {
-                  store.setAgentStatus(agentId as AgentId, "running", last.message);
-                  const progress = Math.min(90, Math.round((logs.length / 10) * 100));
-                  store.setAgentProgress(agentId as AgentId, progress);
-                }
-              }
-            }
-          }
-        }
-
-        // Check completion
-        if (data.campaign?.status === "completed") {
-          store.setIsRunning(false);
-          AGENT_IDS.forEach((id) => {
-            if (store.agentStates[id].status === "running") {
-              store.setAgentStatus(id, "done", "Complete");
-              store.setAgentProgress(id, 100);
-            }
-          });
-        }
-      } catch { /* ignore */ }
-    }, 2500);
-    return () => clearInterval(interval);
-  }, [store.campaignId, store.isRunning]);
+    if (!store.isRunning) return;
+    const allDone = AGENT_IDS
+      .filter((id) => store.agentConfigs[id].enabled)
+      .every((id) => store.agentStates[id].status === "done" || store.agentStates[id].status === "error");
+    if (allDone) {
+      store.setIsRunning(false);
+    }
+  }, [store.agentStates, store.isRunning]);
 
   const handleLaunchAll = async () => {
     setLaunching(true);
-    try {
-      // Create campaign
-      const res = await fetch("/api/campaigns", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          url: String(store.agentConfigs.scraper.settings.targetUrl),
-          appName: "Pepete",
-          niche: "animaux",
-          platforms: ["TikTok", "Instagram", "Snapchat"],
-          goal: "Maximiser les installations et la croissance organique de Pepete",
-        }),
-      });
-      const data = await res.json();
-      store.setCampaignId(data.id);
+    store.setIsRunning(true);
+    setElapsed(0);
 
-      // Mark enabled agents as running
-      AGENT_IDS.forEach((id) => {
-        if (store.agentConfigs[id].enabled) {
-          store.setAgentStatus(id, "running", "Demarrage...");
-          store.setAgentProgress(id, 5);
-        }
-      });
+    // Get enabled agents
+    const enabled = AGENT_IDS.filter((id) => store.agentConfigs[id].enabled);
 
-      // Launch
-      await fetch("/api/agents/run", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ campaignId: data.id }),
-      });
+    // Run all enabled agents in parallel
+    const promises = enabled.map((id) => runSingleAgent(id));
+    await Promise.allSettled(promises);
 
-      store.setIsRunning(true);
-      setElapsed(0);
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setLaunching(false);
-    }
+    store.setIsRunning(false);
+    setLaunching(false);
   };
 
   const fmt = (s: number) => `${Math.floor(s / 60).toString().padStart(2, "0")}:${(s % 60).toString().padStart(2, "0")}`;
@@ -930,25 +952,6 @@ function CockpitView() {
       </div>
     </div>
   );
-}
-
-/* Helper to map backend agent names to our AgentId */
-function mapAgentName(name: string): AgentId {
-  const map: Record<string, AgentId> = {
-    scraper: "scraper",
-    content: "content_tiktok",
-    content_tiktok: "content_tiktok",
-    content_insta: "content_insta",
-    content_snap: "content_snap",
-    seo_aso: "seo_aso",
-    seo: "seo_aso",
-    prospection: "prospection",
-    outreach: "outreach",
-    analytics: "analytics",
-    report: "report",
-    orchestrator: "scraper",
-  };
-  return map[name] || "scraper";
 }
 
 /* ══════════════════════════════════════════════

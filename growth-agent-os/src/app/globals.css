@@ -171,6 +171,18 @@ body {
   100% { transform: translateX(100%) rotate(45deg); }
 }
 
+/* Agent output content - markdown-like rendering */
+.agent-output-content {
+  font-family: var(--font-dm-sans), system-ui, sans-serif;
+  line-height: 1.8;
+}
+
+.agent-output-content strong,
+.agent-output-content b {
+  color: #e0e0e0;
+  font-weight: 700;
+}
+
 /* Custom scrollbar thin */
 .custom-scrollbar::-webkit-scrollbar {
   width: 4px;

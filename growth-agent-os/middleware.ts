@@ -16,7 +16,7 @@ export function middleware(request: NextRequest) {
 
   // Check auth cookie for API routes
   if (pathname.startsWith("/api/")) {
-    const authCookie = request.cookies.get("gao_auth");
+    const authCookie = request.cookies.get("growth_agent_auth");
     if (!authCookie || authCookie.value !== "authenticated") {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
