@@ -11,6 +11,7 @@
   --teal: #00D4A8;
   --yellow: #FFD166;
   --pink: #FF5FA0;
+  --border: rgba(255, 255, 255, 0.06);
 }
 
 * {
@@ -158,6 +159,20 @@ body {
 @keyframes shimmer {
   0% { transform: translateX(-100%) rotate(45deg); }
   100% { transform: translateX(100%) rotate(45deg); }
+}
+
+/* Custom scrollbar thin */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 4px;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(123, 95, 255, 0.3);
+  border-radius: 2px;
+}
+
+/* Border utility */
+.border-\[var\(--border\)\] {
+  border-color: rgba(255, 255, 255, 0.06);
 }
 
 @layer utilities {
