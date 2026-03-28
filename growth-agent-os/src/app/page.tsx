@@ -23,19 +23,89 @@ const AVATARS: Record<AgentId, {
   skinColor: string;
   hairColor: string;
   shirtColor: string;
-  accessory: string;  // what they hold / wear
-  deskItem: string;   // what's on their desk
+  accessory: string;
+  deskItem: string;
   mood: string;
 }> = {
-  scraper: {
+  analyst: {
     name: "Max",
-    role: "Espion Digital",
+    role: "Stratege Growth",
     skinColor: "#F5D0A9",
     hairColor: "#2D1B0E",
     shirtColor: "#FF7A45",
     accessory: "lunettes-spy",
-    deskItem: "ecrans-multiples",
+    deskItem: "ecrans",
     mood: "focus",
+  },
+  email_campaign: {
+    name: "Sofia",
+    role: "Email Blaster",
+    skinColor: "#D4A574",
+    hairColor: "#1A1A2E",
+    shirtColor: "#7B5FFF",
+    accessory: "micro-casque",
+    deskItem: "emails",
+    mood: "efficient",
+  },
+  influencer_email: {
+    name: "Nora",
+    role: "Chasseuse Influenceurs",
+    skinColor: "#FDDCB5",
+    hairColor: "#2D1B4E",
+    shirtColor: "#FF5FA0",
+    accessory: "lunettes-spy",
+    deskItem: "carnet",
+    mood: "determined",
+  },
+  article_writer: {
+    name: "Hugo",
+    role: "Redacteur SEO",
+    skinColor: "#F5D0A9",
+    hairColor: "#4A3728",
+    shirtColor: "#00D4A8",
+    accessory: "lunettes-rondes",
+    deskItem: "articles",
+    mood: "creative",
+  },
+  directory_submit: {
+    name: "Sam",
+    role: "Soumetteur",
+    skinColor: "#C68B59",
+    hairColor: "#000000",
+    shirtColor: "#4285F4",
+    accessory: "casquette",
+    deskItem: "listes",
+    mood: "methodique",
+  },
+  forum_commenter: {
+    name: "Karim",
+    role: "Agent Forum",
+    skinColor: "#8D5524",
+    hairColor: "#1A1A1A",
+    shirtColor: "#FF4500",
+    accessory: "micro-casque",
+    deskItem: "forum",
+    mood: "friendly",
+  },
+  backlink_builder: {
+    name: "Jade",
+    role: "Link Builder",
+    skinColor: "#FFE0BD",
+    hairColor: "#8B4513",
+    shirtColor: "#4ADE80",
+    accessory: "lunettes-data",
+    deskItem: "liens",
+    mood: "analytical",
+  },
+  review_booster: {
+    name: "Mei",
+    role: "Boosteur Avis",
+    skinColor: "#FFE0BD",
+    hairColor: "#0D0D0D",
+    shirtColor: "#FFD166",
+    accessory: "lunettes-rondes",
+    deskItem: "etoiles",
+    mood: "optimist",
   },
   content_tiktok: {
     name: "Lena",
@@ -43,76 +113,36 @@ const AVATARS: Record<AgentId, {
     skinColor: "#D4A574",
     hairColor: "#1A1A2E",
     shirtColor: "#00F2EA",
-    accessory: "ring-light",
+    accessory: "casquette",
     deskItem: "telephone",
     mood: "creative",
   },
   content_insta: {
-    name: "Jade",
-    role: "Instagrameuse",
-    skinColor: "#FDDCB5",
-    hairColor: "#8B4513",
-    shirtColor: "#E4405F",
-    accessory: "appareil-photo",
-    deskItem: "palette-couleurs",
-    mood: "aesthetic",
-  },
-  content_snap: {
     name: "Yani",
-    role: "Snappeur",
+    role: "Instagrameur",
     skinColor: "#C68B59",
     hairColor: "#000000",
-    shirtColor: "#FFFC00",
-    accessory: "casquette",
-    deskItem: "stickers",
-    mood: "chill",
+    shirtColor: "#E4405F",
+    accessory: "lunettes-spy",
+    deskItem: "photos",
+    mood: "aesthetic",
   },
-  seo_aso: {
-    name: "Sam",
-    role: "Technicien SEO",
-    skinColor: "#F5D0A9",
-    hairColor: "#4A3728",
-    shirtColor: "#4285F4",
-    accessory: "lunettes-rondes",
-    deskItem: "graphiques",
-    mood: "analytical",
-  },
-  prospection: {
-    name: "Nora",
-    role: "Chasseuse d'Influenceurs",
-    skinColor: "#D4A574",
-    hairColor: "#2D1B4E",
-    shirtColor: "#FF5FA0",
-    accessory: "jumelles",
-    deskItem: "carnet",
-    mood: "determined",
-  },
-  outreach: {
-    name: "Karim",
-    role: "Ambassadeur",
-    skinColor: "#8D5524",
-    hairColor: "#1A1A1A",
-    shirtColor: "#7B5FFF",
+  social_commenter: {
+    name: "Ines",
+    role: "Social Engager",
+    skinColor: "#FDDCB5",
+    hairColor: "#6B4226",
+    shirtColor: "#E4405F",
     accessory: "micro-casque",
-    deskItem: "messages",
-    mood: "friendly",
+    deskItem: "commentaires",
+    mood: "social",
   },
-  analytics: {
-    name: "Mei",
-    role: "Data Analyst",
-    skinColor: "#FFE0BD",
-    hairColor: "#0D0D0D",
-    shirtColor: "#FFD166",
-    accessory: "lunettes-data",
-    deskItem: "dashboard",
-    mood: "precise",
-  },
-  report: {
+  press_release: {
     name: "Jules",
-    role: "Rapporteur",
+    role: "Attache de Presse",
     skinColor: "#F5D0A9",
     hairColor: "#6B4226",
-    shirtColor: "#4ADE80",
+    shirtColor: "#9333EA",
     accessory: "cravate",
     deskItem: "documents",
     mood: "serious",
@@ -695,6 +725,7 @@ function OverviewPanel() {
   const setActive = useCampaignStore((s) => s.setActiveAgent);
   const isRunning = useCampaignStore((s) => s.isRunning);
 
+  const totalActions = useCampaignStore((s) => s.totalActions);
   const enabledCount = AGENT_IDS.filter((id) => configs[id].enabled).length;
   const runningCount = AGENT_IDS.filter((id) => states[id].status === "running").length;
   const doneCount = AGENT_IDS.filter((id) => states[id].status === "done").length;
@@ -707,11 +738,12 @@ function OverviewPanel() {
   return (
     <div className="h-full flex flex-col">
       {/* Stats row */}
-      <div className="grid grid-cols-4 gap-3 mb-4">
+      <div className="grid grid-cols-5 gap-2 mb-4">
         {[
-          { label: "Actifs", value: enabledCount, color: "text-white" },
+          { label: "Agents", value: enabledCount, color: "text-white" },
           { label: "En cours", value: runningCount, color: "text-violet-400" },
           { label: "Termines", value: doneCount, color: "text-teal-400" },
+          { label: "Actions", value: totalActions, color: "text-orange-400" },
           { label: "Erreurs", value: errorCount, color: "text-red-400" },
         ].map((s) => (
           <div key={s.label} className="bg-[var(--bg3)] rounded-xl px-3 py-3 text-center">
