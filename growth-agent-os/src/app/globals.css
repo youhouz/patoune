@@ -134,6 +134,16 @@ body {
   animation: agentPulse 2s infinite;
 }
 
+/* Avatar working bounce */
+@keyframes avatarBounce {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-2px); }
+}
+
+.agent-avatar-bounce {
+  animation: avatarBounce 1.5s ease-in-out infinite;
+}
+
 /* Button hover shimmer */
 .shimmer {
   position: relative;

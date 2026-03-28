@@ -14,6 +14,185 @@ import {
 import { cn } from "@/lib/utils";
 
 /* ══════════════════════════════════════════════
+   AGENT AVATARS — pixel-art style characters
+   Each agent is a little person in their workspace
+   ══════════════════════════════════════════════ */
+const AVATARS: Record<AgentId, {
+  name: string;
+  role: string;
+  skinColor: string;
+  hairColor: string;
+  shirtColor: string;
+  accessory: string;  // what they hold / wear
+  deskItem: string;   // what's on their desk
+  mood: string;
+}> = {
+  scraper: {
+    name: "Max",
+    role: "Espion Digital",
+    skinColor: "#F5D0A9",
+    hairColor: "#2D1B0E",
+    shirtColor: "#FF7A45",
+    accessory: "lunettes-spy",
+    deskItem: "ecrans-multiples",
+    mood: "focus",
+  },
+  content_tiktok: {
+    name: "Lena",
+    role: "TikTokeuse",
+    skinColor: "#D4A574",
+    hairColor: "#1A1A2E",
+    shirtColor: "#00F2EA",
+    accessory: "ring-light",
+    deskItem: "telephone",
+    mood: "creative",
+  },
+  content_insta: {
+    name: "Jade",
+    role: "Instagrameuse",
+    skinColor: "#FDDCB5",
+    hairColor: "#8B4513",
+    shirtColor: "#E4405F",
+    accessory: "appareil-photo",
+    deskItem: "palette-couleurs",
+    mood: "aesthetic",
+  },
+  content_snap: {
+    name: "Yani",
+    role: "Snappeur",
+    skinColor: "#C68B59",
+    hairColor: "#000000",
+    shirtColor: "#FFFC00",
+    accessory: "casquette",
+    deskItem: "stickers",
+    mood: "chill",
+  },
+  seo_aso: {
+    name: "Sam",
+    role: "Technicien SEO",
+    skinColor: "#F5D0A9",
+    hairColor: "#4A3728",
+    shirtColor: "#4285F4",
+    accessory: "lunettes-rondes",
+    deskItem: "graphiques",
+    mood: "analytical",
+  },
+  prospection: {
+    name: "Nora",
+    role: "Chasseuse d'Influenceurs",
+    skinColor: "#D4A574",
+    hairColor: "#2D1B4E",
+    shirtColor: "#FF5FA0",
+    accessory: "jumelles",
+    deskItem: "carnet",
+    mood: "determined",
+  },
+  outreach: {
+    name: "Karim",
+    role: "Ambassadeur",
+    skinColor: "#8D5524",
+    hairColor: "#1A1A1A",
+    shirtColor: "#7B5FFF",
+    accessory: "micro-casque",
+    deskItem: "messages",
+    mood: "friendly",
+  },
+  analytics: {
+    name: "Mei",
+    role: "Data Analyst",
+    skinColor: "#FFE0BD",
+    hairColor: "#0D0D0D",
+    shirtColor: "#FFD166",
+    accessory: "lunettes-data",
+    deskItem: "dashboard",
+    mood: "precise",
+  },
+  report: {
+    name: "Jules",
+    role: "Rapporteur",
+    skinColor: "#F5D0A9",
+    hairColor: "#6B4226",
+    shirtColor: "#4ADE80",
+    accessory: "cravate",
+    deskItem: "documents",
+    mood: "serious",
+  },
+};
+
+/* SVG Avatar Component — renders a cute character at their desk */
+function AgentAvatar({ id, size = 80, animated = false }: { id: AgentId; size?: number; animated?: boolean }) {
+  const av = AVATARS[id];
+  const s = size;
+  const headSize = s * 0.3;
+  const bodyY = s * 0.45;
+  const deskY = s * 0.7;
+
+  return (
+    <svg width={s} height={s} viewBox={`0 0 ${s} ${s}`} fill="none" className={animated ? "agent-avatar-bounce" : ""}>
+      {/* Room background */}
+      <rect x={2} y={2} width={s - 4} height={s - 4} rx={s * 0.12} fill={`${av.shirtColor}10`} stroke={`${av.shirtColor}30`} strokeWidth={1} />
+
+      {/* Desk */}
+      <rect x={s * 0.15} y={deskY} width={s * 0.7} height={s * 0.06} rx={2} fill={`${av.shirtColor}40`} />
+      {/* Desk legs */}
+      <rect x={s * 0.2} y={deskY} width={s * 0.03} height={s * 0.18} rx={1} fill={`${av.shirtColor}25`} />
+      <rect x={s * 0.77} y={deskY} width={s * 0.03} height={s * 0.18} rx={1} fill={`${av.shirtColor}25`} />
+
+      {/* Desk item - screen/item */}
+      <rect x={s * 0.35} y={deskY - s * 0.14} width={s * 0.3} height={s * 0.13} rx={2} fill={`${av.shirtColor}30`} stroke={`${av.shirtColor}50`} strokeWidth={0.5} />
+      <rect x={s * 0.44} y={deskY - s * 0.02} width={s * 0.12} height={s * 0.02} rx={1} fill={`${av.shirtColor}20`} />
+
+      {/* Body / shirt */}
+      <ellipse cx={s * 0.5} cy={bodyY + s * 0.08} rx={s * 0.12} ry={s * 0.13} fill={av.shirtColor} />
+
+      {/* Arms on desk */}
+      <ellipse cx={s * 0.35} cy={deskY - s * 0.01} rx={s * 0.04} ry={s * 0.03} fill={av.skinColor} />
+      <ellipse cx={s * 0.65} cy={deskY - s * 0.01} rx={s * 0.04} ry={s * 0.03} fill={av.skinColor} />
+
+      {/* Head */}
+      <circle cx={s * 0.5} cy={bodyY - s * 0.06} r={headSize * 0.5} fill={av.skinColor} />
+
+      {/* Hair */}
+      <ellipse cx={s * 0.5} cy={bodyY - s * 0.12} rx={headSize * 0.52} ry={headSize * 0.3} fill={av.hairColor} />
+
+      {/* Eyes */}
+      <circle cx={s * 0.44} cy={bodyY - s * 0.05} r={s * 0.02} fill="#1A1A2E" />
+      <circle cx={s * 0.56} cy={bodyY - s * 0.05} r={s * 0.02} fill="#1A1A2E" />
+      {/* Eye shine */}
+      <circle cx={s * 0.445} cy={bodyY - s * 0.055} r={s * 0.007} fill="white" />
+      <circle cx={s * 0.565} cy={bodyY - s * 0.055} r={s * 0.007} fill="white" />
+
+      {/* Mouth - small smile */}
+      <path d={`M ${s * 0.46} ${bodyY - s * 0.02} Q ${s * 0.5} ${bodyY - s * 0.005} ${s * 0.54} ${bodyY - s * 0.02}`} stroke="#B87A5A" strokeWidth={1} fill="none" strokeLinecap="round" />
+
+      {/* Accessory indicator - colored dot on head for glasses/hat etc */}
+      {(av.accessory.includes("lunettes") || av.accessory.includes("data")) && (
+        <>
+          <rect x={s * 0.4} y={bodyY - s * 0.065} width={s * 0.08} height={s * 0.03} rx={s * 0.01} fill="none" stroke={av.shirtColor} strokeWidth={0.8} />
+          <rect x={s * 0.52} y={bodyY - s * 0.065} width={s * 0.08} height={s * 0.03} rx={s * 0.01} fill="none" stroke={av.shirtColor} strokeWidth={0.8} />
+          <line x1={s * 0.48} y1={bodyY - s * 0.05} x2={s * 0.52} y2={bodyY - s * 0.05} stroke={av.shirtColor} strokeWidth={0.6} />
+        </>
+      )}
+      {av.accessory === "casquette" && (
+        <ellipse cx={s * 0.5} cy={bodyY - s * 0.13} rx={headSize * 0.6} ry={headSize * 0.15} fill={av.shirtColor} />
+      )}
+      {av.accessory === "cravate" && (
+        <path d={`M ${s * 0.48} ${bodyY + s * 0.01} L ${s * 0.5} ${bodyY + s * 0.08} L ${s * 0.52} ${bodyY + s * 0.01}`} fill="#333" />
+      )}
+      {av.accessory === "micro-casque" && (
+        <>
+          <path d={`M ${s * 0.36} ${bodyY - s * 0.07} Q ${s * 0.36} ${bodyY - s * 0.15} ${s * 0.5} ${bodyY - s * 0.16}`} stroke="#666" strokeWidth={1.2} fill="none" />
+          <circle cx={s * 0.36} cy={bodyY - s * 0.05} r={s * 0.02} fill="#666" />
+        </>
+      )}
+
+      {/* Status light in corner */}
+      <circle cx={s - 8} cy={8} r={3} fill={av.shirtColor} opacity={0.6} />
+    </svg>
+  );
+}
+
+/* ══════════════════════════════════════════════
    LOGIN
    ══════════════════════════════════════════════ */
 function LoginView() {
@@ -101,33 +280,41 @@ function AgentSidebarCard({ id }: { id: AgentId }) {
     paused: "bg-yellow-500",
   }[state.status];
 
+  const av = AVATARS[id];
+
   return (
     <button
       onClick={() => setActive(id)}
       className={cn(
-        "w-full text-left px-3 py-2.5 rounded-xl transition-all flex items-center gap-3 group",
+        "w-full text-left px-2 py-2 rounded-xl transition-all flex items-center gap-2.5 group",
         isActive
           ? "bg-[var(--bg3)] border border-violet-500/30"
           : "hover:bg-[var(--bg3)]/50 border border-transparent"
       )}
     >
-      <span className="text-lg flex-shrink-0">{config.emoji}</span>
-      <div className="flex-1 min-w-0">
-        <div className="flex items-center gap-2">
-          <span className={cn("text-xs font-bold truncate", isActive ? "text-white" : "text-gray-400")}>
-            {config.name}
-          </span>
-          {!config.enabled && <span className="text-[9px] text-gray-700 bg-gray-800 px-1.5 py-0.5 rounded">OFF</span>}
-        </div>
-        {state.status !== "idle" && (
-          <p className="text-[10px] text-gray-600 truncate mt-0.5">{state.lastMessage || config.description}</p>
-        )}
+      {/* Mini avatar */}
+      <div className={cn(
+        "flex-shrink-0 rounded-lg overflow-hidden border transition-all",
+        state.status === "running" ? "border-violet-500/50 agent-running" :
+        state.status === "done" ? "border-teal-500/40" :
+        "border-transparent"
+      )}>
+        <AgentAvatar id={id} size={36} animated={state.status === "running"} />
       </div>
-      <div className="flex items-center gap-2 flex-shrink-0">
+      <div className="flex-1 min-w-0">
+        <div className="flex items-center gap-1.5">
+          <span className={cn("text-[11px] font-bold truncate", isActive ? "text-white" : "text-gray-400")}>
+            {av.name}
+          </span>
+          {!config.enabled && <span className="text-[8px] text-gray-700 bg-gray-800 px-1 py-0.5 rounded leading-none">OFF</span>}
+        </div>
+        <p className="text-[9px] text-gray-600 truncate" style={{ color: `${config.color}80` }}>{av.role}</p>
+      </div>
+      <div className="flex items-center gap-1.5 flex-shrink-0">
         {state.status === "running" && (
-          <span className="text-[10px] font-mono text-violet-400">{state.progress}%</span>
+          <span className="text-[9px] font-mono text-violet-400">{state.progress}%</span>
         )}
-        <div className={cn("w-2 h-2 rounded-full flex-shrink-0", statusColor)} />
+        <div className={cn("w-1.5 h-1.5 rounded-full flex-shrink-0", statusColor)} />
       </div>
     </button>
   );
@@ -281,6 +468,7 @@ function AgentDetailView({ id }: { id: AgentId }) {
   const isRunning = useCampaignStore((s) => s.isRunning);
   const [tab, setTab] = useState<"logs" | "config" | "output">("logs");
   const [copied, setCopied] = useState(false);
+  const av = AVATARS[id];
 
   const copyOutput = () => {
     if (state.output) {
@@ -310,25 +498,37 @@ function AgentDetailView({ id }: { id: AgentId }) {
 
   return (
     <div className="h-full flex flex-col">
-      {/* Header */}
-      <div className="flex items-center justify-between mb-4">
-        <div className="flex items-center gap-3">
-          <span className="text-2xl">{config.emoji}</span>
-          <div>
-            <h2 className="font-heading text-lg font-extrabold text-white">{config.name}</h2>
-            <p className="text-xs text-gray-600">{config.description}</p>
-          </div>
+      {/* Header with avatar "room" */}
+      <div className="flex items-center gap-4 mb-4 bg-[var(--bg3)] rounded-2xl p-4 border border-[var(--border)]">
+        {/* Avatar in their room */}
+        <div className={cn(
+          "rounded-xl overflow-hidden border-2 transition-all flex-shrink-0",
+          state.status === "running" ? "border-violet-500/60 glow-violet agent-running" :
+          state.status === "done" ? "border-teal-500/50 glow-teal" :
+          state.status === "error" ? "border-red-500/50" :
+          "border-[var(--border)]"
+        )}>
+          <AgentAvatar id={id} size={72} animated={state.status === "running"} />
         </div>
-        <div className="flex items-center gap-2">
-          <span className={cn("text-[10px] font-mono px-2.5 py-1 rounded-full border", statusColor)}>
-            {statusLabel}
-          </span>
-          {state.status === "running" && (
-            <div className="flex items-center gap-1.5">
-              <Loader2 className="w-3.5 h-3.5 text-violet-400 animate-spin" />
-              <span className="text-xs font-mono text-violet-400">{state.progress}%</span>
-            </div>
-          )}
+        <div className="flex-1">
+          <div className="flex items-center gap-2 mb-0.5">
+            <h2 className="font-heading text-lg font-extrabold text-white">{av.name}</h2>
+            <span className="text-xs px-2 py-0.5 rounded-full font-mono" style={{ color: config.color, background: `${config.color}15`, border: `1px solid ${config.color}30` }}>
+              {av.role}
+            </span>
+          </div>
+          <p className="text-xs text-gray-600 mb-2">{config.description}</p>
+          <div className="flex items-center gap-2">
+            <span className={cn("text-[10px] font-mono px-2.5 py-1 rounded-full border", statusColor)}>
+              {statusLabel}
+            </span>
+            {state.status === "running" && (
+              <div className="flex items-center gap-1.5">
+                <Loader2 className="w-3.5 h-3.5 text-violet-400 animate-spin" />
+                <span className="text-xs font-mono text-violet-400">{state.progress}%</span>
+              </div>
+            )}
+          </div>
         </div>
       </div>
 
@@ -439,11 +639,12 @@ function OverviewPanel() {
         </div>
       )}
 
-      {/* Agent grid - mini cards */}
-      <div className="grid grid-cols-3 gap-2 mb-4">
+      {/* Agent grid - "office rooms" */}
+      <div className="grid grid-cols-3 gap-2.5 mb-4">
         {AGENT_IDS.map((id) => {
           const cfg = configs[id];
           const st = states[id];
+          const av = AVATARS[id];
           const isActive = st.status === "running";
           const isDone = st.status === "done";
           return (
@@ -451,27 +652,51 @@ function OverviewPanel() {
               key={id}
               onClick={() => setActive(id)}
               className={cn(
-                "bg-[var(--bg3)] rounded-xl p-3 text-left transition-all border hover:border-gray-600",
+                "bg-[var(--bg3)] rounded-xl p-2.5 text-left transition-all border hover:border-gray-600 group",
                 isActive ? "border-violet-500/40 glow-violet" :
                 isDone ? "border-teal-500/30" :
                 st.status === "error" ? "border-red-500/30" :
                 "border-transparent"
               )}
             >
-              <div className="flex items-center justify-between mb-1.5">
-                <span className="text-base">{cfg.emoji}</span>
-                {isActive && <Loader2 className="w-3 h-3 text-violet-400 animate-spin" />}
-                {isDone && <CheckCircle2 className="w-3 h-3 text-teal-400" />}
-                {st.status === "error" && <AlertCircle className="w-3 h-3 text-red-400" />}
-                {!cfg.enabled && <Power className="w-3 h-3 text-gray-700" />}
+              <div className="flex items-center gap-2 mb-1">
+                <div className={cn(
+                  "rounded-lg overflow-hidden border transition-all",
+                  isActive ? "border-violet-500/40" : isDone ? "border-teal-500/30" : "border-transparent"
+                )}>
+                  <AgentAvatar id={id} size={40} animated={isActive} />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-[10px] font-bold text-white truncate">{av.name}</p>
+                  <p className="text-[8px] truncate" style={{ color: `${cfg.color}90` }}>{av.role}</p>
+                </div>
               </div>
-              <p className="text-[11px] font-bold text-white truncate">{cfg.name}</p>
               {isActive && (
-                <div className="h-0.5 bg-gray-800 rounded-full mt-1.5 overflow-hidden">
+                <div className="h-0.5 bg-gray-800 rounded-full overflow-hidden">
                   <div className="h-full bg-violet-500 rounded-full transition-all" style={{ width: `${st.progress}%` }} />
                 </div>
               )}
-              {isDone && <p className="text-[9px] text-teal-500 mt-1">Termine</p>}
+              {isDone && (
+                <div className="flex items-center gap-1 mt-0.5">
+                  <CheckCircle2 className="w-2.5 h-2.5 text-teal-500" />
+                  <p className="text-[8px] text-teal-500">Termine</p>
+                </div>
+              )}
+              {st.status === "error" && (
+                <div className="flex items-center gap-1 mt-0.5">
+                  <AlertCircle className="w-2.5 h-2.5 text-red-400" />
+                  <p className="text-[8px] text-red-400">Erreur</p>
+                </div>
+              )}
+              {st.status === "idle" && cfg.enabled && (
+                <p className="text-[8px] text-gray-700 mt-0.5">En attente</p>
+              )}
+              {!cfg.enabled && (
+                <div className="flex items-center gap-1 mt-0.5">
+                  <Power className="w-2.5 h-2.5 text-gray-700" />
+                  <p className="text-[8px] text-gray-700">Desactive</p>
+                </div>
+              )}
             </button>
           );
         })}
