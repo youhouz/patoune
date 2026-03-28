@@ -1,0 +1,430 @@
+import { db } from "@/lib/supabase";
+import type { ScraperResult } from "./scraper";
+import type { ContentResult } from "./content";
+import type { ProspectionResult } from "./prospection";
+import type { AnalyticsResult } from "./analytics";
+
+export interface ReportResult {
+  html: string;
+  pdfUrl: string | null;
+  generatedAt: string;
+}
+
+function generateHtmlReport(
+  appName: string,
+  url: string,
+  scraperResult: ScraperResult,
+  contentResult: ContentResult,
+  prospectionResult: ProspectionResult,
+  analyticsResult: AnalyticsResult
+): string {
+  const primaryColor = scraperResult.brandColors[0] || "#7B5FFF";
+  const secondaryColor = scraperResult.brandColors[1] || "#FF7A45";
+  const accentColor = scraperResult.brandColors[2] || "#00D4A8";
+
+  return `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Growth Strategy Report - ${appName}</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      background: #0A0A0F;
+      color: #e0e0e0;
+      line-height: 1.6;
+    }
+    .container { max-width: 900px; margin: 0 auto; padding: 40px 24px; }
+    .header {
+      text-align: center;
+      padding: 60px 0 40px;
+      border-bottom: 1px solid rgba(123, 95, 255, 0.2);
+      margin-bottom: 40px;
+    }
+    .header h1 {
+      font-size: 36px;
+      background: linear-gradient(135deg, ${primaryColor}, ${secondaryColor});
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 8px;
+    }
+    .header .subtitle { color: #888; font-size: 14px; }
+    .header .app-url { color: ${accentColor}; font-size: 13px; margin-top: 4px; }
+    .section {
+      background: #12121A;
+      border: 1px solid rgba(123, 95, 255, 0.1);
+      border-radius: 12px;
+      padding: 32px;
+      margin-bottom: 24px;
+    }
+    .section h2 {
+      color: ${primaryColor};
+      font-size: 22px;
+      margin-bottom: 20px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid rgba(255,255,255,0.05);
+    }
+    .section h3 { color: ${secondaryColor}; font-size: 16px; margin: 16px 0 8px; }
+    .metric-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+      margin: 16px 0;
+    }
+    .metric-card {
+      background: #1A1A26;
+      border-radius: 8px;
+      padding: 20px;
+      text-align: center;
+    }
+    .metric-card .value { font-size: 28px; font-weight: 700; color: ${accentColor}; }
+    .metric-card .label { font-size: 12px; color: #888; margin-top: 4px; }
+    .status-badge {
+      display: inline-block;
+      padding: 2px 10px;
+      border-radius: 20px;
+      font-size: 11px;
+      font-weight: 600;
+    }
+    .status-ahead { background: rgba(0,212,168,0.15); color: #00D4A8; }
+    .status-on_track { background: rgba(123,95,255,0.15); color: #7B5FFF; }
+    .status-behind { background: rgba(255,122,69,0.15); color: #FF7A45; }
+    .content-item {
+      background: #1A1A26;
+      border-radius: 8px;
+      padding: 16px;
+      margin: 8px 0;
+      border-left: 3px solid ${primaryColor};
+    }
+    .influencer-row {
+      display: grid;
+      grid-template-columns: 2fr 1fr 1fr 1fr 1fr;
+      gap: 8px;
+      padding: 12px;
+      border-bottom: 1px solid rgba(255,255,255,0.03);
+      font-size: 13px;
+    }
+    .influencer-row.header-row { color: #888; font-weight: 600; font-size: 12px; }
+    .day-card {
+      display: grid;
+      grid-template-columns: 60px 1fr;
+      gap: 16px;
+      padding: 16px;
+      background: #1A1A26;
+      border-radius: 8px;
+      margin: 8px 0;
+    }
+    .day-number {
+      font-size: 24px;
+      font-weight: 700;
+      color: ${primaryColor};
+      text-align: center;
+    }
+    .day-theme {
+      font-size: 11px;
+      text-transform: uppercase;
+      color: ${secondaryColor};
+      letter-spacing: 1px;
+    }
+    .recommendation {
+      padding: 12px 16px;
+      background: rgba(0,212,168,0.05);
+      border-left: 3px solid ${accentColor};
+      border-radius: 0 8px 8px 0;
+      margin: 8px 0;
+      font-size: 14px;
+    }
+    .footer {
+      text-align: center;
+      padding: 40px 0;
+      color: #555;
+      font-size: 12px;
+    }
+    table { width: 100%; border-collapse: collapse; }
+    th, td { text-align: left; padding: 8px 12px; font-size: 13px; }
+    th { color: #888; border-bottom: 1px solid rgba(255,255,255,0.1); }
+    td { border-bottom: 1px solid rgba(255,255,255,0.03); }
+    ul { padding-left: 20px; }
+    li { margin: 4px 0; font-size: 14px; }
+    @media print {
+      body { background: white; color: #333; }
+      .section { border: 1px solid #eee; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>Growth Strategy Report</h1>
+      <div class="subtitle">${appName} - Generated by Growth Agent OS</div>
+      <div class="app-url">${url}</div>
+      <div class="subtitle" style="margin-top: 8px">${new Date().toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" })}</div>
+    </div>
+
+    <!-- Brand Analysis -->
+    <div class="section">
+      <h2>Brand Analysis</h2>
+      <div style="display: flex; gap: 12px; margin: 16px 0;">
+        ${scraperResult.brandColors.map((c) => `<div style="width: 48px; height: 48px; border-radius: 8px; background: ${c};" title="${c}"></div>`).join("")}
+      </div>
+      <h3>Brand Tone</h3>
+      <p>${scraperResult.tone}</p>
+      <h3>Target Audience</h3>
+      <p>${scraperResult.targetAudience}</p>
+      <h3>Key Features</h3>
+      <ul>${scraperResult.features.map((f) => `<li>${f}</li>`).join("")}</ul>
+      <h3>Viral Hooks</h3>
+      ${scraperResult.viralHooks.map((h) => `<div class="content-item">${h}</div>`).join("")}
+    </div>
+
+    <!-- Projected Metrics -->
+    <div class="section">
+      <h2>Projected Metrics</h2>
+      <p style="color: #888; margin-bottom: 16px;">${analyticsResult.summary}</p>
+      <div class="metric-grid">
+        <div class="metric-card">
+          <div class="value">${analyticsResult.metrics.impressions.toLocaleString()}</div>
+          <div class="label">Projected Impressions</div>
+        </div>
+        <div class="metric-card">
+          <div class="value">${analyticsResult.metrics.clicks.toLocaleString()}</div>
+          <div class="label">Projected Clicks</div>
+        </div>
+        <div class="metric-card">
+          <div class="value">${analyticsResult.metrics.conversions}</div>
+          <div class="label">Projected Conversions</div>
+        </div>
+        <div class="metric-card">
+          <div class="value">${analyticsResult.metrics.engagementRate}%</div>
+          <div class="label">Engagement Rate</div>
+        </div>
+        <div class="metric-card">
+          <div class="value">+${analyticsResult.metrics.followerGrowth.toLocaleString()}</div>
+          <div class="label">Follower Growth</div>
+        </div>
+        <div class="metric-card">
+          <div class="value">$${analyticsResult.metrics.costPerAcquisition}</div>
+          <div class="label">Cost per Acquisition</div>
+        </div>
+      </div>
+
+      <h3>Performance vs Targets</h3>
+      <table>
+        <tr><th>Metric</th><th>Current</th><th>Target</th><th>Status</th></tr>
+        ${analyticsResult.comparisonVsTarget.map((c) => `
+          <tr>
+            <td>${c.metric}</td>
+            <td>${typeof c.current === "number" && c.current > 100 ? c.current.toLocaleString() : c.current}</td>
+            <td>${typeof c.target === "number" && c.target > 100 ? c.target.toLocaleString() : c.target}</td>
+            <td><span class="status-badge status-${c.status}">${c.status.replace("_", " ")}</span></td>
+          </tr>
+        `).join("")}
+      </table>
+    </div>
+
+    <!-- Content Strategy -->
+    <div class="section">
+      <h2>Content Strategy</h2>
+
+      <h3>TikTok Captions (${contentResult.tiktokCaptions.length})</h3>
+      ${contentResult.tiktokCaptions.slice(0, 5).map((c) => `
+        <div class="content-item">
+          <strong>${c.hook}</strong><br/>
+          <span style="color: #bbb;">${c.caption}</span><br/>
+          <span style="color: ${accentColor}; font-size: 12px;">${(c.hashtags || []).join(" ")}</span>
+        </div>
+      `).join("")}
+      ${contentResult.tiktokCaptions.length > 5 ? `<p style="color: #888; font-size: 13px; margin-top: 8px;">+ ${contentResult.tiktokCaptions.length - 5} more captions in full export</p>` : ""}
+
+      <h3>Video Scripts (${contentResult.videoScripts.length})</h3>
+      ${contentResult.videoScripts.slice(0, 2).map((v) => `
+        <div class="content-item">
+          <strong>${v.title}</strong> (${v.duration})<br/>
+          <span style="color: ${secondaryColor};">Hook:</span> ${v.hook}<br/>
+          <span style="color: ${primaryColor};">Story:</span> ${v.story}<br/>
+          <span style="color: ${accentColor};">CTA:</span> ${v.cta}
+        </div>
+      `).join("")}
+
+      <h3>Snapchat Messages (${contentResult.snapchatMessages.length})</h3>
+      ${contentResult.snapchatMessages.slice(0, 3).map((s) => `
+        <div class="content-item">${s.message}</div>
+      `).join("")}
+    </div>
+
+    <!-- Influencer Targets -->
+    <div class="section">
+      <h2>Influencer Targets (${prospectionResult.totalFound})</h2>
+      <p style="color: #888; margin-bottom: 16px;">Average relevance score: ${prospectionResult.avgRelevance}%</p>
+      <div class="influencer-row header-row">
+        <div>Username</div>
+        <div>Platform</div>
+        <div>Followers</div>
+        <div>ER</div>
+        <div>Relevance</div>
+      </div>
+      ${prospectionResult.influencers.slice(0, 15).map((inf) => `
+        <div class="influencer-row">
+          <div>@${inf.username}</div>
+          <div>${inf.platform}</div>
+          <div>${(inf.followers / 1000).toFixed(1)}k</div>
+          <div>${inf.engagementRate}%</div>
+          <div><span class="status-badge ${inf.relevanceScore >= 85 ? "status-ahead" : inf.relevanceScore >= 70 ? "status-on_track" : "status-behind"}">${inf.relevanceScore}%</span></div>
+        </div>
+      `).join("")}
+    </div>
+
+    <!-- 14-Day Plan -->
+    <div class="section">
+      <h2>14-Day Execution Plan</h2>
+      ${contentResult.strategy14Days.map((day) => `
+        <div class="day-card">
+          <div>
+            <div class="day-number">${day.day}</div>
+            <div class="day-theme">${day.theme}</div>
+          </div>
+          <div>
+            <ul>${day.tasks.map((t) => `<li>${t}</li>`).join("")}</ul>
+            <div style="margin-top: 8px; font-size: 11px; color: #888;">
+              Platforms: ${day.platforms.join(", ")} | KPI: ${day.kpi}
+            </div>
+          </div>
+        </div>
+      `).join("")}
+    </div>
+
+    <!-- Recommendations -->
+    <div class="section">
+      <h2>AI Recommendations</h2>
+      ${analyticsResult.recommendations.map((r) => `
+        <div class="recommendation">${r}</div>
+      `).join("")}
+    </div>
+
+    <div class="footer">
+      Generated by Growth Agent OS | ${new Date().toISOString()}<br/>
+      This report is auto-generated by AI agents. Verify all data before executing.
+    </div>
+  </div>
+</body>
+</html>`;
+}
+
+async function generatePdf(html: string): Promise<Buffer | null> {
+  try {
+    const puppeteer = await import("puppeteer");
+    const browser = await puppeteer.default.launch({
+      headless: true,
+      args: ["--no-sandbox", "--disable-setuid-sandbox"],
+    });
+    const page = await browser.newPage();
+    await page.setContent(html, { waitUntil: "networkidle0" });
+    const pdf = await page.pdf({
+      format: "A4",
+      printBackground: true,
+      margin: { top: "20px", bottom: "20px", left: "20px", right: "20px" },
+    });
+    await browser.close();
+    return Buffer.from(pdf);
+  } catch (error) {
+    console.warn("Puppeteer PDF generation failed:", error);
+    return null;
+  }
+}
+
+async function sendReport(
+  appName: string,
+  html: string,
+  _pdf: Buffer | null
+): Promise<boolean> {
+  const resendKey = process.env.RESEND_API_KEY;
+  if (!resendKey || resendKey === "re_...") {
+    console.log("Resend not configured, skipping report email");
+    return false;
+  }
+
+  try {
+    const { Resend } = await import("resend");
+    const resend = new Resend(resendKey);
+
+    await resend.emails.send({
+      from: "Growth Agent OS <onboarding@resend.dev>",
+      to: ["team@example.com"],
+      subject: `Growth Strategy Report - ${appName}`,
+      html,
+    });
+
+    return true;
+  } catch (error) {
+    console.error("Failed to send report email:", error);
+    return false;
+  }
+}
+
+export async function execute(
+  campaignId: string,
+  appName: string,
+  url: string,
+  scraperResult: ScraperResult,
+  contentResult: ContentResult,
+  prospectionResult: ProspectionResult,
+  analyticsResult: AnalyticsResult
+): Promise<ReportResult> {
+  await db.addLog(campaignId, "report", "info", "Compiling final report...");
+
+  // Generate HTML report
+  await db.addLog(campaignId, "report", "info", "Generating styled HTML report with brand colors...");
+  const html = generateHtmlReport(
+    appName,
+    url,
+    scraperResult,
+    contentResult,
+    prospectionResult,
+    analyticsResult
+  );
+
+  // Try PDF generation
+  await db.addLog(campaignId, "report", "info", "Attempting PDF generation via Puppeteer...");
+  const pdf = await generatePdf(html);
+
+  if (pdf) {
+    await db.addLog(
+      campaignId,
+      "report",
+      "success",
+      `PDF generated: ${(pdf.length / 1024).toFixed(0)}KB`
+    );
+  } else {
+    await db.addLog(
+      campaignId,
+      "report",
+      "warn",
+      "PDF generation unavailable, HTML report ready for download"
+    );
+  }
+
+  // Try sending via email
+  await db.addLog(campaignId, "report", "info", "Attempting to send report via email...");
+  const emailSent = await sendReport(appName, html, pdf);
+  if (emailSent) {
+    await db.addLog(campaignId, "report", "success", "Report sent via email");
+  } else {
+    await db.addLog(campaignId, "report", "warn", "Email delivery skipped (Resend not configured)");
+  }
+
+  const result: ReportResult = {
+    html,
+    pdfUrl: null, // In production, upload to storage and return URL
+    generatedAt: new Date().toISOString(),
+  };
+
+  await db.updateCampaign(campaignId, {
+    report_url: `/api/campaigns/${campaignId}/report`,
+  });
+
+  await db.addLog(campaignId, "report", "success", "Report compilation complete");
+
+  return result;
+}
