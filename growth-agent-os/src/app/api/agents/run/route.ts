@@ -71,11 +71,11 @@ export async function POST(request: NextRequest) {
     }
 
     const config = {
-      url: campaign.url,
-      appName: campaign.app_name,
-      niche: campaign.niche,
-      platforms: campaign.platforms,
-      goal: campaign.goal,
+      url: campaign.app_url,
+      appName: campaign.app_name || "",
+      niche: campaign.niche || "general",
+      platforms: campaign.platforms || ["TikTok"],
+      goal: campaign.goal || "Maximize growth",
     };
 
     // Try BullMQ first for proper queue handling

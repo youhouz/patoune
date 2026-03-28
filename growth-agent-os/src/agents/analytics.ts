@@ -64,8 +64,8 @@ export async function execute(
     throw new Error(`Campaign ${campaignId} not found`);
   }
 
-  const contentResult = campaign.content_result;
-  const prospectionResult = campaign.prospection_result;
+  const contentResult = (campaign as unknown as Record<string, unknown>).content_result;
+  const prospectionResult = (campaign as unknown as Record<string, unknown>).prospection_result;
 
   // In production, these would come from platform APIs
   // For now, generate realistic projected metrics based on content volume

@@ -15,7 +15,7 @@ export async function POST(request: NextRequest) {
     }
 
     const campaign = await db.createCampaign({
-      url,
+      app_url: url,
       app_name: appName,
       niche: niche || "general",
       platforms: platforms || ["TikTok"],
