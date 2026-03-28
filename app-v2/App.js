@@ -27,54 +27,6 @@ if (Platform.OS === 'web' && typeof navigator !== 'undefined' && 'serviceWorker'
   });
 }
 
-// Fix iOS Safari PWA scrolling globally:
-// In standalone PWA mode, CSS flexbox defaults min-height to "auto" which prevents
-// flex children from shrinking below their content size. This breaks ScrollView/FlatList
-// because they never get a constrained height and expand to full content instead of scrolling.
-// Since #root is position:fixed with explicit bounds, all descendants can safely use min-height:0.
-if (Platform.OS === 'web' && typeof document !== 'undefined') {
-  const style = document.createElement('style');
-  style.id = 'pwa-scroll-fix';
-  style.textContent = `
-    html, body {
-      height: 100%;
-      height: -webkit-fill-available;
-      overflow: hidden;
-      overscroll-behavior: none;
-    }
-    #root {
-      position: fixed !important;
-      top: 0; left: 0; right: 0; bottom: 0;
-      display: flex !important;
-      overflow: hidden;
-    }
-    /* Fix flex ancestor chain: direct-child selectors up to 15 levels deep.
-       React Navigation + Tab + Stack creates 10-12 levels of nested divs.
-       Only direct children are targeted so scroll content is not affected. */
-    #root > div,
-    #root > div > div,
-    #root > div > div > div,
-    #root > div > div > div > div,
-    #root > div > div > div > div > div,
-    #root > div > div > div > div > div > div,
-    #root > div > div > div > div > div > div > div,
-    #root > div > div > div > div > div > div > div > div,
-    #root > div > div > div > div > div > div > div > div > div,
-    #root > div > div > div > div > div > div > div > div > div > div,
-    #root > div > div > div > div > div > div > div > div > div > div > div,
-    #root > div > div > div > div > div > div > div > div > div > div > div > div,
-    #root > div > div > div > div > div > div > div > div > div > div > div > div > div,
-    #root > div > div > div > div > div > div > div > div > div > div > div > div > div > div,
-    #root > div > div > div > div > div > div > div > div > div > div > div > div > div > div > div {
-      min-height: 0 !important;
-    }
-    /* Ensure smooth scrolling on iOS Safari */
-    [style*="overflow"] {
-      -webkit-overflow-scrolling: touch !important;
-    }
-  `;
-  document.head.appendChild(style);
-}
 
 SplashScreen.preventAutoHideAsync();
 

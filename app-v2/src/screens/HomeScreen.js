@@ -34,7 +34,7 @@ import { useAuth } from '../context/AuthContext';
 import { getMyPetsAPI } from '../api/pets';
 import { getScanHistoryAPI, getPopularProductsAPI } from '../api/products';
 import { getMyBookingsAPI } from '../api/petsitters';
-import { PawIcon } from '../components/Logo';
+import { PepeteIcon } from '../components/PepeteLogo';
 import useResponsive from '../hooks/useResponsive';
 import { COLORS, SPACING, RADIUS, SHADOWS, FONT_SIZE, getScoreColor, getScoreLabel } from '../utils/colors';
 
@@ -284,7 +284,7 @@ const HomeScreen = ({ navigation }) => {
             <View style={s.heroTop}>
               <View style={s.heroGreetBox}>
                 <View style={s.heroGreetRow}>
-                  <PawIcon size={18} color="rgba(255,255,255,0.9)" />
+                  <PepeteIcon size={24} color="rgba(255,255,255,0.9)" />
                   <Text style={s.greeting}>{greetText}</Text>
                 </View>
                 {firstName
