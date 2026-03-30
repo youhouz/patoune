@@ -41,10 +41,10 @@ async function searchWithApify(
       if (!actorId) continue;
 
       const runResponse = await fetch(
-        `https://api.apify.com/v2/acts/${actorId}/runs?token=${token}`,
+        `https://api.apify.com/v2/acts/${actorId}/runs`,
         {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
           body: JSON.stringify({
             searchQueries: [niche],
             resultsPerPage: 30,
@@ -66,7 +66,7 @@ async function searchWithApify(
       while (status === "RUNNING" && attempts < 12) {
         await new Promise((r) => setTimeout(r, 5000));
         const statusRes = await fetch(
-          `https://api.apify.com/v2/actor-runs/${runId}?token=${token}`
+          `https://api.apify.com/v2/actor-runs/${runId}`, { headers: { "Authorization": `Bearer ${token}` } }
         );
         const statusData = await statusRes.json();
         status = statusData?.data?.status || "FAILED";
@@ -76,7 +76,7 @@ async function searchWithApify(
       if (status !== "SUCCEEDED") continue;
 
       const datasetRes = await fetch(
-        `https://api.apify.com/v2/actor-runs/${runId}/dataset/items?token=${token}`
+        `https://api.apify.com/v2/actor-runs/${runId}/dataset/items`, { headers: { "Authorization": `Bearer ${token}` } }
       );
       const items = await datasetRes.json();
 
