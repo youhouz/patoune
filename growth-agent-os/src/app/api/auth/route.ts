@@ -1,34 +1,72 @@
 import { NextRequest, NextResponse } from "next/server";
+import {
+  getClientIP, isRateLimited, recordFailedAttempt,
+  clearFailedAttempts, generateAuthToken, secureCompare,
+} from "@/lib/auth";
 
 export async function POST(request: NextRequest) {
   try {
-    const { password } = await request.json();
+    const ip = getClientIP(request.headers);
 
-    const adminPassword = process.env.ADMIN_PASSWORD || "growth-agent-os-2024";
-
-    if (password !== adminPassword) {
+    // Check rate limit
+    const { limited, retryAfter } = isRateLimited(ip);
+    if (limited) {
       return NextResponse.json(
-        { error: "Invalid password" },
-        { status: 401 }
+        { error: `Trop de tentatives. Reessaye dans ${retryAfter}s` },
+        { status: 429, headers: { "Retry-After": String(retryAfter) } }
       );
     }
 
-    const response = NextResponse.json({ success: true });
+    // Validate content-type
+    const contentType = request.headers.get("content-type");
+    if (!contentType?.includes("application/json")) {
+      return NextResponse.json({ error: "Content-Type invalide" }, { status: 400 });
+    }
 
-    response.cookies.set("growth_agent_auth", "authenticated", {
+    // Limit body size (1KB max for auth)
+    const body = await request.text();
+    if (body.length > 1024) {
+      return NextResponse.json({ error: "Requete trop grande" }, { status: 413 });
+    }
+
+    let parsed: { password?: unknown };
+    try {
+      parsed = JSON.parse(body);
+    } catch {
+      return NextResponse.json({ error: "JSON invalide" }, { status: 400 });
+    }
+
+    const { password } = parsed;
+    if (typeof password !== "string" || password.length === 0 || password.length > 128) {
+      return NextResponse.json({ error: "Mot de passe invalide" }, { status: 400 });
+    }
+
+    const adminPassword = process.env.ADMIN_PASSWORD;
+    if (!adminPassword) {
+      return NextResponse.json({ error: "Configuration serveur manquante" }, { status: 500 });
+    }
+
+    if (!secureCompare(password, adminPassword)) {
+      recordFailedAttempt(ip);
+      return NextResponse.json({ error: "Mot de passe incorrect" }, { status: 401 });
+    }
+
+    // Success
+    clearFailedAttempts(ip);
+    const token = generateAuthToken();
+
+    const response = NextResponse.json({ success: true });
+    response.cookies.set("growth_agent_auth", token, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "lax",
+      secure: true,
+      sameSite: "strict",
       path: "/",
-      maxAge: 60 * 60 * 24 * 7, // 7 days
+      maxAge: 60 * 60 * 24 * 7,
     });
 
     return response;
   } catch {
-    return NextResponse.json(
-      { error: "Invalid request" },
-      { status: 400 }
-    );
+    return NextResponse.json({ error: "Erreur serveur" }, { status: 500 });
   }
 }
 
