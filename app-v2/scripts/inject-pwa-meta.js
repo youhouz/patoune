@@ -134,7 +134,7 @@ html = html.replace(/<meta name="description"[^>]*>\n?/g, '');
 html = html.replace(/<meta name="keywords"[^>]*>\n?/g, '');
 html = html.replace(/<title>[^<]*<\/title>\n?/g, '');
 
-const SITE_URL = 'https://pepete-front.vercel.app';
+const SITE_URL = 'https://pepete.fr';
 
 const metaTags = `
     <!-- ═══════════════════════════════════════════════════════════════════ -->

@@ -5,46 +5,49 @@
 
   <!-- Page principale -->
   <url>
-    <loc>https://pepete-front.vercel.app/</loc>
-    <lastmod>2026-03-17</lastmod>
+    <loc>https://pepete.fr/</loc>
+    <lastmod>2026-03-30</lastmod>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
-    <xhtml:link rel="alternate" hreflang="fr" href="https://pepete-front.vercel.app/" />
+    <xhtml:link rel="alternate" hreflang="fr" href="https://pepete.fr/" />
     <image:image>
-      <image:loc>https://pepete-front.vercel.app/assets/og-image.png</image:loc>
-      <image:title>Pépète — Le compagnon de vos compagnons</image:title>
-      <image:caption>Application Pépète : scanner produits animaux, garde animaux, assistant IA vétérinaire</image:caption>
+      <image:loc>https://pepete.fr/assets/og-image.png</image:loc>
+      <image:title>Pepete — Le compagnon de vos compagnons</image:title>
+      <image:caption>Application Pepete : scanner croquettes par IA, garde animaux, assistant veterinaire IA</image:caption>
     </image:image>
   </url>
 
-  <!-- Scanner produits -->
+  <!-- Scanner croquettes / produits animaux -->
   <url>
-    <loc>https://pepete-front.vercel.app/scanner</loc>
-    <lastmod>2026-03-17</lastmod>
+    <loc>https://pepete.fr/scanner</loc>
+    <lastmod>2026-03-30</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://pepete.fr/scanner" />
   </url>
 
   <!-- Garde animaux / Pet-sitting -->
   <url>
-    <loc>https://pepete-front.vercel.app/garde</loc>
-    <lastmod>2026-03-17</lastmod>
+    <loc>https://pepete.fr/garde</loc>
+    <lastmod>2026-03-30</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://pepete.fr/garde" />
   </url>
 
-  <!-- Assistant IA -->
+  <!-- Assistant IA veterinaire -->
   <url>
-    <loc>https://pepete-front.vercel.app/assistant</loc>
-    <lastmod>2026-03-17</lastmod>
+    <loc>https://pepete.fr/assistant</loc>
+    <lastmod>2026-03-30</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://pepete.fr/assistant" />
   </url>
 
-  <!-- Profil -->
+  <!-- Profil utilisateur -->
   <url>
-    <loc>https://pepete-front.vercel.app/profil</loc>
-    <lastmod>2026-03-17</lastmod>
+    <loc>https://pepete.fr/profil</loc>
+    <lastmod>2026-03-30</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
   </url>

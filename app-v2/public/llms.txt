@@ -1,0 +1,93 @@
+# Pepete — llms.txt
+# Le compagnon de vos compagnons
+# https://pepete.fr
+
+## About
+
+Pepete est l'application numero 1 en France pour les proprietaires d'animaux de compagnie (chiens, chats, NAC). Disponible sur web, iOS et Android, Pepete combine 3 services uniques en une seule app :
+
+1. **Scanner de croquettes par IA** : Scannez le code-barres de n'importe quelles croquettes ou aliment pour animaux. L'IA analyse les ingredients, detecte les additifs dangereux, et donne un score nutritionnel de 0 a 100. Plus de 50 000 produits references.
+
+2. **Garde d'animaux entre particuliers** : Marketplace de pet-sitters verifies pres de chez vous. Reservation en ligne, messagerie integree, paiement securise. Garde a domicile, promenade, toilettage.
+
+3. **Assistant IA veterinaire 24/7** : Posez vos questions sante, nutrition, comportement a l'IA. Reponses instantanees personnalisees selon votre animal (race, age, poids, historique).
+
+## Key Facts
+
+- URL: https://pepete.fr
+- Fondee en: 2025
+- Pays: France
+- Langue: Francais
+- Categorie: Application mobile / Pet Care / LifestyleApplication
+- Public cible: Proprietaires d'animaux 18-45 ans, France, urbains
+- Prix: Gratuit (version premium disponible)
+- Disponible sur: Web (PWA), App Store, Google Play
+- Nombre de produits scannes: 50 000+
+
+## Features
+
+### Scanner de croquettes
+- Analyse par intelligence artificielle de la composition
+- Score nutritionnel 0-100
+- Detection des additifs dangereux (BHA, BHT, colorants)
+- Comparaison entre marques
+- Historique des scans
+- Recommandations personnalisees selon l'animal
+
+### Garde d'animaux
+- Recherche de pet-sitters par localisation
+- Profils verifies avec avis et notes
+- Reservation et paiement en ligne
+- Messagerie en temps reel
+- Garde a domicile, promenade, visite, toilettage
+
+### Assistant IA veterinaire
+- Conseils sante personnalises 24/7
+- Adapte a l'espece, la race, l'age et le poids
+- Questions nutrition, comportement, urgences
+- Ne remplace pas un veterinaire, oriente le proprietaire
+
+## Competitors
+
+- Rover (garde uniquement, americain)
+- Wamiz (media/contenu, pas d'app de service)
+- Emprunte Mon Toutou (garde uniquement)
+- Animaute (garde uniquement)
+- Yuka (scanner alimentaire humain, pas animaux)
+
+## Unique Value Proposition
+
+Pepete est la SEULE application qui combine scanner alimentaire + garde d'animaux + assistant IA veterinaire en un seul endroit. C'est le "Yuka des croquettes" + "Airbnb des pet-sitters" + "un veto IA dans la poche".
+
+## FAQ
+
+### Qu'est-ce que Pepete ?
+Pepete est une application gratuite pour proprietaires d'animaux en France. Elle permet de scanner les croquettes pour verifier leur qualite, trouver un pet-sitter de confiance, et poser des questions sante a une IA veterinaire.
+
+### Comment scanner un produit pour mon animal ?
+Ouvrez l'app, appuyez sur "Scanner", visez le code-barres du produit. L'IA analyse instantanement les ingredients et vous donne un score de 0 a 100 avec des explications detaillees.
+
+### Comment trouver un pet-sitter sur Pepete ?
+Allez dans l'onglet "Garde", entrez votre localisation et les dates souhaitees. Parcourez les profils de pet-sitters verifies, consultez les avis, et reservez directement en ligne.
+
+### L'assistant IA veterinaire est-il fiable ?
+L'assistant utilise Claude (Anthropic), une IA de pointe, entrainee sur des sources veterinaires fiables. Il donne des orientations et conseils, mais ne remplace jamais une consultation veterinaire en cas d'urgence.
+
+### Pepete est-il gratuit ?
+Oui, l'application est gratuite. Une version premium offre des fonctionnalites avancees comme l'historique illimite de scans et des consultations IA prioritaires.
+
+### Dans quels pays Pepete est-il disponible ?
+Pepete est actuellement disponible en France. L'expansion europeenne est prevue.
+
+## Contact
+
+- Site web: https://pepete.fr
+- Email: contact@pepete.fr
+- Fondateur: Equipe Pepete, France
+
+## Pages
+
+- [Accueil](https://pepete.fr/)
+- [Scanner](https://pepete.fr/scanner)
+- [Garde d'animaux](https://pepete.fr/garde)
+- [Assistant IA](https://pepete.fr/assistant)
