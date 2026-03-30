@@ -1,5 +1,30 @@
 import { NextRequest, NextResponse } from "next/server";
 import { callClaude, isAnthropicConfigured } from "@/lib/anthropic";
+import { verifyAuthToken } from "@/lib/auth";
+
+// Rate limiting per agent execution
+const executionLog = new Map<string, { count: number; windowStart: number }>();
+const MAX_EXECUTIONS_PER_HOUR = 20;
+const WINDOW_MS = 60 * 60 * 1000;
+
+function checkExecutionRate(ip: string): boolean {
+  const now = Date.now();
+  const record = executionLog.get(ip);
+  if (!record || now - record.windowStart > WINDOW_MS) {
+    executionLog.set(ip, { count: 1, windowStart: now });
+    return true;
+  }
+  if (record.count >= MAX_EXECUTIONS_PER_HOUR) return false;
+  record.count += 1;
+  return true;
+}
+
+// Strict whitelist
+const VALID_AGENT_IDS = new Set([
+  "analyst", "email_campaign", "influencer_email", "article_writer",
+  "directory_submit", "forum_commenter", "backlink_builder", "review_booster",
+  "content_tiktok", "content_insta", "social_commenter", "press_release",
+]);
 
 const PEPETE = `
 APP: Pepete (pepete.fr)
@@ -80,20 +105,44 @@ const PROMPTS: Record<string, { system: string; user: string }> = {
 
 export async function POST(request: NextRequest) {
   try {
-    const { agentId } = await request.json();
-    if (!agentId || !PROMPTS[agentId]) {
+    // Double-check auth
+    const authCookie = request.cookies.get("growth_agent_auth");
+    if (!authCookie?.value || !verifyAuthToken(authCookie.value)) {
+      return NextResponse.json({ error: "Non autorise" }, { status: 401 });
+    }
+
+    // Rate limit
+    const ip = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "unknown";
+    if (!checkExecutionRate(ip)) {
+      return NextResponse.json({ error: "Limite 20 executions/heure atteinte." }, { status: 429 });
+    }
+
+    // Limit body size
+    const bodyText = await request.text();
+    if (bodyText.length > 1024) {
+      return NextResponse.json({ error: "Requete trop grande" }, { status: 413 });
+    }
+
+    let parsed: { agentId?: unknown };
+    try { parsed = JSON.parse(bodyText); } catch {
+      return NextResponse.json({ error: "JSON invalide" }, { status: 400 });
+    }
+
+    const { agentId } = parsed;
+    if (typeof agentId !== "string" || !VALID_AGENT_IDS.has(agentId)) {
       return NextResponse.json({ error: "Agent invalide" }, { status: 400 });
     }
+
     const prompt = PROMPTS[agentId];
     if (!isAnthropicConfigured()) {
       return NextResponse.json({
-        error: "Cle API Anthropic non configuree. Ajoute ANTHROPIC_API_KEY dans Vercel → Settings → Environment Variables.",
+        error: "Cle API Anthropic non configuree. Ajoute ANTHROPIC_API_KEY dans Vercel > Settings > Environment Variables.",
       }, { status: 500 });
     }
+
     const result = await callClaude(prompt.system, prompt.user, { maxTokens: 8192, temperature: 0.8 });
     return NextResponse.json({ result, agentId });
-  } catch (error) {
-    console.error("Agent error:", error);
+  } catch {
     return NextResponse.json({ error: "Erreur execution agent" }, { status: 500 });
   }
 }
