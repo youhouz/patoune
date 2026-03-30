@@ -39,8 +39,8 @@ async function sendEmailAlert(
     const resend = new Resend(resendKey);
 
     await resend.emails.send({
-      from: "Growth Agent OS <onboarding@resend.dev>",
-      to: ["team@example.com"],
+      from: process.env.EMAIL_FROM || "Pepete Growth <noreply@pepete.fr>",
+      to: [process.env.EMAIL_TO || "contact@pepete.fr"],
       subject,
       html: htmlContent,
     });
