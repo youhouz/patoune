@@ -29,10 +29,29 @@
       ]
     },
     {
+      "source": "/llms.txt",
+      "headers": [
+        { "key": "Cache-Control", "value": "public, max-age=86400" },
+        { "key": "Content-Type", "value": "text/plain; charset=utf-8" }
+      ]
+    },
+    {
       "source": "/sitemap.xml",
       "headers": [
         { "key": "Cache-Control", "value": "public, max-age=86400" },
         { "key": "Content-Type", "value": "application/xml; charset=utf-8" }
+      ]
+    },
+    {
+      "source": "/blog/(.*)",
+      "headers": [
+        { "key": "Cache-Control", "value": "public, max-age=86400, s-maxage=86400" }
+      ]
+    },
+    {
+      "source": "/landing.html",
+      "headers": [
+        { "key": "Cache-Control", "value": "public, max-age=86400, s-maxage=86400" }
       ]
     },
     {
@@ -46,6 +65,11 @@
     { "source": "/robots.txt", "destination": "/robots.txt" },
     { "source": "/sitemap.xml", "destination": "/sitemap.xml" },
     { "source": "/manifest.json", "destination": "/manifest.json" },
+    { "source": "/llms.txt", "destination": "/llms.txt" },
+    { "source": "/landing.html", "destination": "/landing.html" },
+    { "source": "/indexnow.json", "destination": "/indexnow.json" },
+    { "source": "/fef37dc422ec45c2bdae7c5a0e1f6a8e.txt", "destination": "/fef37dc422ec45c2bdae7c5a0e1f6a8e.txt" },
+    { "source": "/blog/:path*", "destination": "/blog/:path*" },
     { "source": "/(.*)", "destination": "/index.html" }
   ]
 }

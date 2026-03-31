@@ -113,7 +113,7 @@ for (const file of publicAssetsToCopy) {
 
 // Copy PWA files (manifest.json, service-worker.js) to dist/
 const publicDir = path.join(__dirname, '..', 'public');
-const pwaFiles = ['manifest.json', 'service-worker.js', 'robots.txt', 'sitemap.xml'];
+const pwaFiles = ['manifest.json', 'service-worker.js', 'robots.txt', 'sitemap.xml', 'llms.txt', 'landing.html', 'indexnow.json', 'fef37dc422ec45c2bdae7c5a0e1f6a8e.txt'];
 for (const file of pwaFiles) {
   const src = path.join(publicDir, file);
   const dest = path.join(distDir, file);
@@ -121,6 +121,23 @@ for (const file of pwaFiles) {
     fs.copyFileSync(src, dest);
     console.log(`✓ Copied public/${file} → dist/${file}`);
   }
+}
+
+// Copy blog directory (static SEO articles)
+const blogSrcDir = path.join(publicDir, 'blog');
+const blogDestDir = path.join(distDir, 'blog');
+if (fs.existsSync(blogSrcDir)) {
+  if (!fs.existsSync(blogDestDir)) fs.mkdirSync(blogDestDir, { recursive: true });
+  const blogFiles = fs.readdirSync(blogSrcDir);
+  for (const file of blogFiles) {
+    const src = path.join(blogSrcDir, file);
+    const dest = path.join(blogDestDir, file);
+    if (fs.statSync(src).isFile()) {
+      fs.copyFileSync(src, dest);
+      console.log(`✓ Copied blog/${file} → dist/blog/${file}`);
+    }
+  }
+  console.log(`✓ Blog: ${blogFiles.length} articles copied`);
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
