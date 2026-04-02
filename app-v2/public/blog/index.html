@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Blog Pepete - Conseils animaux, nutrition & bien-etre</title>
+    <meta name="description" content="Retrouvez tous nos conseils d'experts pour prendre soin de votre animal : nutrition, sante, garde et bien-etre. Le blog officiel de Pepete, l'app qui revolutionne le soin animal.">
+    <link rel="canonical" href="https://pepete.fr/blog/">
+    <meta property="og:title" content="Blog Pepete - Conseils animaux, nutrition & bien-etre">
+    <meta property="og:description" content="Conseils d'experts pour prendre soin de votre animal : nutrition, sante, garde et bien-etre.">
+    <meta property="og:url" content="https://pepete.fr/blog/">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Pepete">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="robots" content="index, follow">
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "Blog",
+        "name": "Blog Pepete",
+        "description": "Conseils d'experts pour prendre soin de votre animal de compagnie",
+        "url": "https://pepete.fr/blog/",
+        "publisher": {
+            "@type": "Organization",
+            "name": "Pepete",
+            "url": "https://pepete.fr"
+        }
+    }
+    </script>
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, sans-serif;
+            background: #0D0F12;
+            color: #e5e5e5;
+            line-height: 1.7;
+            -webkit-font-smoothing: antialiased;
+        }
+        a { color: #7aad7e; text-decoration: none; transition: color 0.2s; }
+        a:hover { color: #527A56; }
+        .container { max-width: 720px; margin: 0 auto; padding: 0 20px; }
+        header {
+            border-bottom: 1px solid #1a1d22;
+            padding: 20px 0;
+        }
+        header .container {
+            display: flex; justify-content: space-between; align-items: center;
+        }
+        .logo { font-size: 1.5rem; font-weight: 700; color: #e5e5e5; }
+        .logo span { color: #527A56; }
+        header nav a { margin-left: 20px; font-size: 0.9rem; color: #a0a0a0; }
+        header nav a:hover { color: #e5e5e5; }
+        .hero {
+            text-align: center;
+            padding: 60px 0 40px;
+        }
+        .hero h1 {
+            font-size: 2.2rem;
+            line-height: 1.3;
+            margin-bottom: 16px;
+            color: #ffffff;
+        }
+        .hero h1 span { color: #527A56; }
+        .hero p {
+            font-size: 1.1rem;
+            color: #a0a0a0;
+            max-width: 560px;
+            margin: 0 auto;
+        }
+        .articles-grid {
+            display: grid;
+            gap: 24px;
+            padding-bottom: 60px;
+        }
+        .article-card {
+            background: #151820;
+            border-radius: 12px;
+            padding: 28px;
+            border: 1px solid #1e2230;
+            transition: border-color 0.3s, transform 0.2s;
+        }
+        .article-card:hover {
+            border-color: #527A56;
+            transform: translateY(-2px);
+        }
+        .article-card .tag {
+            display: inline-block;
+            background: rgba(82, 122, 86, 0.15);
+            color: #7aad7e;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            padding: 4px 10px;
+            border-radius: 4px;
+            margin-bottom: 12px;
+        }
+        .article-card h2 {
+            font-size: 1.3rem;
+            line-height: 1.4;
+            margin-bottom: 10px;
+        }
+        .article-card h2 a { color: #ffffff; }
+        .article-card h2 a:hover { color: #7aad7e; }
+        .article-card p {
+            color: #a0a0a0;
+            font-size: 0.95rem;
+            margin-bottom: 14px;
+        }
+        .article-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.82rem;
+            color: #666;
+        }
+        .read-more {
+            color: #527A56;
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+        .cta-banner {
+            background: linear-gradient(135deg, #527A56 0%, #3a5a3d 100%);
+            border-radius: 12px;
+            padding: 36px 28px;
+            text-align: center;
+            margin-bottom: 60px;
+        }
+        .cta-banner h2 { color: #fff; font-size: 1.4rem; margin-bottom: 10px; }
+        .cta-banner p { color: rgba(255,255,255,0.85); margin-bottom: 20px; }
+        .cta-btn {
+            display: inline-block;
+            background: #FAF6EE;
+            color: #527A56;
+            font-weight: 700;
+            padding: 12px 28px;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: transform 0.2s;
+        }
+        .cta-btn:hover { transform: scale(1.04); color: #3a5a3d; }
+        footer {
+            border-top: 1px solid #1a1d22;
+            padding: 30px 0;
+            text-align: center;
+            font-size: 0.85rem;
+            color: #555;
+        }
+        footer a { color: #666; margin: 0 10px; }
+        @media (max-width: 600px) {
+            .hero h1 { font-size: 1.6rem; }
+            .article-card { padding: 20px; }
+            .article-card h2 { font-size: 1.15rem; }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="container">
+            <a href="https://pepete.fr" class="logo">Pep<span>ete</span></a>
+            <nav>
+                <a href="https://pepete.fr">Accueil</a>
+                <a href="/blog/">Blog</a>
+            </nav>
+        </div>
+    </header>
+    <main>
+        <div class="container">
+            <section class="hero">
+                <h1>Le Blog <span>Pepete</span></h1>
+                <p>Conseils d'experts, guides pratiques et actualites pour prendre soin de votre compagnon a quatre pattes.</p>
+            </section>
+            <section class="articles-grid">
+                <article class="article-card">
+                    <span class="tag">Nutrition</span>
+                    <h2><a href="/blog/scanner-croquettes-chien-chat.html">Comment savoir si les croquettes de votre chien sont bonnes ? Le guide complet</a></h2>
+                    <p>Apprenez a decoder les etiquettes, identifier les ingredients de qualite et utiliser la technologie pour faire les meilleurs choix nutritionnels pour votre animal.</p>
+                    <div class="article-meta">
+                        <span>Equipe Pepete &middot; Mars 2026</span>
+                        <a href="/blog/scanner-croquettes-chien-chat.html" class="read-more">Lire l'article &rarr;</a>
+                    </div>
+                </article>
+                <article class="article-card">
+                    <span class="tag">Garde</span>
+                    <h2><a href="/blog/trouver-pet-sitter-confiance.html">Pet-sitting en France : comment trouver un gardien de confiance pour votre animal</a></h2>
+                    <p>Partir en vacances l'esprit tranquille, c'est possible. Decouvrez nos conseils pour trouver le pet-sitter ideal et les criteres essentiels a verifier.</p>
+                    <div class="article-meta">
+                        <span>Equipe Pepete &middot; Mars 2026</span>
+                        <a href="/blog/trouver-pet-sitter-confiance.html" class="read-more">Lire l'article &rarr;</a>
+                    </div>
+                </article>
+                <article class="article-card">
+                    <span class="tag">Sante</span>
+                    <h2><a href="/blog/assistant-ia-veterinaire.html">Mon chat est malade : quand consulter un veterinaire ? L'IA au secours</a></h2>
+                    <p>Votre chat se comporte etrangement ? Decouvrez les symptomes qui doivent alerter, ceux qui peuvent attendre, et comment l'intelligence artificielle peut vous guider.</p>
+                    <div class="article-meta">
+                        <span>Equipe Pepete &middot; Mars 2026</span>
+                        <a href="/blog/assistant-ia-veterinaire.html" class="read-more">Lire l'article &rarr;</a>
+                    </div>
+                </article>
+                <article class="article-card">
+                    <span class="tag">Nutrition</span>
+                    <h2><a href="/blog/ingredients-dangereux-croquettes.html">Les 10 ingredients dangereux caches dans les croquettes de votre animal</a></h2>
+                    <p>BHA, BHT, sous-produits animaux... Certains ingredients omnipresents dans les croquettes sont potentiellement nocifs. Apprenez a les reperer et a les eviter.</p>
+                    <div class="article-meta">
+                        <span>Equipe Pepete &middot; Mars 2026</span>
+                        <a href="/blog/ingredients-dangereux-croquettes.html" class="read-more">Lire l'article &rarr;</a>
+                    </div>
+                </article>
+            </section>
+            <div class="cta-banner">
+                <h2>Scannez les croquettes de votre animal en 2 secondes</h2>
+                <p>L'app Pepete analyse la composition et vous donne un score nutrition de 0 a 100.</p>
+                <a href="https://pepete.fr" class="cta-btn">Decouvrir Pepete</a>
+            </div>
+        </div>
+    </main>
+    <footer>
+        <div class="container">
+            <p>&copy; 2026 Pepete. Tous droits reserves.</p>
+            <p><a href="https://pepete.fr">pepete.fr</a> <a href="/blog/">Blog</a></p>
+        </div>
+    </footer>
+</body>
+</html>

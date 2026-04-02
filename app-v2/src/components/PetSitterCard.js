@@ -42,7 +42,7 @@ const StarRating = ({ value = 0, count, size = 13 }) => {
 };
 
 const PetSitterCard = ({ petsitter, onPress }) => {
-  const { user, bio, pricePerDay, rating, reviewCount, acceptedAnimals, services } = petsitter;
+  const { user, bio, pricePerDay, rating, reviewCount, acceptedAnimals, services, responseTime, recurringClients, topReview, verified } = petsitter;
   const displayName = user?.name || 'Pet-sitter';
 
   return (
@@ -57,18 +57,24 @@ const PetSitterCard = ({ petsitter, onPress }) => {
           name={displayName}
           imageUri={user?.avatar}
           size="md"
-          verified={petsitter.verified}
+          verified={verified}
         />
         <View style={styles.info}>
           <View style={styles.nameRow}>
             <Text style={styles.name} numberOfLines={1}>{displayName}</Text>
-            {petsitter.verified && (
+            {verified && (
               <View style={styles.verifiedBadge}>
                 <Feather name="check-circle" size={14} color={COLORS.secondary} />
               </View>
             )}
           </View>
           <StarRating value={rating || 0} count={reviewCount} size={13} />
+          {rating >= 4.8 && reviewCount >= 5 && (
+            <View style={styles.starSitterBadge}>
+              <Feather name="award" size={10} color="#C4956A" />
+              <Text style={styles.starSitterText}>Star Sitter</Text>
+            </View>
+          )}
         </View>
         <View style={styles.priceTag}>
           <Text style={styles.priceValue}>{pricePerDay}€</Text>
@@ -80,6 +86,36 @@ const PetSitterCard = ({ petsitter, onPress }) => {
       {bio ? (
         <Text style={styles.bio} numberOfLines={2}>{bio}</Text>
       ) : null}
+
+      {/* Response time */}
+      {responseTime && (
+        <View style={styles.metaRow}>
+          <Feather name="clock" size={12} color="#527A56" />
+          <Text style={styles.responseTimeText}>
+            Répond {responseTime === 'fast' ? 'très rapidement' : responseTime === 'medium' ? 'rapidement' : 'dans la journée'}
+          </Text>
+        </View>
+      )}
+
+      {/* Recurring clients */}
+      {recurringClients > 0 && (
+        <View style={styles.metaRow}>
+          <Feather name="repeat" size={12} color={COLORS.secondary || '#C4956A'} />
+          <Text style={styles.recurringText}>
+            {recurringClients} propriétaire{recurringClients > 1 ? 's' : ''} récurrent{recurringClients > 1 ? 's' : ''}
+          </Text>
+        </View>
+      )}
+
+      {/* Review excerpt */}
+      {topReview && (
+        <View style={styles.reviewExcerpt}>
+          <Feather name="message-circle" size={12} color={COLORS.textTertiary || '#999'} />
+          <Text style={styles.reviewExcerptText} numberOfLines={1}>
+            "{topReview}"
+          </Text>
+        </View>
+      )}
 
       {/* Bottom tags */}
       <View style={styles.footer}>
@@ -227,6 +263,51 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontFamily: FONTS.bodyMedium,
     color: COLORS.textTertiary,
+  },
+  starSitterBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#FFF8F0',
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: RADIUS.xs,
+    gap: 3,
+    alignSelf: 'flex-start',
+    marginTop: 4,
+  },
+  starSitterText: {
+    fontSize: 10,
+    fontFamily: FONTS.bodySemiBold,
+    color: '#C4956A',
+  },
+  metaRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    marginTop: 6,
+  },
+  responseTimeText: {
+    fontSize: 11,
+    fontFamily: FONTS.bodySemiBold,
+    color: '#527A56',
+  },
+  recurringText: {
+    fontSize: 11,
+    fontFamily: FONTS.bodyMedium,
+    color: COLORS.secondary || '#C4956A',
+  },
+  reviewExcerpt: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    marginTop: 6,
+  },
+  reviewExcerptText: {
+    fontSize: 11,
+    fontFamily: FONTS.body,
+    color: COLORS.textTertiary || '#999',
+    fontStyle: 'italic',
+    flex: 1,
   },
 });
 

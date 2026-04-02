@@ -1,25 +1,83 @@
-# Pépète — robots.txt
-# https://pepete-front.vercel.app
+# Pepete.fr — robots.txt
+# Le compagnon de vos compagnons
 
 User-agent: *
 Allow: /
 Disallow: /api/
 Disallow: /_expo/
+Disallow: /admin/
 
-# Sitemaps
-Sitemap: https://pepete-front.vercel.app/sitemap.xml
-
-# Crawl-delay (politesse)
-Crawl-delay: 5
-
-# Google
+# ══════════════════════════════════════
+# GOOGLE & BING — Indexation classique
+# ══════════════════════════════════════
 User-agent: Googlebot
 Allow: /
 Disallow: /api/
 Disallow: /_expo/
 
-# Bing
 User-agent: Bingbot
 Allow: /
 Disallow: /api/
 Disallow: /_expo/
+
+# ══════════════════════════════════════
+# AI SEARCH BOTS — On VEUT apparaitre
+# dans les reponses IA (GEO strategy)
+# ══════════════════════════════════════
+
+# ChatGPT Search (OpenAI)
+User-agent: OAI-SearchBot
+Allow: /
+
+# ChatGPT User-triggered fetch
+User-agent: ChatGPT-User
+Allow: /
+
+# Perplexity AI
+User-agent: PerplexityBot
+Allow: /
+
+# Claude Search (Anthropic)
+User-agent: Claude-SearchBot
+Allow: /
+
+# Claude User fetch
+User-agent: Claude-User
+Allow: /
+
+# Google Gemini / AI Overviews
+User-agent: Google-Extended
+Allow: /
+
+# Microsoft Copilot (via Bing)
+User-agent: Bingbot
+Allow: /
+
+# Apple Intelligence
+User-agent: Applebot
+Allow: /
+
+# ══════════════════════════════════════
+# AI TRAINING BOTS — Bloquer l'entrainement
+# mais autoriser la recherche/citation
+# ══════════════════════════════════════
+User-agent: GPTBot
+Disallow: /
+
+User-agent: ClaudeBot
+Disallow: /
+
+User-agent: CCBot
+Disallow: /
+
+User-agent: Meta-ExternalAgent
+Disallow: /
+
+User-agent: FacebookBot
+Disallow: /api/
+
+# Sitemaps
+Sitemap: https://pepete.fr/sitemap.xml
+
+# LLMs context file
+# See: https://pepete.fr/llms.txt

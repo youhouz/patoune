@@ -67,4 +67,9 @@ router.get('/analytics/feedbacks', adminController.getFeedbacks);
 router.put('/analytics/feedbacks/:id', adminController.updateFeedbackStatus);
 router.get('/subscribers', adminController.getSubscribers);
 
+// Pet-sitter management
+router.get('/petsitters', adminController.getAllPetSitters);
+router.put('/petsitters/:id', adminController.updatePetSitter);
+router.delete('/petsitters/:id', adminController.deletePetSitter);
+
 module.exports = router;

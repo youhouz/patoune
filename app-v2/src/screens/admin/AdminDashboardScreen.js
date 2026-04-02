@@ -388,6 +388,21 @@ function renderUsers(charts, g, navigation) {
           <Text style={styles.viewAllText}>Voir tous les utilisateurs</Text>
         </LinearGradient>
       </TouchableOpacity>
+
+      {/* Manage pet-sitters button */}
+      <TouchableOpacity
+        style={[styles.viewAllButton, { marginTop: 10 }]}
+        onPress={() => navigation.navigate('AdminPetSitters')}
+        activeOpacity={0.8}
+      >
+        <LinearGradient
+          colors={['#C4956A', '#A07850']}
+          style={styles.viewAllGradient}
+        >
+          <Feather name="users" size={18} color="#FFF" />
+          <Text style={styles.viewAllText}>Gerer les pet-sitters</Text>
+        </LinearGradient>
+      </TouchableOpacity>
     </>
   );
 }

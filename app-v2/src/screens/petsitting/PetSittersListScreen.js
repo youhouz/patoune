@@ -38,6 +38,15 @@ const RADIUS_FILTERS = [
   { key: 50, label: '50 km' },
 ];
 
+const SERVICE_FILTERS = [
+  { key: 'Tous', icon: 'grid', label: 'Tous' },
+  { key: 'garde_domicile', icon: 'home', label: 'Garde domicile' },
+  { key: 'garde_chez_sitter', icon: 'home', label: 'Hébergement' },
+  { key: 'promenade', icon: 'map-pin', label: 'Promenade' },
+  { key: 'visite', icon: 'eye', label: 'Visite' },
+  { key: 'toilettage', icon: 'scissors', label: 'Toilettage' },
+];
+
 /* ---------- Star Rating ---------- */
 const StarRating = ({ rating, size = 14 }) => {
   const stars = [];
@@ -188,6 +197,12 @@ const PetSitterCard = ({ petsitter, onPress, index }) => {
                   <Text style={styles.verifiedBadgeText}>Verifie</Text>
                 </View>
               )}
+              {petsitter.rating >= 4.8 && petsitter.reviewCount >= 5 && (
+                <View style={styles.starSitterBadge}>
+                  <Feather name="award" size={9} color="#C4956A" />
+                  <Text style={styles.starSitterText}>Star Sitter</Text>
+                </View>
+              )}
             </View>
 
             <View style={styles.ratingRow}>
@@ -216,6 +231,33 @@ const PetSitterCard = ({ petsitter, onPress, index }) => {
                 {bioPreview}
               </Text>
             ) : null}
+
+            {petsitter.responseTime && (
+              <View style={styles.responseTimeBadge}>
+                <Feather name="clock" size={11} color="#527A56" />
+                <Text style={styles.responseTimeText}>
+                  Répond {petsitter.responseTime === 'fast' ? 'très rapidement' : petsitter.responseTime === 'medium' ? 'rapidement' : 'dans la journée'}
+                </Text>
+              </View>
+            )}
+
+            {petsitter.recurringClients > 0 && (
+              <View style={styles.recurringRow}>
+                <Feather name="repeat" size={11} color={colors.secondary} />
+                <Text style={styles.recurringText}>
+                  {petsitter.recurringClients} propriétaire{petsitter.recurringClients > 1 ? 's' : ''} récurrent{petsitter.recurringClients > 1 ? 's' : ''}
+                </Text>
+              </View>
+            )}
+
+            {petsitter.topReview && (
+              <View style={styles.reviewExcerpt}>
+                <Feather name="message-circle" size={11} color={colors.textTertiary} />
+                <Text style={styles.reviewExcerptText} numberOfLines={1}>
+                  "{petsitter.topReview}"
+                </Text>
+              </View>
+            )}
 
             {/* Distance if available */}
             {petsitter.distance != null && (
@@ -274,6 +316,7 @@ const PetSittersListScreen = ({ navigation }) => {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [selectedAnimal, setSelectedAnimal] = useState('Tous');
+  const [selectedService, setSelectedService] = useState('Tous');
   const [selectedRadius, setSelectedRadius] = useState(25);
   const [searchQuery, setSearchQuery] = useState('');
   const [searchFocused, setSearchFocused] = useState(false);
@@ -292,7 +335,7 @@ const PetSittersListScreen = ({ navigation }) => {
 
   useEffect(() => {
     loadPetSitters();
-  }, [selectedAnimal, location, selectedRadius, manualLocation, searchQuery]);
+  }, [selectedAnimal, selectedService, location, selectedRadius, manualLocation, searchQuery]);
 
   const handleCitySearch = async () => {
     if (!citySearchValue.trim()) return;
@@ -320,6 +363,9 @@ const PetSittersListScreen = ({ navigation }) => {
       const params = {};
       if (selectedAnimal !== 'Tous') {
         params.animal = selectedAnimal.toLowerCase();
+      }
+      if (selectedService !== 'Tous') {
+        params.service = selectedService;
       }
       if (searchQuery.trim()) {
         params.search = searchQuery.trim();
@@ -518,6 +564,44 @@ const PetSittersListScreen = ({ navigation }) => {
         />
       </View>
 
+      {/* Service Filter Chips */}
+      <View style={styles.filtersSection}>
+        <FlatList
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          data={SERVICE_FILTERS}
+          keyExtractor={(item) => item.key}
+          renderItem={({ item }) => {
+            const isActive = selectedService === item.key;
+            return (
+              <TouchableOpacity
+                style={[styles.filterChip, isActive && styles.filterChipActive]}
+                onPress={() => setSelectedService(item.key)}
+                activeOpacity={0.7}
+              >
+                {isActive ? (
+                  <LinearGradient
+                    colors={colors.gradientAccent || ['#C4956A', '#A07850']}
+                    style={styles.filterChipGradient}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 0 }}
+                  >
+                    <Feather name={item.icon} size={15} color={colors.white} />
+                    <Text style={[styles.filterText, styles.filterTextActive]}>{item.label}</Text>
+                  </LinearGradient>
+                ) : (
+                  <View style={styles.filterChipInner}>
+                    <Feather name={item.icon} size={15} color={colors.textSecondary} />
+                    <Text style={styles.filterText}>{item.label}</Text>
+                  </View>
+                )}
+              </TouchableOpacity>
+            );
+          }}
+          contentContainerStyle={styles.filterList}
+        />
+      </View>
+
       {/* Radius Filter Pills (only when location or manual location is available) */}
       {(location || manualLocation) && (
         <View style={styles.radiusSection}>
@@ -552,6 +636,14 @@ const PetSittersListScreen = ({ navigation }) => {
               hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
             >
               <Text style={styles.clearFilterText}>Effacer le filtre</Text>
+            </TouchableOpacity>
+          )}
+          {selectedService !== 'Tous' && (
+            <TouchableOpacity
+              onPress={() => setSelectedService('Tous')}
+              hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+            >
+              <Text style={styles.clearFilterText}>Effacer service</Text>
             </TouchableOpacity>
           )}
         </View>
@@ -1154,6 +1246,60 @@ const styles = StyleSheet.create({
     fontSize: FONT_SIZE.base,
     fontFamily: FONTS.heading,
     color: colors.white,
+  },
+
+  // Response time
+  responseTimeBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    marginBottom: SPACING.sm,
+  },
+  responseTimeText: {
+    fontSize: FONT_SIZE.xs,
+    fontFamily: FONTS.bodySemiBold,
+    color: '#527A56',
+  },
+  // Recurring clients
+  recurringRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    marginBottom: SPACING.sm,
+  },
+  recurringText: {
+    fontSize: FONT_SIZE.xs,
+    fontFamily: FONTS.bodyMedium,
+    color: colors.secondary,
+  },
+  // Review excerpt
+  reviewExcerpt: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    marginBottom: SPACING.sm,
+  },
+  reviewExcerptText: {
+    fontSize: FONT_SIZE.xs,
+    fontFamily: FONTS.body,
+    color: colors.textTertiary,
+    fontStyle: 'italic',
+    flex: 1,
+  },
+  // Star Sitter badge
+  starSitterBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#FFF8F0',
+    paddingHorizontal: SPACING.sm,
+    paddingVertical: 2,
+    borderRadius: RADIUS.xs,
+    gap: 3,
+  },
+  starSitterText: {
+    fontSize: FONT_SIZE.xs,
+    fontFamily: FONTS.bodySemiBold,
+    color: '#C4956A',
   },
 });
 

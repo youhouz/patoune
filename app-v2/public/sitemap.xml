@@ -5,48 +5,103 @@
 
   <!-- Page principale -->
   <url>
-    <loc>https://pepete-front.vercel.app/</loc>
-    <lastmod>2026-03-17</lastmod>
+    <loc>https://pepete.fr/</loc>
+    <lastmod>2026-03-31</lastmod>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
-    <xhtml:link rel="alternate" hreflang="fr" href="https://pepete-front.vercel.app/" />
+    <xhtml:link rel="alternate" hreflang="fr" href="https://pepete.fr/" />
     <image:image>
-      <image:loc>https://pepete-front.vercel.app/assets/og-image.png</image:loc>
-      <image:title>Pépète — Le compagnon de vos compagnons</image:title>
-      <image:caption>Application Pépète : scanner produits animaux, garde animaux, assistant IA vétérinaire</image:caption>
+      <image:loc>https://pepete.fr/assets/og-image.png</image:loc>
+      <image:title>Pepete — Le compagnon de vos compagnons</image:title>
     </image:image>
   </url>
 
-  <!-- Scanner produits -->
+  <!-- Landing page SEO -->
   <url>
-    <loc>https://pepete-front.vercel.app/scanner</loc>
-    <lastmod>2026-03-17</lastmod>
+    <loc>https://pepete.fr/landing.html</loc>
+    <lastmod>2026-03-31</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.95</priority>
+  </url>
+
+  <!-- Scanner croquettes -->
+  <url>
+    <loc>https://pepete.fr/scanner</loc>
+    <lastmod>2026-03-31</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://pepete.fr/scanner" />
   </url>
 
   <!-- Garde animaux / Pet-sitting -->
   <url>
-    <loc>https://pepete-front.vercel.app/garde</loc>
-    <lastmod>2026-03-17</lastmod>
+    <loc>https://pepete.fr/garde</loc>
+    <lastmod>2026-03-31</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://pepete.fr/garde" />
   </url>
 
-  <!-- Assistant IA -->
+  <!-- Assistant IA veterinaire -->
   <url>
-    <loc>https://pepete-front.vercel.app/assistant</loc>
-    <lastmod>2026-03-17</lastmod>
+    <loc>https://pepete.fr/assistant</loc>
+    <lastmod>2026-03-31</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://pepete.fr/assistant" />
+  </url>
+
+  <!-- Blog index -->
+  <url>
+    <loc>https://pepete.fr/blog/</loc>
+    <lastmod>2026-03-31</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
 
+  <!-- Articles blog -->
+  <url>
+    <loc>https://pepete.fr/blog/scanner-croquettes-chien-chat.html</loc>
+    <lastmod>2026-03-31</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+
+  <url>
+    <loc>https://pepete.fr/blog/trouver-pet-sitter-confiance.html</loc>
+    <lastmod>2026-03-31</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+
+  <url>
+    <loc>https://pepete.fr/blog/assistant-ia-veterinaire.html</loc>
+    <lastmod>2026-03-31</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+
+  <url>
+    <loc>https://pepete.fr/blog/ingredients-dangereux-croquettes.html</loc>
+    <lastmod>2026-03-31</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+
   <!-- Profil -->
   <url>
-    <loc>https://pepete-front.vercel.app/profil</loc>
-    <lastmod>2026-03-17</lastmod>
+    <loc>https://pepete.fr/profil</loc>
+    <lastmod>2026-03-31</lastmod>
     <changefreq>monthly</changefreq>
-    <priority>0.5</priority>
+    <priority>0.4</priority>
+  </url>
+
+  <!-- LLMs context -->
+  <url>
+    <loc>https://pepete.fr/llms.txt</loc>
+    <lastmod>2026-03-31</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.3</priority>
   </url>
 
 </urlset>
