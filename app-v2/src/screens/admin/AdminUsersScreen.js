@@ -125,22 +125,33 @@ const AdminUsersScreen = ({ navigation }) => {
         </TouchableOpacity>
       </View>
 
-      <FlatList
-        data={users}
-        keyExtractor={(item) => item._id}
-        renderItem={renderUser}
-        contentContainerStyle={styles.list}
-        onEndReached={loadMore}
-        onEndReachedThreshold={0.3}
-        ListEmptyComponent={
-          !loading ? (
+      {Platform.OS === 'web' ? (
+        <View style={styles.webScroll}>
+          {users.length === 0 && !loading ? (
             <Text style={styles.emptyText}>Aucun utilisateur trouve</Text>
-          ) : null
-        }
-        ListFooterComponent={
-          loading ? <ActivityIndicator style={{ padding: SPACING.lg }} color={colors.primary} /> : null
-        }
-      />
+          ) : (
+            users.map((item) => <View key={item._id}>{renderUser({ item })}</View>)
+          )}
+          {loading && <ActivityIndicator style={{ padding: SPACING.lg }} color={colors.primary} />}
+        </View>
+      ) : (
+        <FlatList
+          data={users}
+          keyExtractor={(item) => item._id}
+          renderItem={renderUser}
+          contentContainerStyle={styles.list}
+          onEndReached={loadMore}
+          onEndReachedThreshold={0.3}
+          ListEmptyComponent={
+            !loading ? (
+              <Text style={styles.emptyText}>Aucun utilisateur trouve</Text>
+            ) : null
+          }
+          ListFooterComponent={
+            loading ? <ActivityIndicator style={{ padding: SPACING.lg }} color={colors.primary} /> : null
+          }
+        />
+      )}
     </View>
   );
 };
@@ -154,6 +165,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: colors.background,
+    ...(Platform.OS === 'web' ? { height: '100vh', overflow: 'hidden' } : {}),
   },
   header: {
     flexDirection: 'row',
@@ -218,6 +230,13 @@ const styles = StyleSheet.create({
     backgroundColor: '#527A56',
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  webScroll: {
+    flex: 1,
+    overflowY: 'auto',
+    WebkitOverflowScrolling: 'touch',
+    paddingHorizontal: SPACING.lg,
+    paddingBottom: SPACING['3xl'],
   },
   list: {
     paddingHorizontal: SPACING.lg,
