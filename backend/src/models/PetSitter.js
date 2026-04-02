@@ -64,6 +64,11 @@ const petSitterSchema = new mongoose.Schema({
     type: Boolean,
     default: false
   },
+  responseTime: {
+    type: String,
+    enum: ['fast', 'medium', 'slow'],
+    default: null
+  },
   photos: [{
     type: String
   }]

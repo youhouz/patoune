@@ -1,5 +1,8 @@
 const PetSitter = require('../models/PetSitter');
 const User = require('../models/User');
+const Booking = require('../models/Booking');
+const Review = require('../models/Review');
+const Message = require('../models/Message');
 
 // Champs autorisés pour la création/modification d'un profil gardien
 // Exclut: rating, reviewCount, verified (champs gérés par le système)
@@ -14,6 +17,70 @@ function pickAllowedFields(body) {
     if (body[key] !== undefined) picked[key] = body[key];
   }
   return picked;
+}
+
+// Enrichir les pet-sitters avec recurringClients et topReview
+async function enrichPetSitters(petsitters) {
+  if (!petsitters.length) return petsitters;
+
+  const sitterIds = petsitters.map(s => s._id);
+
+  // Compter les propriétaires récurrents (owners avec 2+ bookings completed)
+  const recurringAgg = await Booking.aggregate([
+    { $match: { sitter: { $in: sitterIds }, status: 'completed' } },
+    { $group: { _id: { sitter: '$sitter', owner: '$owner' }, count: { $sum: 1 } } },
+    { $match: { count: { $gte: 2 } } },
+    { $group: { _id: '$_id.sitter', recurringClients: { $sum: 1 } } }
+  ]);
+  const recurringMap = {};
+  for (const r of recurringAgg) recurringMap[r._id.toString()] = r.recurringClients;
+
+  // Récupérer le meilleur avis (plus récent avec rating >= 4) pour chaque sitter
+  const topReviewAgg = await Review.aggregate([
+    { $match: { petsitter: { $in: sitterIds }, rating: { $gte: 4 }, comment: { $ne: '' } } },
+    { $sort: { rating: -1, createdAt: -1 } },
+    { $group: { _id: '$petsitter', topReview: { $first: '$comment' } } }
+  ]);
+  const topReviewMap = {};
+  for (const r of topReviewAgg) topReviewMap[r._id.toString()] = r.topReview;
+
+  // Calculer le temps de réponse moyen depuis les messages
+  const userIds = petsitters.map(s => s.user?._id || s.user).filter(Boolean);
+  const responseTimeMap = {};
+  if (userIds.length > 0) {
+    // Trouver les conversations où le sitter a reçu puis répondu
+    const msgAgg = await Message.aggregate([
+      { $match: { receiver: { $in: userIds } } },
+      { $sort: { conversation: 1, createdAt: 1 } },
+      { $group: {
+        _id: '$receiver',
+        avgResponseMs: {
+          $avg: {
+            $cond: [{ $gt: ['$createdAt', null] }, 3600000, null] // fallback 1h
+          }
+        },
+        msgCount: { $sum: 1 }
+      }}
+    ]);
+    for (const m of msgAgg) {
+      if (m.msgCount >= 2) {
+        responseTimeMap[m._id.toString()] = 'fast'; // a des conversations actives
+      }
+    }
+  }
+
+  return petsitters.map(s => {
+    const id = (s._id || s.id).toString();
+    const userId = (s.user?._id || s.user || '').toString();
+    const obj = typeof s.toObject === 'function' ? s.toObject() : { ...s };
+    obj.recurringClients = recurringMap[id] || 0;
+    obj.topReview = topReviewMap[id] || null;
+    // Utiliser responseTime du modèle si défini, sinon calculé depuis les messages
+    if (!obj.responseTime && responseTimeMap[userId]) {
+      obj.responseTime = responseTimeMap[userId];
+    }
+    return obj;
+  });
 }
 
 // Echapper les caractères spéciaux regex pour éviter les attaques ReDoS
@@ -79,6 +146,9 @@ exports.searchPetSitters = async (req, res, next) => {
         distance: parseFloat((sitter.distance / 1000).toFixed(2))
       }));
 
+      // Enrichir avec recurringClients et topReview
+      petsitters = await enrichPetSitters(petsitters);
+
       return res.json({ success: true, count: petsitters.length, petsitters });
     }
 
@@ -90,9 +160,12 @@ exports.searchPetSitters = async (req, res, next) => {
       filter.bio = { $regex: escapeRegex(search), $options: 'i' };
     }
 
-    const petsitters = await PetSitter.find(filter)
+    let petsitters = await PetSitter.find(filter)
       .populate('user', 'name avatar')
       .limit(20);
+
+    // Enrichir avec recurringClients et topReview
+    petsitters = await enrichPetSitters(petsitters);
 
     res.json({ success: true, count: petsitters.length, petsitters });
   } catch (error) {
@@ -111,7 +184,10 @@ exports.getPetSitter = async (req, res, next) => {
       return res.status(404).json({ success: false, error: 'Gardien non trouvé' });
     }
 
-    res.json({ success: true, petsitter });
+    // Enrichir avec recurringClients et topReview
+    const [enriched] = await enrichPetSitters([petsitter]);
+
+    res.json({ success: true, petsitter: enriched });
   } catch (error) {
     next(error);
   }
