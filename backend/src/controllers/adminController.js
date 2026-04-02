@@ -327,3 +327,87 @@ exports.getSubscribers = async (req, res, next) => {
     next(error);
   }
 };
+
+// ─── GET /api/admin/petsitters ───────────────────────────────────────────────
+exports.getAllPetSitters = async (req, res, next) => {
+  try {
+    const { search, page = 1 } = req.query;
+    const limit = 30;
+    const skip = (parseInt(page) - 1) * limit;
+
+    const filter = {};
+    if (search) {
+      const escaped = search.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      filter.bio = { $regex: escaped, $options: 'i' };
+    }
+
+    const [petsitters, total] = await Promise.all([
+      PetSitter.find(filter)
+        .populate('user', 'name email avatar phone city')
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limit),
+      PetSitter.countDocuments(filter),
+    ]);
+
+    res.status(200).json({
+      success: true,
+      count: petsitters.length,
+      total,
+      page: parseInt(page),
+      pages: Math.ceil(total / limit),
+      data: petsitters,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// ─── PUT /api/admin/petsitters/:id ───────────────────────────────────────────
+exports.updatePetSitter = async (req, res, next) => {
+  try {
+    const allowedFields = [
+      'bio', 'experience', 'acceptedAnimals', 'services',
+      'pricePerDay', 'pricePerHour', 'availability', 'location',
+      'radius', 'photos', 'verified', 'responseTime', 'rating', 'reviewCount'
+    ];
+    const updates = {};
+    for (const key of allowedFields) {
+      if (req.body[key] !== undefined) updates[key] = req.body[key];
+    }
+
+    const petsitter = await PetSitter.findByIdAndUpdate(
+      req.params.id,
+      updates,
+      { new: true, runValidators: true }
+    ).populate('user', 'name email avatar');
+
+    if (!petsitter) {
+      return res.status(404).json({ success: false, error: 'Pet-sitter non trouvé' });
+    }
+
+    res.status(200).json({ success: true, data: petsitter });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// ─── DELETE /api/admin/petsitters/:id ────────────────────────────────────────
+exports.deletePetSitter = async (req, res, next) => {
+  try {
+    const petsitter = await PetSitter.findById(req.params.id);
+    if (!petsitter) {
+      return res.status(404).json({ success: false, error: 'Pet-sitter non trouvé' });
+    }
+
+    // Remettre le user en mode non-sitter
+    await User.findByIdAndUpdate(petsitter.user, { isPetSitter: false });
+
+    // Supprimer le profil pet-sitter
+    await PetSitter.findByIdAndDelete(req.params.id);
+
+    res.status(200).json({ success: true, message: 'Pet-sitter supprimé' });
+  } catch (error) {
+    next(error);
+  }
+};

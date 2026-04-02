@@ -6,3 +6,8 @@ export const getVisitorAnalyticsAPI = (days) => api.get('/admin/analytics/visito
 export const getFeedbacksAPI = () => api.get('/admin/analytics/feedbacks');
 export const updateFeedbackStatusAPI = (id, status) => api.put(`/admin/analytics/feedbacks/${id}`, { status });
 export const getSubscribersAPI = () => api.get('/admin/subscribers');
+
+// Pet-sitter management
+export const getAdminPetSittersAPI = (params) => api.get('/admin/petsitters', { params });
+export const updateAdminPetSitterAPI = (id, data) => api.put(`/admin/petsitters/${id}`, data);
+export const deleteAdminPetSitterAPI = (id) => api.delete(`/admin/petsitters/${id}`);

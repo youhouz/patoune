@@ -25,6 +25,7 @@ import InstallGuideScreen from '../screens/profile/InstallGuideScreen';
 import ContactScreen from '../screens/profile/ContactScreen';
 import AdminDashboardScreen from '../screens/admin/AdminDashboardScreen';
 import AdminUsersScreen from '../screens/admin/AdminUsersScreen';
+import AdminPetSittersScreen from '../screens/admin/AdminPetSittersScreen';
 
 const Tab = createBottomTabNavigator();
 const RootStack = createStackNavigator();
@@ -149,6 +150,7 @@ const TabNavigator = () => (
     <RootStack.Screen name="AuthStack" component={AuthNavigatorStack} />
     <RootStack.Screen name="AdminDashboard" component={AdminDashboardScreen} />
     <RootStack.Screen name="AdminUsers" component={AdminUsersScreen} />
+    <RootStack.Screen name="AdminPetSitters" component={AdminPetSittersScreen} />
   </RootStack.Navigator>
 );
 
