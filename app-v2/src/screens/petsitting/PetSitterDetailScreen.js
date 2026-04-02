@@ -246,6 +246,14 @@ const PetSitterDetailScreen = ({ route, navigation }) => {
               </View>
             )}
 
+            {/* Star Sitter Badge */}
+            {petsitter.rating >= 4.8 && petsitter.reviewCount >= 5 && (
+              <View style={styles.starSitterBadge}>
+                <Feather name="award" size={14} color="#C4956A" />
+                <Text style={styles.starSitterText}>Star Sitter</Text>
+              </View>
+            )}
+
             {/* Stats row */}
             <View style={styles.statsRow}>
               <View style={styles.statItem}>
@@ -256,6 +264,11 @@ const PetSitterDetailScreen = ({ route, navigation }) => {
               <View style={styles.statItem}>
                 <Text style={styles.statValue}>{petsitter.reviewCount || 0}</Text>
                 <Text style={styles.statLabel}>avis</Text>
+              </View>
+              <View style={styles.statDivider} />
+              <View style={styles.statItem}>
+                <Text style={styles.statValue}>{petsitter.recurringClients || 0}</Text>
+                <Text style={styles.statLabel}>récurrents</Text>
               </View>
               <View style={styles.statDivider} />
               <View style={styles.statItem}>
@@ -283,6 +296,21 @@ const PetSitterDetailScreen = ({ route, navigation }) => {
           opacity: fadeAnim,
           transform: [{ translateY: slideAnim }],
         }}>
+          {/* Response Time */}
+          {petsitter.responseTime && (
+            <View style={styles.responseTimeCard}>
+              <Feather name="zap" size={18} color="#527A56" />
+              <View style={styles.responseTimeInfo}>
+                <Text style={styles.responseTimeTitle}>
+                  Répond {petsitter.responseTime === 'fast' ? 'très rapidement' : petsitter.responseTime === 'medium' ? 'rapidement' : 'dans la journée'}
+                </Text>
+                <Text style={styles.responseTimeDesc}>
+                  {petsitter.responseTime === 'fast' ? 'Généralement en moins d\'une heure' : petsitter.responseTime === 'medium' ? 'Généralement en quelques heures' : 'Répond sous 24h'}
+                </Text>
+              </View>
+            </View>
+          )}
+
           {/* Bio */}
           {petsitter.bio ? (
             <SectionCard title="A propos" iconName="edit-3">
@@ -659,6 +687,24 @@ const styles = StyleSheet.create({
     fontFamily: FONTS.bodySemiBold,
     color: '#6B8F71',
   },
+  // Star Sitter Badge
+  starSitterBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(196, 149, 106, 0.2)',
+    paddingHorizontal: SPACING.md,
+    paddingVertical: SPACING.xs + 2,
+    borderRadius: RADIUS.full,
+    gap: SPACING.xs,
+    marginBottom: SPACING.lg,
+    borderWidth: 1,
+    borderColor: 'rgba(196, 149, 106, 0.35)',
+  },
+  starSitterText: {
+    fontSize: FONT_SIZE.sm,
+    fontFamily: FONTS.bodySemiBold,
+    color: '#C4956A',
+  },
   statsRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -695,6 +741,34 @@ const styles = StyleSheet.create({
   photosSectionTitle: { fontFamily: FONTS.heading, fontSize: 18, color: colors.text, marginBottom: 12 },
   photosScroll: { gap: 12 },
   galleryPhoto: { width: 200, height: 150, borderRadius: 16, backgroundColor: colors.background },
+
+  // Response Time Card
+  responseTimeCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#EFF5F0',
+    marginHorizontal: SPACING.base,
+    marginTop: SPACING.base,
+    borderRadius: RADIUS.xl,
+    padding: SPACING.base,
+    gap: SPACING.md,
+    borderWidth: 1,
+    borderColor: '#527A5620',
+  },
+  responseTimeInfo: {
+    flex: 1,
+  },
+  responseTimeTitle: {
+    fontSize: FONT_SIZE.base,
+    fontFamily: FONTS.bodySemiBold,
+    color: '#527A56',
+  },
+  responseTimeDesc: {
+    fontSize: FONT_SIZE.xs,
+    fontFamily: FONTS.body,
+    color: colors.textTertiary,
+    marginTop: 2,
+  },
 
   // Section Card
   sectionCard: {
