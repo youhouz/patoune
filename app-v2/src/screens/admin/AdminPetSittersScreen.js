@@ -230,25 +230,39 @@ const AdminPetSittersScreen = ({ navigation }) => {
         </TouchableOpacity>
       </View>
 
-      <FlatList
-        data={petsitters}
-        keyExtractor={(item) => item._id}
-        renderItem={renderSitter}
-        contentContainerStyle={styles.list}
-        onEndReached={loadMore}
-        onEndReachedThreshold={0.3}
-        ListEmptyComponent={
-          !loading ? (
+      {Platform.OS === 'web' ? (
+        <View style={styles.webScroll}>
+          {petsitters.length === 0 && !loading ? (
             <View style={styles.emptyContainer}>
               <Feather name="users" size={40} color={colors.textTertiary} />
               <Text style={styles.emptyText}>Aucun pet-sitter trouve</Text>
             </View>
-          ) : null
-        }
-        ListFooterComponent={
-          loading ? <ActivityIndicator style={{ padding: SPACING.lg }} color={colors.primary} /> : null
-        }
-      />
+          ) : (
+            petsitters.map((item) => <View key={item._id}>{renderSitter({ item })}</View>)
+          )}
+          {loading && <ActivityIndicator style={{ padding: SPACING.lg }} color={colors.primary} />}
+        </View>
+      ) : (
+        <FlatList
+          data={petsitters}
+          keyExtractor={(item) => item._id}
+          renderItem={renderSitter}
+          contentContainerStyle={styles.list}
+          onEndReached={loadMore}
+          onEndReachedThreshold={0.3}
+          ListEmptyComponent={
+            !loading ? (
+              <View style={styles.emptyContainer}>
+                <Feather name="users" size={40} color={colors.textTertiary} />
+                <Text style={styles.emptyText}>Aucun pet-sitter trouve</Text>
+              </View>
+            ) : null
+          }
+          ListFooterComponent={
+            loading ? <ActivityIndicator style={{ padding: SPACING.lg }} color={colors.primary} /> : null
+          }
+        />
+      )}
 
       {/* Edit Modal */}
       <Modal visible={!!editModal} transparent animationType="slide">
@@ -325,6 +339,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: colors.background,
+    ...(Platform.OS === 'web' ? { height: '100vh', overflow: 'hidden' } : {}),
   },
   header: {
     flexDirection: 'row',
@@ -389,6 +404,13 @@ const styles = StyleSheet.create({
     backgroundColor: '#527A56',
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  webScroll: {
+    flex: 1,
+    overflowY: 'auto',
+    WebkitOverflowScrolling: 'touch',
+    paddingHorizontal: SPACING.lg,
+    paddingBottom: SPACING['3xl'],
   },
   list: {
     paddingHorizontal: SPACING.lg,

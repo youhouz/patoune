@@ -453,6 +453,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: colors.background,
+    ...(Platform.OS === 'web' ? { height: '100vh', overflow: 'hidden' } : {}),
   },
   loadingContainer: {
     flex: 1,
@@ -556,7 +557,10 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
 
-  scrollView: { flex: 1 },
+  scrollView: {
+    flex: 1,
+    ...(Platform.OS === 'web' ? { overflowY: 'auto', WebkitOverflowScrolling: 'touch' } : {}),
+  },
   scrollContent: {
     paddingHorizontal: SPACING.lg,
     paddingTop: SPACING.lg,
