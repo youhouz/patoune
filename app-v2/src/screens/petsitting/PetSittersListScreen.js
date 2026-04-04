@@ -368,6 +368,8 @@ const PetSittersListScreen = ({ navigation }) => {
 
   const computeFilterCount = () => {
     let count = 0;
+    if (selectedAnimal !== 'Tous') count++;
+    if (selectedService !== 'Tous') count++;
     if (priceMin) count++;
     if (priceMax) count++;
     if (verifiedOnly) count++;
@@ -384,6 +386,9 @@ const PetSittersListScreen = ({ navigation }) => {
   };
 
   const resetFilters = () => {
+    setSelectedAnimal('Tous');
+    setSelectedService('Tous');
+    setSelectedRadius(25);
     setPriceMin('');
     setPriceMax('');
     setVerifiedOnly(false);
@@ -609,98 +614,18 @@ const PetSittersListScreen = ({ navigation }) => {
         </TouchableOpacity>
       </LinearGradient>
 
-      {/* Filter Chips */}
-      <View style={styles.filtersSection}>
-        <FlatList
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          data={ANIMAL_FILTERS}
-          keyExtractor={(item) => item.key}
-          renderItem={renderFilterChip}
-          contentContainerStyle={styles.filterList}
-        />
-      </View>
-
-      {/* Service Filter Chips */}
-      <View style={styles.filtersSection}>
-        <FlatList
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          data={SERVICE_FILTERS}
-          keyExtractor={(item) => item.key}
-          renderItem={({ item }) => {
-            const isActive = selectedService === item.key;
-            return (
-              <TouchableOpacity
-                style={[styles.filterChip, isActive && styles.filterChipActive]}
-                onPress={() => setSelectedService(item.key)}
-                activeOpacity={0.7}
-              >
-                {isActive ? (
-                  <LinearGradient
-                    colors={colors.gradientAccent || ['#C4956A', '#A07850']}
-                    style={styles.filterChipGradient}
-                    start={{ x: 0, y: 0 }}
-                    end={{ x: 1, y: 0 }}
-                  >
-                    <Feather name={item.icon} size={15} color={colors.white} />
-                    <Text style={[styles.filterText, styles.filterTextActive]}>{item.label}</Text>
-                  </LinearGradient>
-                ) : (
-                  <View style={styles.filterChipInner}>
-                    <Feather name={item.icon} size={15} color={colors.textSecondary} />
-                    <Text style={styles.filterText}>{item.label}</Text>
-                  </View>
-                )}
-              </TouchableOpacity>
-            );
-          }}
-          contentContainerStyle={styles.filterList}
-        />
-      </View>
-
-      {/* Radius Filter Pills (only when location or manual location is available) */}
-      {(location || manualLocation) && (
-        <View style={styles.radiusSection}>
-          <Feather name="target" size={13} color={colors.textTertiary} style={{ marginRight: SPACING.sm }} />
-          {RADIUS_FILTERS.map((rf) => {
-            const isActive = selectedRadius === rf.key;
-            return (
-              <TouchableOpacity
-                key={rf.key}
-                style={[styles.radiusPill, isActive && styles.radiusPillActive]}
-                onPress={() => setSelectedRadius(rf.key)}
-                activeOpacity={0.7}
-              >
-                <Text style={[styles.radiusPillText, isActive && styles.radiusPillTextActive]}>
-                  {rf.label}
-                </Text>
-              </TouchableOpacity>
-            );
-          })}
-        </View>
-      )}
-
       {/* Results count */}
       {!loading && (
         <View style={styles.resultsCount}>
           <Text style={styles.resultsText}>
             {filteredPetsitters.length} pet-sitter{filteredPetsitters.length !== 1 ? 's' : ''} disponible{filteredPetsitters.length !== 1 ? 's' : ''}
           </Text>
-          {selectedAnimal !== 'Tous' && (
+          {activeFilterCount > 0 && (
             <TouchableOpacity
-              onPress={() => setSelectedAnimal('Tous')}
+              onPress={() => { resetFilters(); }}
               hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
             >
-              <Text style={styles.clearFilterText}>Effacer le filtre</Text>
-            </TouchableOpacity>
-          )}
-          {selectedService !== 'Tous' && (
-            <TouchableOpacity
-              onPress={() => setSelectedService('Tous')}
-              hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-            >
-              <Text style={styles.clearFilterText}>Effacer service</Text>
+              <Text style={styles.clearFilterText}>Effacer les filtres</Text>
             </TouchableOpacity>
           )}
         </View>
@@ -822,7 +747,61 @@ const PetSittersListScreen = ({ navigation }) => {
             </View>
 
             <ScrollView showsVerticalScrollIndicator={false} style={styles.modalScroll}>
+              {/* Animal Type */}
+              <Text style={styles.modalSectionTitle}>Type d'animal</Text>
+              <View style={styles.expChips}>
+                {ANIMAL_FILTERS.map((af) => (
+                  <TouchableOpacity
+                    key={af.key}
+                    style={[styles.expChip, selectedAnimal === af.key && styles.expChipActive]}
+                    onPress={() => setSelectedAnimal(af.key)}
+                    activeOpacity={0.7}
+                  >
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                      <Feather name={af.icon} size={14} color={selectedAnimal === af.key ? colors.primary : colors.textSecondary} />
+                      <Text style={[styles.expChipText, selectedAnimal === af.key && styles.expChipTextActive]}>{af.label}</Text>
+                    </View>
+                  </TouchableOpacity>
+                ))}
+              </View>
+
+              {/* Service Type */}
+              <View style={styles.modalDivider} />
+              <Text style={styles.modalSectionTitle}>Type de service</Text>
+              <View style={styles.expChips}>
+                {SERVICE_FILTERS.map((sf) => (
+                  <TouchableOpacity
+                    key={sf.key}
+                    style={[styles.expChip, selectedService === sf.key && styles.expChipActive]}
+                    onPress={() => setSelectedService(sf.key)}
+                    activeOpacity={0.7}
+                  >
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                      <Feather name={sf.icon} size={14} color={selectedService === sf.key ? colors.primary : colors.textSecondary} />
+                      <Text style={[styles.expChipText, selectedService === sf.key && styles.expChipTextActive]}>{sf.label}</Text>
+                    </View>
+                  </TouchableOpacity>
+                ))}
+              </View>
+
+              {/* Radius */}
+              <View style={styles.modalDivider} />
+              <Text style={styles.modalSectionTitle}>Rayon de recherche</Text>
+              <View style={styles.expChips}>
+                {RADIUS_FILTERS.map((rf) => (
+                  <TouchableOpacity
+                    key={rf.key}
+                    style={[styles.expChip, selectedRadius === rf.key && styles.expChipActive]}
+                    onPress={() => setSelectedRadius(rf.key)}
+                    activeOpacity={0.7}
+                  >
+                    <Text style={[styles.expChipText, selectedRadius === rf.key && styles.expChipTextActive]}>{rf.label}</Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+
               {/* Price Range */}
+              <View style={styles.modalDivider} />
               <Text style={styles.modalSectionTitle}>Tarif par nuit</Text>
               <View style={styles.priceRangeRow}>
                 <View style={styles.priceInputWrap}>
