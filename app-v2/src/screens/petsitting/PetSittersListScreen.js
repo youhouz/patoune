@@ -597,21 +597,6 @@ const PetSittersListScreen = ({ navigation }) => {
             </TouchableOpacity>
           )}
         </View>
-
-        {/* Filter Button */}
-        <TouchableOpacity
-          style={styles.filterButton}
-          onPress={() => setFilterModalVisible(true)}
-          activeOpacity={0.7}
-        >
-          <Feather name="sliders" size={18} color={colors.white} />
-          <Text style={styles.filterButtonText}>Filtres</Text>
-          {activeFilterCount > 0 && (
-            <View style={styles.filterBadge}>
-              <Text style={styles.filterBadgeText}>{activeFilterCount}</Text>
-            </View>
-          )}
-        </TouchableOpacity>
       </LinearGradient>
 
       {/* Results count */}
@@ -733,6 +718,28 @@ const PetSittersListScreen = ({ navigation }) => {
           )}
         />
       )}
+
+      {/* Floating Filter Button */}
+      <TouchableOpacity
+        style={styles.floatingFilterBtn}
+        onPress={() => setFilterModalVisible(true)}
+        activeOpacity={0.85}
+      >
+        <LinearGradient
+          colors={['#3A4E3D', '#527A56']}
+          style={styles.floatingFilterGradient}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 0 }}
+        >
+          <Feather name="sliders" size={17} color={colors.white} />
+          <Text style={styles.floatingFilterText}>Filtres</Text>
+          {activeFilterCount > 0 && (
+            <View style={styles.floatingFilterBadge}>
+              <Text style={styles.floatingFilterBadgeText}>{activeFilterCount}</Text>
+            </View>
+          )}
+        </LinearGradient>
+      </TouchableOpacity>
 
       {/* Filter Modal */}
       <Modal visible={filterModalVisible} transparent animationType="slide">
@@ -1476,35 +1483,41 @@ const styles = StyleSheet.create({
     color: '#C4956A',
   },
 
-  // Filter Button
-  filterButton: {
+  // Floating Filter Button
+  floatingFilterBtn: {
+    position: 'absolute',
+    bottom: Platform.OS === 'ios' ? 30 : 20,
+    alignSelf: 'center',
+    borderRadius: RADIUS.full,
+    overflow: 'hidden',
+    ...SHADOWS.lg,
+    elevation: 8,
+    zIndex: 100,
+  },
+  floatingFilterGradient: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: 'rgba(255,255,255,0.18)',
-    borderRadius: RADIUS.xl,
-    paddingHorizontal: SPACING.lg,
-    paddingVertical: SPACING.md,
-    marginTop: SPACING.md,
+    paddingHorizontal: SPACING.xl + 4,
+    paddingVertical: SPACING.md + 4,
+    borderRadius: RADIUS.full,
     gap: SPACING.sm,
-    borderWidth: 1.5,
-    borderColor: 'rgba(255,255,255,0.25)',
   },
-  filterButtonText: {
+  floatingFilterText: {
     fontSize: FONT_SIZE.base,
-    fontFamily: FONTS.bodySemiBold,
+    fontFamily: FONTS.heading,
     color: colors.white,
+    letterSpacing: 0.3,
   },
-  filterBadge: {
+  floatingFilterBadge: {
     backgroundColor: '#C4956A',
     width: 22,
     height: 22,
     borderRadius: 11,
     alignItems: 'center',
     justifyContent: 'center',
-    marginLeft: SPACING.xs,
+    marginLeft: 2,
   },
-  filterBadgeText: {
+  floatingFilterBadgeText: {
     fontSize: FONT_SIZE.xs,
     fontFamily: FONTS.heading,
     color: '#FFF',
