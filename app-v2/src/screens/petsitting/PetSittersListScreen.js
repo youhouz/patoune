@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import {
   View, Text, FlatList, StyleSheet, ActivityIndicator,
   TouchableOpacity, TextInput, Platform, Animated, RefreshControl,
-  StatusBar, Image,
+  StatusBar, Image, Modal, Switch, ScrollView,
 } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -327,6 +327,15 @@ const PetSittersListScreen = ({ navigation }) => {
   const [citySearchLoading, setCitySearchLoading] = useState(false);
   const scrollY = useRef(new Animated.Value(0)).current;
 
+  const [filterModalVisible, setFilterModalVisible] = useState(false);
+  const [priceMin, setPriceMin] = useState('');
+  const [priceMax, setPriceMax] = useState('');
+  const [verifiedOnly, setVerifiedOnly] = useState(false);
+  const [starSitterOnly, setStarSitterOnly] = useState(false);
+  const [minExperience, setMinExperience] = useState(0);
+  const [fastResponseOnly, setFastResponseOnly] = useState(false);
+  const [activeFilterCount, setActiveFilterCount] = useState(0);
+
   const { location, city, loading: locationLoading, error: locationError, approximate, requestLocation } = useLocation();
 
   useEffect(() => {
@@ -335,7 +344,7 @@ const PetSittersListScreen = ({ navigation }) => {
 
   useEffect(() => {
     loadPetSitters();
-  }, [selectedAnimal, selectedService, location, selectedRadius, manualLocation, searchQuery]);
+  }, [selectedAnimal, selectedService, location, selectedRadius, manualLocation, searchQuery, priceMin, priceMax, verifiedOnly, starSitterOnly, minExperience, fastResponseOnly]);
 
   const handleCitySearch = async () => {
     if (!citySearchValue.trim()) return;
@@ -357,6 +366,33 @@ const PetSittersListScreen = ({ navigation }) => {
     }
   };
 
+  const computeFilterCount = () => {
+    let count = 0;
+    if (priceMin) count++;
+    if (priceMax) count++;
+    if (verifiedOnly) count++;
+    if (starSitterOnly) count++;
+    if (minExperience > 0) count++;
+    if (fastResponseOnly) count++;
+    return count;
+  };
+
+  const applyFilters = () => {
+    setActiveFilterCount(computeFilterCount());
+    setFilterModalVisible(false);
+    loadPetSitters();
+  };
+
+  const resetFilters = () => {
+    setPriceMin('');
+    setPriceMax('');
+    setVerifiedOnly(false);
+    setStarSitterOnly(false);
+    setMinExperience(0);
+    setFastResponseOnly(false);
+    setActiveFilterCount(0);
+  };
+
   const loadPetSitters = async () => {
     if (!refreshing) setLoading(true);
     try {
@@ -376,6 +412,12 @@ const PetSittersListScreen = ({ navigation }) => {
         params.lng = searchLoc.longitude;
         params.radius = selectedRadius;
       }
+      if (priceMin) params.priceMin = priceMin;
+      if (priceMax) params.priceMax = priceMax;
+      if (verifiedOnly) params.verified = 'true';
+      if (starSitterOnly) params.starSitter = 'true';
+      if (minExperience > 0) params.minExperience = minExperience;
+      if (fastResponseOnly) params.responseTime = 'fast';
       const response = await searchPetSittersAPI(params);
       setPetsitters(response.data?.petsitters || []);
     } catch (error) {
@@ -550,6 +592,21 @@ const PetSittersListScreen = ({ navigation }) => {
             </TouchableOpacity>
           )}
         </View>
+
+        {/* Filter Button */}
+        <TouchableOpacity
+          style={styles.filterButton}
+          onPress={() => setFilterModalVisible(true)}
+          activeOpacity={0.7}
+        >
+          <Feather name="sliders" size={18} color={colors.white} />
+          <Text style={styles.filterButtonText}>Filtres</Text>
+          {activeFilterCount > 0 && (
+            <View style={styles.filterBadge}>
+              <Text style={styles.filterBadgeText}>{activeFilterCount}</Text>
+            </View>
+          )}
+        </TouchableOpacity>
       </LinearGradient>
 
       {/* Filter Chips */}
@@ -751,6 +808,144 @@ const PetSittersListScreen = ({ navigation }) => {
           )}
         />
       )}
+
+      {/* Filter Modal */}
+      <Modal visible={filterModalVisible} transparent animationType="slide">
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            {/* Header */}
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>Filtres</Text>
+              <TouchableOpacity onPress={() => setFilterModalVisible(false)} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
+                <Feather name="x" size={24} color={colors.text} />
+              </TouchableOpacity>
+            </View>
+
+            <ScrollView showsVerticalScrollIndicator={false} style={styles.modalScroll}>
+              {/* Price Range */}
+              <Text style={styles.modalSectionTitle}>Tarif par nuit</Text>
+              <View style={styles.priceRangeRow}>
+                <View style={styles.priceInputWrap}>
+                  <Text style={styles.priceInputLabel}>Min</Text>
+                  <TextInput
+                    style={styles.priceInput}
+                    value={priceMin}
+                    onChangeText={setPriceMin}
+                    keyboardType="numeric"
+                    placeholder="1 €"
+                    placeholderTextColor={colors.textTertiary}
+                  />
+                </View>
+                <Text style={styles.priceSeparator}>—</Text>
+                <View style={styles.priceInputWrap}>
+                  <Text style={styles.priceInputLabel}>Max</Text>
+                  <TextInput
+                    style={styles.priceInput}
+                    value={priceMax}
+                    onChangeText={setPriceMax}
+                    keyboardType="numeric"
+                    placeholder="150 €"
+                    placeholderTextColor={colors.textTertiary}
+                  />
+                </View>
+              </View>
+
+              {/* Star Sitters Only */}
+              <View style={styles.modalDivider} />
+              <Text style={styles.modalSectionTitle}>Star Sitters</Text>
+              <View style={styles.toggleRow}>
+                <View style={styles.toggleInfo}>
+                  <Feather name="award" size={18} color="#C4956A" />
+                  <Text style={styles.toggleLabel}>Afficher uniquement les Star Sitters</Text>
+                </View>
+                <Switch
+                  value={starSitterOnly}
+                  onValueChange={setStarSitterOnly}
+                  trackColor={{ false: colors.border, true: '#C4956A' }}
+                  thumbColor={starSitterOnly ? '#FFF' : '#F4F4F4'}
+                />
+              </View>
+
+              {/* Verified Only */}
+              <View style={styles.modalDivider} />
+              <Text style={styles.modalSectionTitle}>Profil verifie</Text>
+              <View style={styles.toggleRow}>
+                <View style={styles.toggleInfo}>
+                  <Feather name="check-circle" size={18} color="#527A56" />
+                  <Text style={styles.toggleLabel}>Uniquement les profils verifies</Text>
+                </View>
+                <Switch
+                  value={verifiedOnly}
+                  onValueChange={setVerifiedOnly}
+                  trackColor={{ false: colors.border, true: '#527A56' }}
+                  thumbColor={verifiedOnly ? '#FFF' : '#F4F4F4'}
+                />
+              </View>
+
+              {/* Response Time */}
+              <View style={styles.modalDivider} />
+              <Text style={styles.modalSectionTitle}>Temps de reponse</Text>
+              <View style={styles.toggleRow}>
+                <View style={styles.toggleInfo}>
+                  <Feather name="zap" size={18} color="#527A56" />
+                  <Text style={styles.toggleLabel}>Repond tres rapidement</Text>
+                </View>
+                <Switch
+                  value={fastResponseOnly}
+                  onValueChange={setFastResponseOnly}
+                  trackColor={{ false: colors.border, true: '#527A56' }}
+                  thumbColor={fastResponseOnly ? '#FFF' : '#F4F4F4'}
+                />
+              </View>
+
+              {/* Experience */}
+              <View style={styles.modalDivider} />
+              <Text style={styles.modalSectionTitle}>Experience minimum</Text>
+              <View style={styles.expChips}>
+                {[0, 1, 2, 3, 5].map((y) => (
+                  <TouchableOpacity
+                    key={y}
+                    style={[styles.expChip, minExperience === y && styles.expChipActive]}
+                    onPress={() => setMinExperience(y)}
+                    activeOpacity={0.7}
+                  >
+                    <Text style={[styles.expChipText, minExperience === y && styles.expChipTextActive]}>
+                      {y === 0 ? 'Tous' : `${y}+ ans`}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+
+              <View style={{ height: 30 }} />
+            </ScrollView>
+
+            {/* Bottom Actions */}
+            <View style={styles.modalActions}>
+              <TouchableOpacity
+                style={styles.modalResetBtn}
+                onPress={resetFilters}
+                activeOpacity={0.7}
+              >
+                <Text style={styles.modalResetText}>Tout reinitialiser</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.modalApplyBtn}
+                onPress={applyFilters}
+                activeOpacity={0.7}
+              >
+                <LinearGradient
+                  colors={colors.gradientPrimary}
+                  style={styles.modalApplyGradient}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 0 }}
+                >
+                  <Text style={styles.modalApplyText}>Utiliser</Text>
+                </LinearGradient>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 };
@@ -1300,6 +1495,200 @@ const styles = StyleSheet.create({
     fontSize: FONT_SIZE.xs,
     fontFamily: FONTS.bodySemiBold,
     color: '#C4956A',
+  },
+
+  // Filter Button
+  filterButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: 'rgba(255,255,255,0.18)',
+    borderRadius: RADIUS.xl,
+    paddingHorizontal: SPACING.lg,
+    paddingVertical: SPACING.md,
+    marginTop: SPACING.md,
+    gap: SPACING.sm,
+    borderWidth: 1.5,
+    borderColor: 'rgba(255,255,255,0.25)',
+  },
+  filterButtonText: {
+    fontSize: FONT_SIZE.base,
+    fontFamily: FONTS.bodySemiBold,
+    color: colors.white,
+  },
+  filterBadge: {
+    backgroundColor: '#C4956A',
+    width: 22,
+    height: 22,
+    borderRadius: 11,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginLeft: SPACING.xs,
+  },
+  filterBadgeText: {
+    fontSize: FONT_SIZE.xs,
+    fontFamily: FONTS.heading,
+    color: '#FFF',
+  },
+
+  // Modal
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'flex-end',
+  },
+  modalContent: {
+    backgroundColor: colors.white,
+    borderTopLeftRadius: RADIUS['2xl'],
+    borderTopRightRadius: RADIUS['2xl'],
+    maxHeight: '85%',
+    paddingTop: SPACING.lg,
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: SPACING.xl,
+    paddingBottom: SPACING.base,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.borderLight,
+  },
+  modalTitle: {
+    fontSize: FONT_SIZE.xl,
+    fontFamily: FONTS.heading,
+    color: colors.text,
+  },
+  modalScroll: {
+    paddingHorizontal: SPACING.xl,
+    paddingTop: SPACING.lg,
+  },
+  modalSectionTitle: {
+    fontSize: FONT_SIZE.base,
+    fontFamily: FONTS.heading,
+    color: colors.text,
+    marginBottom: SPACING.md,
+  },
+  modalDivider: {
+    height: 1,
+    backgroundColor: colors.borderLight,
+    marginVertical: SPACING.lg,
+  },
+
+  // Price Range
+  priceRangeRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: SPACING.md,
+  },
+  priceInputWrap: {
+    flex: 1,
+  },
+  priceInputLabel: {
+    fontSize: FONT_SIZE.xs,
+    fontFamily: FONTS.bodyMedium,
+    color: colors.textTertiary,
+    marginBottom: SPACING.xs,
+  },
+  priceInput: {
+    backgroundColor: colors.background,
+    borderRadius: RADIUS.lg,
+    paddingHorizontal: SPACING.base,
+    paddingVertical: SPACING.md,
+    fontSize: FONT_SIZE.base,
+    fontFamily: FONTS.body,
+    color: colors.text,
+    borderWidth: 1.5,
+    borderColor: colors.border,
+    textAlign: 'center',
+  },
+  priceSeparator: {
+    fontSize: FONT_SIZE.lg,
+    color: colors.textTertiary,
+    marginTop: SPACING.lg,
+  },
+
+  // Toggle rows
+  toggleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  toggleInfo: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: SPACING.md,
+    flex: 1,
+  },
+  toggleLabel: {
+    fontSize: FONT_SIZE.sm,
+    fontFamily: FONTS.bodyMedium,
+    color: colors.text,
+    flex: 1,
+  },
+
+  // Experience chips
+  expChips: {
+    flexDirection: 'row',
+    gap: SPACING.sm,
+    flexWrap: 'wrap',
+  },
+  expChip: {
+    paddingHorizontal: SPACING.lg,
+    paddingVertical: SPACING.md,
+    borderRadius: RADIUS.lg,
+    borderWidth: 1.5,
+    borderColor: colors.border,
+    backgroundColor: colors.white,
+  },
+  expChipActive: {
+    borderColor: colors.primary,
+    backgroundColor: colors.primarySoft,
+  },
+  expChipText: {
+    fontSize: FONT_SIZE.sm,
+    fontFamily: FONTS.bodySemiBold,
+    color: colors.textSecondary,
+  },
+  expChipTextActive: {
+    color: colors.primary,
+  },
+
+  // Modal actions
+  modalActions: {
+    flexDirection: 'row',
+    paddingHorizontal: SPACING.xl,
+    paddingVertical: SPACING.lg,
+    paddingBottom: Platform.OS === 'ios' ? 40 : SPACING.lg,
+    gap: SPACING.md,
+    borderTopWidth: 1,
+    borderTopColor: colors.borderLight,
+  },
+  modalResetBtn: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: SPACING.md + 4,
+  },
+  modalResetText: {
+    fontSize: FONT_SIZE.sm,
+    fontFamily: FONTS.bodySemiBold,
+    color: colors.primary,
+  },
+  modalApplyBtn: {
+    flex: 2,
+    borderRadius: RADIUS.xl,
+    overflow: 'hidden',
+  },
+  modalApplyGradient: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: SPACING.md + 4,
+    borderRadius: RADIUS.xl,
+  },
+  modalApplyText: {
+    fontSize: FONT_SIZE.base,
+    fontFamily: FONTS.heading,
+    color: colors.white,
   },
 });
 
