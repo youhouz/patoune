@@ -92,7 +92,8 @@ function escapeRegex(str) {
 // @route   GET /api/petsitters?lat=&lng=&radius=&animal=&service=&search=
 exports.searchPetSitters = async (req, res, next) => {
   try {
-    const { lat, lng, radius = 10, animal, service, search } = req.query;
+    const { lat, lng, radius = 10, animal, service, search,
+            priceMin, priceMax, verified, starSitter, minExperience, responseTime: rtFilter } = req.query;
 
     // Si coordonnées fournies, utiliser $geoNear pour obtenir la distance
     if (lat && lng) {
@@ -124,6 +125,18 @@ exports.searchPetSitters = async (req, res, next) => {
       if (search) {
         matchStage.bio = { $regex: escapeRegex(search), $options: 'i' };
       }
+      if (priceMin || priceMax) {
+        matchStage.pricePerDay = {};
+        if (priceMin) matchStage.pricePerDay.$gte = parseFloat(priceMin);
+        if (priceMax) matchStage.pricePerDay.$lte = parseFloat(priceMax);
+      }
+      if (verified === 'true') matchStage.verified = true;
+      if (starSitter === 'true') {
+        matchStage.rating = { $gte: 4.8 };
+        matchStage.reviewCount = { $gte: 5 };
+      }
+      if (minExperience) matchStage.experience = { $gte: parseInt(minExperience) };
+      if (rtFilter) matchStage.responseTime = rtFilter;
 
       if (Object.keys(matchStage).length > 0) {
         pipeline.push({ $match: matchStage });
@@ -159,6 +172,18 @@ exports.searchPetSitters = async (req, res, next) => {
     if (search) {
       filter.bio = { $regex: escapeRegex(search), $options: 'i' };
     }
+    if (priceMin || priceMax) {
+      filter.pricePerDay = {};
+      if (priceMin) filter.pricePerDay.$gte = parseFloat(priceMin);
+      if (priceMax) filter.pricePerDay.$lte = parseFloat(priceMax);
+    }
+    if (verified === 'true') filter.verified = true;
+    if (starSitter === 'true') {
+      filter.rating = { $gte: 4.8 };
+      filter.reviewCount = { $gte: 5 };
+    }
+    if (minExperience) filter.experience = { $gte: parseInt(minExperience) };
+    if (rtFilter) filter.responseTime = rtFilter;
 
     let petsitters = await PetSitter.find(filter)
       .populate('user', 'name avatar')
