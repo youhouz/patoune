@@ -88,6 +88,18 @@ exports.scanProduct = async (req, res, next) => {
         if (newBadges.length > 0) userDoc.badges.push(...newBadges);
 
         await userDoc.save();
+
+        // Retourner les infos gamification avec la réponse
+        return res.json({
+          success: true,
+          product,
+          gamification: {
+            totalScans: userDoc.totalScans,
+            scanStreak: userDoc.scanStreak,
+            newBadges,
+            badges: userDoc.badges,
+          },
+        });
       }
     }
 
@@ -193,6 +205,37 @@ exports.getPopularProducts = async (req, res, next) => {
     }
 
     res.json({ success: true, count: popular.length, products: popular });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// @desc    Alternatives mieux notees pour un produit
+// @route   GET /api/products/:id/alternatives
+exports.getAlternatives = async (req, res, next) => {
+  try {
+    const product = await Product.findById(req.params.id);
+    if (!product) {
+      return res.status(404).json({ success: false, error: 'Produit non trouve' });
+    }
+
+    // Chercher des produits mieux notes dans la meme categorie/animal
+    const filter = {
+      _id: { $ne: product._id },
+      nutritionScore: { $gt: (product.nutritionScore || 0) + 10 },
+    };
+    if (product.category) filter.category = product.category;
+    if (product.targetAnimal?.length > 0) {
+      filter.targetAnimal = { $in: product.targetAnimal };
+    }
+
+    const alternatives = await Product.find(filter)
+      .sort({ nutritionScore: -1 })
+      .limit(3)
+      .select('name brand nutritionScore category targetAnimal image')
+      .lean();
+
+    res.json({ success: true, alternatives });
   } catch (error) {
     next(error);
   }

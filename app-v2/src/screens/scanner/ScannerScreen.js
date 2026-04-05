@@ -157,7 +157,11 @@ const ScannerScreen = ({ navigation }) => {
     try {
       const response = await scanProductAPI(code);
       if (response.data && response.data.product) {
-        navigation.navigate('ProductResult', { product: response.data.product });
+        navigation.navigate('ProductResult', {
+          product: response.data.product,
+          newBadges: response.data.gamification?.newBadges || [],
+          gamification: response.data.gamification || null,
+        });
       } else {
         showError('Reponse inattendue du serveur');
       }

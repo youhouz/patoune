@@ -17,6 +17,8 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { FONTS } from '../../utils/typography';
 import { COLORS, SHADOWS, RADIUS, SPACING, FONT_SIZE, getScoreColor, getScoreBg, getScoreLabel } from '../../utils/colors';
 import { showAlert } from '../../utils/alert';
+import { getAlternativesAPI } from '../../api/products';
+import BadgeUnlockModal from '../../components/BadgeUnlockModal';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const SCORE_RING_SIZE = 110;
@@ -154,7 +156,7 @@ const getAdviceColors = (type) => {
 
 const ProductResultScreen = ({ route, navigation }) => {
   const insets = useSafeAreaInsets();
-  const { product } = route.params;
+  const { product, newBadges: newBadgesParam, gamification } = route.params;
   const score = product.nutritionScore ?? null;
   const hasScore = score !== null && score !== undefined;
   const displayScore = hasScore ? score : '--';
@@ -169,6 +171,9 @@ const ProductResultScreen = ({ route, navigation }) => {
   const scoreOpacity = useRef(new Animated.Value(0)).current;
   const ringRotate = useRef(new Animated.Value(0)).current;
   const [cardsVisible, setCardsVisible] = useState(false);
+  const [badgeModal, setBadgeModal] = useState(null);
+  const [alternatives, setAlternatives] = useState([]);
+  const badgeQueue = useRef([...(newBadgesParam || [])]).current;
 
   useEffect(() => {
     // Content fade in
@@ -206,7 +211,22 @@ const ProductResultScreen = ({ route, navigation }) => {
           useNativeDriver: true,
         }),
       ]),
-    ]).start(() => setCardsVisible(true));
+    ]).start(() => {
+      setCardsVisible(true);
+      // Show badge unlock after animation
+      if (badgeQueue.length > 0) {
+        setTimeout(() => setBadgeModal(badgeQueue.shift()), 800);
+      }
+    });
+
+    // Fetch alternatives for low-score products
+    if (hasScore && score < 60 && product._id) {
+      getAlternativesAPI(product._id).then(res => {
+        if (res.data?.alternatives?.length > 0) {
+          setAlternatives(res.data.alternatives);
+        }
+      }).catch(() => {});
+    }
   }, []);
 
   const getShareEmoji = (s) => {
@@ -690,6 +710,41 @@ const ProductResultScreen = ({ route, navigation }) => {
             </View>
           )}
 
+          {/* Better alternatives (for low-score products) */}
+          {alternatives.length > 0 && (
+            <View style={styles.card}>
+              <View style={styles.cardHeader}>
+                <Feather name="thumbs-up" size={20} color={COLORS.scoreExcellent} style={{ marginRight: SPACING.sm }} />
+                <Text style={styles.cardTitle}>Meilleures alternatives</Text>
+              </View>
+              <Text style={styles.altIntro}>
+                Produits mieux notes dans la meme categorie :
+              </Text>
+              {alternatives.map((alt, idx) => {
+                const altColor = getScoreColor(alt.nutritionScore || 0);
+                return (
+                  <TouchableOpacity
+                    key={alt._id || idx}
+                    style={[styles.altRow, idx === alternatives.length - 1 && styles.lastRow]}
+                    onPress={() => navigation.push('ProductResult', { product: alt })}
+                    activeOpacity={0.7}
+                  >
+                    <View style={[styles.altScoreBadge, { backgroundColor: altColor + '15' }]}>
+                      <Text style={[styles.altScoreText, { color: altColor }]}>
+                        {alt.nutritionScore || 0}
+                      </Text>
+                    </View>
+                    <View style={styles.altInfo}>
+                      <Text style={styles.altName} numberOfLines={1}>{alt.name}</Text>
+                      <Text style={styles.altBrand} numberOfLines={1}>{alt.brand || ''}</Text>
+                    </View>
+                    <Feather name="chevron-right" size={16} color={COLORS.pebble} />
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
+          )}
+
           {/* Share score card - Growth Hacking #1 */}
           <View style={styles.shareCard}>
             <LinearGradient
@@ -735,6 +790,19 @@ const ProductResultScreen = ({ route, navigation }) => {
           <View style={{ height: SPACING['3xl'] }} />
         </Animated.View>
       </ScrollView>
+
+      {/* Badge unlock modal */}
+      <BadgeUnlockModal
+        visible={!!badgeModal}
+        badgeKey={badgeModal}
+        onClose={() => {
+          setBadgeModal(null);
+          // Show next badge in queue
+          if (badgeQueue.length > 0) {
+            setTimeout(() => setBadgeModal(badgeQueue.shift()), 400);
+          }
+        }}
+      />
 
       {/* Sticky engagement bar */}
       <View style={[styles.engagementBar, { paddingBottom: Math.max(insets.bottom, 12) }]}>
@@ -1245,6 +1313,47 @@ const styles = StyleSheet.create({
     fontFamily: FONTS.bodyMedium,
     color: COLORS.stone,
     lineHeight: 18,
+  },
+
+  // Alternatives
+  altIntro: {
+    fontSize: FONT_SIZE.sm,
+    fontFamily: FONTS.bodyMedium,
+    color: COLORS.stone,
+    marginBottom: SPACING.md,
+  },
+  altRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: SPACING.md,
+    borderBottomWidth: 1,
+    borderBottomColor: COLORS.borderLight,
+  },
+  altScoreBadge: {
+    width: 44,
+    height: 44,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: SPACING.md,
+  },
+  altScoreText: {
+    fontSize: FONT_SIZE.base,
+    fontFamily: FONTS.heading,
+  },
+  altInfo: {
+    flex: 1,
+  },
+  altName: {
+    fontSize: FONT_SIZE.sm,
+    fontFamily: FONTS.bodySemiBold,
+    color: COLORS.charcoal,
+    marginBottom: 2,
+  },
+  altBrand: {
+    fontSize: FONT_SIZE.xs,
+    fontFamily: FONTS.bodyMedium,
+    color: COLORS.pebble,
   },
 
   // Share card

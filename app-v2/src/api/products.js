@@ -17,3 +17,6 @@ export const getPopularProductsAPI = (limit = 12) =>
 
 export const getCommunityStatsAPI = () =>
   api.get('/products/community-stats');
+
+export const getAlternativesAPI = (productId) =>
+  api.get(`/products/${productId}/alternatives`);
