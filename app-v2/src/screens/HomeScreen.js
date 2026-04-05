@@ -404,6 +404,39 @@ const HomeScreen = ({ navigation }) => {
           </View>
         )}
 
+        {/* ── Welcome card for new users (0 scans) ── */}
+        {!loading && recentScans.length === 0 && user && (
+          <View style={[s.welcomeSection, { paddingHorizontal: hPadding }, centerWrap]}>
+            <TouchableOpacity
+              activeOpacity={0.9}
+              onPress={() => navigation.navigate('Scanner')}
+            >
+              <LinearGradient
+                colors={['#527A56', '#6B8F71', '#8CB092']}
+                start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}
+                style={s.welcomeCard}
+              >
+                <View style={s.welcomeIconCircle}>
+                  <Feather name="camera" size={28} color="#FFF" />
+                </View>
+                <Text style={s.welcomeTitle}>Bienvenue {user.name?.split(' ')[0]} !</Text>
+                <Text style={s.welcomeText}>
+                  Scanne ton premier produit pour decouvrir ce que mange vraiment ton animal.
+                </Text>
+                <View style={s.welcomeBtn}>
+                  <Text style={s.welcomeBtnText}>Mon premier scan</Text>
+                  <Feather name="arrow-right" size={16} color="#527A56" />
+                </View>
+                {communityStats && (
+                  <Text style={s.welcomeProof}>
+                    {communityStats.totalUsers} membres font deja confiance a Pepete
+                  </Text>
+                )}
+              </LinearGradient>
+            </TouchableOpacity>
+          </View>
+        )}
+
         {/* ── Que faire ? — Feature cards (grille 2 colonnes) ── */}
         <View style={[s.featuresSection, { paddingHorizontal: hPadding }, centerWrap]}>
           <Text style={s.sectionTitle}>Que voulez-vous faire ?</Text>
@@ -670,6 +703,37 @@ const HomeScreen = ({ navigation }) => {
             </View>
           </View>
         )}
+
+        {/* ── Defi du jour — Daily tip ── */}
+        <View style={[s.dailyTipSection, { paddingHorizontal: hPadding }, centerWrap]}>
+          <View style={s.dailyTipCard}>
+            <View style={s.dailyTipHeader}>
+              <View style={s.dailyTipBadge}>
+                <Feather name="sun" size={12} color="#EAB308" />
+                <Text style={s.dailyTipBadgeText}>Conseil du jour</Text>
+              </View>
+            </View>
+            <Text style={s.dailyTipText}>
+              {[
+                'Verifiez toujours le 1er ingredient sur l\'emballage : il doit etre une source de proteine animale.',
+                'Les chats sont des carnivores stricts. Evitez les croquettes riches en cereales pour eux.',
+                'Un chien adulte a besoin de 2 repas par jour. Evitez l\'exercice 1h apres manger.',
+                'Changez la gamelle d\'eau de votre animal tous les jours pour eviter les bacteries.',
+                'Les additifs E150 a E155 sont des colorants controverses. Scannez pour verifier !',
+                'Un score Pepete au-dessus de 70 est un bon indicateur de qualite nutritionnelle.',
+                'Alternez croquettes et patee pour les chats : ils boivent naturellement peu d\'eau.',
+              ][new Date().getDay()]}
+            </Text>
+            <TouchableOpacity
+              style={s.dailyTipCta}
+              onPress={() => navigation.navigate('Scanner')}
+              activeOpacity={0.8}
+            >
+              <Text style={s.dailyTipCtaText}>Verifier mes croquettes</Text>
+              <Feather name="arrow-right" size={14} color="#6B8F71" />
+            </TouchableOpacity>
+          </View>
+        </View>
 
         {/* ── Bannière CTA — Premium gradient ── */}
         <View style={[s.bannerSection, { paddingHorizontal: hPadding }, centerWrap]}>
@@ -949,6 +1013,36 @@ const s = StyleSheet.create({
   },
   bannerBtnText: { color: '#FFF', fontWeight: '700', fontSize: FONT_SIZE.sm },
 
+  // Welcome card
+  welcomeSection: { marginTop: SPACING.base },
+  welcomeCard: {
+    borderRadius: RADIUS['2xl'], padding: SPACING.xl,
+    alignItems: 'center', overflow: 'hidden',
+  },
+  welcomeIconCircle: {
+    width: 64, height: 64, borderRadius: 32,
+    backgroundColor: 'rgba(255,255,255,0.2)', alignItems: 'center', justifyContent: 'center',
+    marginBottom: SPACING.base,
+  },
+  welcomeTitle: {
+    fontSize: FONT_SIZE.xl, fontWeight: '900', color: '#FFF',
+    marginBottom: SPACING.sm, letterSpacing: -0.3,
+  },
+  welcomeText: {
+    fontSize: FONT_SIZE.sm, fontWeight: '500', color: 'rgba(255,255,255,0.85)',
+    textAlign: 'center', lineHeight: 20, marginBottom: SPACING.lg,
+  },
+  welcomeBtn: {
+    flexDirection: 'row', alignItems: 'center', gap: SPACING.sm,
+    backgroundColor: '#FFF', paddingHorizontal: SPACING.xl, paddingVertical: SPACING.base,
+    borderRadius: RADIUS.full, ...SHADOWS.md,
+  },
+  welcomeBtnText: { fontSize: FONT_SIZE.sm, fontWeight: '800', color: '#527A56' },
+  welcomeProof: {
+    fontSize: FONT_SIZE.xs, fontWeight: '600', color: 'rgba(255,255,255,0.6)',
+    marginTop: SPACING.base,
+  },
+
   // Growth section
   growthSection: { marginTop: SPACING.sm, gap: SPACING.sm },
 
@@ -1026,6 +1120,30 @@ const s = StyleSheet.create({
     width: 32, height: 32, borderRadius: 16,
     backgroundColor: '#FDF5ED', alignItems: 'center', justifyContent: 'center',
   },
+
+  // Daily tip
+  dailyTipSection: { marginTop: SPACING.sm },
+  dailyTipCard: {
+    backgroundColor: '#FFFDF5', borderRadius: RADIUS['2xl'],
+    padding: SPACING.xl, borderWidth: 1, borderColor: '#EAB30815',
+    ...SHADOWS.xs,
+  },
+  dailyTipHeader: { marginBottom: SPACING.md },
+  dailyTipBadge: {
+    flexDirection: 'row', alignItems: 'center', gap: 6,
+    backgroundColor: '#EAB30812', alignSelf: 'flex-start',
+    paddingHorizontal: SPACING.md, paddingVertical: SPACING.xs,
+    borderRadius: RADIUS.full,
+  },
+  dailyTipBadgeText: { fontSize: FONT_SIZE.xs, fontWeight: '700', color: '#92740A' },
+  dailyTipText: {
+    fontSize: FONT_SIZE.sm, fontWeight: '500', color: COLORS.text,
+    lineHeight: 20, marginBottom: SPACING.base,
+  },
+  dailyTipCta: {
+    flexDirection: 'row', alignItems: 'center', gap: 6, alignSelf: 'flex-start',
+  },
+  dailyTipCtaText: { fontSize: FONT_SIZE.sm, fontWeight: '700', color: '#6B8F71' },
 });
 
 export default HomeScreen;

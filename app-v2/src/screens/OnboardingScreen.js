@@ -19,6 +19,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Feather } from '@expo/vector-icons';
 import { PepeteIcon } from '../components/PepeteLogo';
+import { getCommunityStatsAPI } from '../api/products';
 
 const { width, height } = Dimensions.get('window');
 
@@ -142,6 +143,14 @@ const TrustPill = ({ icon, label, delay }) => {
 const OnboardingScreen = ({ onComplete }) => {
   const insets = useSafeAreaInsets();
   const [currentSlide, setCurrentSlide] = useState(0);
+  const [communityCount, setCommunityCount] = useState(null);
+
+  useEffect(() => {
+    getCommunityStatsAPI().then(res => {
+      const users = res.data?.stats?.totalUsers;
+      if (users) setCommunityCount(users);
+    }).catch(() => {});
+  }, []);
 
   const cardFade   = useRef(new Animated.Value(0)).current;
   const cardSlide  = useRef(new Animated.Value(0)).current;
@@ -275,6 +284,16 @@ const OnboardingScreen = ({ onComplete }) => {
           </View>
         )}
 
+        {/* Social proof on welcome slide */}
+        {slide.key === 'welcome' && communityCount && (
+          <View style={styles.socialProof}>
+            <View style={styles.socialProofDot} />
+            <Text style={styles.socialProofText}>
+              Rejoint par {communityCount.toLocaleString('fr-FR')} membres
+            </Text>
+          </View>
+        )}
+
         {/* Progress */}
         <View style={styles.dotsRow}>
           {SLIDES.map((_, i) => (
@@ -386,6 +405,14 @@ const styles = StyleSheet.create({
   ctaArrow: { width: 32, height: 32, borderRadius: 10, backgroundColor: 'rgba(255,255,255,0.92)', alignItems: 'center', justifyContent: 'center' },
 
   pwaHint: { marginTop: 12, fontSize: 12, color: '#6B7E6E', textAlign: 'center' },
+
+  // Social proof
+  socialProof: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
+    marginTop: 16, gap: 8,
+  },
+  socialProofDot: { width: 8, height: 8, borderRadius: 4, backgroundColor: '#6B8F71' },
+  socialProofText: { fontSize: 13, fontWeight: '600', color: '#6B7E6E' },
 });
 
 export default OnboardingScreen;
