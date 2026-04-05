@@ -24,6 +24,7 @@ import SettingsScreen from '../screens/profile/SettingsScreen';
 import InstallGuideScreen from '../screens/profile/InstallGuideScreen';
 import ContactScreen from '../screens/profile/ContactScreen';
 import ReferralScreen from '../screens/profile/ReferralScreen';
+import LeaderboardScreen from '../screens/profile/LeaderboardScreen';
 import AdminDashboardScreen from '../screens/admin/AdminDashboardScreen';
 import AdminUsersScreen from '../screens/admin/AdminUsersScreen';
 import AdminPetSittersScreen from '../screens/admin/AdminPetSittersScreen';
@@ -74,6 +75,7 @@ const ProfileNavigator = () => {
       <ProfileStack.Screen name="InstallGuide" component={InstallGuideScreen} options={{ headerShown: false }} />
       <ProfileStack.Screen name="Contact" component={ContactScreen} options={{ headerShown: false }} />
       <ProfileStack.Screen name="Referral" component={ReferralScreen} options={{ headerShown: false }} />
+      <ProfileStack.Screen name="Leaderboard" component={LeaderboardScreen} options={{ headerShown: false }} />
     </ProfileStack.Navigator>
   );
 };

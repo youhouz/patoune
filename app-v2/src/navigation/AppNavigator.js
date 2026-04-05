@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { NavigationContainer } from '@react-navigation/native';
-import { View, Text, StyleSheet, StatusBar, Animated, Platform } from 'react-native';
+import { NavigationContainer, LinkingConfiguration } from '@react-navigation/native';
+import { View, Text, StyleSheet, StatusBar, Animated, Platform, Linking } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useAuth } from '../context/AuthContext';
 import TabNavigator from './TabNavigator';
@@ -9,6 +9,7 @@ import PWAInstallBanner from '../components/PWAInstallBanner';
 import { PepeteIcon } from '../components/PepeteLogo';
 
 const ONBOARDING_KEY = 'onboarding_v3';
+const REFERRAL_STORAGE_KEY = 'pending_referral_code';
 
 // ─── Animated Dot ────────────────────────────────────────
 const LoadingDot = ({ delay }) => {
@@ -134,6 +135,21 @@ const AppNavigator = () => {
     AsyncStorage.getItem(ONBOARDING_KEY).then((val) => {
       setShowOnboarding(!val);
     });
+
+    // Capture referral code from URL (?ref=CODE)
+    if (Platform.OS === 'web') {
+      try {
+        const params = new URLSearchParams(window.location.search);
+        const ref = params.get('ref');
+        if (ref) {
+          AsyncStorage.setItem(REFERRAL_STORAGE_KEY, ref.toUpperCase());
+          // Clean URL
+          const url = new URL(window.location.href);
+          url.searchParams.delete('ref');
+          window.history.replaceState({}, '', url.toString());
+        }
+      } catch (_) {}
+    }
   }, [loading]);
 
   const handleOnboardingComplete = async () => {

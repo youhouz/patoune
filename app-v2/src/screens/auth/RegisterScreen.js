@@ -9,6 +9,7 @@ import {
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Feather } from '@expo/vector-icons';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAuth } from '../../context/AuthContext';
 import { PepeteIcon } from '../../components/PepeteLogo';
@@ -69,6 +70,13 @@ const RegisterScreen = ({ navigation }) => {
       Animated.spring(slideAnim, { toValue: 0, tension: 55, friction: 8, delay: 100, useNativeDriver: true }),
       Animated.timing(fadeAnim,  { toValue: 1, duration: 450, delay: 100, useNativeDriver: true }),
     ]).start();
+    // Auto-fill referral code from deep link
+    AsyncStorage.getItem('pending_referral_code').then(code => {
+      if (code) {
+        setReferral(code);
+        AsyncStorage.removeItem('pending_referral_code');
+      }
+    }).catch(() => {});
   }, []);
 
   const shake = () => Animated.sequence([

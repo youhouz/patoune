@@ -20,3 +20,6 @@ export const getCommunityStatsAPI = () =>
 
 export const getAlternativesAPI = (productId) =>
   api.get(`/products/${productId}/alternatives`);
+
+export const getLeaderboardAPI = () =>
+  api.get('/products/leaderboard');

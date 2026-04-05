@@ -246,7 +246,7 @@ const ProfileScreen = ({ navigation }) => {
       ],
     }] : []),
     {
-      title: 'Parrainage & Badges',
+      title: 'Communaute',
       items: [
         {
           icon: 'gift',
@@ -255,6 +255,14 @@ const ProfileScreen = ({ navigation }) => {
           screen: 'Referral',
           accentColor: '#6B8F71',
           bgColor: colors.primarySoft,
+        },
+        {
+          icon: 'award',
+          label: 'Classement',
+          subtitle: 'Top scanners de la communaute',
+          screen: 'Leaderboard',
+          accentColor: '#EAB308',
+          bgColor: '#FFFDF5',
         },
       ],
     },

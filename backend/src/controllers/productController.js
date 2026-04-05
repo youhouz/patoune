@@ -241,6 +241,32 @@ exports.getAlternatives = async (req, res, next) => {
   }
 };
 
+// @desc    Leaderboard des meilleurs scanners
+// @route   GET /api/products/leaderboard
+exports.getLeaderboard = async (req, res, next) => {
+  try {
+    const topScanners = await User.find({ totalScans: { $gt: 0 } })
+      .sort({ totalScans: -1 })
+      .limit(20)
+      .select('name avatar totalScans scanStreak badges referralCount')
+      .lean();
+
+    const leaderboard = topScanners.map((u, i) => ({
+      rank: i + 1,
+      name: u.name,
+      avatar: u.avatar || null,
+      totalScans: u.totalScans || 0,
+      scanStreak: u.scanStreak || 0,
+      badgeCount: (u.badges || []).length,
+      referralCount: u.referralCount || 0,
+    }));
+
+    res.json({ success: true, leaderboard });
+  } catch (error) {
+    next(error);
+  }
+};
+
 // @desc    Stats communautaires (social proof)
 // @route   GET /api/products/community-stats
 exports.getCommunityStats = async (req, res, next) => {
