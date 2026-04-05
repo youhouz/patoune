@@ -39,6 +39,8 @@ import useResponsive from '../hooks/useResponsive';
 import { COLORS, SPACING, RADIUS, SHADOWS, FONT_SIZE, getScoreColor, getScoreLabel } from '../utils/colors';
 import { isPushSubscribed, subscribeToPush } from '../utils/pushNotifications';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import SatisfactionPrompt from '../components/SatisfactionPrompt';
+import api from '../api/client';
 
 // ─── Recent Scan Card — Glass morphism ─────────────────────
 const RecentScanCard = ({ scan, onPress }) => {
@@ -763,6 +765,21 @@ const HomeScreen = ({ navigation }) => {
         </>
         }
       </ScrollView>
+
+      {/* NPS satisfaction prompt (after 5+ scans) */}
+      <SatisfactionPrompt
+        totalScans={user?.totalScans || recentScans.length}
+        onSubmitFeedback={async ({ rating, feedback }) => {
+          try {
+            await api.post('/feedback', {
+              category: rating >= 4 ? 'other' : 'feature',
+              title: `NPS ${rating}/5`,
+              description: feedback,
+              platform: Platform.OS,
+            });
+          } catch (_) {}
+        }}
+      />
     </View>
   );
 };

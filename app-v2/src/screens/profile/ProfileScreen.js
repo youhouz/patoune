@@ -285,6 +285,14 @@ const ProfileScreen = ({ navigation }) => {
           accentColor: '#5B7FC2',
           bgColor: '#E4ECFB',
         },
+        {
+          icon: 'message-square',
+          label: 'Donner mon avis',
+          subtitle: 'Aidez-nous a ameliorer Pepete',
+          screen: 'Contact',
+          accentColor: '#8B5CF6',
+          bgColor: '#F0EAFF',
+        },
       ],
     },
   ];

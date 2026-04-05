@@ -745,6 +745,32 @@ const ProductResultScreen = ({ route, navigation }) => {
             </View>
           )}
 
+          {/* Scan milestone celebration */}
+          {gamification && [10, 50, 100, 250, 500].includes(gamification.totalScans) && (
+            <View style={styles.milestoneCard}>
+              <LinearGradient
+                colors={['#527A56', '#6B8F71']}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+                style={styles.milestoneGradient}
+              >
+                <Text style={styles.milestoneEmoji}>
+                  {gamification.totalScans >= 100 ? '🏆' : gamification.totalScans >= 50 ? '🌟' : '🎯'}
+                </Text>
+                <Text style={styles.milestoneTitle}>
+                  {gamification.totalScans}e scan !
+                </Text>
+                <Text style={styles.milestoneText}>
+                  {gamification.totalScans >= 100
+                    ? 'Vous etes un vrai expert ! Rien ne vous echappe.'
+                    : gamification.totalScans >= 50
+                      ? 'Impressionnant ! Vous protegez votre animal comme un pro.'
+                      : 'Bravo ! Continuez a proteger votre compagnon.'}
+                </Text>
+              </LinearGradient>
+            </View>
+          )}
+
           {/* Share score card - Growth Hacking #1 */}
           <View style={styles.shareCard}>
             <LinearGradient
@@ -1313,6 +1339,32 @@ const styles = StyleSheet.create({
     fontFamily: FONTS.bodyMedium,
     color: COLORS.stone,
     lineHeight: 18,
+  },
+
+  // Milestone
+  milestoneCard: {
+    borderRadius: RADIUS['2xl'],
+    overflow: 'hidden',
+    marginBottom: SPACING.base,
+    ...SHADOWS.md,
+  },
+  milestoneGradient: {
+    padding: SPACING.xl,
+    alignItems: 'center',
+  },
+  milestoneEmoji: { fontSize: 40, marginBottom: SPACING.sm },
+  milestoneTitle: {
+    fontSize: FONT_SIZE['2xl'] || 24,
+    fontFamily: FONTS.heading,
+    color: '#FFF',
+    marginBottom: SPACING.xs,
+  },
+  milestoneText: {
+    fontSize: FONT_SIZE.sm,
+    fontFamily: FONTS.bodyMedium,
+    color: 'rgba(255,255,255,0.85)',
+    textAlign: 'center',
+    lineHeight: 20,
   },
 
   // Alternatives
