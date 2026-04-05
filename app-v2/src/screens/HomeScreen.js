@@ -37,6 +37,8 @@ import { getMyBookingsAPI } from '../api/petsitters';
 import { PepeteIcon } from '../components/PepeteLogo';
 import useResponsive from '../hooks/useResponsive';
 import { COLORS, SPACING, RADIUS, SHADOWS, FONT_SIZE, getScoreColor, getScoreLabel } from '../utils/colors';
+import { isPushSubscribed, subscribeToPush } from '../utils/pushNotifications';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 // ─── Recent Scan Card — Glass morphism ─────────────────────
 const RecentScanCard = ({ scan, onPress }) => {
@@ -173,6 +175,8 @@ const HomeScreen = ({ navigation }) => {
   const [query, setQuery] = useState('');
   const [popularProducts, setPopularProducts] = useState([]);
   const [communityStats, setCommunityStats] = useState(null);
+  const [showPushCard, setShowPushCard] = useState(false);
+  const [pushDismissed, setPushDismissed] = useState(false);
 
   const fetchData = async () => {
     try {
@@ -190,6 +194,17 @@ const HomeScreen = ({ navigation }) => {
           .sort((a, b) => new Date(a.startDate) - new Date(b.startDate));
         setBookings(upcoming);
       }
+      // Check push opt-in state (show after at least 1 scan)
+      if (Platform.OS === 'web' && 'Notification' in window && Notification.permission === 'default') {
+        const dismissed = await AsyncStorage.getItem('push_card_dismissed');
+        if (!dismissed) {
+          const scans = scansRes.status === 'fulfilled'
+            ? (scansRes.value.data?.history || scansRes.value.data || [])
+            : [];
+          if (scans.length >= 1) setShowPushCard(true);
+        }
+      }
+
       // Produits populaires + stats communaute (sans auth)
       try {
         const [popRes, statsRes] = await Promise.allSettled([
@@ -471,6 +486,43 @@ const HomeScreen = ({ navigation }) => {
               <View style={s.socialProofLive}>
                 <View style={s.liveDot} />
                 <Text style={s.liveText}>Live</Text>
+              </View>
+            </View>
+          )}
+
+          {/* Push notification opt-in */}
+          {showPushCard && !pushDismissed && (
+            <View style={s.pushCard}>
+              <View style={s.pushCardLeft}>
+                <View style={s.pushBellCircle}>
+                  <Feather name="bell" size={20} color="#527A56" />
+                </View>
+                <View style={s.pushCardContent}>
+                  <Text style={s.pushCardTitle}>Restez informe !</Text>
+                  <Text style={s.pushCardSub}>Alertes produits, rappels scans, nouveautes</Text>
+                </View>
+              </View>
+              <View style={s.pushCardActions}>
+                <TouchableOpacity
+                  style={s.pushCardBtn}
+                  onPress={async () => {
+                    const ok = await subscribeToPush();
+                    setShowPushCard(false);
+                    if (!ok) await AsyncStorage.setItem('push_card_dismissed', 'true');
+                  }}
+                  activeOpacity={0.8}
+                >
+                  <Text style={s.pushCardBtnText}>Activer</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  onPress={async () => {
+                    setPushDismissed(true);
+                    await AsyncStorage.setItem('push_card_dismissed', 'true');
+                  }}
+                  hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                >
+                  <Feather name="x" size={16} color={COLORS.textTertiary} />
+                </TouchableOpacity>
               </View>
             </View>
           )}
@@ -899,6 +951,28 @@ const s = StyleSheet.create({
 
   // Growth section
   growthSection: { marginTop: SPACING.sm, gap: SPACING.sm },
+
+  // Push opt-in card
+  pushCard: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
+    backgroundColor: '#EFF5F0', borderRadius: RADIUS.xl,
+    padding: SPACING.base, borderWidth: 1, borderColor: '#6B8F7120',
+  },
+  pushCardLeft: { flexDirection: 'row', alignItems: 'center', flex: 1 },
+  pushBellCircle: {
+    width: 40, height: 40, borderRadius: 20,
+    backgroundColor: '#FFF', alignItems: 'center', justifyContent: 'center',
+    marginRight: SPACING.md, ...SHADOWS.xs,
+  },
+  pushCardContent: { flex: 1 },
+  pushCardTitle: { fontSize: FONT_SIZE.sm, fontWeight: '700', color: COLORS.text },
+  pushCardSub: { fontSize: 11, fontWeight: '500', color: COLORS.textTertiary, marginTop: 1 },
+  pushCardActions: { flexDirection: 'row', alignItems: 'center', gap: SPACING.sm, marginLeft: SPACING.sm },
+  pushCardBtn: {
+    backgroundColor: '#527A56', paddingHorizontal: SPACING.base, paddingVertical: SPACING.sm,
+    borderRadius: RADIUS.full,
+  },
+  pushCardBtnText: { fontSize: FONT_SIZE.xs, fontWeight: '700', color: '#FFF' },
 
   // Social proof
   socialProofCard: {

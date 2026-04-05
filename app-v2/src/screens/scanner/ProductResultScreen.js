@@ -735,6 +735,26 @@ const ProductResultScreen = ({ route, navigation }) => {
           <View style={{ height: SPACING['3xl'] }} />
         </Animated.View>
       </ScrollView>
+
+      {/* Sticky engagement bar */}
+      <View style={[styles.engagementBar, { paddingBottom: Math.max(insets.bottom, 12) }]}>
+        <TouchableOpacity
+          style={styles.engageScanBtn}
+          onPress={() => navigation.replace('ScannerMain')}
+          activeOpacity={0.85}
+        >
+          <Feather name="camera" size={18} color={COLORS.primary} />
+          <Text style={styles.engageScanText}>Scanner un autre</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={[styles.engageShareBtn, { backgroundColor: hasScore ? getScoreColor(score) : COLORS.pebble }]}
+          onPress={handleShare}
+          activeOpacity={0.85}
+        >
+          <Feather name="share-2" size={18} color="#FFF" />
+          <Text style={styles.engageShareText}>Partager</Text>
+        </TouchableOpacity>
+      </View>
     </View>
   );
 };
@@ -748,7 +768,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   scrollContent: {
-    paddingBottom: SPACING['2xl'],
+    paddingBottom: 80,
   },
 
   // Header gradient
@@ -1317,6 +1337,53 @@ const styles = StyleSheet.create({
     marginTop: SPACING.md,
     letterSpacing: 1,
     textTransform: 'uppercase',
+  },
+
+  // Engagement bar
+  engagementBar: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    flexDirection: 'row',
+    gap: SPACING.sm,
+    paddingHorizontal: SPACING.xl,
+    paddingTop: SPACING.md,
+    backgroundColor: COLORS.cream,
+    borderTopWidth: 1,
+    borderTopColor: COLORS.borderLight,
+    ...SHADOWS.lg,
+  },
+  engageScanBtn: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: SPACING.sm,
+    backgroundColor: COLORS.white,
+    paddingVertical: SPACING.base,
+    borderRadius: RADIUS.xl,
+    borderWidth: 1.5,
+    borderColor: COLORS.primary + '30',
+  },
+  engageScanText: {
+    fontSize: FONT_SIZE.sm,
+    fontFamily: FONTS.heading,
+    color: COLORS.primary,
+  },
+  engageShareBtn: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: SPACING.sm,
+    paddingVertical: SPACING.base,
+    borderRadius: RADIUS.xl,
+  },
+  engageShareText: {
+    fontSize: FONT_SIZE.sm,
+    fontFamily: FONTS.heading,
+    color: '#FFF',
   },
 
   // Barcode footer
