@@ -209,11 +209,40 @@ const ProductResultScreen = ({ route, navigation }) => {
     ]).start(() => setCardsVisible(true));
   }, []);
 
+  const getShareEmoji = (s) => {
+    if (s >= 80) return '🟢';
+    if (s >= 60) return '🟡';
+    if (s >= 40) return '🟠';
+    return '🔴';
+  };
+
+  const buildShareMessage = () => {
+    const emoji = hasScore ? getShareEmoji(score) : '🔍';
+    const brandText = product.brand ? ` de ${product.brand}` : '';
+    const dangerousIngs = (product.ingredients || []).filter(i => i.risk === 'dangerous');
+    const ingredientWarning = dangerousIngs.length > 0
+      ? `\n⚠️ ${dangerousIngs.length} ingredient${dangerousIngs.length > 1 ? 's' : ''} a risque detecte${dangerousIngs.length > 1 ? 's' : ''} !`
+      : '';
+
+    if (!hasScore) {
+      return `🐾 J'ai scanne ${product.name}${brandText} sur Pepete !${ingredientWarning}\n\nScanne les croquettes de ton animal ➡️ pepete.fr`;
+    }
+
+    const verdict = score >= 80
+      ? '✅ Excellent choix pour mon animal !'
+      : score >= 60
+        ? '👍 Pas mal, mais il y a mieux'
+        : score >= 40
+          ? '⚠️ Qualite moyenne... a changer ?'
+          : '🚫 Deconseille ! Je cherche une alternative';
+
+    return `${emoji} ${product.name}${brandText} → ${score}/100 sur Pepete !\n\n${verdict}${ingredientWarning}\n\n🐾 Et toi, tu sais ce que mange ton animal ?\nScanne ses croquettes ➡️ pepete.fr`;
+  };
+
   const handleShare = async () => {
     try {
-      const scoreText = hasScore ? `Score Pepete: ${score}/100 (${scoreLabel})` : 'Score en cours d\'evaluation';
       await Share.share({
-        message: `${product.name} (${product.brand || 'Marque inconnue'}) - ${scoreText}. Analyse sur Pepete!`,
+        message: buildShareMessage(),
       });
     } catch (_) {
       // Share cancelled
@@ -660,6 +689,48 @@ const ProductResultScreen = ({ route, navigation }) => {
               </Text>
             </View>
           )}
+
+          {/* Share score card - Growth Hacking #1 */}
+          <View style={styles.shareCard}>
+            <LinearGradient
+              colors={hasScore ? getScoreGradient(score) : [COLORS.pebble, COLORS.sand]}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={styles.shareCardGradient}
+            >
+              <View style={styles.shareCardPreview}>
+                <View style={styles.shareMiniScore}>
+                  <Text style={styles.shareMiniScoreText}>{displayScore}</Text>
+                  {hasScore && <Text style={styles.shareMiniScoreMax}>/100</Text>}
+                </View>
+                <View style={styles.shareCardPreviewInfo}>
+                  <Text style={styles.shareCardProductName} numberOfLines={1}>
+                    {product.name || 'Produit inconnu'}
+                  </Text>
+                  <Text style={styles.shareCardVerdict}>
+                    {hasScore ? scoreLabel : 'Non evalue'}
+                  </Text>
+                </View>
+              </View>
+
+              <Text style={styles.shareCardQuestion}>
+                Et toi, tu sais ce que mange ton animal ?
+              </Text>
+
+              <TouchableOpacity
+                style={styles.shareCardButton}
+                onPress={handleShare}
+                activeOpacity={0.85}
+              >
+                <Feather name="share-2" size={18} color={hasScore ? getScoreColor(score) : COLORS.pebble} />
+                <Text style={[styles.shareCardButtonText, { color: hasScore ? getScoreColor(score) : COLORS.pebble }]}>
+                  Partager le resultat
+                </Text>
+              </TouchableOpacity>
+
+              <Text style={styles.shareCardFooter}>pepete.fr</Text>
+            </LinearGradient>
+          </View>
 
           <View style={{ height: SPACING['3xl'] }} />
         </Animated.View>
@@ -1154,6 +1225,98 @@ const styles = StyleSheet.create({
     fontFamily: FONTS.bodyMedium,
     color: COLORS.stone,
     lineHeight: 18,
+  },
+
+  // Share card
+  shareCard: {
+    borderRadius: RADIUS['2xl'],
+    overflow: 'hidden',
+    marginBottom: SPACING.base,
+    ...SHADOWS.lg,
+  },
+  shareCardGradient: {
+    padding: SPACING.xl,
+    alignItems: 'center',
+  },
+  shareCardPreview: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    borderRadius: RADIUS.xl,
+    padding: SPACING.base,
+    width: '100%',
+    marginBottom: SPACING.lg,
+  },
+  shareMiniScore: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: 'rgba(255,255,255,0.95)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: SPACING.md,
+    ...SHADOWS.sm,
+  },
+  shareMiniScoreText: {
+    fontSize: FONT_SIZE.xl,
+    fontFamily: FONTS.heading,
+    color: COLORS.charcoal,
+    lineHeight: FONT_SIZE.xl + 2,
+  },
+  shareMiniScoreMax: {
+    fontSize: 9,
+    fontFamily: FONTS.bodySemiBold,
+    color: COLORS.pebble,
+    marginTop: -3,
+  },
+  shareCardPreviewInfo: {
+    flex: 1,
+  },
+  shareCardProductName: {
+    fontSize: FONT_SIZE.base,
+    fontFamily: FONTS.heading,
+    color: COLORS.white,
+    marginBottom: 2,
+  },
+  shareCardVerdict: {
+    fontSize: FONT_SIZE.sm,
+    fontFamily: FONTS.bodySemiBold,
+    color: 'rgba(255,255,255,0.8)',
+    textTransform: 'uppercase',
+    letterSpacing: 0.3,
+  },
+  shareCardQuestion: {
+    fontSize: FONT_SIZE.lg,
+    fontFamily: FONTS.heading,
+    color: COLORS.white,
+    textAlign: 'center',
+    marginBottom: SPACING.lg,
+    lineHeight: FONT_SIZE.lg + 6,
+  },
+  shareCardButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: COLORS.white,
+    paddingHorizontal: SPACING['2xl'],
+    paddingVertical: SPACING.base,
+    borderRadius: RADIUS.full,
+    gap: SPACING.sm,
+    width: '100%',
+    ...SHADOWS.md,
+  },
+  shareCardButtonText: {
+    fontSize: FONT_SIZE.base,
+    fontFamily: FONTS.heading,
+    letterSpacing: 0.2,
+  },
+  shareCardFooter: {
+    fontSize: FONT_SIZE.xs,
+    fontFamily: FONTS.bodySemiBold,
+    color: 'rgba(255,255,255,0.6)',
+    marginTop: SPACING.md,
+    letterSpacing: 1,
+    textTransform: 'uppercase',
   },
 
   // Barcode footer
