@@ -14,3 +14,6 @@ export const searchProductsAPI = (query) =>
 
 export const getPopularProductsAPI = (limit = 12) =>
   api.get('/products/popular', { params: { limit } });
+
+export const getCommunityStatsAPI = () =>
+  api.get('/products/community-stats');

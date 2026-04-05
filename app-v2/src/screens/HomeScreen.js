@@ -32,7 +32,7 @@ import { useFocusEffect } from '@react-navigation/native';
 import { Feather } from '@expo/vector-icons';
 import { useAuth } from '../context/AuthContext';
 import { getMyPetsAPI } from '../api/pets';
-import { getScanHistoryAPI, getPopularProductsAPI } from '../api/products';
+import { getScanHistoryAPI, getPopularProductsAPI, getCommunityStatsAPI } from '../api/products';
 import { getMyBookingsAPI } from '../api/petsitters';
 import { PepeteIcon } from '../components/PepeteLogo';
 import useResponsive from '../hooks/useResponsive';
@@ -172,6 +172,7 @@ const HomeScreen = ({ navigation }) => {
   const [refreshing, setRefreshing] = useState(false);
   const [query, setQuery] = useState('');
   const [popularProducts, setPopularProducts] = useState([]);
+  const [communityStats, setCommunityStats] = useState(null);
 
   const fetchData = async () => {
     try {
@@ -189,10 +190,14 @@ const HomeScreen = ({ navigation }) => {
           .sort((a, b) => new Date(a.startDate) - new Date(b.startDate));
         setBookings(upcoming);
       }
-      // Produits populaires (sans auth)
+      // Produits populaires + stats communaute (sans auth)
       try {
-        const popRes = await getPopularProductsAPI(12);
-        setPopularProducts(popRes.data?.products || []);
+        const [popRes, statsRes] = await Promise.allSettled([
+          getPopularProductsAPI(12),
+          getCommunityStatsAPI(),
+        ]);
+        if (popRes.status === 'fulfilled') setPopularProducts(popRes.value.data?.products || []);
+        if (statsRes.status === 'fulfilled') setCommunityStats(statsRes.value.data?.stats || null);
       } catch (_) {
         // silently ignore
       }
@@ -442,6 +447,96 @@ const HomeScreen = ({ navigation }) => {
               </React.Fragment>
             ))}
           </View>
+        </View>
+
+        {/* ── Social proof + Streak + Invite ── */}
+        <View style={[s.growthSection, { paddingHorizontal: hPadding }, centerWrap]}>
+          {/* Social proof banner */}
+          {communityStats && (
+            <View style={s.socialProofCard}>
+              <View style={s.socialProofIcon}>
+                <Feather name="trending-up" size={18} color="#6B8F71" />
+              </View>
+              <View style={s.socialProofContent}>
+                <Text style={s.socialProofTitle}>
+                  {communityStats.scansToday > 0
+                    ? `${communityStats.scansToday} scan${communityStats.scansToday > 1 ? 's' : ''} aujourd'hui`
+                    : `${communityStats.totalScans} scans au total`
+                  }
+                </Text>
+                <Text style={s.socialProofSub}>
+                  {communityStats.totalUsers} membres protegent leurs animaux
+                </Text>
+              </View>
+              <View style={s.socialProofLive}>
+                <View style={s.liveDot} />
+                <Text style={s.liveText}>Live</Text>
+              </View>
+            </View>
+          )}
+
+          {/* Streak card */}
+          {user && (
+            <TouchableOpacity
+              style={s.streakCard}
+              onPress={() => navigation.navigate('Profil', { screen: 'Referral' })}
+              activeOpacity={0.8}
+            >
+              <LinearGradient
+                colors={
+                  (user.scanStreak || 0) >= 7 ? ['#EAB308', '#F59E0B'] :
+                  (user.scanStreak || 0) >= 3 ? ['#6B8F71', '#8CB092'] :
+                  ['#B8A88A', '#C4B89A']
+                }
+                start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}
+                style={s.streakGradient}
+              >
+                <Text style={s.streakEmoji}>
+                  {(user.scanStreak || 0) >= 7 ? '🔥' : (user.scanStreak || 0) >= 3 ? '⚡' : '🐾'}
+                </Text>
+                <View style={s.streakInfo}>
+                  <Text style={s.streakTitle}>
+                    {(user.scanStreak || 0) > 0
+                      ? `${user.scanStreak} jour${user.scanStreak > 1 ? 's' : ''} de suite !`
+                      : 'Scanne aujourd\'hui !'
+                    }
+                  </Text>
+                  <Text style={s.streakSub}>
+                    {(user.scanStreak || 0) > 0
+                      ? 'Continue pour debloquer des badges'
+                      : 'Commence ta serie de scans'
+                    }
+                  </Text>
+                </View>
+                <Feather name="chevron-right" size={18} color="rgba(255,255,255,0.7)" />
+              </LinearGradient>
+            </TouchableOpacity>
+          )}
+
+          {/* Invite CTA */}
+          {user && (
+            <TouchableOpacity
+              style={s.inviteCard}
+              onPress={() => navigation.navigate('Profil', { screen: 'Referral' })}
+              activeOpacity={0.8}
+            >
+              <View style={s.inviteIconCircle}>
+                <Feather name="gift" size={20} color="#C4956A" />
+              </View>
+              <View style={s.inviteContent}>
+                <Text style={s.inviteTitle}>Invite tes amis</Text>
+                <Text style={s.inviteSub}>
+                  {(user.referralCount || 0) > 0
+                    ? `${user.referralCount} ami${user.referralCount > 1 ? 's' : ''} parraine${user.referralCount > 1 ? 's' : ''}`
+                    : 'Parraine et gagne des badges exclusifs'
+                  }
+                </Text>
+              </View>
+              <View style={s.inviteArrow}>
+                <Feather name="arrow-right" size={16} color="#C4956A" />
+              </View>
+            </TouchableOpacity>
+          )}
         </View>
 
         {/* ── Prochaine garde ── */}
@@ -801,6 +896,62 @@ const s = StyleSheet.create({
     borderRadius: RADIUS.pill, paddingHorizontal: 18, paddingVertical: 10,
   },
   bannerBtnText: { color: '#FFF', fontWeight: '700', fontSize: FONT_SIZE.sm },
+
+  // Growth section
+  growthSection: { marginTop: SPACING.sm, gap: SPACING.sm },
+
+  // Social proof
+  socialProofCard: {
+    flexDirection: 'row', alignItems: 'center',
+    backgroundColor: '#FFF', borderRadius: RADIUS.xl,
+    padding: SPACING.base, ...SHADOWS.sm,
+  },
+  socialProofIcon: {
+    width: 40, height: 40, borderRadius: 20,
+    backgroundColor: '#EFF5F0', alignItems: 'center', justifyContent: 'center',
+    marginRight: SPACING.md,
+  },
+  socialProofContent: { flex: 1 },
+  socialProofTitle: { fontSize: FONT_SIZE.sm, fontWeight: '700', color: COLORS.text },
+  socialProofSub: { fontSize: FONT_SIZE.xs, fontWeight: '500', color: COLORS.textTertiary, marginTop: 1 },
+  socialProofLive: {
+    flexDirection: 'row', alignItems: 'center', gap: 4,
+    backgroundColor: '#FBE8E4', paddingHorizontal: 8, paddingVertical: 3,
+    borderRadius: RADIUS.full,
+  },
+  liveDot: { width: 6, height: 6, borderRadius: 3, backgroundColor: '#C25B4A' },
+  liveText: { fontSize: 10, fontWeight: '700', color: '#C25B4A' },
+
+  // Streak card
+  streakCard: { borderRadius: RADIUS.xl, overflow: 'hidden', ...SHADOWS.sm },
+  streakGradient: {
+    flexDirection: 'row', alignItems: 'center',
+    padding: SPACING.base, gap: SPACING.md,
+  },
+  streakEmoji: { fontSize: 28 },
+  streakInfo: { flex: 1 },
+  streakTitle: { fontSize: FONT_SIZE.sm, fontWeight: '800', color: '#FFF' },
+  streakSub: { fontSize: FONT_SIZE.xs, fontWeight: '500', color: 'rgba(255,255,255,0.8)', marginTop: 1 },
+
+  // Invite card
+  inviteCard: {
+    flexDirection: 'row', alignItems: 'center',
+    backgroundColor: '#FFF', borderRadius: RADIUS.xl,
+    padding: SPACING.base, ...SHADOWS.sm,
+    borderWidth: 1, borderColor: '#C4956A20',
+  },
+  inviteIconCircle: {
+    width: 44, height: 44, borderRadius: 22,
+    backgroundColor: '#FDF5ED', alignItems: 'center', justifyContent: 'center',
+    marginRight: SPACING.md,
+  },
+  inviteContent: { flex: 1 },
+  inviteTitle: { fontSize: FONT_SIZE.sm, fontWeight: '700', color: COLORS.text },
+  inviteSub: { fontSize: FONT_SIZE.xs, fontWeight: '500', color: COLORS.textTertiary, marginTop: 1 },
+  inviteArrow: {
+    width: 32, height: 32, borderRadius: 16,
+    backgroundColor: '#FDF5ED', alignItems: 'center', justifyContent: 'center',
+  },
 });
 
 export default HomeScreen;

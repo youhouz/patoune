@@ -198,6 +198,29 @@ exports.getPopularProducts = async (req, res, next) => {
   }
 };
 
+// @desc    Stats communautaires (social proof)
+// @route   GET /api/products/community-stats
+exports.getCommunityStats = async (req, res, next) => {
+  try {
+    const now = new Date();
+    const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+
+    const [totalScans, scansToday, totalProducts, totalUsers] = await Promise.all([
+      ScanHistory.countDocuments(),
+      ScanHistory.countDocuments({ scannedAt: { $gte: todayStart } }),
+      Product.countDocuments(),
+      User.countDocuments(),
+    ]);
+
+    res.json({
+      success: true,
+      stats: { totalScans, scansToday, totalProducts, totalUsers },
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 // @desc    Rechercher des produits
 // @route   GET /api/products/search?q=
 exports.searchProducts = async (req, res, next) => {
