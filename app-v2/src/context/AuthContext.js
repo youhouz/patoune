@@ -94,8 +94,8 @@ export const AuthProvider = ({ children }) => {
 
   const register = useCallback(async (data = {}) => {
     try {
-      const { name, email, password, phone, role, address, guardianProfile } = data;
-      const response = await registerAPI(name, email, password, phone, role, address, guardianProfile);
+      const { name, email, password, phone, role, address, guardianProfile, referralCode } = data;
+      const response = await registerAPI(name, email, password, phone, role, address, guardianProfile, referralCode);
       const { token: newToken, user: userData } = response.data;
 
       if (!newToken || !userData) {

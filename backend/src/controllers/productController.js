@@ -1,5 +1,6 @@
 const Product = require('../models/Product');
 const ScanHistory = require('../models/ScanHistory');
+const User = require('../models/User');
 const { calculateScore } = require('../utils/scoreCalculator');
 const { fetchProductFromOpenFoodFacts } = require('../utils/openFoodFacts');
 
@@ -46,12 +47,48 @@ exports.scanProduct = async (req, res, next) => {
       await product.save();
     }
 
-    // Sauvegarder dans l'historique si l'utilisateur est connecte
+    // Sauvegarder dans l'historique + mettre à jour les stats gamification
     if (req.user) {
       await ScanHistory.create({
         user: req.user.id,
         product: product._id
       });
+
+      // Mettre à jour streak et totalScans
+      const now = new Date();
+      const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+      const userDoc = await User.findById(req.user.id);
+      if (userDoc) {
+        userDoc.totalScans = (userDoc.totalScans || 0) + 1;
+        if (userDoc.lastScanDate) {
+          const lastDate = new Date(userDoc.lastScanDate);
+          const lastDay = new Date(lastDate.getFullYear(), lastDate.getMonth(), lastDate.getDate());
+          const diffDays = Math.round((today - lastDay) / (1000 * 60 * 60 * 24));
+          if (diffDays === 1) {
+            userDoc.scanStreak = (userDoc.scanStreak || 0) + 1;
+          } else if (diffDays > 1) {
+            userDoc.scanStreak = 1;
+          }
+          // Same day: keep streak unchanged
+        } else {
+          userDoc.scanStreak = 1;
+        }
+        userDoc.lastScanDate = now;
+
+        // Auto-attribution de badges
+        const badges = userDoc.badges || [];
+        const newBadges = [];
+        if (userDoc.totalScans >= 1 && !badges.includes('first_scan')) newBadges.push('first_scan');
+        if (userDoc.totalScans >= 10 && !badges.includes('scanner_10')) newBadges.push('scanner_10');
+        if (userDoc.totalScans >= 50 && !badges.includes('scanner_50')) newBadges.push('scanner_50');
+        if (userDoc.totalScans >= 100 && !badges.includes('scanner_100')) newBadges.push('scanner_100');
+        if (userDoc.scanStreak >= 3 && !badges.includes('streak_3')) newBadges.push('streak_3');
+        if (userDoc.scanStreak >= 7 && !badges.includes('streak_7')) newBadges.push('streak_7');
+        if (userDoc.scanStreak >= 30 && !badges.includes('streak_30')) newBadges.push('streak_30');
+        if (newBadges.length > 0) userDoc.badges.push(...newBadges);
+
+        await userDoc.save();
+      }
     }
 
     res.json({ success: true, product });

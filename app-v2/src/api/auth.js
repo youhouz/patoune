@@ -1,10 +1,11 @@
 import api, { API_URL } from './client';
 
 // Use raw fetch for register/login to avoid axios interceptor issues on Safari
-export const registerAPI = async (name, email, password, phone, role, address, guardianProfile) => {
+export const registerAPI = async (name, email, password, phone, role, address, guardianProfile, referralCode) => {
   const body = { name, email, password, phone, role };
   if (address) body.address = address;
   if (guardianProfile) body.guardianProfile = guardianProfile;
+  if (referralCode) body.referralCode = referralCode;
 
   let res;
   try {

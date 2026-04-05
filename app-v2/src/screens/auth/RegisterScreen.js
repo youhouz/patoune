@@ -43,6 +43,7 @@ const RegisterScreen = ({ navigation }) => {
   const [phone,    setPhone]    = useState('');
   const [password, setPassword] = useState('');
   const [confirm,  setConfirm]  = useState('');
+  const [referral, setReferral]  = useState('');
   const [roles,    setRoles]    = useState({ user: true, guardian: false });
   const [showPwd,  setShowPwd]  = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
@@ -108,7 +109,7 @@ const RegisterScreen = ({ navigation }) => {
     if (!validate()) { shake(); return; }
     setLoading(true);
     try {
-      const result = await register({ name: name.trim(), email: email.trim().toLowerCase(), password, phone: phone.trim(), role: getFinalRole() });
+      const result = await register({ name: name.trim(), email: email.trim().toLowerCase(), password, phone: phone.trim(), role: getFinalRole(), referralCode: referral.trim() || undefined });
       setLoading(false);
       if (result.success) {
         const parent = navigation.getParent()?.getParent();
@@ -325,6 +326,14 @@ const RegisterScreen = ({ navigation }) => {
                   </Text>
                 </View>
               )}
+
+              {/* Referral code (optional) */}
+              {renderField({
+                label: 'Code parrainage (optionnel)', icon: 'gift', fieldKey: 'referral',
+                value: referral, onChangeText: setReferral,
+                placeholder: 'Ex: PEP1234', autoCapitalize: 'characters',
+                returnKeyType: 'done', onSubmitEditing: handleRegister,
+              })}
 
               {/* CTA */}
               <TouchableOpacity

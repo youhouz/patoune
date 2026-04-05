@@ -246,6 +246,19 @@ const ProfileScreen = ({ navigation }) => {
       ],
     }] : []),
     {
+      title: 'Parrainage & Badges',
+      items: [
+        {
+          icon: 'gift',
+          label: 'Inviter des amis',
+          subtitle: `${user?.referralCount || 0} filleul${(user?.referralCount || 0) !== 1 ? 's' : ''} — Gagne des badges`,
+          screen: 'Referral',
+          accentColor: '#6B8F71',
+          bgColor: colors.primarySoft,
+        },
+      ],
+    },
+    {
       title: 'Parametres',
       items: [
         {
