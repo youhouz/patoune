@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useRef } from 'react';
+import React, { useState, useCallback, useRef, useEffect } from 'react';
 import {
   View, Text, ScrollView, TouchableOpacity, StyleSheet,
   Platform, StatusBar, RefreshControl, TextInput, Animated,
@@ -9,6 +9,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 const PressableCard = ({ onPress, disabled, style, children }) => {
   const scale = useRef(new Animated.Value(1)).current;
   const onPressIn = () => {
+    hapticLight();
     Animated.spring(scale, { toValue: 0.95, useNativeDriver: true, speed: 50, bounciness: 4 }).start();
   };
   const onPressOut = () => {
@@ -28,6 +29,24 @@ const PressableCard = ({ onPress, disabled, style, children }) => {
     </TouchableOpacity>
   );
 };
+
+// ─── Pulsing emoji (for streak fire) ────────────────────
+const PulsingEmoji = ({ emoji, style }) => {
+  const scale = useRef(new Animated.Value(1)).current;
+  useEffect(() => {
+    const pulse = Animated.loop(
+      Animated.sequence([
+        Animated.timing(scale, { toValue: 1.15, duration: 650, useNativeDriver: true }),
+        Animated.timing(scale, { toValue: 1, duration: 650, useNativeDriver: true }),
+      ])
+    );
+    pulse.start();
+    return () => pulse.stop();
+  }, []);
+  return (
+    <Animated.Text style={[style, { transform: [{ scale }] }]}>{emoji}</Animated.Text>
+  );
+};
 import { useFocusEffect } from '@react-navigation/native';
 import { Feather } from '@expo/vector-icons';
 import { useAuth } from '../context/AuthContext';
@@ -38,8 +57,10 @@ import { PepeteIcon } from '../components/PepeteLogo';
 import useResponsive from '../hooks/useResponsive';
 import { COLORS, SPACING, RADIUS, SHADOWS, FONT_SIZE, getScoreColor, getScoreLabel } from '../utils/colors';
 import { isPushSubscribed, subscribeToPush } from '../utils/pushNotifications';
+import { hapticLight, hapticSelection } from '../utils/haptics';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import SatisfactionPrompt from '../components/SatisfactionPrompt';
+import WeeklySummaryCard from '../components/WeeklySummaryCard';
 import api from '../api/client';
 
 // ─── Recent Scan Card — Glass morphism ─────────────────────
@@ -587,9 +608,14 @@ const HomeScreen = ({ navigation }) => {
                 start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}
                 style={s.streakGradient}
               >
-                <Text style={s.streakEmoji}>
-                  {(user.scanStreak || 0) >= 7 ? '🔥' : (user.scanStreak || 0) >= 3 ? '⚡' : '🐾'}
-                </Text>
+                {(user.scanStreak || 0) >= 3 ? (
+                  <PulsingEmoji
+                    emoji={(user.scanStreak || 0) >= 7 ? '🔥' : '⚡'}
+                    style={s.streakEmoji}
+                  />
+                ) : (
+                  <Text style={s.streakEmoji}>🐾</Text>
+                )}
                 <View style={s.streakInfo}>
                   <Text style={s.streakTitle}>
                     {(user.scanStreak || 0) > 0
@@ -687,6 +713,15 @@ const HomeScreen = ({ navigation }) => {
             );
           })()}
         </View>
+
+        {/* ── Recap hebdomadaire ── */}
+        {user && recentScans.length > 0 && (
+          <View style={[s.weeklySection, { paddingHorizontal: hPadding }, centerWrap]}>
+            <WeeklySummaryCard
+              onPressHistory={() => navigation.navigate('Scanner', { screen: 'ScanHistory' })}
+            />
+          </View>
+        )}
 
         {/* ── Prochaine garde ── */}
         {bookings.length > 0 && (
@@ -1222,6 +1257,9 @@ const s = StyleSheet.create({
     borderRadius: 3, overflow: 'hidden',
   },
   nextBadgeProgressFill: { height: '100%', borderRadius: 3 },
+
+  // Weekly summary
+  weeklySection: { marginTop: SPACING.base },
 
   // Daily tip
   dailyTipSection: { marginTop: SPACING.sm },

@@ -29,3 +29,6 @@ export const toggleFavoriteAPI = (productId) =>
 
 export const getFavoritesAPI = () =>
   api.get('/products/favorites');
+
+export const getWeeklySummaryAPI = () =>
+  api.get('/products/weekly-summary');

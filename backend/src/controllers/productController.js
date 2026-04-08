@@ -295,6 +295,58 @@ exports.getCommunityStats = async (req, res, next) => {
   }
 };
 
+// @desc    Resume hebdomadaire des scans pour l'utilisateur
+// @route   GET /api/products/weekly-summary
+exports.getWeeklySummary = async (req, res, next) => {
+  try {
+    const now = new Date();
+    const weekStart = new Date(now);
+    weekStart.setDate(now.getDate() - 7);
+    weekStart.setHours(0, 0, 0, 0);
+
+    const history = await ScanHistory.find({
+      user: req.user.id,
+      scannedAt: { $gte: weekStart },
+    })
+      .populate('product', 'name brand nutritionScore image category')
+      .lean();
+
+    const scansThisWeek = history.length;
+    const scoresSum = history.reduce((sum, h) => sum + (h.product?.nutritionScore || 0), 0);
+    const avgScore = scansThisWeek > 0 ? Math.round(scoresSum / scansThisWeek) : 0;
+    const dangerousCount = history.filter(h => (h.product?.nutritionScore || 100) < 40).length;
+    const excellentCount = history.filter(h => (h.product?.nutritionScore || 0) >= 80).length;
+
+    // Best scan of the week
+    const bestScan = history
+      .filter(h => h.product)
+      .sort((a, b) => (b.product.nutritionScore || 0) - (a.product.nutritionScore || 0))[0];
+
+    // Scans per day (last 7 days)
+    const perDay = Array(7).fill(0);
+    history.forEach(h => {
+      const daysAgo = Math.floor((now - new Date(h.scannedAt)) / (1000 * 60 * 60 * 24));
+      if (daysAgo >= 0 && daysAgo < 7) {
+        perDay[6 - daysAgo]++;
+      }
+    });
+
+    res.json({
+      success: true,
+      summary: {
+        scansThisWeek,
+        avgScore,
+        dangerousCount,
+        excellentCount,
+        bestScan: bestScan?.product || null,
+        perDay,
+      },
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 // @desc    Toggle un produit en favori
 // @route   POST /api/products/:id/favorite
 exports.toggleFavorite = async (req, res, next) => {

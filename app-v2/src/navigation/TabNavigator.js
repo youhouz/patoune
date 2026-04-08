@@ -5,6 +5,7 @@ import { View, Text, StyleSheet, Platform } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import { useAuth } from '../context/AuthContext';
 import { COLORS } from '../utils/colors';
+import { hapticSelection } from '../utils/haptics';
 import HomeScreen from '../screens/HomeScreen';
 import ScannerNavigator from './ScannerNavigator';
 import PetSittersListScreen from '../screens/petsitting/PetSittersListScreen';
@@ -108,6 +109,11 @@ const TabIcon = ({ routeName, focused }) => {
 
 const ThreeTabs = () => (
   <Tab.Navigator
+    screenListeners={{
+      tabPress: () => {
+        hapticSelection();
+      },
+    }}
     screenOptions={({ route }) => ({
       headerShown: false,
       tabBarIcon: ({ focused }) => <TabIcon routeName={route.name} focused={focused} />,
