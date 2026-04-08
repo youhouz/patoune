@@ -25,6 +25,7 @@ import { uploadAvatarAPI } from '../../api/auth';
 import { API_URL } from '../../api/client';
 import { showAlert } from '../../utils/alert';
 import colors, { SHADOWS, RADIUS, SPACING, FONT_SIZE } from '../../utils/colors';
+import { hapticLight } from '../../utils/haptics';
 
 const HEADER_PADDING_TOP = Platform.OS === 'ios' ? 60 : (StatusBar.currentHeight || 24) + 20;
 
@@ -461,6 +462,7 @@ const ProfileScreen = ({ navigation }) => {
                 key={itemIndex}
                 style={styles.menuCard}
                 onPress={() => {
+                  hapticLight();
                   if (item.isRootNav) {
                     navigation.getParent()?.getParent()?.navigate(item.screen);
                   } else if (item.tabNav) {

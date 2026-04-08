@@ -132,13 +132,13 @@ const NextBookingCard = ({ booking }) => {
 
 // ─── Pet Mini Card — Refined ───────────────────────────────
 const PetMiniCard = ({ pet }) => {
-  const speciesLetters = { chien: 'C', chat: 'Ch', oiseau: 'O', rongeur: 'R', reptile: 'Re', poisson: 'P' };
+  const speciesEmojis = { chien: '🐶', chat: '🐱', oiseau: '🐦', rongeur: '🐹', reptile: '🦎', poisson: '🐟' };
   const speciesColors = { chien: '#6B8F71', chat: '#527A56', oiseau: '#8CB092', rongeur: '#C4956A', reptile: '#3D5E41', poisson: '#B8A88A' };
   const color = speciesColors[pet.species] || COLORS.primary;
   return (
     <View style={s.petMini}>
       <View style={[s.petMiniAvatar, { backgroundColor: color + '10', borderColor: color + '20' }]}>
-        <Text style={[s.petMiniLetter, { color }]}>{speciesLetters[pet.species] || '?'}</Text>
+        <Text style={s.petMiniEmoji}>{speciesEmojis[pet.species] || '🐾'}</Text>
       </View>
       <Text style={s.petMiniName} numberOfLines={1}>{pet.name}</Text>
     </View>
@@ -948,6 +948,7 @@ const s = StyleSheet.create({
     borderWidth: 2, marginBottom: 8,
   },
   petMiniLetter: { fontSize: 16, fontWeight: '800' },
+  petMiniEmoji: { fontSize: 22 },
   petMiniName: { fontSize: FONT_SIZE.xs, fontWeight: '700', color: COLORS.text, textAlign: 'center' },
   petMiniAdd: { alignItems: 'center', width: 74, justifyContent: 'center' },
   petMiniAddCircle: {
