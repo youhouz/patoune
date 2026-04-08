@@ -84,8 +84,18 @@ const userSchema = new mongoose.Schema({
     type: Number,
     default: 0,
   },
+  // Nombre de produits dangereux que l'utilisateur a évités grâce à Pepete
+  badProductsAvoided: {
+    type: Number,
+    default: 0,
+  },
   badges: [{
     type: String,
+  }],
+  // Produits favoris (sauvegardés)
+  favoriteProducts: [{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Product',
   }],
 }, {
   timestamps: true

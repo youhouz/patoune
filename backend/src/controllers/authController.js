@@ -82,6 +82,11 @@ exports.register = async (req, res, next) => {
         isPetSitter: user.isPetSitter,
         referralCode: user.referralCode,
         referralCount: 0,
+        totalScans: 0,
+        scanStreak: 0,
+        badProductsAvoided: 0,
+        badges: [],
+        favoriteProducts: [],
       }
     });
   } catch (error) {
@@ -133,6 +138,11 @@ exports.login = async (req, res, next) => {
         role: user.role,
         referralCode: user.referralCode,
         referralCount: user.referralCount || 0,
+        totalScans: user.totalScans || 0,
+        scanStreak: user.scanStreak || 0,
+        badProductsAvoided: user.badProductsAvoided || 0,
+        badges: user.badges || [],
+        favoriteProducts: user.favoriteProducts || [],
       }
     });
   } catch (error) {
@@ -162,7 +172,9 @@ exports.getMe = async (req, res, next) => {
         referralCount: user.referralCount || 0,
         totalScans: user.totalScans || 0,
         scanStreak: user.scanStreak || 0,
+        badProductsAvoided: user.badProductsAvoided || 0,
         badges: user.badges || [],
+        favoriteProducts: user.favoriteProducts || [],
       }
     });
   } catch (error) {

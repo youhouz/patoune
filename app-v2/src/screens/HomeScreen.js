@@ -231,7 +231,16 @@ const HomeScreen = ({ navigation }) => {
 
   const firstName = user?.name?.split(' ')[0] || null;
   const hour = new Date().getHours();
-  const greetText = hour < 12 ? 'Bonjour' : hour < 18 ? 'Bonne journée' : 'Bonsoir';
+  const greetInfo = (() => {
+    if (hour < 6)  return { text: 'Bonne nuit',     emoji: '🌙' };
+    if (hour < 12) return { text: 'Bonjour',        emoji: '☀️' };
+    if (hour < 14) return { text: 'Bon appétit',    emoji: '🍽️' };
+    if (hour < 18) return { text: 'Bon après-midi', emoji: '🌤️' };
+    if (hour < 22) return { text: 'Bonsoir',        emoji: '🌆' };
+    return { text: 'Bonne soirée', emoji: '🌙' };
+  })();
+  const greetText = greetInfo.text;
+  const greetEmoji = greetInfo.emoji;
 
   const features = [
     {
@@ -307,7 +316,7 @@ const HomeScreen = ({ navigation }) => {
               <View style={s.heroGreetBox}>
                 <View style={s.heroGreetRow}>
                   <PepeteIcon size={24} color="rgba(255,255,255,0.9)" />
-                  <Text style={s.greeting}>{greetText}</Text>
+                  <Text style={s.greeting}>{greetText} {greetEmoji}</Text>
                 </View>
                 {firstName
                   ? <Text style={s.userName}>{firstName}</Text>

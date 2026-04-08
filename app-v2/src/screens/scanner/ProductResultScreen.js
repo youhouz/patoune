@@ -17,8 +17,11 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { FONTS } from '../../utils/typography';
 import { COLORS, SHADOWS, RADIUS, SPACING, FONT_SIZE, getScoreColor, getScoreBg, getScoreLabel } from '../../utils/colors';
 import { showAlert } from '../../utils/alert';
-import { getAlternativesAPI } from '../../api/products';
+import { hapticSuccess, hapticWarning, hapticError, hapticLight } from '../../utils/haptics';
+import { getAlternativesAPI, toggleFavoriteAPI } from '../../api/products';
+import { useAuth } from '../../context/AuthContext';
 import BadgeUnlockModal from '../../components/BadgeUnlockModal';
+import Confetti from '../../components/Confetti';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const SCORE_RING_SIZE = 110;
@@ -156,6 +159,7 @@ const getAdviceColors = (type) => {
 
 const ProductResultScreen = ({ route, navigation }) => {
   const insets = useSafeAreaInsets();
+  const { user, updateUser } = useAuth();
   const { product, newBadges: newBadgesParam, gamification } = route.params;
   const score = product.nutritionScore ?? null;
   const hasScore = score !== null && score !== undefined;
@@ -173,7 +177,43 @@ const ProductResultScreen = ({ route, navigation }) => {
   const [cardsVisible, setCardsVisible] = useState(false);
   const [badgeModal, setBadgeModal] = useState(null);
   const [alternatives, setAlternatives] = useState([]);
+  const [showConfetti, setShowConfetti] = useState(false);
   const badgeQueue = useRef([...(newBadgesParam || [])]).current;
+
+  // Favorite state
+  const [isFavorite, setIsFavorite] = useState(
+    (user?.favoriteProducts || []).some(id => id === product._id || id?._id === product._id)
+  );
+  const favScale = useRef(new Animated.Value(1)).current;
+
+  const handleToggleFavorite = async () => {
+    if (!user) {
+      showAlert('Connecte-toi', 'Connecte-toi pour sauvegarder des produits favoris.');
+      return;
+    }
+    if (!product._id) return;
+    hapticLight();
+    // Optimistic update + bump animation
+    setIsFavorite(f => !f);
+    Animated.sequence([
+      Animated.spring(favScale, { toValue: 1.3, friction: 3, tension: 150, useNativeDriver: true }),
+      Animated.spring(favScale, { toValue: 1, friction: 3, tension: 150, useNativeDriver: true }),
+    ]).start();
+    try {
+      const res = await toggleFavoriteAPI(product._id);
+      setIsFavorite(!!res.data?.isFavorite);
+      // Update local user
+      if (updateUser) {
+        const currentFavs = user.favoriteProducts || [];
+        const newFavs = res.data?.isFavorite
+          ? [...currentFavs, product._id]
+          : currentFavs.filter(id => id !== product._id && id?._id !== product._id);
+        updateUser({ ...user, favoriteProducts: newFavs });
+      }
+    } catch (_) {
+      setIsFavorite(f => !f); // rollback
+    }
+  };
 
   useEffect(() => {
     // Content fade in
@@ -219,6 +259,24 @@ const ProductResultScreen = ({ route, navigation }) => {
       }
     });
 
+    // Haptic feedback based on score quality
+    if (hasScore) {
+      setTimeout(() => {
+        if (score >= 80) {
+          hapticSuccess();
+          // Celebrate with confetti on great products!
+          setShowConfetti(true);
+          setTimeout(() => setShowConfetti(false), 4000);
+        } else if (score >= 40) {
+          hapticLight();
+        } else {
+          hapticWarning();
+        }
+      }, 400);
+    } else {
+      hapticLight();
+    }
+
     // Fetch alternatives for low-score products
     if (hasScore && score < 60 && product._id) {
       getAlternativesAPI(product._id).then(res => {
@@ -260,6 +318,7 @@ const ProductResultScreen = ({ route, navigation }) => {
   };
 
   const handleShare = async () => {
+    hapticLight();
     try {
       await Share.share({
         message: buildShareMessage(),
@@ -325,13 +384,31 @@ const ProductResultScreen = ({ route, navigation }) => {
               <Feather name="chevron-left" size={22} color={COLORS.white} />
               <Text style={styles.backText}>Retour</Text>
             </TouchableOpacity>
-            <TouchableOpacity
-              style={styles.shareButton}
-              onPress={handleShare}
-              activeOpacity={0.7}
-            >
-              <Feather name="share-2" size={18} color={COLORS.white} />
-            </TouchableOpacity>
+            <View style={{ flexDirection: 'row', gap: SPACING.sm }}>
+              {user && (
+                <TouchableOpacity
+                  style={styles.shareButton}
+                  onPress={handleToggleFavorite}
+                  activeOpacity={0.7}
+                >
+                  <Animated.View style={{ transform: [{ scale: favScale }] }}>
+                    <Feather
+                      name="heart"
+                      size={18}
+                      color={isFavorite ? '#FF5C7A' : COLORS.white}
+                      style={isFavorite ? { } : undefined}
+                    />
+                  </Animated.View>
+                </TouchableOpacity>
+              )}
+              <TouchableOpacity
+                style={styles.shareButton}
+                onPress={handleShare}
+                activeOpacity={0.7}
+              >
+                <Feather name="share-2" size={18} color={COLORS.white} />
+              </TouchableOpacity>
+            </View>
           </View>
 
           {/* Product image */}
@@ -771,6 +848,32 @@ const ProductResultScreen = ({ route, navigation }) => {
             </View>
           )}
 
+          {/* "Produit dangereux évité" impact card - displays when current product is bad */}
+          {hasScore && score < 40 && gamification?.badProductsAvoided > 0 && (
+            <View style={styles.avoidedCard}>
+              <LinearGradient
+                colors={['#6B8F71', '#8CB092']}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+                style={styles.avoidedGradient}
+              >
+                <View style={styles.avoidedIconCircle}>
+                  <Feather name="shield" size={22} color="#FFF" />
+                </View>
+                <View style={styles.avoidedContent}>
+                  <Text style={styles.avoidedTitle}>
+                    {gamification.badProductsAvoided === 1
+                      ? 'Premier produit dangereux évité !'
+                      : `${gamification.badProductsAvoided} produits dangereux évités`}
+                  </Text>
+                  <Text style={styles.avoidedText}>
+                    Grace a Pepete, tu sais ce qu'il faut eviter pour ton animal 🐾
+                  </Text>
+                </View>
+              </LinearGradient>
+            </View>
+          )}
+
           {/* Share score card - Growth Hacking #1 */}
           <View style={styles.shareCard}>
             <LinearGradient
@@ -816,6 +919,9 @@ const ProductResultScreen = ({ route, navigation }) => {
           <View style={{ height: SPACING['3xl'] }} />
         </Animated.View>
       </ScrollView>
+
+      {/* Confetti celebration on great scores */}
+      <Confetti active={showConfetti} count={40} />
 
       {/* Badge unlock modal */}
       <BadgeUnlockModal
@@ -1365,6 +1471,41 @@ const styles = StyleSheet.create({
     color: 'rgba(255,255,255,0.85)',
     textAlign: 'center',
     lineHeight: 20,
+  },
+
+  // Avoided product impact card
+  avoidedCard: {
+    borderRadius: RADIUS['2xl'],
+    overflow: 'hidden',
+    marginBottom: SPACING.base,
+    ...SHADOWS.md,
+  },
+  avoidedGradient: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: SPACING.lg,
+    gap: SPACING.md,
+  },
+  avoidedIconCircle: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  avoidedContent: { flex: 1 },
+  avoidedTitle: {
+    fontSize: FONT_SIZE.base,
+    fontFamily: FONTS.heading,
+    color: '#FFF',
+  },
+  avoidedText: {
+    fontSize: FONT_SIZE.xs,
+    fontFamily: FONTS.bodyMedium,
+    color: 'rgba(255,255,255,0.85)',
+    marginTop: 2,
+    lineHeight: 16,
   },
 
   // Alternatives

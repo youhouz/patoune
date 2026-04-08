@@ -4,6 +4,7 @@ import { COLORS } from '../utils/colors';
 import ScannerScreen from '../screens/scanner/ScannerScreen';
 import ProductResultScreen from '../screens/scanner/ProductResultScreen';
 import ScanHistoryScreen from '../screens/scanner/ScanHistoryScreen';
+import FavoritesScreen from '../screens/scanner/FavoritesScreen';
 
 const Stack = createStackNavigator();
 
@@ -29,6 +30,7 @@ const ScannerNavigator = () => (
     <Stack.Screen name="ScannerMain" component={ScannerScreen} options={{ headerShown: false }} />
     <Stack.Screen name="ProductResult" component={ProductResultScreen} options={{ headerShown: false }} />
     <Stack.Screen name="ScanHistory" component={ScanHistoryScreen} options={{ headerShown: false }} />
+    <Stack.Screen name="Favorites" component={FavoritesScreen} options={{ headerShown: false }} />
   </Stack.Navigator>
 );
 

@@ -60,6 +60,10 @@ exports.scanProduct = async (req, res, next) => {
       const userDoc = await User.findById(req.user.id);
       if (userDoc) {
         userDoc.totalScans = (userDoc.totalScans || 0) + 1;
+        // Compter les produits dangereux évités
+        if ((product.nutritionScore || 0) < 40) {
+          userDoc.badProductsAvoided = (userDoc.badProductsAvoided || 0) + 1;
+        }
         if (userDoc.lastScanDate) {
           const lastDate = new Date(userDoc.lastScanDate);
           const lastDay = new Date(lastDate.getFullYear(), lastDate.getMonth(), lastDate.getDate());
@@ -96,6 +100,7 @@ exports.scanProduct = async (req, res, next) => {
           gamification: {
             totalScans: userDoc.totalScans,
             scanStreak: userDoc.scanStreak,
+            badProductsAvoided: userDoc.badProductsAvoided,
             newBadges,
             badges: userDoc.badges,
           },
@@ -285,6 +290,56 @@ exports.getCommunityStats = async (req, res, next) => {
       success: true,
       stats: { totalScans, scansToday, totalProducts, totalUsers },
     });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// @desc    Toggle un produit en favori
+// @route   POST /api/products/:id/favorite
+exports.toggleFavorite = async (req, res, next) => {
+  try {
+    const productId = req.params.id;
+    const user = await User.findById(req.user.id);
+    if (!user) {
+      return res.status(404).json({ success: false, error: 'Utilisateur non trouve' });
+    }
+
+    user.favoriteProducts = user.favoriteProducts || [];
+    const idx = user.favoriteProducts.findIndex(p => p.toString() === productId);
+    let isFavorite;
+    if (idx >= 0) {
+      user.favoriteProducts.splice(idx, 1);
+      isFavorite = false;
+    } else {
+      user.favoriteProducts.push(productId);
+      isFavorite = true;
+    }
+    await user.save();
+
+    res.json({
+      success: true,
+      isFavorite,
+      favoriteCount: user.favoriteProducts.length,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// @desc    Liste des produits favoris
+// @route   GET /api/products/favorites
+exports.getFavorites = async (req, res, next) => {
+  try {
+    const user = await User.findById(req.user.id)
+      .populate({
+        path: 'favoriteProducts',
+        select: 'name brand barcode nutritionScore image category targetAnimal',
+      })
+      .lean();
+
+    const favorites = (user?.favoriteProducts || []).filter(Boolean);
+    res.json({ success: true, count: favorites.length, favorites });
   } catch (error) {
     next(error);
   }

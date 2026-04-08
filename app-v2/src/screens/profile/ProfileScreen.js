@@ -201,6 +201,29 @@ const ProfileScreen = ({ navigation }) => {
         },
       ],
     },
+    {
+      title: 'Mes produits',
+      items: [
+        {
+          icon: 'heart',
+          label: 'Mes favoris',
+          subtitle: 'Produits que j\'ai sauvegardes',
+          screen: 'Favorites',
+          tabNav: 'Scanner',
+          accentColor: '#FF5C7A',
+          bgColor: '#FFF1F3',
+        },
+        {
+          icon: 'list',
+          label: 'Historique scans',
+          subtitle: 'Tous les produits que j\'ai scannes',
+          screen: 'ScanHistory',
+          tabNav: 'Scanner',
+          accentColor: '#5B7FC2',
+          bgColor: '#E4ECFB',
+        },
+      ],
+    },
   ];
 
   const sitterSections = [
@@ -440,6 +463,9 @@ const ProfileScreen = ({ navigation }) => {
                 onPress={() => {
                   if (item.isRootNav) {
                     navigation.getParent()?.getParent()?.navigate(item.screen);
+                  } else if (item.tabNav) {
+                    // Navigate to a screen inside another tab's stack
+                    navigation.getParent()?.navigate(item.tabNav, { screen: item.screen });
                   } else {
                     navigation.navigate(item.screen);
                   }

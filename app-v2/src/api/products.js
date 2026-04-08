@@ -23,3 +23,9 @@ export const getAlternativesAPI = (productId) =>
 
 export const getLeaderboardAPI = () =>
   api.get('/products/leaderboard');
+
+export const toggleFavoriteAPI = (productId) =>
+  api.post(`/products/${productId}/favorite`);
+
+export const getFavoritesAPI = () =>
+  api.get('/products/favorites');
