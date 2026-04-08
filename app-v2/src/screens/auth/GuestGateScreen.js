@@ -2,7 +2,7 @@
 // Pépète — GuestGateScreen v4.0
 // DA premium unifiée — même système que les autres écrans de l'app
 // ─────────────────────────────────────────────────────────────────────────────
-import React, { useRef, useEffect } from 'react';
+import React, { useRef, useEffect, useState } from 'react';
 import {
   View, Text, TouchableOpacity, StyleSheet, Animated, ScrollView,
 } from 'react-native';
@@ -13,6 +13,8 @@ import { useNavigation } from '@react-navigation/native';
 import { PepeteIcon } from '../../components/PepeteLogo';
 import { FONTS } from '../../utils/typography';
 import colors, { RADIUS, SHADOWS, SPACING, FONT_SIZE } from '../../utils/colors';
+import { getCommunityStatsAPI } from '../../api/products';
+import AnimatedCounter from '../../components/AnimatedCounter';
 
 const FEATURES = [
   { icon: 'heart', title: 'Trouvez un Pet-sitter', desc: 'Des Pet-sitters vérifiés près de chez vous pour vos animaux.' },
@@ -26,12 +28,25 @@ const GuestGateScreen = ({ route }) => {
   const insets = useSafeAreaInsets();
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const slideAnim = useRef(new Animated.Value(30)).current;
+  const [totalUsers, setTotalUsers] = useState(0);
 
   useEffect(() => {
     Animated.parallel([
       Animated.timing(fadeAnim, { toValue: 1, duration: 500, useNativeDriver: true }),
       Animated.timing(slideAnim, { toValue: 0, duration: 450, useNativeDriver: true }),
     ]).start();
+
+    // Live counter: fetch now + poll every 20s
+    let cancelled = false;
+    const fetchStats = async () => {
+      try {
+        const res = await getCommunityStatsAPI();
+        if (!cancelled) setTotalUsers(res.data?.stats?.totalUsers || 0);
+      } catch (_) {}
+    };
+    fetchStats();
+    const interval = setInterval(fetchStats, 20000);
+    return () => { cancelled = true; clearInterval(interval); };
   }, []);
 
   return (
@@ -64,6 +79,14 @@ const GuestGateScreen = ({ route }) => {
               <Text style={s.heroSubtitle}>
                 Débloquez toutes les fonctionnalités gratuitement
               </Text>
+
+              {totalUsers > 0 && (
+                <View style={s.liveCounter}>
+                  <View style={s.liveDotBig} />
+                  <AnimatedCounter value={totalUsers} style={s.liveCounterNumber} />
+                  <Text style={s.liveCounterLabel}>membres inscrits</Text>
+                </View>
+              )}
             </LinearGradient>
           </View>
 
@@ -183,6 +206,34 @@ const s = StyleSheet.create({
     color: 'rgba(255,255,255,0.85)',
     textAlign: 'center',
     fontWeight: '500',
+  },
+
+  // Live counter badge
+  liveCounter: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginTop: SPACING.lg,
+    paddingHorizontal: SPACING.lg,
+    paddingVertical: SPACING.sm,
+    backgroundColor: 'rgba(255,255,255,0.18)',
+    borderRadius: RADIUS.full,
+  },
+  liveDotBig: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: '#8CB092',
+  },
+  liveCounterNumber: {
+    fontSize: FONT_SIZE.lg,
+    fontWeight: '900',
+    color: '#FFF',
+  },
+  liveCounterLabel: {
+    fontSize: FONT_SIZE.xs,
+    fontWeight: '700',
+    color: 'rgba(255,255,255,0.9)',
   },
 
   features: { paddingHorizontal: SPACING.xl, marginBottom: 32 },

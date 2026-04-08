@@ -13,7 +13,8 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { Feather } from '@expo/vector-icons';
 import { useFocusEffect } from '@react-navigation/native';
 import { useAuth } from '../../context/AuthContext';
-import { getLeaderboardAPI } from '../../api/products';
+import { getLeaderboardAPI, getMonthlyLeaderboardAPI } from '../../api/products';
+import { hapticSelection } from '../../utils/haptics';
 import colors, { SHADOWS, RADIUS, SPACING, FONT_SIZE } from '../../utils/colors';
 
 const HEADER_PADDING_TOP = Platform.OS === 'ios' ? 56 : (StatusBar.currentHeight || 24) + 12;
@@ -23,20 +24,48 @@ const RANK_EMOJIS = ['🥇', '🥈', '🥉'];
 
 const LeaderboardScreen = ({ navigation }) => {
   const { user } = useAuth();
+  const [mode, setMode] = useState('month'); // 'month' | 'all'
   const [leaderboard, setLeaderboard] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [monthlyData, setMonthlyData] = useState(null);
+
+  const loadLeaderboard = useCallback(async (m) => {
+    setLoading(true);
+    try {
+      if (m === 'month') {
+        const res = await getMonthlyLeaderboardAPI();
+        setMonthlyData(res.data || null);
+        const list = (res.data?.leaderboard || []).map(e => ({
+          ...e,
+          totalScans: e.scanCount, // normalize for display
+        }));
+        setLeaderboard(list);
+      } else {
+        const res = await getLeaderboardAPI();
+        setLeaderboard(res.data?.leaderboard || []);
+      }
+    } catch (_) {
+      setLeaderboard([]);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
   useFocusEffect(
     useCallback(() => {
-      setLoading(true);
-      getLeaderboardAPI()
-        .then(res => setLeaderboard(res.data?.leaderboard || []))
-        .catch(() => {})
-        .finally(() => setLoading(false));
-    }, [])
+      loadLeaderboard(mode);
+    }, [mode, loadLeaderboard])
   );
 
-  const myRank = leaderboard.findIndex(l => l.name === user?.name) + 1;
+  const switchMode = (m) => {
+    if (m === mode) return;
+    hapticSelection();
+    setMode(m);
+  };
+
+  const myRank = mode === 'month' && monthlyData?.myRank
+    ? monthlyData.myRank
+    : leaderboard.findIndex(l => l.name === user?.name) + 1;
 
   return (
     <View style={styles.container}>
@@ -61,6 +90,37 @@ const LeaderboardScreen = ({ navigation }) => {
           <Text style={styles.headerEmoji}>🏆</Text>
           <Text style={styles.headerSub}>Les protecteurs d'animaux les plus actifs</Text>
 
+          {/* Period toggle */}
+          <View style={styles.toggleContainer}>
+            <TouchableOpacity
+              style={[styles.toggleBtn, mode === 'month' && styles.toggleBtnActive]}
+              onPress={() => switchMode('month')}
+              activeOpacity={0.8}
+            >
+              <Text style={[styles.toggleText, mode === 'month' && styles.toggleTextActive]}>
+                Ce mois-ci
+              </Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.toggleBtn, mode === 'all' && styles.toggleBtnActive]}
+              onPress={() => switchMode('all')}
+              activeOpacity={0.8}
+            >
+              <Text style={[styles.toggleText, mode === 'all' && styles.toggleTextActive]}>
+                Tout le temps
+              </Text>
+            </TouchableOpacity>
+          </View>
+
+          {mode === 'month' && monthlyData?.daysRemaining > 0 && (
+            <View style={styles.daysRemainingBadge}>
+              <Feather name="clock" size={12} color="#FFF" />
+              <Text style={styles.daysRemainingText}>
+                Fin du concours dans {monthlyData.daysRemaining} jour{monthlyData.daysRemaining > 1 ? 's' : ''}
+              </Text>
+            </View>
+          )}
+
           {myRank > 0 && (
             <View style={styles.myRankBadge}>
               <Text style={styles.myRankText}>Vous etes #{myRank}</Text>
@@ -70,6 +130,42 @@ const LeaderboardScreen = ({ navigation }) => {
 
         {/* Content */}
         <View style={styles.content}>
+          {/* Rewards card - shown only in monthly mode */}
+          {mode === 'month' && !loading && (
+            <View style={styles.rewardsCard}>
+              <View style={styles.rewardsHeader}>
+                <Text style={styles.rewardsEmoji}>🎁</Text>
+                <Text style={styles.rewardsTitle}>Récompenses du mois</Text>
+              </View>
+              <View style={styles.rewardsList}>
+                <View style={styles.rewardRow}>
+                  <Text style={styles.rewardMedal}>🥇</Text>
+                  <View style={styles.rewardInfo}>
+                    <Text style={styles.rewardName}>Champion du mois</Text>
+                    <Text style={styles.rewardDesc}>Badge exclusif + récompense surprise 🎉</Text>
+                  </View>
+                </View>
+                <View style={styles.rewardRow}>
+                  <Text style={styles.rewardMedal}>🥈</Text>
+                  <View style={styles.rewardInfo}>
+                    <Text style={styles.rewardName}>Vice-Champion</Text>
+                    <Text style={styles.rewardDesc}>Badge exclusif "Vice-Champion"</Text>
+                  </View>
+                </View>
+                <View style={[styles.rewardRow, { borderBottomWidth: 0 }]}>
+                  <Text style={styles.rewardMedal}>🥉</Text>
+                  <View style={styles.rewardInfo}>
+                    <Text style={styles.rewardName}>Médaille de bronze</Text>
+                    <Text style={styles.rewardDesc}>Badge exclusif "Bronze du mois"</Text>
+                  </View>
+                </View>
+              </View>
+              <Text style={styles.rewardsFooter}>
+                Classement remis à zéro chaque début de mois
+              </Text>
+            </View>
+          )}
+
           {loading ? (
             <ActivityIndicator size="large" color={colors.primary} style={{ marginTop: 40 }} />
           ) : leaderboard.length === 0 ? (
@@ -180,6 +276,101 @@ const styles = StyleSheet.create({
     paddingHorizontal: SPACING.lg, paddingVertical: SPACING.sm, borderRadius: RADIUS.full,
   },
   myRankText: { fontSize: FONT_SIZE.sm, fontWeight: '700', color: '#FFF' },
+
+  // Toggle
+  toggleContainer: {
+    flexDirection: 'row',
+    backgroundColor: 'rgba(255,255,255,0.15)',
+    borderRadius: RADIUS.full,
+    padding: 4,
+    marginTop: SPACING.md,
+  },
+  toggleBtn: {
+    paddingHorizontal: SPACING.lg,
+    paddingVertical: SPACING.sm,
+    borderRadius: RADIUS.full,
+  },
+  toggleBtnActive: {
+    backgroundColor: '#FFF',
+  },
+  toggleText: {
+    fontSize: FONT_SIZE.xs,
+    fontWeight: '700',
+    color: 'rgba(255,255,255,0.8)',
+  },
+  toggleTextActive: {
+    color: '#527A56',
+    fontWeight: '900',
+  },
+  daysRemainingBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    marginTop: SPACING.sm,
+    paddingHorizontal: SPACING.md,
+    paddingVertical: SPACING.xs,
+    backgroundColor: 'rgba(0,0,0,0.15)',
+    borderRadius: RADIUS.full,
+  },
+  daysRemainingText: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: '#FFF',
+  },
+
+  // Rewards card
+  rewardsCard: {
+    backgroundColor: '#FFFDF5',
+    borderRadius: RADIUS['2xl'],
+    padding: SPACING.xl,
+    marginTop: SPACING.lg,
+    borderWidth: 1,
+    borderColor: '#EAB30820',
+    ...SHADOWS.sm,
+  },
+  rewardsHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: SPACING.sm,
+    marginBottom: SPACING.base,
+  },
+  rewardsEmoji: { fontSize: 24 },
+  rewardsTitle: {
+    fontSize: FONT_SIZE.base,
+    fontWeight: '800',
+    color: colors.text,
+  },
+  rewardsList: {},
+  rewardRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: SPACING.md,
+    paddingVertical: SPACING.sm,
+    borderBottomWidth: 1,
+    borderBottomColor: '#EAB30815',
+  },
+  rewardMedal: { fontSize: 24 },
+  rewardInfo: { flex: 1 },
+  rewardName: {
+    fontSize: FONT_SIZE.sm,
+    fontWeight: '800',
+    color: colors.text,
+  },
+  rewardDesc: {
+    fontSize: FONT_SIZE.xs,
+    fontWeight: '500',
+    color: colors.textSecondary,
+    marginTop: 1,
+  },
+  rewardsFooter: {
+    fontSize: 10,
+    fontWeight: '600',
+    color: colors.textTertiary,
+    textAlign: 'center',
+    marginTop: SPACING.md,
+    fontStyle: 'italic',
+  },
+
   content: { paddingHorizontal: SPACING.xl, marginTop: -SPACING.sm },
 
   // Empty

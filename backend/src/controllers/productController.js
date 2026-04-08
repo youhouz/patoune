@@ -272,6 +272,79 @@ exports.getLeaderboard = async (req, res, next) => {
   }
 };
 
+// @desc    Leaderboard mensuel (concours du mois)
+// @route   GET /api/products/monthly-leaderboard
+exports.getMonthlyLeaderboard = async (req, res, next) => {
+  try {
+    const now = new Date();
+    const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+    const monthEnd = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59);
+    const daysRemaining = Math.max(
+      0,
+      Math.ceil((monthEnd - now) / (1000 * 60 * 60 * 24))
+    );
+
+    const topScanners = await ScanHistory.aggregate([
+      { $match: { scannedAt: { $gte: monthStart } } },
+      { $group: { _id: '$user', scanCount: { $sum: 1 } } },
+      { $sort: { scanCount: -1 } },
+      { $limit: 20 },
+      {
+        $lookup: {
+          from: 'users',
+          localField: '_id',
+          foreignField: '_id',
+          as: 'user',
+        },
+      },
+      { $unwind: '$user' },
+      {
+        $project: {
+          _id: '$user._id',
+          name: '$user.name',
+          avatar: '$user.avatar',
+          scanCount: 1,
+          totalScans: '$user.totalScans',
+          scanStreak: '$user.scanStreak',
+        },
+      },
+    ]);
+
+    // Compute my rank if authenticated
+    let myRank = null;
+    let myScanCount = 0;
+    if (req.user) {
+      const myData = await ScanHistory.aggregate([
+        { $match: { user: req.user._id, scannedAt: { $gte: monthStart } } },
+        { $count: 'scanCount' },
+      ]);
+      myScanCount = myData[0]?.scanCount || 0;
+
+      if (myScanCount > 0) {
+        const rankAgg = await ScanHistory.aggregate([
+          { $match: { scannedAt: { $gte: monthStart } } },
+          { $group: { _id: '$user', scanCount: { $sum: 1 } } },
+          { $match: { scanCount: { $gt: myScanCount } } },
+          { $count: 'higher' },
+        ]);
+        myRank = (rankAgg[0]?.higher || 0) + 1;
+      }
+    }
+
+    res.json({
+      success: true,
+      monthStart,
+      monthEnd,
+      daysRemaining,
+      leaderboard: topScanners.map((u, i) => ({ rank: i + 1, ...u })),
+      myRank,
+      myScanCount,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 // @desc    Stats communautaires (social proof)
 // @route   GET /api/products/community-stats
 exports.getCommunityStats = async (req, res, next) => {

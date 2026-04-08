@@ -51,7 +51,7 @@ import { useFocusEffect } from '@react-navigation/native';
 import { Feather } from '@expo/vector-icons';
 import { useAuth } from '../context/AuthContext';
 import { getMyPetsAPI } from '../api/pets';
-import { getScanHistoryAPI, getPopularProductsAPI, getCommunityStatsAPI } from '../api/products';
+import { getScanHistoryAPI, getPopularProductsAPI, getCommunityStatsAPI, getMonthlyLeaderboardAPI } from '../api/products';
 import { getMyBookingsAPI } from '../api/petsitters';
 import { PepeteIcon } from '../components/PepeteLogo';
 import useResponsive from '../hooks/useResponsive';
@@ -61,6 +61,7 @@ import { hapticLight, hapticSelection } from '../utils/haptics';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import SatisfactionPrompt from '../components/SatisfactionPrompt';
 import WeeklySummaryCard from '../components/WeeklySummaryCard';
+import AnimatedCounter from '../components/AnimatedCounter';
 import api from '../api/client';
 
 // ─── Recent Scan Card — Glass morphism ─────────────────────
@@ -198,8 +199,29 @@ const HomeScreen = ({ navigation }) => {
   const [query, setQuery] = useState('');
   const [popularProducts, setPopularProducts] = useState([]);
   const [communityStats, setCommunityStats] = useState(null);
+  const [monthlyLeaderboard, setMonthlyLeaderboard] = useState(null);
   const [showPushCard, setShowPushCard] = useState(false);
   const [pushDismissed, setPushDismissed] = useState(false);
+
+  // Live-poll community stats every 30 seconds so the counter feels alive
+  useEffect(() => {
+    let cancelled = false;
+    const poll = async () => {
+      try {
+        const res = await getCommunityStatsAPI();
+        if (!cancelled) setCommunityStats(res.data?.stats || null);
+      } catch (_) {}
+    };
+    const interval = setInterval(poll, 30000);
+    return () => { cancelled = true; clearInterval(interval); };
+  }, []);
+
+  // Fetch monthly leaderboard once on mount
+  useEffect(() => {
+    getMonthlyLeaderboardAPI()
+      .then(res => setMonthlyLeaderboard(res.data || null))
+      .catch(() => setMonthlyLeaderboard(null));
+  }, [user?.id]);
 
   const fetchData = async () => {
     try {
@@ -531,21 +553,24 @@ const HomeScreen = ({ navigation }) => {
 
         {/* ── Social proof + Streak + Invite ── */}
         <View style={[s.growthSection, { paddingHorizontal: hPadding }, centerWrap]}>
-          {/* Social proof banner */}
+          {/* Social proof banner with live counter */}
           {communityStats && (
             <View style={s.socialProofCard}>
               <View style={s.socialProofIcon}>
-                <Feather name="trending-up" size={18} color="#6B8F71" />
+                <Feather name="users" size={18} color="#6B8F71" />
               </View>
               <View style={s.socialProofContent}>
-                <Text style={s.socialProofTitle}>
+                <View style={{ flexDirection: 'row', alignItems: 'baseline', gap: 4 }}>
+                  <AnimatedCounter
+                    value={communityStats.totalUsers}
+                    style={s.socialProofCount}
+                  />
+                  <Text style={s.socialProofTitle}>membres en direct</Text>
+                </View>
+                <Text style={s.socialProofSub}>
                   {communityStats.scansToday > 0
                     ? `${communityStats.scansToday} scan${communityStats.scansToday > 1 ? 's' : ''} aujourd'hui`
-                    : `${communityStats.totalScans} scans au total`
-                  }
-                </Text>
-                <Text style={s.socialProofSub}>
-                  {communityStats.totalUsers} membres protegent leurs animaux
+                    : `${communityStats.totalScans} scans au total`}
                 </Text>
               </View>
               <View style={s.socialProofLive}>
@@ -713,6 +738,80 @@ const HomeScreen = ({ navigation }) => {
             );
           })()}
         </View>
+
+        {/* ── Concours du mois ── */}
+        {user && monthlyLeaderboard?.leaderboard?.length > 0 && (
+          <View style={[s.contestSection, { paddingHorizontal: hPadding }, centerWrap]}>
+            <TouchableOpacity
+              activeOpacity={0.9}
+              onPress={() => navigation.navigate('Profil', { screen: 'Leaderboard' })}
+            >
+              <LinearGradient
+                colors={['#F59E0B', '#EAB308', '#FBB928']}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+                style={s.contestCard}
+              >
+                <View style={s.contestHeader}>
+                  <View style={s.contestTitleBox}>
+                    <Text style={s.contestEmoji}>🏆</Text>
+                    <View>
+                      <Text style={s.contestEyebrow}>CONCOURS DU MOIS</Text>
+                      <Text style={s.contestTitle}>Top scanners</Text>
+                    </View>
+                  </View>
+                  {monthlyLeaderboard.daysRemaining > 0 && (
+                    <View style={s.contestDaysBadge}>
+                      <Feather name="clock" size={11} color="#7B4D00" />
+                      <Text style={s.contestDaysText}>
+                        {monthlyLeaderboard.daysRemaining}j
+                      </Text>
+                    </View>
+                  )}
+                </View>
+
+                {/* Top 3 mini podium */}
+                <View style={s.contestPodium}>
+                  {monthlyLeaderboard.leaderboard.slice(0, 3).map((entry, i) => (
+                    <View key={entry._id || i} style={s.contestPodiumItem}>
+                      <Text style={s.contestRankMedal}>
+                        {['🥇', '🥈', '🥉'][i]}
+                      </Text>
+                      <Text style={s.contestPodiumName} numberOfLines={1}>
+                        {entry.name?.split(' ')[0] || '?'}
+                      </Text>
+                      <Text style={s.contestPodiumScans}>{entry.scanCount} scans</Text>
+                    </View>
+                  ))}
+                </View>
+
+                {/* Your rank */}
+                <View style={s.contestRankRow}>
+                  {monthlyLeaderboard.myRank ? (
+                    <>
+                      <Feather name="user" size={13} color="#FFF" />
+                      <Text style={s.contestRankText}>
+                        Tu es <Text style={s.contestRankStrong}>#{monthlyLeaderboard.myRank}</Text>
+                        {' '}avec {monthlyLeaderboard.myScanCount} scans
+                      </Text>
+                    </>
+                  ) : (
+                    <>
+                      <Feather name="zap" size={13} color="#FFF" />
+                      <Text style={s.contestRankText}>
+                        Scanne pour entrer dans le classement !
+                      </Text>
+                    </>
+                  )}
+                </View>
+
+                <Text style={s.contestReward}>
+                  🎁 Récompenses exclusives pour le top 3
+                </Text>
+              </LinearGradient>
+            </TouchableOpacity>
+          </View>
+        )}
 
         {/* ── Recap hebdomadaire ── */}
         {user && recentScans.length > 0 && (
@@ -1196,6 +1295,7 @@ const s = StyleSheet.create({
   },
   socialProofContent: { flex: 1 },
   socialProofTitle: { fontSize: FONT_SIZE.sm, fontWeight: '700', color: COLORS.text },
+  socialProofCount: { fontSize: FONT_SIZE.base, fontWeight: '900', color: '#527A56' },
   socialProofSub: { fontSize: FONT_SIZE.xs, fontWeight: '500', color: COLORS.textTertiary, marginTop: 1 },
   socialProofLive: {
     flexDirection: 'row', alignItems: 'center', gap: 4,
@@ -1258,6 +1358,92 @@ const s = StyleSheet.create({
     borderRadius: 3, overflow: 'hidden',
   },
   nextBadgeProgressFill: { height: '100%', borderRadius: 3 },
+
+  // Contest du mois
+  contestSection: { marginTop: SPACING.base },
+  contestCard: {
+    borderRadius: RADIUS['2xl'],
+    padding: SPACING.xl,
+    ...SHADOWS.md,
+  },
+  contestHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: SPACING.base,
+  },
+  contestTitleBox: { flexDirection: 'row', alignItems: 'center', gap: SPACING.sm },
+  contestEmoji: { fontSize: 28 },
+  contestEyebrow: {
+    fontSize: 9,
+    fontWeight: '900',
+    color: 'rgba(255,255,255,0.85)',
+    letterSpacing: 1,
+  },
+  contestTitle: {
+    fontSize: FONT_SIZE.lg,
+    fontWeight: '900',
+    color: '#FFF',
+    marginTop: 1,
+  },
+  contestDaysBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: '#FFFFFF',
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: RADIUS.full,
+  },
+  contestDaysText: {
+    fontSize: 11,
+    fontWeight: '900',
+    color: '#7B4D00',
+  },
+  contestPodium: {
+    flexDirection: 'row',
+    backgroundColor: 'rgba(255,255,255,0.18)',
+    borderRadius: RADIUS.xl,
+    padding: SPACING.md,
+    marginBottom: SPACING.sm,
+  },
+  contestPodiumItem: { flex: 1, alignItems: 'center' },
+  contestRankMedal: { fontSize: 22 },
+  contestPodiumName: {
+    fontSize: FONT_SIZE.xs,
+    fontWeight: '800',
+    color: '#FFF',
+    marginTop: 2,
+  },
+  contestPodiumScans: {
+    fontSize: 10,
+    fontWeight: '700',
+    color: 'rgba(255,255,255,0.85)',
+    marginTop: 1,
+  },
+  contestRankRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    marginTop: SPACING.xs,
+  },
+  contestRankText: {
+    fontSize: FONT_SIZE.xs,
+    fontWeight: '600',
+    color: 'rgba(255,255,255,0.92)',
+  },
+  contestRankStrong: {
+    fontSize: FONT_SIZE.sm,
+    fontWeight: '900',
+    color: '#FFF',
+  },
+  contestReward: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: 'rgba(255,255,255,0.92)',
+    marginTop: SPACING.sm,
+    textAlign: 'center',
+  },
 
   // Weekly summary
   weeklySection: { marginTop: SPACING.base },

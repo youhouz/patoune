@@ -3,7 +3,8 @@ const router = express.Router();
 const {
   scanProduct, addProduct, getScanHistory, searchProducts,
   getPopularProducts, getCommunityStats, getAlternatives,
-  getLeaderboard, toggleFavorite, getFavorites, getWeeklySummary,
+  getLeaderboard, getMonthlyLeaderboard, toggleFavorite, getFavorites,
+  getWeeklySummary,
 } = require('../controllers/productController');
 const { protect, optionalAuth } = require('../middleware/auth');
 
@@ -11,6 +12,7 @@ const { protect, optionalAuth } = require('../middleware/auth');
 router.get('/popular', getPopularProducts);
 router.get('/community-stats', getCommunityStats);
 router.get('/leaderboard', getLeaderboard);
+router.get('/monthly-leaderboard', optionalAuth, getMonthlyLeaderboard);
 router.get('/favorites', protect, getFavorites);
 router.get('/weekly-summary', protect, getWeeklySummary);
 router.post('/:id/favorite', protect, toggleFavorite);
