@@ -624,6 +624,59 @@ const HomeScreen = ({ navigation }) => {
               </View>
             </TouchableOpacity>
           )}
+
+          {/* Next badge motivation card */}
+          {user && (() => {
+            const earned = user.badges || [];
+            const totalScans = user.totalScans || 0;
+            const streak = user.scanStreak || 0;
+            const SCAN_TIERS = [
+              { key: 'first_scan', target: 1, icon: 'camera', label: 'Premier Scan', color: '#6B8F71' },
+              { key: 'scanner_10', target: 10, icon: 'zap', label: 'Explorateur', color: '#527A56' },
+              { key: 'scanner_50', target: 50, icon: 'award', label: 'Expert', color: '#C4956A' },
+              { key: 'scanner_100', target: 100, icon: 'star', label: 'Master Scanner', color: '#C25B4A' },
+            ];
+            const STREAK_TIERS = [
+              { key: 'streak_3', target: 3, icon: 'trending-up', label: 'Regulier', color: '#5B7FC2' },
+              { key: 'streak_7', target: 7, icon: 'target', label: 'Assidu', color: '#8B5CF6' },
+              { key: 'streak_30', target: 30, icon: 'shield', label: 'Inarretable', color: '#EAB308' },
+            ];
+            const nextScan = SCAN_TIERS.find(t => !earned.includes(t.key) && totalScans < t.target);
+            const nextStreak = STREAK_TIERS.find(t => !earned.includes(t.key) && streak < t.target);
+            // Pick closest by percentage
+            const candidates = [
+              nextScan && { ...nextScan, current: totalScans, type: 'scans' },
+              nextStreak && { ...nextStreak, current: streak, type: 'jours' },
+            ].filter(Boolean);
+            if (candidates.length === 0) return null;
+            candidates.sort((a, b) => (b.current / b.target) - (a.current / a.target));
+            const b = candidates[0];
+            const pct = Math.min(100, Math.round((b.current / b.target) * 100));
+            const remaining = b.target - b.current;
+            return (
+              <TouchableOpacity
+                style={s.nextBadgeCard}
+                onPress={() => navigation.navigate('Profil', { screen: 'Referral' })}
+                activeOpacity={0.85}
+              >
+                <View style={s.nextBadgeCardHeader}>
+                  <View style={[s.nextBadgeCardIcon, { backgroundColor: b.color + '1A' }]}>
+                    <Feather name={b.icon} size={20} color={b.color} />
+                  </View>
+                  <View style={{ flex: 1 }}>
+                    <Text style={s.nextBadgeCardLabel}>Prochain badge : {b.label}</Text>
+                    <Text style={s.nextBadgeCardSub}>
+                      Plus que {remaining} {b.type} !
+                    </Text>
+                  </View>
+                  <Text style={[s.nextBadgeCardPct, { color: b.color }]}>{pct}%</Text>
+                </View>
+                <View style={s.nextBadgeProgressBg}>
+                  <View style={[s.nextBadgeProgressFill, { width: `${pct}%`, backgroundColor: b.color }]} />
+                </View>
+              </TouchableOpacity>
+            );
+          })()}
         </View>
 
         {/* ── Prochaine garde ── */}
@@ -1137,6 +1190,29 @@ const s = StyleSheet.create({
     width: 32, height: 32, borderRadius: 16,
     backgroundColor: '#FDF5ED', alignItems: 'center', justifyContent: 'center',
   },
+
+  // Next badge card
+  nextBadgeCard: {
+    backgroundColor: '#FFF', borderRadius: RADIUS.xl,
+    padding: SPACING.base, ...SHADOWS.sm,
+    borderWidth: 1, borderColor: 'rgba(107,143,113,0.15)',
+  },
+  nextBadgeCardHeader: {
+    flexDirection: 'row', alignItems: 'center',
+    gap: SPACING.md, marginBottom: SPACING.sm,
+  },
+  nextBadgeCardIcon: {
+    width: 40, height: 40, borderRadius: 20,
+    alignItems: 'center', justifyContent: 'center',
+  },
+  nextBadgeCardLabel: { fontSize: FONT_SIZE.sm, fontWeight: '800', color: COLORS.text },
+  nextBadgeCardSub: { fontSize: FONT_SIZE.xs, fontWeight: '500', color: COLORS.textSecondary, marginTop: 1 },
+  nextBadgeCardPct: { fontSize: FONT_SIZE.sm, fontWeight: '900' },
+  nextBadgeProgressBg: {
+    height: 6, backgroundColor: '#F0ECE4',
+    borderRadius: 3, overflow: 'hidden',
+  },
+  nextBadgeProgressFill: { height: '100%', borderRadius: 3 },
 
   // Daily tip
   dailyTipSection: { marginTop: SPACING.sm },

@@ -80,6 +80,34 @@ const ReferralScreen = ({ navigation }) => {
     { count: 10, label: '10 amis', reward: 'Badge Parrain VIP' },
   ];
 
+  // Next badges to unlock (progress bars)
+  const SCAN_TIERS = [
+    { key: 'first_scan', target: 1 },
+    { key: 'scanner_10', target: 10 },
+    { key: 'scanner_50', target: 50 },
+    { key: 'scanner_100', target: 100 },
+  ];
+  const STREAK_TIERS = [
+    { key: 'streak_3', target: 3 },
+    { key: 'streak_7', target: 7 },
+    { key: 'streak_30', target: 30 },
+  ];
+  const REFERRAL_TIERS = [
+    { key: 'referral_1', target: 1 },
+    { key: 'referral_5', target: 5 },
+    { key: 'referral_10', target: 10 },
+  ];
+
+  const nextScanBadge = SCAN_TIERS.find(t => !earnedBadges.includes(t.key) && totalScans < t.target);
+  const nextStreakBadge = STREAK_TIERS.find(t => !earnedBadges.includes(t.key) && scanStreak < t.target);
+  const nextReferralBadge = REFERRAL_TIERS.find(t => !earnedBadges.includes(t.key) && referralCount < t.target);
+
+  const nextBadges = [
+    nextScanBadge && { ...nextScanBadge, current: totalScans, type: 'scans' },
+    nextStreakBadge && { ...nextStreakBadge, current: scanStreak, type: 'jours' },
+    nextReferralBadge && { ...nextReferralBadge, current: referralCount, type: 'amis' },
+  ].filter(Boolean);
+
   return (
     <View style={styles.container}>
       <StatusBar barStyle="light-content" translucent backgroundColor="transparent" />
@@ -168,21 +196,59 @@ const ReferralScreen = ({ navigation }) => {
             </View>
           </View>
 
+          {/* Next badges progress */}
+          {nextBadges.length > 0 && (
+            <View style={styles.nextBadgesCard}>
+              <Text style={styles.sectionTitle}>Prochains badges</Text>
+              {nextBadges.map((b, i) => {
+                const def = BADGE_DEFS[b.key];
+                const pct = Math.min(100, Math.round((b.current / b.target) * 100));
+                const remaining = b.target - b.current;
+                return (
+                  <View key={b.key} style={[styles.nextBadgeRow, i === nextBadges.length - 1 && { marginBottom: 0 }]}>
+                    <View style={styles.nextBadgeHeader}>
+                      <View style={[styles.nextBadgeIcon, { backgroundColor: def.color + '20' }]}>
+                        <Feather name={def.icon} size={18} color={def.color} />
+                      </View>
+                      <View style={{ flex: 1 }}>
+                        <Text style={styles.nextBadgeLabel}>{def.label}</Text>
+                        <Text style={styles.nextBadgeDesc}>
+                          Plus que {remaining} {b.type} !
+                        </Text>
+                      </View>
+                      <Text style={[styles.nextBadgePct, { color: def.color }]}>{pct}%</Text>
+                    </View>
+                    <View style={styles.progressBarBg}>
+                      <View style={[styles.progressBarFill, { width: `${pct}%`, backgroundColor: def.color }]} />
+                    </View>
+                    <Text style={styles.progressBarText}>{b.current}/{b.target} {b.type}</Text>
+                  </View>
+                );
+              })}
+            </View>
+          )}
+
           {/* Milestones */}
           <View style={styles.milestonesCard}>
             <Text style={styles.sectionTitle}>Objectifs parrainage</Text>
             {milestones.map((m, i) => {
               const reached = referralCount >= m.count;
+              const pct = Math.min(100, Math.round((referralCount / m.count) * 100));
               return (
-                <View key={i} style={styles.milestoneRow}>
-                  <View style={[styles.milestoneCheck, reached && styles.milestoneCheckDone]}>
-                    <Feather name={reached ? 'check' : 'circle'} size={16} color={reached ? '#FFF' : colors.textTertiary} />
+                <View key={i} style={[styles.milestoneRow, i === milestones.length - 1 && { borderBottomWidth: 0 }]}>
+                  <View style={styles.milestoneTop}>
+                    <View style={[styles.milestoneCheck, reached && styles.milestoneCheckDone]}>
+                      <Feather name={reached ? 'check' : 'circle'} size={16} color={reached ? '#FFF' : colors.textTertiary} />
+                    </View>
+                    <View style={styles.milestoneInfo}>
+                      <Text style={[styles.milestoneLabel, reached && styles.milestoneLabelDone]}>{m.label}</Text>
+                      <Text style={styles.milestoneReward}>{m.reward}</Text>
+                    </View>
+                    <Text style={styles.milestoneCount}>{Math.min(referralCount, m.count)}/{m.count}</Text>
                   </View>
-                  <View style={styles.milestoneInfo}>
-                    <Text style={[styles.milestoneLabel, reached && styles.milestoneLabelDone]}>{m.label}</Text>
-                    <Text style={styles.milestoneReward}>{m.reward}</Text>
+                  <View style={styles.milestoneProgressBg}>
+                    <View style={[styles.milestoneProgressFill, { width: `${pct}%`, backgroundColor: reached ? '#6B8F71' : '#C4956A' }]} />
                   </View>
-                  <Text style={styles.milestoneCount}>{Math.min(referralCount, m.count)}/{m.count}</Text>
                 </View>
               );
             })}
@@ -383,6 +449,63 @@ const styles = StyleSheet.create({
     color: colors.text,
   },
 
+  // Next badges
+  nextBadgesCard: {
+    backgroundColor: '#FFF',
+    borderRadius: RADIUS['2xl'],
+    padding: SPACING.xl,
+    marginTop: SPACING.base,
+    ...SHADOWS.sm,
+  },
+  nextBadgeRow: {
+    marginBottom: SPACING.lg,
+  },
+  nextBadgeHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: SPACING.md,
+    marginBottom: SPACING.sm,
+  },
+  nextBadgeIcon: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  nextBadgeLabel: {
+    fontSize: FONT_SIZE.sm,
+    fontWeight: '800',
+    color: colors.text,
+  },
+  nextBadgeDesc: {
+    fontSize: FONT_SIZE.xs,
+    fontWeight: '500',
+    color: colors.textSecondary,
+    marginTop: 1,
+  },
+  nextBadgePct: {
+    fontSize: FONT_SIZE.sm,
+    fontWeight: '900',
+  },
+  progressBarBg: {
+    height: 8,
+    backgroundColor: '#F0ECE4',
+    borderRadius: 4,
+    overflow: 'hidden',
+  },
+  progressBarFill: {
+    height: '100%',
+    borderRadius: 4,
+  },
+  progressBarText: {
+    fontSize: 10,
+    fontWeight: '600',
+    color: colors.textTertiary,
+    marginTop: 4,
+    textAlign: 'right',
+  },
+
   // Milestones
   milestonesCard: {
     backgroundColor: '#FFF',
@@ -392,11 +515,25 @@ const styles = StyleSheet.create({
     ...SHADOWS.sm,
   },
   milestoneRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
     paddingVertical: SPACING.md,
     borderBottomWidth: 1,
     borderBottomColor: colors.borderLight,
+  },
+  milestoneTop: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: SPACING.sm,
+  },
+  milestoneProgressBg: {
+    height: 6,
+    backgroundColor: '#F0ECE4',
+    borderRadius: 3,
+    overflow: 'hidden',
+    marginLeft: 40,
+  },
+  milestoneProgressFill: {
+    height: '100%',
+    borderRadius: 3,
   },
   milestoneCheck: {
     width: 28,
