@@ -13,6 +13,7 @@ import { Feather } from '@expo/vector-icons';
 import { COLORS, SPACING, RADIUS, FONT_SIZE, SHADOWS } from '../utils/colors';
 
 const BADGE_DEFS = {
+  fondateur:   { icon: 'flag', label: 'Fondateur', desc: 'Vous faites partie des 1000 premiers membres de Pepete !', color: '#EAB308' },
   first_scan:  { icon: 'camera', label: 'Premier Scan', desc: 'Vous avez scanne votre premier produit !', color: '#6B8F71' },
   scanner_10:  { icon: 'zap', label: 'Explorateur', desc: '10 produits scannes ! Vous etes sur la bonne voie.', color: '#527A56' },
   scanner_50:  { icon: 'award', label: 'Expert', desc: '50 produits analyses ! Vous etes un expert.', color: '#C4956A' },

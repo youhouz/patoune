@@ -35,3 +35,6 @@ export const getFavoritesAPI = () =>
 
 export const getWeeklySummaryAPI = () =>
   api.get('/products/weekly-summary');
+
+export const getPublicProductAPI = (barcode) =>
+  api.get(`/products/public/${barcode}`);

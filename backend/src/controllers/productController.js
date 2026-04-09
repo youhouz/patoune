@@ -470,6 +470,39 @@ exports.getFavorites = async (req, res, next) => {
   }
 };
 
+// @desc    Page publique d'un produit (partageable, pas besoin d'auth)
+// @route   GET /api/products/public/:barcode
+exports.getPublicProduct = async (req, res, next) => {
+  try {
+    const product = await Product.findOne({ barcode: req.params.barcode })
+      .select('name brand barcode nutritionScore scoreDetails image category targetAnimal ingredients additives')
+      .lean();
+
+    if (!product) {
+      return res.status(404).json({ success: false, error: 'Produit non trouve' });
+    }
+
+    // Compute community scan count
+    const scanCount = await ScanHistory.countDocuments({ product: product._id });
+
+    // Dangerous ingredients summary
+    const dangerousIngredients = (product.ingredients || [])
+      .filter(i => i.risk === 'dangerous')
+      .map(i => ({ name: i.name, description: i.description }));
+
+    res.json({
+      success: true,
+      product: {
+        ...product,
+        scanCount,
+        dangerousIngredients,
+      },
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 // @desc    Rechercher des produits
 // @route   GET /api/products/search?q=
 exports.searchProducts = async (req, res, next) => {

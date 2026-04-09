@@ -13,7 +13,9 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAuth } from '../../context/AuthContext';
 import { PepeteIcon } from '../../components/PepeteLogo';
+import AnimatedCounter from '../../components/AnimatedCounter';
 import useResponsive from '../../hooks/useResponsive';
+import { getCommunityStatsAPI } from '../../api/products';
 import { FONTS } from '../../utils/typography';
 const colors = require('../../utils/colors');
 const { SHADOWS, RADIUS, SPACING, FONT_SIZE } = require('../../utils/colors');
@@ -52,6 +54,8 @@ const RegisterScreen = ({ navigation }) => {
   const [focused,  setFocused]  = useState(null);
   const [errors,   setErrors]   = useState({});
 
+  const [totalUsers, setTotalUsers] = useState(0);
+
   const slideAnim = useRef(new Animated.Value(30)).current;
   const fadeAnim  = useRef(new Animated.Value(0)).current;
   const shakeAnim = useRef(new Animated.Value(0)).current;
@@ -70,6 +74,16 @@ const RegisterScreen = ({ navigation }) => {
       Animated.spring(slideAnim, { toValue: 0, tension: 55, friction: 8, delay: 100, useNativeDriver: true }),
       Animated.timing(fadeAnim,  { toValue: 1, duration: 450, delay: 100, useNativeDriver: true }),
     ]).start();
+    // Live user counter polling
+    getCommunityStatsAPI().then(res => {
+      if (res.data?.stats?.totalUsers) setTotalUsers(res.data.stats.totalUsers);
+    }).catch(() => {});
+    const interval = setInterval(() => {
+      getCommunityStatsAPI().then(res => {
+        if (res.data?.stats?.totalUsers) setTotalUsers(res.data.stats.totalUsers);
+      }).catch(() => {});
+    }, 20000);
+
     // Auto-fill referral code from deep link
     AsyncStorage.getItem('pending_referral_code').then(code => {
       if (code) {
@@ -77,6 +91,7 @@ const RegisterScreen = ({ navigation }) => {
         AsyncStorage.removeItem('pending_referral_code');
       }
     }).catch(() => {});
+    return () => clearInterval(interval);
   }, []);
 
   const shake = () => Animated.sequence([
@@ -207,6 +222,16 @@ const RegisterScreen = ({ navigation }) => {
               <Text style={s.logoWord}>pépète.</Text>
               <Text style={s.heroTitle}>Créer un compte <Text style={s.heroAccent}>!</Text></Text>
               <Text style={s.heroSub}>Compte gratuit · 30 secondes</Text>
+              {totalUsers > 0 && (
+                <View style={s.liveCounter}>
+                  <View style={s.liveDot} />
+                  <AnimatedCounter
+                    value={totalUsers}
+                    style={s.liveNumber}
+                  />
+                  <Text style={s.liveLabel}> membres inscrits</Text>
+                </View>
+              )}
             </View>
           </LinearGradient>
 
@@ -433,6 +458,20 @@ const s = StyleSheet.create({
   heroSub: {
     fontFamily: FONTS.bodyMedium, fontSize: FONT_SIZE.base,
     color: 'rgba(255,255,255,0.55)',
+  },
+  liveCounter: {
+    flexDirection: 'row', alignItems: 'center', marginTop: SPACING.md,
+    backgroundColor: 'rgba(255,255,255,0.08)', paddingHorizontal: SPACING.base,
+    paddingVertical: SPACING.sm, borderRadius: RADIUS.full,
+  },
+  liveDot: {
+    width: 8, height: 8, borderRadius: 4, backgroundColor: '#4ADE80', marginRight: SPACING.sm,
+  },
+  liveNumber: {
+    fontFamily: FONTS.heading, fontSize: FONT_SIZE.sm, color: '#4ADE80',
+  },
+  liveLabel: {
+    fontFamily: FONTS.bodyMedium, fontSize: FONT_SIZE.xs, color: 'rgba(255,255,255,0.6)',
   },
 
   // Form area

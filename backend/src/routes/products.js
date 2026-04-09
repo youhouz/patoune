@@ -4,13 +4,14 @@ const {
   scanProduct, addProduct, getScanHistory, searchProducts,
   getPopularProducts, getCommunityStats, getAlternatives,
   getLeaderboard, getMonthlyLeaderboard, toggleFavorite, getFavorites,
-  getWeeklySummary,
+  getWeeklySummary, getPublicProduct,
 } = require('../controllers/productController');
 const { protect, optionalAuth } = require('../middleware/auth');
 
 // Scan & search are accessible without login (guest mode)
 router.get('/popular', getPopularProducts);
 router.get('/community-stats', getCommunityStats);
+router.get('/public/:barcode', getPublicProduct);
 router.get('/leaderboard', getLeaderboard);
 router.get('/monthly-leaderboard', optionalAuth, getMonthlyLeaderboard);
 router.get('/favorites', protect, getFavorites);

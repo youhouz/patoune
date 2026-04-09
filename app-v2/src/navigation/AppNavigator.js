@@ -136,18 +136,25 @@ const AppNavigator = () => {
       setShowOnboarding(!val);
     });
 
-    // Capture referral code from URL (?ref=CODE)
+    // Capture referral code + UTM params from URL
     if (Platform.OS === 'web') {
       try {
         const params = new URLSearchParams(window.location.search);
         const ref = params.get('ref');
         if (ref) {
           AsyncStorage.setItem(REFERRAL_STORAGE_KEY, ref.toUpperCase());
-          // Clean URL
-          const url = new URL(window.location.href);
-          url.searchParams.delete('ref');
-          window.history.replaceState({}, '', url.toString());
         }
+        // UTM tracking
+        const utmSource = params.get('utm_source');
+        const utmMedium = params.get('utm_medium');
+        const utmCampaign = params.get('utm_campaign');
+        if (utmSource) AsyncStorage.setItem('utm_source', utmSource);
+        if (utmMedium) AsyncStorage.setItem('utm_medium', utmMedium);
+        if (utmCampaign) AsyncStorage.setItem('utm_campaign', utmCampaign);
+        // Clean URL
+        const url = new URL(window.location.href);
+        ['ref', 'utm_source', 'utm_medium', 'utm_campaign'].forEach(k => url.searchParams.delete(k));
+        window.history.replaceState({}, '', url.toString());
       } catch (_) {}
     }
   }, [loading]);

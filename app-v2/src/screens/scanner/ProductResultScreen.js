@@ -303,7 +303,8 @@ const ProductResultScreen = ({ route, navigation }) => {
       : '';
 
     if (!hasScore) {
-      return `🐾 J'ai scanne ${product.name}${brandText} sur Pepete !${ingredientWarning}\n\nScanne les croquettes de ton animal ➡️ pepete.fr`;
+      const link = product.barcode ? `pepete.fr/scan/${product.barcode}` : 'pepete.fr';
+      return `🐾 J'ai scanne ${product.name}${brandText} sur Pepete !${ingredientWarning}\n\nScanne les croquettes de ton animal ➡️ ${link}`;
     }
 
     const verdict = score >= 80
@@ -314,7 +315,8 @@ const ProductResultScreen = ({ route, navigation }) => {
           ? '⚠️ Qualite moyenne... a changer ?'
           : '🚫 Deconseille ! Je cherche une alternative';
 
-    return `${emoji} ${product.name}${brandText} → ${score}/100 sur Pepete !\n\n${verdict}${ingredientWarning}\n\n🐾 Et toi, tu sais ce que mange ton animal ?\nScanne ses croquettes ➡️ pepete.fr`;
+    const productLink = product.barcode ? `pepete.fr/scan/${product.barcode}` : 'pepete.fr';
+    return `${emoji} ${product.name}${brandText} → ${score}/100 sur Pepete !\n\n${verdict}${ingredientWarning}\n\n🐾 Et toi, tu sais ce que mange ton animal ?\nVoir le resultat ➡️ ${productLink}`;
   };
 
   const handleShare = async () => {

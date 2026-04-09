@@ -62,6 +62,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import SatisfactionPrompt from '../components/SatisfactionPrompt';
 import WeeklySummaryCard from '../components/WeeklySummaryCard';
 import AnimatedCounter from '../components/AnimatedCounter';
+import BadgeUnlockModal from '../components/BadgeUnlockModal';
 import api from '../api/client';
 
 // ─── Recent Scan Card — Glass morphism ─────────────────────
@@ -202,6 +203,18 @@ const HomeScreen = ({ navigation }) => {
   const [monthlyLeaderboard, setMonthlyLeaderboard] = useState(null);
   const [showPushCard, setShowPushCard] = useState(false);
   const [pushDismissed, setPushDismissed] = useState(false);
+  const [fondateurModal, setFondateurModal] = useState(false);
+
+  // Show fondateur badge celebration once
+  useEffect(() => {
+    if (!user?.badges?.includes('fondateur')) return;
+    AsyncStorage.getItem('fondateur_badge_shown').then(v => {
+      if (!v) {
+        setTimeout(() => setFondateurModal(true), 1200);
+        AsyncStorage.setItem('fondateur_badge_shown', 'true');
+      }
+    }).catch(() => {});
+  }, [user?.id]);
 
   // Live-poll community stats every 30 seconds so the counter feels alive
   useEffect(() => {
@@ -975,6 +988,13 @@ const HomeScreen = ({ navigation }) => {
             });
           } catch (_) {}
         }}
+      />
+
+      {/* Fondateur badge celebration */}
+      <BadgeUnlockModal
+        visible={fondateurModal}
+        badgeKey="fondateur"
+        onClose={() => setFondateurModal(false)}
       />
     </View>
   );

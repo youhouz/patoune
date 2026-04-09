@@ -21,6 +21,7 @@ import colors, { SHADOWS, RADIUS, SPACING, FONT_SIZE } from '../../utils/colors'
 const HEADER_PADDING_TOP = Platform.OS === 'ios' ? 56 : (StatusBar.currentHeight || 24) + 12;
 
 const BADGE_DEFS = {
+  fondateur:   { icon: 'flag', label: 'Fondateur', desc: 'Parmi les 1000 premiers membres', color: '#EAB308' },
   first_scan:  { icon: 'camera', label: 'Premier Scan', desc: 'Votre premier produit scanne', color: '#6B8F71' },
   scanner_10:  { icon: 'zap', label: 'Explorateur', desc: '10 produits scannes', color: '#527A56' },
   scanner_50:  { icon: 'award', label: 'Expert', desc: '50 produits scannes', color: '#C4956A' },
