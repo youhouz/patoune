@@ -18,10 +18,13 @@ import { FONTS } from '../../utils/typography';
 import { COLORS, SHADOWS, RADIUS, SPACING, FONT_SIZE, getScoreColor, getScoreBg, getScoreLabel } from '../../utils/colors';
 import { showAlert } from '../../utils/alert';
 import { hapticSuccess, hapticWarning, hapticError, hapticLight } from '../../utils/haptics';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { getAlternativesAPI, toggleFavoriteAPI } from '../../api/products';
 import { useAuth } from '../../context/AuthContext';
 import BadgeUnlockModal from '../../components/BadgeUnlockModal';
 import Confetti from '../../components/Confetti';
+import ShareNudgeModal from '../../components/ShareNudgeModal';
+import ExtremeScoreSharePrompt from '../../components/ExtremeScoreSharePrompt';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const SCORE_RING_SIZE = 110;
@@ -178,6 +181,8 @@ const ProductResultScreen = ({ route, navigation }) => {
   const [badgeModal, setBadgeModal] = useState(null);
   const [alternatives, setAlternatives] = useState([]);
   const [showConfetti, setShowConfetti] = useState(false);
+  const [showShareNudge, setShowShareNudge] = useState(false);
+  const [showExtremeShare, setShowExtremeShare] = useState(false);
   const badgeQueue = useRef([...(newBadgesParam || [])]).current;
 
   // Favorite state
@@ -275,6 +280,21 @@ const ProductResultScreen = ({ route, navigation }) => {
       }, 400);
     } else {
       hapticLight();
+    }
+
+    // Extreme score share prompt (score < 20 or > 85) — high viral potential
+    if (hasScore && (score >= 85 || score < 20) && gamification?.totalScans !== 1) {
+      setTimeout(() => setShowExtremeShare(true), 4000);
+    }
+
+    // First scan share nudge — show once ever, 3s after result
+    if (user && gamification?.totalScans === 1) {
+      AsyncStorage.getItem('share_nudge_shown').then(v => {
+        if (!v) {
+          setTimeout(() => setShowShareNudge(true), 3000);
+          AsyncStorage.setItem('share_nudge_shown', 'true');
+        }
+      }).catch(() => {});
     }
 
     // Fetch alternatives for low-score products
@@ -936,6 +956,21 @@ const ProductResultScreen = ({ route, navigation }) => {
             setTimeout(() => setBadgeModal(badgeQueue.shift()), 400);
           }
         }}
+      />
+
+      {/* First scan share nudge */}
+      <ShareNudgeModal
+        visible={showShareNudge}
+        product={product}
+        onClose={() => setShowShareNudge(false)}
+      />
+
+      {/* Extreme score viral share prompt */}
+      <ExtremeScoreSharePrompt
+        product={product}
+        score={score}
+        visible={showExtremeShare && !showShareNudge}
+        onDismiss={() => setShowExtremeShare(false)}
       />
 
       {/* Sticky engagement bar */}

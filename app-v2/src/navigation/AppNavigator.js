@@ -136,7 +136,7 @@ const AppNavigator = () => {
       setShowOnboarding(!val);
     });
 
-    // Capture referral code + UTM params from URL
+    // Capture referral code + UTM params + scan deep link from URL
     if (Platform.OS === 'web') {
       try {
         const params = new URLSearchParams(window.location.search);
@@ -151,9 +151,14 @@ const AppNavigator = () => {
         if (utmSource) AsyncStorage.setItem('utm_source', utmSource);
         if (utmMedium) AsyncStorage.setItem('utm_medium', utmMedium);
         if (utmCampaign) AsyncStorage.setItem('utm_campaign', utmCampaign);
+        // Deep link: ?scan=BARCODE → navigate to public score
+        const scanBarcode = params.get('scan');
+        if (scanBarcode) {
+          AsyncStorage.setItem('pending_scan_barcode', scanBarcode);
+        }
         // Clean URL
         const url = new URL(window.location.href);
-        ['ref', 'utm_source', 'utm_medium', 'utm_campaign'].forEach(k => url.searchParams.delete(k));
+        ['ref', 'utm_source', 'utm_medium', 'utm_campaign', 'scan'].forEach(k => url.searchParams.delete(k));
         window.history.replaceState({}, '', url.toString());
       } catch (_) {}
     }
@@ -180,6 +185,15 @@ const AppNavigator = () => {
               index: 0,
               routes: [{ name: 'Tabs', state: { routes: [{ name: 'Accueil' }] } }],
             });
+            // Handle deep link: ?scan=BARCODE
+            AsyncStorage.getItem('pending_scan_barcode').then(barcode => {
+              if (barcode) {
+                AsyncStorage.removeItem('pending_scan_barcode');
+                setTimeout(() => {
+                  navigationRef.current?.navigate('Scanner', { screen: 'PublicScore', params: { barcode } });
+                }, 500);
+              }
+            }).catch(() => {});
           }
         }}
       >

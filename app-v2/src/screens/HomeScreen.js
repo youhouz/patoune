@@ -673,7 +673,7 @@ const HomeScreen = ({ navigation }) => {
             </TouchableOpacity>
           )}
 
-          {/* Invite CTA */}
+          {/* Invite CTA — enhanced viral */}
           {user && (
             <TouchableOpacity
               style={s.inviteCard}
@@ -684,11 +684,22 @@ const HomeScreen = ({ navigation }) => {
                 <Feather name="gift" size={20} color="#C4956A" />
               </View>
               <View style={s.inviteContent}>
-                <Text style={s.inviteTitle}>Invite tes amis</Text>
+                <Text style={s.inviteTitle}>
+                  {(user.referralCount || 0) === 0
+                    ? 'Tes potes savent ce que mange leur animal ?'
+                    : (user.referralCount || 0) >= 3
+                      ? `${user.referralCount} amis parraines ! Continue`
+                      : `${user.referralCount} ami${user.referralCount > 1 ? 's' : ''} parraine${user.referralCount > 1 ? 's' : ''}`
+                  }
+                </Text>
                 <Text style={s.inviteSub}>
-                  {(user.referralCount || 0) > 0
-                    ? `${user.referralCount} ami${user.referralCount > 1 ? 's' : ''} parraine${user.referralCount > 1 ? 's' : ''}`
-                    : 'Parraine et gagne des badges exclusifs'
+                  {(user.referralCount || 0) === 0
+                    ? 'Partage ton code et gagne le badge Ambassadeur'
+                    : (user.referralCount || 0) < 5
+                      ? `Plus que ${5 - (user.referralCount || 0)} pour le badge Influenceur !`
+                      : (user.referralCount || 0) < 10
+                        ? `Plus que ${10 - (user.referralCount || 0)} pour le badge VIP !`
+                        : 'Tu es un vrai ambassadeur Pepete !'
                   }
                 </Text>
               </View>

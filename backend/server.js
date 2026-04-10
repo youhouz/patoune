@@ -90,6 +90,59 @@ app.get('/landing', (req, res) => {
   res.sendFile(path.join(__dirname, '..', 'landing', 'index.html'));
 });
 
+// OG meta tags for social sharing (rich previews on WhatsApp, Instagram, Facebook)
+app.get('/scan/:barcode', async (req, res) => {
+  try {
+    const Product = require('./src/models/Product');
+    const product = await Product.findOne({ barcode: req.params.barcode })
+      .select('name brand nutritionScore image barcode')
+      .lean();
+
+    if (!product) {
+      return res.redirect('https://pepete.fr');
+    }
+
+    const score = product.nutritionScore ?? 0;
+    const emoji = score >= 80 ? '🟢' : score >= 60 ? '🟡' : score >= 40 ? '🟠' : '🔴';
+    const verdict = score >= 80 ? 'Excellent' : score >= 60 ? 'Correct' : score >= 40 ? 'Moyen' : 'Deconseille';
+    const brandText = product.brand ? ` de ${product.brand}` : '';
+    const title = `${emoji} ${product.name}${brandText} — ${score}/100`;
+    const description = `Score Pepete : ${verdict}. Scanne les croquettes de ton animal gratuitement sur pepete.fr`;
+    const image = product.image || 'https://pepete.fr/og-default.png';
+    const url = `https://pepete.fr/scan/${product.barcode}`;
+
+    // Escape HTML
+    const esc = (s) => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+
+    res.set('Content-Type', 'text/html; charset=utf-8');
+    res.send(`<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <title>${esc(title)}</title>
+  <meta property="og:title" content="${esc(title)}">
+  <meta property="og:description" content="${esc(description)}">
+  <meta property="og:image" content="${esc(image)}">
+  <meta property="og:url" content="${esc(url)}">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="Pepete">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="${esc(title)}">
+  <meta name="twitter:description" content="${esc(description)}">
+  <meta name="twitter:image" content="${esc(image)}">
+  <meta name="description" content="${esc(description)}">
+  <meta http-equiv="refresh" content="0;url=https://pepete.fr?scan=${esc(product.barcode)}">
+</head>
+<body>
+  <p>Redirection vers Pepete...</p>
+  <script>window.location.href="https://pepete.fr?scan=${esc(product.barcode)}";</script>
+</body>
+</html>`);
+  } catch (err) {
+    res.redirect('https://pepete.fr');
+  }
+});
+
 // Route de test
 app.get('/', (req, res) => {
   res.json({ message: 'Pépète API v1.0' });
