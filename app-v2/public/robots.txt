@@ -3,6 +3,12 @@
 
 User-agent: *
 Allow: /
+Allow: /produit/
+Allow: /marque/
+Allow: /croquettes-
+Allow: /classement/
+Allow: /ingredients-dangereux
+Allow: /blog/
 Disallow: /api/
 Disallow: /_expo/
 Disallow: /admin/
@@ -12,11 +18,21 @@ Disallow: /admin/
 # ══════════════════════════════════════
 User-agent: Googlebot
 Allow: /
+Allow: /produit/
+Allow: /marque/
+Allow: /croquettes-
+Allow: /classement/
+Allow: /ingredients-dangereux
 Disallow: /api/
 Disallow: /_expo/
 
 User-agent: Bingbot
 Allow: /
+Allow: /produit/
+Allow: /marque/
+Allow: /croquettes-
+Allow: /classement/
+Allow: /ingredients-dangereux
 Disallow: /api/
 Disallow: /_expo/
 
@@ -76,8 +92,10 @@ Disallow: /
 User-agent: FacebookBot
 Disallow: /api/
 
-# Sitemaps
+# Sitemaps (dynamiques depuis MongoDB)
 Sitemap: https://pepete.fr/sitemap.xml
+Sitemap: https://pepete.fr/sitemap-pages.xml
+Sitemap: https://pepete.fr/sitemap-brands.xml
 
 # LLMs context file
 # See: https://pepete.fr/llms.txt

@@ -38,7 +38,7 @@
     {
       "source": "/sitemap.xml",
       "headers": [
-        { "key": "Cache-Control", "value": "public, max-age=86400" },
+        { "key": "Cache-Control", "value": "public, max-age=3600" },
         { "key": "Content-Type", "value": "application/xml; charset=utf-8" }
       ]
     },
@@ -59,17 +59,55 @@
       "headers": [
         { "key": "Cache-Control", "value": "public, max-age=31536000, immutable" }
       ]
+    },
+    {
+      "source": "/produit/:path*",
+      "headers": [
+        { "key": "Cache-Control", "value": "public, s-maxage=3600, stale-while-revalidate=86400" }
+      ]
+    },
+    {
+      "source": "/marque/:path*",
+      "headers": [
+        { "key": "Cache-Control", "value": "public, s-maxage=3600, stale-while-revalidate=86400" }
+      ]
+    },
+    {
+      "source": "/croquettes-:path*",
+      "headers": [
+        { "key": "Cache-Control", "value": "public, s-maxage=3600, stale-while-revalidate=86400" }
+      ]
+    },
+    {
+      "source": "/classement/:path*",
+      "headers": [
+        { "key": "Cache-Control", "value": "public, s-maxage=3600, stale-while-revalidate=86400" }
+      ]
+    },
+    {
+      "source": "/ingredients-dangereux",
+      "headers": [
+        { "key": "Cache-Control", "value": "public, s-maxage=3600, stale-while-revalidate=86400" }
+      ]
     }
   ],
   "rewrites": [
     { "source": "/robots.txt", "destination": "/robots.txt" },
-    { "source": "/sitemap.xml", "destination": "/sitemap.xml" },
     { "source": "/manifest.json", "destination": "/manifest.json" },
     { "source": "/llms.txt", "destination": "/llms.txt" },
     { "source": "/landing.html", "destination": "/landing.html" },
     { "source": "/indexnow.json", "destination": "/indexnow.json" },
     { "source": "/fef37dc422ec45c2bdae7c5a0e1f6a8e.txt", "destination": "/fef37dc422ec45c2bdae7c5a0e1f6a8e.txt" },
     { "source": "/blog/:path*", "destination": "/blog/:path*" },
+    { "source": "/produit/:barcode", "destination": "/api/seo?type=product&barcode=:barcode" },
+    { "source": "/marque/:brand", "destination": "/api/seo?type=brand&brand=:brand" },
+    { "source": "/croquettes-:animal", "destination": "/api/seo?type=animal&animal=:animal" },
+    { "source": "/classement/:animal", "destination": "/api/seo?type=ranking&animal=:animal" },
+    { "source": "/ingredients-dangereux", "destination": "/api/seo?type=dangerous" },
+    { "source": "/sitemap.xml", "destination": "/api/seo?type=sitemap-index" },
+    { "source": "/sitemap-products-:page.xml", "destination": "/api/seo?type=sitemap-products&page=:page" },
+    { "source": "/sitemap-brands.xml", "destination": "/api/seo?type=sitemap-brands" },
+    { "source": "/sitemap-pages.xml", "destination": "/api/seo?type=sitemap-pages" },
     { "source": "/(.*)", "destination": "/index.html" }
   ]
 }

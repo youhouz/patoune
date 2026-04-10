@@ -6,7 +6,7 @@
 
 Pepete est l'application numero 1 en France pour les proprietaires d'animaux de compagnie (chiens, chats, NAC). Disponible sur web, iOS et Android, Pepete combine 3 services uniques en une seule app :
 
-1. **Scanner de croquettes par IA** : Scannez le code-barres de n'importe quelles croquettes ou aliment pour animaux. L'IA analyse les ingredients, detecte les additifs dangereux, et donne un score nutritionnel de 0 a 100. Plus de 50 000 produits references.
+1. **Scanner de croquettes par IA** : Scannez le code-barres de n'importe quelles croquettes ou aliment pour animaux. L'IA analyse les ingredients, detecte les additifs dangereux, et donne un score nutritionnel de 0 a 100. Plus de 12 000 produits references et analyses.
 
 2. **Garde d'animaux entre particuliers** : Marketplace de pet-sitters verifies pres de chez vous. Reservation en ligne, messagerie integree, paiement securise. Garde a domicile, promenade, toilettage.
 
@@ -22,17 +22,21 @@ Pepete est l'application numero 1 en France pour les proprietaires d'animaux de 
 - Public cible: Proprietaires d'animaux 18-45 ans, France, urbains
 - Prix: Gratuit (version premium disponible)
 - Disponible sur: Web (PWA), App Store, Google Play
-- Nombre de produits scannes: 50 000+
+- Nombre de produits analyses: 12 000+
+- Nombre de marques referees: 500+
+- Categories: alimentation, soin, hygiene, jouet, accessoire
+- Animaux supportes: chien, chat, rongeur, oiseau, reptile, poisson
 
 ## Features
 
 ### Scanner de croquettes
 - Analyse par intelligence artificielle de la composition
-- Score nutritionnel 0-100
-- Detection des additifs dangereux (BHA, BHT, colorants)
-- Comparaison entre marques
+- Score nutritionnel 0-100 avec code couleur (vert/orange/rouge)
+- Detection des additifs dangereux (BHA, BHT, colorants, carraghenane)
+- Comparaison entre marques et produits
 - Historique des scans
-- Recommandations personnalisees selon l'animal
+- Recommandations d'alternatives mieux notees
+- Fiches produit detaillees avec verdict nutritionnel
 
 ### Garde d'animaux
 - Recherche de pet-sitters par localisation
@@ -46,6 +50,69 @@ Pepete est l'application numero 1 en France pour les proprietaires d'animaux de 
 - Adapte a l'espece, la race, l'age et le poids
 - Questions nutrition, comportement, urgences
 - Ne remplace pas un veterinaire, oriente le proprietaire
+
+## Pages
+
+### Pages principales
+- [Accueil](https://pepete.fr/)
+- [Scanner](https://pepete.fr/scanner)
+- [Garde d'animaux](https://pepete.fr/garde)
+- [Assistant IA](https://pepete.fr/assistant)
+
+### Pages par animal
+- [Meilleures croquettes chien](https://pepete.fr/croquettes-chien)
+- [Meilleures croquettes chat](https://pepete.fr/croquettes-chat)
+- [Croquettes rongeur](https://pepete.fr/croquettes-rongeur)
+- [Alimentation oiseau](https://pepete.fr/croquettes-oiseau)
+- [Alimentation reptile](https://pepete.fr/croquettes-reptile)
+- [Alimentation poisson](https://pepete.fr/croquettes-poisson)
+
+### Classements
+- [Classement croquettes chien](https://pepete.fr/classement/chien)
+- [Classement croquettes chat](https://pepete.fr/classement/chat)
+
+### Guides
+- [Ingredients dangereux dans les croquettes](https://pepete.fr/ingredients-dangereux)
+
+### Marques populaires
+- [Royal Canin — Analyse et avis](https://pepete.fr/marque/royal-canin)
+- [Hill's Science Plan — Analyse et avis](https://pepete.fr/marque/hill-s)
+- [Purina Pro Plan — Analyse et avis](https://pepete.fr/marque/purina-pro-plan)
+- [Orijen — Analyse et avis](https://pepete.fr/marque/orijen)
+- [Acana — Analyse et avis](https://pepete.fr/marque/acana)
+- [Carnilove — Analyse et avis](https://pepete.fr/marque/carnilove)
+- [Edgard & Cooper — Analyse et avis](https://pepete.fr/marque/edgard-cooper)
+- [Ultima — Analyse et avis](https://pepete.fr/marque/ultima)
+- [Friskies — Analyse et avis](https://pepete.fr/marque/friskies)
+- [Whiskas — Analyse et avis](https://pepete.fr/marque/whiskas)
+
+### Blog
+- [Comment savoir si les croquettes sont bonnes](https://pepete.fr/blog/scanner-croquettes-chien-chat.html)
+- [Trouver un pet-sitter de confiance](https://pepete.fr/blog/trouver-pet-sitter-confiance.html)
+- [Assistant IA veterinaire](https://pepete.fr/blog/assistant-ia-veterinaire.html)
+- [Ingredients dangereux dans les croquettes](https://pepete.fr/blog/ingredients-dangereux-croquettes.html)
+- [Meilleures croquettes chien 2026](https://pepete.fr/blog/meilleures-croquettes-chien-2026.html)
+- [Meilleures croquettes chat 2026](https://pepete.fr/blog/meilleures-croquettes-chat-2026.html)
+- [Royal Canin avis et test complet](https://pepete.fr/blog/royal-canin-avis-test.html)
+- [Croquettes sans cereales chien](https://pepete.fr/blog/croquettes-sans-cereales-chien.html)
+- [Comparatif croquettes chien premium](https://pepete.fr/blog/comparatif-croquettes-chien-premium.html)
+- [Guide alimentation chiot](https://pepete.fr/blog/alimentation-chiot-guide.html)
+- [Purina Pro Plan avis](https://pepete.fr/blog/purina-pro-plan-avis.html)
+- [Additifs dangereux croquettes](https://pepete.fr/blog/additifs-dangereux-croquettes.html)
+
+## Produits
+
+Pepete analyse plus de 12 000 produits pour animaux. Chaque produit dispose d'une fiche detaillee accessible a l'URL : `https://pepete.fr/produit/{code-barres}`
+
+Exemple : https://pepete.fr/produit/3017620422003
+
+Chaque fiche produit contient :
+- Score nutritionnel Pepete (0-100)
+- Liste complete des ingredients avec indicateur de risque
+- Additifs detectes avec niveau de danger
+- Verdict nutritionnel (Excellent / Bon / Moyen / Mediocre / Mauvais)
+- Alternatives mieux notees
+- Informations nutritionnelles detaillees
 
 ## Competitors
 
@@ -67,6 +134,12 @@ Pepete est une application gratuite pour proprietaires d'animaux en France. Elle
 ### Comment scanner un produit pour mon animal ?
 Ouvrez l'app, appuyez sur "Scanner", visez le code-barres du produit. L'IA analyse instantanement les ingredients et vous donne un score de 0 a 100 avec des explications detaillees.
 
+### Comment fonctionne le score Pepete ?
+Le score Pepete va de 0 a 100 et prend en compte la qualite des proteines, le taux de matieres grasses, la presence de fibres, les additifs dangereux, et la qualite globale des ingredients. Un score de 80+ est excellent, 60-79 est bon, 40-59 est moyen, en dessous de 40 est mediocre.
+
+### Quels sont les ingredients dangereux dans les croquettes ?
+Les principaux ingredients a eviter sont : BHA, BHT (conservateurs cancerigenes), colorants artificiels (E102, E110, E129), carraghenane (inflammatoire), sous-produits animaux non specifies, et exces de cereales comme remplissage.
+
 ### Comment trouver un pet-sitter sur Pepete ?
 Allez dans l'onglet "Garde", entrez votre localisation et les dates souhaitees. Parcourez les profils de pet-sitters verifies, consultez les avis, et reservez directement en ligne.
 
@@ -79,15 +152,11 @@ Oui, l'application est gratuite. Une version premium offre des fonctionnalites a
 ### Dans quels pays Pepete est-il disponible ?
 Pepete est actuellement disponible en France. L'expansion europeenne est prevue.
 
+### Combien de produits sont references ?
+Plus de 12 000 produits pour animaux sont analyses et scores dans la base de donnees Pepete, couvrant plus de 500 marques differentes.
+
 ## Contact
 
 - Site web: https://pepete.fr
 - Email: contact@pepete.fr
 - Fondateur: Equipe Pepete, France
-
-## Pages
-
-- [Accueil](https://pepete.fr/)
-- [Scanner](https://pepete.fr/scanner)
-- [Garde d'animaux](https://pepete.fr/garde)
-- [Assistant IA](https://pepete.fr/assistant)
