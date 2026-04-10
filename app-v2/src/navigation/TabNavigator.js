@@ -5,6 +5,7 @@ import { View, Text, StyleSheet, Platform } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import { useAuth } from '../context/AuthContext';
 import { COLORS } from '../utils/colors';
+import { hapticSelection } from '../utils/haptics';
 import HomeScreen from '../screens/HomeScreen';
 import ScannerNavigator from './ScannerNavigator';
 import PetSittersListScreen from '../screens/petsitting/PetSittersListScreen';
@@ -23,6 +24,8 @@ import AddPetScreen from '../screens/profile/AddPetScreen';
 import SettingsScreen from '../screens/profile/SettingsScreen';
 import InstallGuideScreen from '../screens/profile/InstallGuideScreen';
 import ContactScreen from '../screens/profile/ContactScreen';
+import ReferralScreen from '../screens/profile/ReferralScreen';
+import LeaderboardScreen from '../screens/profile/LeaderboardScreen';
 import AdminDashboardScreen from '../screens/admin/AdminDashboardScreen';
 import AdminUsersScreen from '../screens/admin/AdminUsersScreen';
 import AdminPetSittersScreen from '../screens/admin/AdminPetSittersScreen';
@@ -72,6 +75,8 @@ const ProfileNavigator = () => {
       <ProfileStack.Screen name="PetSitterBookings" component={PetSitterBookingsScreen} options={{ headerShown: false }} />
       <ProfileStack.Screen name="InstallGuide" component={InstallGuideScreen} options={{ headerShown: false }} />
       <ProfileStack.Screen name="Contact" component={ContactScreen} options={{ headerShown: false }} />
+      <ProfileStack.Screen name="Referral" component={ReferralScreen} options={{ headerShown: false }} />
+      <ProfileStack.Screen name="Leaderboard" component={LeaderboardScreen} options={{ headerShown: false }} />
     </ProfileStack.Navigator>
   );
 };
@@ -104,6 +109,11 @@ const TabIcon = ({ routeName, focused }) => {
 
 const ThreeTabs = () => (
   <Tab.Navigator
+    screenListeners={{
+      tabPress: () => {
+        hapticSelection();
+      },
+    }}
     screenOptions={({ route }) => ({
       headerShown: false,
       tabBarIcon: ({ focused }) => <TabIcon routeName={route.name} focused={focused} />,

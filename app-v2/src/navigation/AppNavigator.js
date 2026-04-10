@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { NavigationContainer } from '@react-navigation/native';
-import { View, Text, StyleSheet, StatusBar, Animated, Platform } from 'react-native';
+import { NavigationContainer, LinkingConfiguration } from '@react-navigation/native';
+import { View, Text, StyleSheet, StatusBar, Animated, Platform, Linking } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useAuth } from '../context/AuthContext';
 import TabNavigator from './TabNavigator';
@@ -9,6 +9,7 @@ import PWAInstallBanner from '../components/PWAInstallBanner';
 import { PepeteIcon } from '../components/PepeteLogo';
 
 const ONBOARDING_KEY = 'onboarding_v3';
+const REFERRAL_STORAGE_KEY = 'pending_referral_code';
 
 // ─── Animated Dot ────────────────────────────────────────
 const LoadingDot = ({ delay }) => {
@@ -134,6 +135,33 @@ const AppNavigator = () => {
     AsyncStorage.getItem(ONBOARDING_KEY).then((val) => {
       setShowOnboarding(!val);
     });
+
+    // Capture referral code + UTM params + scan deep link from URL
+    if (Platform.OS === 'web') {
+      try {
+        const params = new URLSearchParams(window.location.search);
+        const ref = params.get('ref');
+        if (ref) {
+          AsyncStorage.setItem(REFERRAL_STORAGE_KEY, ref.toUpperCase());
+        }
+        // UTM tracking
+        const utmSource = params.get('utm_source');
+        const utmMedium = params.get('utm_medium');
+        const utmCampaign = params.get('utm_campaign');
+        if (utmSource) AsyncStorage.setItem('utm_source', utmSource);
+        if (utmMedium) AsyncStorage.setItem('utm_medium', utmMedium);
+        if (utmCampaign) AsyncStorage.setItem('utm_campaign', utmCampaign);
+        // Deep link: ?scan=BARCODE → navigate to public score
+        const scanBarcode = params.get('scan');
+        if (scanBarcode) {
+          AsyncStorage.setItem('pending_scan_barcode', scanBarcode);
+        }
+        // Clean URL
+        const url = new URL(window.location.href);
+        ['ref', 'utm_source', 'utm_medium', 'utm_campaign', 'scan'].forEach(k => url.searchParams.delete(k));
+        window.history.replaceState({}, '', url.toString());
+      } catch (_) {}
+    }
   }, [loading]);
 
   const handleOnboardingComplete = async () => {
@@ -157,6 +185,15 @@ const AppNavigator = () => {
               index: 0,
               routes: [{ name: 'Tabs', state: { routes: [{ name: 'Accueil' }] } }],
             });
+            // Handle deep link: ?scan=BARCODE
+            AsyncStorage.getItem('pending_scan_barcode').then(barcode => {
+              if (barcode) {
+                AsyncStorage.removeItem('pending_scan_barcode');
+                setTimeout(() => {
+                  navigationRef.current?.navigate('Scanner', { screen: 'PublicScore', params: { barcode } });
+                }, 500);
+              }
+            }).catch(() => {});
           }
         }}
       >

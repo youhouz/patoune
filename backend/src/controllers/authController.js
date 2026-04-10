@@ -11,7 +11,7 @@ exports.register = async (req, res, next) => {
       return res.status(400).json({ success: false, errors: errors.array() });
     }
 
-    const { name, email, password, phone, role, address, guardianProfile } = req.body;
+    const { name, email, password, phone, role, address, guardianProfile, referralCode, utmSource, utmMedium, utmCampaign } = req.body;
 
     const userExists = await User.findOne({ email });
     if (userExists) {
@@ -26,13 +26,35 @@ exports.register = async (req, res, next) => {
     // Defense-in-depth : jamais accepter 'admin' depuis le register
     if (role && ['user', 'guardian', 'both'].includes(role)) userData.role = role;
     if (address) userData.address = address;
+    if (utmSource) userData.utmSource = utmSource;
+    if (utmMedium) userData.utmMedium = utmMedium;
+    if (utmCampaign) userData.utmCampaign = utmCampaign;
 
     // Si role guardian ou both, marquer isPetSitter
     if (role === 'guardian' || role === 'both') {
       userData.isPetSitter = true;
     }
 
+    // Parrainage : lier au parrain si code valide
+    if (referralCode) {
+      const referrer = await User.findOne({ referralCode: referralCode.toUpperCase() });
+      if (referrer) {
+        userData.referredBy = referrer._id;
+      }
+    }
+
+    // Badge "Fondateur" pour les 1000 premiers inscrits
+    const userCount = await User.countDocuments();
+    if (userCount < 1000) {
+      userData.badges = ['fondateur'];
+    }
+
     const user = await User.create(userData);
+
+    // Incrémenter le compteur du parrain
+    if (user.referredBy) {
+      await User.findByIdAndUpdate(user.referredBy, { $inc: { referralCount: 1 } });
+    }
 
     // Auto-créer le profil PetSitter si guardian ou both
     if ((role === 'guardian' || role === 'both') && guardianProfile) {
@@ -66,7 +88,14 @@ exports.register = async (req, res, next) => {
         phone: user.phone,
         avatar: user.avatar,
         role: user.role,
-        isPetSitter: user.isPetSitter
+        isPetSitter: user.isPetSitter,
+        referralCode: user.referralCode,
+        referralCount: 0,
+        totalScans: 0,
+        scanStreak: 0,
+        badProductsAvoided: 0,
+        badges: [],
+        favoriteProducts: [],
       }
     });
   } catch (error) {
@@ -115,7 +144,14 @@ exports.login = async (req, res, next) => {
         phone: user.phone,
         avatar: user.avatar,
         isPetSitter: user.isPetSitter,
-        role: user.role
+        role: user.role,
+        referralCode: user.referralCode,
+        referralCount: user.referralCount || 0,
+        totalScans: user.totalScans || 0,
+        scanStreak: user.scanStreak || 0,
+        badProductsAvoided: user.badProductsAvoided || 0,
+        badges: user.badges || [],
+        favoriteProducts: user.favoriteProducts || [],
       }
     });
   } catch (error) {
@@ -140,7 +176,14 @@ exports.getMe = async (req, res, next) => {
         role: user.role,
         address: user.address,
         location: user.location,
-        createdAt: user.createdAt
+        createdAt: user.createdAt,
+        referralCode: user.referralCode,
+        referralCount: user.referralCount || 0,
+        totalScans: user.totalScans || 0,
+        scanStreak: user.scanStreak || 0,
+        badProductsAvoided: user.badProductsAvoided || 0,
+        badges: user.badges || [],
+        favoriteProducts: user.favoriteProducts || [],
       }
     });
   } catch (error) {

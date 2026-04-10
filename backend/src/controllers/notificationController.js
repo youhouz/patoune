@@ -67,6 +67,54 @@ exports.unsubscribe = async (req, res, next) => {
   }
 };
 
+// @desc    Envoyer un rappel de scan quotidien aux utilisateurs inactifs
+// @route   POST /api/notifications/daily-reminder (protege par cron secret)
+exports.sendDailyReminders = async (req, res, next) => {
+  try {
+    const secret = req.headers['x-cron-secret'] || req.body.cronSecret;
+    if (secret !== process.env.CRON_SECRET) {
+      return res.status(403).json({ success: false, error: 'Acces refuse' });
+    }
+
+    const ScanHistory = require('../models/ScanHistory');
+    const todayStart = new Date();
+    todayStart.setHours(0, 0, 0, 0);
+
+    // Trouver les utilisateurs avec push ET qui n'ont pas scanne aujourd'hui
+    const usersWithPush = await User.find({
+      'pushSubscriptions.0': { $exists: true },
+    }).select('_id pushSubscriptions scanStreak lastScanDate');
+
+    // Filtrer ceux qui n'ont pas scanne aujourd'hui
+    const inactiveUsers = usersWithPush.filter(u => {
+      if (!u.lastScanDate) return true;
+      return new Date(u.lastScanDate) < todayStart;
+    });
+
+    let sent = 0;
+    const messages = [
+      { title: 'Ton animal compte sur toi !', body: 'Scanne ses croquettes pour verifier leur qualite.' },
+      { title: 'As-tu scanne aujourd\'hui ?', body: 'Continue ta serie et debloque de nouveaux badges !' },
+      { title: 'Nouvelle journee, nouveau scan !', body: 'Protege la sante de ton compagnon en 2 secondes.' },
+    ];
+
+    for (const u of inactiveUsers) {
+      const msg = messages[Math.floor(Math.random() * messages.length)];
+      const streakMsg = (u.scanStreak || 0) >= 3
+        ? { title: `Serie de ${u.scanStreak} jours !`, body: 'Ne perds pas ta serie, scanne un produit maintenant.' }
+        : msg;
+      try {
+        await exports.sendPushToUser(u._id, { ...streakMsg, url: '/' });
+        sent++;
+      } catch (_) {}
+    }
+
+    res.json({ success: true, sent, total: inactiveUsers.length });
+  } catch (error) {
+    next(error);
+  }
+};
+
 // @desc    Send push notification to a user
 // @param   {string} userId - Recipient user ID
 // @param   {object} payload - { title, body, url, icon }

@@ -17,6 +17,14 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { FONTS } from '../../utils/typography';
 import { COLORS, SHADOWS, RADIUS, SPACING, FONT_SIZE, getScoreColor, getScoreBg, getScoreLabel } from '../../utils/colors';
 import { showAlert } from '../../utils/alert';
+import { hapticSuccess, hapticWarning, hapticError, hapticLight } from '../../utils/haptics';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { getAlternativesAPI, toggleFavoriteAPI } from '../../api/products';
+import { useAuth } from '../../context/AuthContext';
+import BadgeUnlockModal from '../../components/BadgeUnlockModal';
+import Confetti from '../../components/Confetti';
+import ShareNudgeModal from '../../components/ShareNudgeModal';
+import ExtremeScoreSharePrompt from '../../components/ExtremeScoreSharePrompt';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const SCORE_RING_SIZE = 110;
@@ -154,7 +162,8 @@ const getAdviceColors = (type) => {
 
 const ProductResultScreen = ({ route, navigation }) => {
   const insets = useSafeAreaInsets();
-  const { product } = route.params;
+  const { user, updateUser } = useAuth();
+  const { product, newBadges: newBadgesParam, gamification } = route.params;
   const score = product.nutritionScore ?? null;
   const hasScore = score !== null && score !== undefined;
   const displayScore = hasScore ? score : '--';
@@ -169,6 +178,47 @@ const ProductResultScreen = ({ route, navigation }) => {
   const scoreOpacity = useRef(new Animated.Value(0)).current;
   const ringRotate = useRef(new Animated.Value(0)).current;
   const [cardsVisible, setCardsVisible] = useState(false);
+  const [badgeModal, setBadgeModal] = useState(null);
+  const [alternatives, setAlternatives] = useState([]);
+  const [showConfetti, setShowConfetti] = useState(false);
+  const [showShareNudge, setShowShareNudge] = useState(false);
+  const [showExtremeShare, setShowExtremeShare] = useState(false);
+  const badgeQueue = useRef([...(newBadgesParam || [])]).current;
+
+  // Favorite state
+  const [isFavorite, setIsFavorite] = useState(
+    (user?.favoriteProducts || []).some(id => id === product._id || id?._id === product._id)
+  );
+  const favScale = useRef(new Animated.Value(1)).current;
+
+  const handleToggleFavorite = async () => {
+    if (!user) {
+      showAlert('Connecte-toi', 'Connecte-toi pour sauvegarder des produits favoris.');
+      return;
+    }
+    if (!product._id) return;
+    hapticLight();
+    // Optimistic update + bump animation
+    setIsFavorite(f => !f);
+    Animated.sequence([
+      Animated.spring(favScale, { toValue: 1.3, friction: 3, tension: 150, useNativeDriver: true }),
+      Animated.spring(favScale, { toValue: 1, friction: 3, tension: 150, useNativeDriver: true }),
+    ]).start();
+    try {
+      const res = await toggleFavoriteAPI(product._id);
+      setIsFavorite(!!res.data?.isFavorite);
+      // Update local user
+      if (updateUser) {
+        const currentFavs = user.favoriteProducts || [];
+        const newFavs = res.data?.isFavorite
+          ? [...currentFavs, product._id]
+          : currentFavs.filter(id => id !== product._id && id?._id !== product._id);
+        updateUser({ ...user, favoriteProducts: newFavs });
+      }
+    } catch (_) {
+      setIsFavorite(f => !f); // rollback
+    }
+  };
 
   useEffect(() => {
     // Content fade in
@@ -206,14 +256,94 @@ const ProductResultScreen = ({ route, navigation }) => {
           useNativeDriver: true,
         }),
       ]),
-    ]).start(() => setCardsVisible(true));
+    ]).start(() => {
+      setCardsVisible(true);
+      // Show badge unlock after animation
+      if (badgeQueue.length > 0) {
+        setTimeout(() => setBadgeModal(badgeQueue.shift()), 800);
+      }
+    });
+
+    // Haptic feedback based on score quality
+    if (hasScore) {
+      setTimeout(() => {
+        if (score >= 80) {
+          hapticSuccess();
+          // Celebrate with confetti on great products!
+          setShowConfetti(true);
+          setTimeout(() => setShowConfetti(false), 4000);
+        } else if (score >= 40) {
+          hapticLight();
+        } else {
+          hapticWarning();
+        }
+      }, 400);
+    } else {
+      hapticLight();
+    }
+
+    // Extreme score share prompt (score < 20 or > 85) — high viral potential
+    if (hasScore && (score >= 85 || score < 20) && gamification?.totalScans !== 1) {
+      setTimeout(() => setShowExtremeShare(true), 4000);
+    }
+
+    // First scan share nudge — show once ever, 3s after result
+    if (user && gamification?.totalScans === 1) {
+      AsyncStorage.getItem('share_nudge_shown').then(v => {
+        if (!v) {
+          setTimeout(() => setShowShareNudge(true), 3000);
+          AsyncStorage.setItem('share_nudge_shown', 'true');
+        }
+      }).catch(() => {});
+    }
+
+    // Fetch alternatives for low-score products
+    if (hasScore && score < 60 && product._id) {
+      getAlternativesAPI(product._id).then(res => {
+        if (res.data?.alternatives?.length > 0) {
+          setAlternatives(res.data.alternatives);
+        }
+      }).catch(() => {});
+    }
   }, []);
 
+  const getShareEmoji = (s) => {
+    if (s >= 80) return '🟢';
+    if (s >= 60) return '🟡';
+    if (s >= 40) return '🟠';
+    return '🔴';
+  };
+
+  const buildShareMessage = () => {
+    const emoji = hasScore ? getShareEmoji(score) : '🔍';
+    const brandText = product.brand ? ` de ${product.brand}` : '';
+    const dangerousIngs = (product.ingredients || []).filter(i => i.risk === 'dangerous');
+    const ingredientWarning = dangerousIngs.length > 0
+      ? `\n⚠️ ${dangerousIngs.length} ingredient${dangerousIngs.length > 1 ? 's' : ''} a risque detecte${dangerousIngs.length > 1 ? 's' : ''} !`
+      : '';
+
+    if (!hasScore) {
+      const link = product.barcode ? `pepete.fr/scan/${product.barcode}` : 'pepete.fr';
+      return `🐾 J'ai scanne ${product.name}${brandText} sur Pepete !${ingredientWarning}\n\nScanne les croquettes de ton animal ➡️ ${link}`;
+    }
+
+    const verdict = score >= 80
+      ? '✅ Excellent choix pour mon animal !'
+      : score >= 60
+        ? '👍 Pas mal, mais il y a mieux'
+        : score >= 40
+          ? '⚠️ Qualite moyenne... a changer ?'
+          : '🚫 Deconseille ! Je cherche une alternative';
+
+    const productLink = product.barcode ? `pepete.fr/scan/${product.barcode}` : 'pepete.fr';
+    return `${emoji} ${product.name}${brandText} → ${score}/100 sur Pepete !\n\n${verdict}${ingredientWarning}\n\n🐾 Et toi, tu sais ce que mange ton animal ?\nVoir le resultat ➡️ ${productLink}`;
+  };
+
   const handleShare = async () => {
+    hapticLight();
     try {
-      const scoreText = hasScore ? `Score Pepete: ${score}/100 (${scoreLabel})` : 'Score en cours d\'evaluation';
       await Share.share({
-        message: `${product.name} (${product.brand || 'Marque inconnue'}) - ${scoreText}. Analyse sur Pepete!`,
+        message: buildShareMessage(),
       });
     } catch (_) {
       // Share cancelled
@@ -276,13 +406,31 @@ const ProductResultScreen = ({ route, navigation }) => {
               <Feather name="chevron-left" size={22} color={COLORS.white} />
               <Text style={styles.backText}>Retour</Text>
             </TouchableOpacity>
-            <TouchableOpacity
-              style={styles.shareButton}
-              onPress={handleShare}
-              activeOpacity={0.7}
-            >
-              <Feather name="share-2" size={18} color={COLORS.white} />
-            </TouchableOpacity>
+            <View style={{ flexDirection: 'row', gap: SPACING.sm }}>
+              {user && (
+                <TouchableOpacity
+                  style={styles.shareButton}
+                  onPress={handleToggleFavorite}
+                  activeOpacity={0.7}
+                >
+                  <Animated.View style={{ transform: [{ scale: favScale }] }}>
+                    <Feather
+                      name="heart"
+                      size={18}
+                      color={isFavorite ? '#FF5C7A' : COLORS.white}
+                      style={isFavorite ? { } : undefined}
+                    />
+                  </Animated.View>
+                </TouchableOpacity>
+              )}
+              <TouchableOpacity
+                style={styles.shareButton}
+                onPress={handleShare}
+                activeOpacity={0.7}
+              >
+                <Feather name="share-2" size={18} color={COLORS.white} />
+              </TouchableOpacity>
+            </View>
           </View>
 
           {/* Product image */}
@@ -661,9 +809,189 @@ const ProductResultScreen = ({ route, navigation }) => {
             </View>
           )}
 
+          {/* Better alternatives (for low-score products) */}
+          {alternatives.length > 0 && (
+            <View style={styles.card}>
+              <View style={styles.cardHeader}>
+                <Feather name="thumbs-up" size={20} color={COLORS.scoreExcellent} style={{ marginRight: SPACING.sm }} />
+                <Text style={styles.cardTitle}>Meilleures alternatives</Text>
+              </View>
+              <Text style={styles.altIntro}>
+                Produits mieux notes dans la meme categorie :
+              </Text>
+              {alternatives.map((alt, idx) => {
+                const altColor = getScoreColor(alt.nutritionScore || 0);
+                return (
+                  <TouchableOpacity
+                    key={alt._id || idx}
+                    style={[styles.altRow, idx === alternatives.length - 1 && styles.lastRow]}
+                    onPress={() => navigation.push('ProductResult', { product: alt })}
+                    activeOpacity={0.7}
+                  >
+                    <View style={[styles.altScoreBadge, { backgroundColor: altColor + '15' }]}>
+                      <Text style={[styles.altScoreText, { color: altColor }]}>
+                        {alt.nutritionScore || 0}
+                      </Text>
+                    </View>
+                    <View style={styles.altInfo}>
+                      <Text style={styles.altName} numberOfLines={1}>{alt.name}</Text>
+                      <Text style={styles.altBrand} numberOfLines={1}>{alt.brand || ''}</Text>
+                    </View>
+                    <Feather name="chevron-right" size={16} color={COLORS.pebble} />
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
+          )}
+
+          {/* Scan milestone celebration */}
+          {gamification && [10, 50, 100, 250, 500].includes(gamification.totalScans) && (
+            <View style={styles.milestoneCard}>
+              <LinearGradient
+                colors={['#527A56', '#6B8F71']}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+                style={styles.milestoneGradient}
+              >
+                <Text style={styles.milestoneEmoji}>
+                  {gamification.totalScans >= 100 ? '🏆' : gamification.totalScans >= 50 ? '🌟' : '🎯'}
+                </Text>
+                <Text style={styles.milestoneTitle}>
+                  {gamification.totalScans}e scan !
+                </Text>
+                <Text style={styles.milestoneText}>
+                  {gamification.totalScans >= 100
+                    ? 'Vous etes un vrai expert ! Rien ne vous echappe.'
+                    : gamification.totalScans >= 50
+                      ? 'Impressionnant ! Vous protegez votre animal comme un pro.'
+                      : 'Bravo ! Continuez a proteger votre compagnon.'}
+                </Text>
+              </LinearGradient>
+            </View>
+          )}
+
+          {/* "Produit dangereux évité" impact card - displays when current product is bad */}
+          {hasScore && score < 40 && gamification?.badProductsAvoided > 0 && (
+            <View style={styles.avoidedCard}>
+              <LinearGradient
+                colors={['#6B8F71', '#8CB092']}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+                style={styles.avoidedGradient}
+              >
+                <View style={styles.avoidedIconCircle}>
+                  <Feather name="shield" size={22} color="#FFF" />
+                </View>
+                <View style={styles.avoidedContent}>
+                  <Text style={styles.avoidedTitle}>
+                    {gamification.badProductsAvoided === 1
+                      ? 'Premier produit dangereux évité !'
+                      : `${gamification.badProductsAvoided} produits dangereux évités`}
+                  </Text>
+                  <Text style={styles.avoidedText}>
+                    Grace a Pepete, tu sais ce qu'il faut eviter pour ton animal 🐾
+                  </Text>
+                </View>
+              </LinearGradient>
+            </View>
+          )}
+
+          {/* Share score card - Growth Hacking #1 */}
+          <View style={styles.shareCard}>
+            <LinearGradient
+              colors={hasScore ? getScoreGradient(score) : [COLORS.pebble, COLORS.sand]}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={styles.shareCardGradient}
+            >
+              <View style={styles.shareCardPreview}>
+                <View style={styles.shareMiniScore}>
+                  <Text style={styles.shareMiniScoreText}>{displayScore}</Text>
+                  {hasScore && <Text style={styles.shareMiniScoreMax}>/100</Text>}
+                </View>
+                <View style={styles.shareCardPreviewInfo}>
+                  <Text style={styles.shareCardProductName} numberOfLines={1}>
+                    {product.name || 'Produit inconnu'}
+                  </Text>
+                  <Text style={styles.shareCardVerdict}>
+                    {hasScore ? scoreLabel : 'Non evalue'}
+                  </Text>
+                </View>
+              </View>
+
+              <Text style={styles.shareCardQuestion}>
+                Et toi, tu sais ce que mange ton animal ?
+              </Text>
+
+              <TouchableOpacity
+                style={styles.shareCardButton}
+                onPress={handleShare}
+                activeOpacity={0.85}
+              >
+                <Feather name="share-2" size={18} color={hasScore ? getScoreColor(score) : COLORS.pebble} />
+                <Text style={[styles.shareCardButtonText, { color: hasScore ? getScoreColor(score) : COLORS.pebble }]}>
+                  Partager le resultat
+                </Text>
+              </TouchableOpacity>
+
+              <Text style={styles.shareCardFooter}>pepete.fr</Text>
+            </LinearGradient>
+          </View>
+
           <View style={{ height: SPACING['3xl'] }} />
         </Animated.View>
       </ScrollView>
+
+      {/* Confetti celebration on great scores */}
+      <Confetti active={showConfetti} count={40} />
+
+      {/* Badge unlock modal */}
+      <BadgeUnlockModal
+        visible={!!badgeModal}
+        badgeKey={badgeModal}
+        onClose={() => {
+          setBadgeModal(null);
+          // Show next badge in queue
+          if (badgeQueue.length > 0) {
+            setTimeout(() => setBadgeModal(badgeQueue.shift()), 400);
+          }
+        }}
+      />
+
+      {/* First scan share nudge */}
+      <ShareNudgeModal
+        visible={showShareNudge}
+        product={product}
+        onClose={() => setShowShareNudge(false)}
+      />
+
+      {/* Extreme score viral share prompt */}
+      <ExtremeScoreSharePrompt
+        product={product}
+        score={score}
+        visible={showExtremeShare && !showShareNudge}
+        onDismiss={() => setShowExtremeShare(false)}
+      />
+
+      {/* Sticky engagement bar */}
+      <View style={[styles.engagementBar, { paddingBottom: Math.max(insets.bottom, 12) }]}>
+        <TouchableOpacity
+          style={styles.engageScanBtn}
+          onPress={() => navigation.replace('ScannerMain')}
+          activeOpacity={0.85}
+        >
+          <Feather name="camera" size={18} color={COLORS.primary} />
+          <Text style={styles.engageScanText}>Scanner un autre</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={[styles.engageShareBtn, { backgroundColor: hasScore ? getScoreColor(score) : COLORS.pebble }]}
+          onPress={handleShare}
+          activeOpacity={0.85}
+        >
+          <Feather name="share-2" size={18} color="#FFF" />
+          <Text style={styles.engageShareText}>Partager</Text>
+        </TouchableOpacity>
+      </View>
     </View>
   );
 };
@@ -677,7 +1005,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   scrollContent: {
-    paddingBottom: SPACING['2xl'],
+    paddingBottom: 80,
   },
 
   // Header gradient
@@ -1154,6 +1482,247 @@ const styles = StyleSheet.create({
     fontFamily: FONTS.bodyMedium,
     color: COLORS.stone,
     lineHeight: 18,
+  },
+
+  // Milestone
+  milestoneCard: {
+    borderRadius: RADIUS['2xl'],
+    overflow: 'hidden',
+    marginBottom: SPACING.base,
+    ...SHADOWS.md,
+  },
+  milestoneGradient: {
+    padding: SPACING.xl,
+    alignItems: 'center',
+  },
+  milestoneEmoji: { fontSize: 40, marginBottom: SPACING.sm },
+  milestoneTitle: {
+    fontSize: FONT_SIZE['2xl'] || 24,
+    fontFamily: FONTS.heading,
+    color: '#FFF',
+    marginBottom: SPACING.xs,
+  },
+  milestoneText: {
+    fontSize: FONT_SIZE.sm,
+    fontFamily: FONTS.bodyMedium,
+    color: 'rgba(255,255,255,0.85)',
+    textAlign: 'center',
+    lineHeight: 20,
+  },
+
+  // Avoided product impact card
+  avoidedCard: {
+    borderRadius: RADIUS['2xl'],
+    overflow: 'hidden',
+    marginBottom: SPACING.base,
+    ...SHADOWS.md,
+  },
+  avoidedGradient: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: SPACING.lg,
+    gap: SPACING.md,
+  },
+  avoidedIconCircle: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  avoidedContent: { flex: 1 },
+  avoidedTitle: {
+    fontSize: FONT_SIZE.base,
+    fontFamily: FONTS.heading,
+    color: '#FFF',
+  },
+  avoidedText: {
+    fontSize: FONT_SIZE.xs,
+    fontFamily: FONTS.bodyMedium,
+    color: 'rgba(255,255,255,0.85)',
+    marginTop: 2,
+    lineHeight: 16,
+  },
+
+  // Alternatives
+  altIntro: {
+    fontSize: FONT_SIZE.sm,
+    fontFamily: FONTS.bodyMedium,
+    color: COLORS.stone,
+    marginBottom: SPACING.md,
+  },
+  altRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: SPACING.md,
+    borderBottomWidth: 1,
+    borderBottomColor: COLORS.borderLight,
+  },
+  altScoreBadge: {
+    width: 44,
+    height: 44,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: SPACING.md,
+  },
+  altScoreText: {
+    fontSize: FONT_SIZE.base,
+    fontFamily: FONTS.heading,
+  },
+  altInfo: {
+    flex: 1,
+  },
+  altName: {
+    fontSize: FONT_SIZE.sm,
+    fontFamily: FONTS.bodySemiBold,
+    color: COLORS.charcoal,
+    marginBottom: 2,
+  },
+  altBrand: {
+    fontSize: FONT_SIZE.xs,
+    fontFamily: FONTS.bodyMedium,
+    color: COLORS.pebble,
+  },
+
+  // Share card
+  shareCard: {
+    borderRadius: RADIUS['2xl'],
+    overflow: 'hidden',
+    marginBottom: SPACING.base,
+    ...SHADOWS.lg,
+  },
+  shareCardGradient: {
+    padding: SPACING.xl,
+    alignItems: 'center',
+  },
+  shareCardPreview: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    borderRadius: RADIUS.xl,
+    padding: SPACING.base,
+    width: '100%',
+    marginBottom: SPACING.lg,
+  },
+  shareMiniScore: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: 'rgba(255,255,255,0.95)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: SPACING.md,
+    ...SHADOWS.sm,
+  },
+  shareMiniScoreText: {
+    fontSize: FONT_SIZE.xl,
+    fontFamily: FONTS.heading,
+    color: COLORS.charcoal,
+    lineHeight: FONT_SIZE.xl + 2,
+  },
+  shareMiniScoreMax: {
+    fontSize: 9,
+    fontFamily: FONTS.bodySemiBold,
+    color: COLORS.pebble,
+    marginTop: -3,
+  },
+  shareCardPreviewInfo: {
+    flex: 1,
+  },
+  shareCardProductName: {
+    fontSize: FONT_SIZE.base,
+    fontFamily: FONTS.heading,
+    color: COLORS.white,
+    marginBottom: 2,
+  },
+  shareCardVerdict: {
+    fontSize: FONT_SIZE.sm,
+    fontFamily: FONTS.bodySemiBold,
+    color: 'rgba(255,255,255,0.8)',
+    textTransform: 'uppercase',
+    letterSpacing: 0.3,
+  },
+  shareCardQuestion: {
+    fontSize: FONT_SIZE.lg,
+    fontFamily: FONTS.heading,
+    color: COLORS.white,
+    textAlign: 'center',
+    marginBottom: SPACING.lg,
+    lineHeight: FONT_SIZE.lg + 6,
+  },
+  shareCardButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: COLORS.white,
+    paddingHorizontal: SPACING['2xl'],
+    paddingVertical: SPACING.base,
+    borderRadius: RADIUS.full,
+    gap: SPACING.sm,
+    width: '100%',
+    ...SHADOWS.md,
+  },
+  shareCardButtonText: {
+    fontSize: FONT_SIZE.base,
+    fontFamily: FONTS.heading,
+    letterSpacing: 0.2,
+  },
+  shareCardFooter: {
+    fontSize: FONT_SIZE.xs,
+    fontFamily: FONTS.bodySemiBold,
+    color: 'rgba(255,255,255,0.6)',
+    marginTop: SPACING.md,
+    letterSpacing: 1,
+    textTransform: 'uppercase',
+  },
+
+  // Engagement bar
+  engagementBar: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    flexDirection: 'row',
+    gap: SPACING.sm,
+    paddingHorizontal: SPACING.xl,
+    paddingTop: SPACING.md,
+    backgroundColor: COLORS.cream,
+    borderTopWidth: 1,
+    borderTopColor: COLORS.borderLight,
+    ...SHADOWS.lg,
+  },
+  engageScanBtn: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: SPACING.sm,
+    backgroundColor: COLORS.white,
+    paddingVertical: SPACING.base,
+    borderRadius: RADIUS.xl,
+    borderWidth: 1.5,
+    borderColor: COLORS.primary + '30',
+  },
+  engageScanText: {
+    fontSize: FONT_SIZE.sm,
+    fontFamily: FONTS.heading,
+    color: COLORS.primary,
+  },
+  engageShareBtn: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: SPACING.sm,
+    paddingVertical: SPACING.base,
+    borderRadius: RADIUS.xl,
+  },
+  engageShareText: {
+    fontSize: FONT_SIZE.sm,
+    fontFamily: FONTS.heading,
+    color: '#FFF',
   },
 
   // Barcode footer

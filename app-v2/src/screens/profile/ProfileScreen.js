@@ -25,6 +25,7 @@ import { uploadAvatarAPI } from '../../api/auth';
 import { API_URL } from '../../api/client';
 import { showAlert } from '../../utils/alert';
 import colors, { SHADOWS, RADIUS, SPACING, FONT_SIZE } from '../../utils/colors';
+import { hapticLight } from '../../utils/haptics';
 
 const HEADER_PADDING_TOP = Platform.OS === 'ios' ? 60 : (StatusBar.currentHeight || 24) + 20;
 
@@ -201,6 +202,29 @@ const ProfileScreen = ({ navigation }) => {
         },
       ],
     },
+    {
+      title: 'Mes produits',
+      items: [
+        {
+          icon: 'heart',
+          label: 'Mes favoris',
+          subtitle: 'Produits que j\'ai sauvegardes',
+          screen: 'Favorites',
+          tabNav: 'Scanner',
+          accentColor: '#FF5C7A',
+          bgColor: '#FFF1F3',
+        },
+        {
+          icon: 'list',
+          label: 'Historique scans',
+          subtitle: 'Tous les produits que j\'ai scannes',
+          screen: 'ScanHistory',
+          tabNav: 'Scanner',
+          accentColor: '#5B7FC2',
+          bgColor: '#E4ECFB',
+        },
+      ],
+    },
   ];
 
   const sitterSections = [
@@ -246,6 +270,27 @@ const ProfileScreen = ({ navigation }) => {
       ],
     }] : []),
     {
+      title: 'Communaute',
+      items: [
+        {
+          icon: 'gift',
+          label: 'Inviter des amis',
+          subtitle: `${user?.referralCount || 0} filleul${(user?.referralCount || 0) !== 1 ? 's' : ''} — Gagne des badges`,
+          screen: 'Referral',
+          accentColor: '#6B8F71',
+          bgColor: colors.primarySoft,
+        },
+        {
+          icon: 'award',
+          label: 'Classement',
+          subtitle: 'Top scanners de la communaute',
+          screen: 'Leaderboard',
+          accentColor: '#EAB308',
+          bgColor: '#FFFDF5',
+        },
+      ],
+    },
+    {
       title: 'Parametres',
       items: [
         {
@@ -271,6 +316,14 @@ const ProfileScreen = ({ navigation }) => {
           screen: 'Contact',
           accentColor: '#5B7FC2',
           bgColor: '#E4ECFB',
+        },
+        {
+          icon: 'message-square',
+          label: 'Donner mon avis',
+          subtitle: 'Aidez-nous a ameliorer Pepete',
+          screen: 'Contact',
+          accentColor: '#8B5CF6',
+          bgColor: '#F0EAFF',
         },
       ],
     },
@@ -409,8 +462,12 @@ const ProfileScreen = ({ navigation }) => {
                 key={itemIndex}
                 style={styles.menuCard}
                 onPress={() => {
+                  hapticLight();
                   if (item.isRootNav) {
                     navigation.getParent()?.getParent()?.navigate(item.screen);
+                  } else if (item.tabNav) {
+                    // Navigate to a screen inside another tab's stack
+                    navigation.getParent()?.navigate(item.tabNav, { screen: item.screen });
                   } else {
                     navigation.navigate(item.screen);
                   }

@@ -19,6 +19,7 @@ import { CameraView, useCameraPermissions } from 'expo-camera';
 import { Feather } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { scanProductAPI } from '../../api/products';
+import { hapticMedium, hapticSuccess, hapticError } from '../../utils/haptics';
 import useResponsive from '../../hooks/useResponsive';
 import WebBarcodeScanner from '../../components/WebBarcodeScanner';
 import { FONTS } from '../../utils/typography';
@@ -148,6 +149,8 @@ const ScannerScreen = ({ navigation }) => {
     setScanned(true);
     triggerScanFlash();
 
+    // Feedback tactile immédiat sur barcode détecté
+    hapticMedium();
     try {
       Vibration.vibrate(50);
     } catch (_) {
@@ -157,11 +160,18 @@ const ScannerScreen = ({ navigation }) => {
     try {
       const response = await scanProductAPI(code);
       if (response.data && response.data.product) {
-        navigation.navigate('ProductResult', { product: response.data.product });
+        hapticSuccess();
+        navigation.navigate('ProductResult', {
+          product: response.data.product,
+          newBadges: response.data.gamification?.newBadges || [],
+          gamification: response.data.gamification || null,
+        });
       } else {
+        hapticError();
         showError('Reponse inattendue du serveur');
       }
     } catch (error) {
+      hapticError();
       if (error.response?.status === 404) {
         Alert.alert(
           'Produit non trouve',

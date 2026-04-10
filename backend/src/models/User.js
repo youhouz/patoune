@@ -56,6 +56,51 @@ const userSchema = new mongoose.Schema({
       auth: String,
     },
   }],
+  // Système de parrainage
+  referralCode: {
+    type: String,
+    unique: true,
+    sparse: true,
+  },
+  referredBy: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    default: null,
+  },
+  referralCount: {
+    type: Number,
+    default: 0,
+  },
+  // Gamification
+  scanStreak: {
+    type: Number,
+    default: 0,
+  },
+  lastScanDate: {
+    type: Date,
+    default: null,
+  },
+  totalScans: {
+    type: Number,
+    default: 0,
+  },
+  // Nombre de produits dangereux que l'utilisateur a évités grâce à Pepete
+  badProductsAvoided: {
+    type: Number,
+    default: 0,
+  },
+  badges: [{
+    type: String,
+  }],
+  // Produits favoris (sauvegardés)
+  favoriteProducts: [{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Product',
+  }],
+  // UTM tracking (acquisition source)
+  utmSource: { type: String, default: null },
+  utmMedium: { type: String, default: null },
+  utmCampaign: { type: String, default: null },
 }, {
   timestamps: true
 });
@@ -63,8 +108,13 @@ const userSchema = new mongoose.Schema({
 // Index géospatial
 userSchema.index({ location: '2dsphere' });
 
-// Hash password avant save
+// Générer un code de parrainage unique à la création
 userSchema.pre('save', async function (next) {
+  if (this.isNew && !this.referralCode) {
+    const prefix = (this.name || 'PEP').substring(0, 3).toUpperCase().replace(/[^A-Z]/g, 'P');
+    const suffix = this._id.toString().slice(-4).toUpperCase();
+    this.referralCode = `${prefix}${suffix}`;
+  }
   if (!this.isModified('password')) return next();
   const salt = await bcrypt.genSalt(10);
   this.password = await bcrypt.hash(this.password, salt);

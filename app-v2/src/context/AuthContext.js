@@ -94,8 +94,17 @@ export const AuthProvider = ({ children }) => {
 
   const register = useCallback(async (data = {}) => {
     try {
-      const { name, email, password, phone, role, address, guardianProfile } = data;
-      const response = await registerAPI(name, email, password, phone, role, address, guardianProfile);
+      const { name, email, password, phone, role, address, guardianProfile, referralCode } = data;
+      // Attach UTM params from storage
+      let utmSource, utmMedium, utmCampaign;
+      try {
+        [utmSource, utmMedium, utmCampaign] = await Promise.all([
+          AsyncStorage.getItem('utm_source'),
+          AsyncStorage.getItem('utm_medium'),
+          AsyncStorage.getItem('utm_campaign'),
+        ]);
+      } catch (_) {}
+      const response = await registerAPI(name, email, password, phone, role, address, guardianProfile, referralCode, utmSource, utmMedium, utmCampaign);
       const { token: newToken, user: userData } = response.data;
 
       if (!newToken || !userData) {

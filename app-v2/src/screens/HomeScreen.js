@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useRef } from 'react';
+import React, { useState, useCallback, useRef, useEffect } from 'react';
 import {
   View, Text, ScrollView, TouchableOpacity, StyleSheet,
   Platform, StatusBar, RefreshControl, TextInput, Animated,
@@ -9,6 +9,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 const PressableCard = ({ onPress, disabled, style, children }) => {
   const scale = useRef(new Animated.Value(1)).current;
   const onPressIn = () => {
+    hapticLight();
     Animated.spring(scale, { toValue: 0.95, useNativeDriver: true, speed: 50, bounciness: 4 }).start();
   };
   const onPressOut = () => {
@@ -28,15 +29,41 @@ const PressableCard = ({ onPress, disabled, style, children }) => {
     </TouchableOpacity>
   );
 };
+
+// ─── Pulsing emoji (for streak fire) ────────────────────
+const PulsingEmoji = ({ emoji, style }) => {
+  const scale = useRef(new Animated.Value(1)).current;
+  useEffect(() => {
+    const pulse = Animated.loop(
+      Animated.sequence([
+        Animated.timing(scale, { toValue: 1.15, duration: 650, useNativeDriver: true }),
+        Animated.timing(scale, { toValue: 1, duration: 650, useNativeDriver: true }),
+      ])
+    );
+    pulse.start();
+    return () => pulse.stop();
+  }, []);
+  return (
+    <Animated.Text style={[style, { transform: [{ scale }] }]}>{emoji}</Animated.Text>
+  );
+};
 import { useFocusEffect } from '@react-navigation/native';
 import { Feather } from '@expo/vector-icons';
 import { useAuth } from '../context/AuthContext';
 import { getMyPetsAPI } from '../api/pets';
-import { getScanHistoryAPI, getPopularProductsAPI } from '../api/products';
+import { getScanHistoryAPI, getPopularProductsAPI, getCommunityStatsAPI, getMonthlyLeaderboardAPI } from '../api/products';
 import { getMyBookingsAPI } from '../api/petsitters';
 import { PepeteIcon } from '../components/PepeteLogo';
 import useResponsive from '../hooks/useResponsive';
 import { COLORS, SPACING, RADIUS, SHADOWS, FONT_SIZE, getScoreColor, getScoreLabel } from '../utils/colors';
+import { isPushSubscribed, subscribeToPush } from '../utils/pushNotifications';
+import { hapticLight, hapticSelection } from '../utils/haptics';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import SatisfactionPrompt from '../components/SatisfactionPrompt';
+import WeeklySummaryCard from '../components/WeeklySummaryCard';
+import AnimatedCounter from '../components/AnimatedCounter';
+import BadgeUnlockModal from '../components/BadgeUnlockModal';
+import api from '../api/client';
 
 // ─── Recent Scan Card — Glass morphism ─────────────────────
 const RecentScanCard = ({ scan, onPress }) => {
@@ -107,13 +134,13 @@ const NextBookingCard = ({ booking }) => {
 
 // ─── Pet Mini Card — Refined ───────────────────────────────
 const PetMiniCard = ({ pet }) => {
-  const speciesLetters = { chien: 'C', chat: 'Ch', oiseau: 'O', rongeur: 'R', reptile: 'Re', poisson: 'P' };
+  const speciesEmojis = { chien: '🐶', chat: '🐱', oiseau: '🐦', rongeur: '🐹', reptile: '🦎', poisson: '🐟' };
   const speciesColors = { chien: '#6B8F71', chat: '#527A56', oiseau: '#8CB092', rongeur: '#C4956A', reptile: '#3D5E41', poisson: '#B8A88A' };
   const color = speciesColors[pet.species] || COLORS.primary;
   return (
     <View style={s.petMini}>
       <View style={[s.petMiniAvatar, { backgroundColor: color + '10', borderColor: color + '20' }]}>
-        <Text style={[s.petMiniLetter, { color }]}>{speciesLetters[pet.species] || '?'}</Text>
+        <Text style={s.petMiniEmoji}>{speciesEmojis[pet.species] || '🐾'}</Text>
       </View>
       <Text style={s.petMiniName} numberOfLines={1}>{pet.name}</Text>
     </View>
@@ -172,6 +199,42 @@ const HomeScreen = ({ navigation }) => {
   const [refreshing, setRefreshing] = useState(false);
   const [query, setQuery] = useState('');
   const [popularProducts, setPopularProducts] = useState([]);
+  const [communityStats, setCommunityStats] = useState(null);
+  const [monthlyLeaderboard, setMonthlyLeaderboard] = useState(null);
+  const [showPushCard, setShowPushCard] = useState(false);
+  const [pushDismissed, setPushDismissed] = useState(false);
+  const [fondateurModal, setFondateurModal] = useState(false);
+
+  // Show fondateur badge celebration once
+  useEffect(() => {
+    if (!user?.badges?.includes('fondateur')) return;
+    AsyncStorage.getItem('fondateur_badge_shown').then(v => {
+      if (!v) {
+        setTimeout(() => setFondateurModal(true), 1200);
+        AsyncStorage.setItem('fondateur_badge_shown', 'true');
+      }
+    }).catch(() => {});
+  }, [user?.id]);
+
+  // Live-poll community stats every 30 seconds so the counter feels alive
+  useEffect(() => {
+    let cancelled = false;
+    const poll = async () => {
+      try {
+        const res = await getCommunityStatsAPI();
+        if (!cancelled) setCommunityStats(res.data?.stats || null);
+      } catch (_) {}
+    };
+    const interval = setInterval(poll, 30000);
+    return () => { cancelled = true; clearInterval(interval); };
+  }, []);
+
+  // Fetch monthly leaderboard once on mount
+  useEffect(() => {
+    getMonthlyLeaderboardAPI()
+      .then(res => setMonthlyLeaderboard(res.data || null))
+      .catch(() => setMonthlyLeaderboard(null));
+  }, [user?.id]);
 
   const fetchData = async () => {
     try {
@@ -189,10 +252,25 @@ const HomeScreen = ({ navigation }) => {
           .sort((a, b) => new Date(a.startDate) - new Date(b.startDate));
         setBookings(upcoming);
       }
-      // Produits populaires (sans auth)
+      // Check push opt-in state (show after at least 1 scan)
+      if (Platform.OS === 'web' && 'Notification' in window && Notification.permission === 'default') {
+        const dismissed = await AsyncStorage.getItem('push_card_dismissed');
+        if (!dismissed) {
+          const scans = scansRes.status === 'fulfilled'
+            ? (scansRes.value.data?.history || scansRes.value.data || [])
+            : [];
+          if (scans.length >= 1) setShowPushCard(true);
+        }
+      }
+
+      // Produits populaires + stats communaute (sans auth)
       try {
-        const popRes = await getPopularProductsAPI(12);
-        setPopularProducts(popRes.data?.products || []);
+        const [popRes, statsRes] = await Promise.allSettled([
+          getPopularProductsAPI(12),
+          getCommunityStatsAPI(),
+        ]);
+        if (popRes.status === 'fulfilled') setPopularProducts(popRes.value.data?.products || []);
+        if (statsRes.status === 'fulfilled') setCommunityStats(statsRes.value.data?.stats || null);
       } catch (_) {
         // silently ignore
       }
@@ -209,7 +287,16 @@ const HomeScreen = ({ navigation }) => {
 
   const firstName = user?.name?.split(' ')[0] || null;
   const hour = new Date().getHours();
-  const greetText = hour < 12 ? 'Bonjour' : hour < 18 ? 'Bonne journée' : 'Bonsoir';
+  const greetInfo = (() => {
+    if (hour < 6)  return { text: 'Bonne nuit',     emoji: '🌙' };
+    if (hour < 12) return { text: 'Bonjour',        emoji: '☀️' };
+    if (hour < 14) return { text: 'Bon appétit',    emoji: '🍽️' };
+    if (hour < 18) return { text: 'Bon après-midi', emoji: '🌤️' };
+    if (hour < 22) return { text: 'Bonsoir',        emoji: '🌆' };
+    return { text: 'Bonne soirée', emoji: '🌙' };
+  })();
+  const greetText = greetInfo.text;
+  const greetEmoji = greetInfo.emoji;
 
   const features = [
     {
@@ -285,7 +372,7 @@ const HomeScreen = ({ navigation }) => {
               <View style={s.heroGreetBox}>
                 <View style={s.heroGreetRow}>
                   <PepeteIcon size={24} color="rgba(255,255,255,0.9)" />
-                  <Text style={s.greeting}>{greetText}</Text>
+                  <Text style={s.greeting}>{greetText} {greetEmoji}</Text>
                 </View>
                 {firstName
                   ? <Text style={s.userName}>{firstName}</Text>
@@ -384,6 +471,39 @@ const HomeScreen = ({ navigation }) => {
           </View>
         )}
 
+        {/* ── Welcome card for new users (0 scans) ── */}
+        {!loading && recentScans.length === 0 && user && (
+          <View style={[s.welcomeSection, { paddingHorizontal: hPadding }, centerWrap]}>
+            <TouchableOpacity
+              activeOpacity={0.9}
+              onPress={() => navigation.navigate('Scanner')}
+            >
+              <LinearGradient
+                colors={['#527A56', '#6B8F71', '#8CB092']}
+                start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}
+                style={s.welcomeCard}
+              >
+                <View style={s.welcomeIconCircle}>
+                  <Feather name="camera" size={28} color="#FFF" />
+                </View>
+                <Text style={s.welcomeTitle}>Bienvenue {user.name?.split(' ')[0]} !</Text>
+                <Text style={s.welcomeText}>
+                  Scanne ton premier produit pour decouvrir ce que mange vraiment ton animal.
+                </Text>
+                <View style={s.welcomeBtn}>
+                  <Text style={s.welcomeBtnText}>Mon premier scan</Text>
+                  <Feather name="arrow-right" size={16} color="#527A56" />
+                </View>
+                {communityStats && (
+                  <Text style={s.welcomeProof}>
+                    {communityStats.totalUsers} membres font deja confiance a Pepete
+                  </Text>
+                )}
+              </LinearGradient>
+            </TouchableOpacity>
+          </View>
+        )}
+
         {/* ── Que faire ? — Feature cards (grille 2 colonnes) ── */}
         <View style={[s.featuresSection, { paddingHorizontal: hPadding }, centerWrap]}>
           <Text style={s.sectionTitle}>Que voulez-vous faire ?</Text>
@@ -443,6 +563,288 @@ const HomeScreen = ({ navigation }) => {
             ))}
           </View>
         </View>
+
+        {/* ── Social proof + Streak + Invite ── */}
+        <View style={[s.growthSection, { paddingHorizontal: hPadding }, centerWrap]}>
+          {/* Social proof banner with live counter */}
+          {communityStats && (
+            <View style={s.socialProofCard}>
+              <View style={s.socialProofIcon}>
+                <Feather name="users" size={18} color="#6B8F71" />
+              </View>
+              <View style={s.socialProofContent}>
+                <View style={{ flexDirection: 'row', alignItems: 'baseline', gap: 4 }}>
+                  <AnimatedCounter
+                    value={communityStats.totalUsers}
+                    style={s.socialProofCount}
+                  />
+                  <Text style={s.socialProofTitle}>membres en direct</Text>
+                </View>
+                <Text style={s.socialProofSub}>
+                  {communityStats.scansToday > 0
+                    ? `${communityStats.scansToday} scan${communityStats.scansToday > 1 ? 's' : ''} aujourd'hui`
+                    : `${communityStats.totalScans} scans au total`}
+                </Text>
+              </View>
+              <View style={s.socialProofLive}>
+                <View style={s.liveDot} />
+                <Text style={s.liveText}>Live</Text>
+              </View>
+            </View>
+          )}
+
+          {/* Push notification opt-in */}
+          {showPushCard && !pushDismissed && (
+            <View style={s.pushCard}>
+              <View style={s.pushCardLeft}>
+                <View style={s.pushBellCircle}>
+                  <Feather name="bell" size={20} color="#527A56" />
+                </View>
+                <View style={s.pushCardContent}>
+                  <Text style={s.pushCardTitle}>Restez informe !</Text>
+                  <Text style={s.pushCardSub}>Alertes produits, rappels scans, nouveautes</Text>
+                </View>
+              </View>
+              <View style={s.pushCardActions}>
+                <TouchableOpacity
+                  style={s.pushCardBtn}
+                  onPress={async () => {
+                    const ok = await subscribeToPush();
+                    setShowPushCard(false);
+                    if (!ok) await AsyncStorage.setItem('push_card_dismissed', 'true');
+                  }}
+                  activeOpacity={0.8}
+                >
+                  <Text style={s.pushCardBtnText}>Activer</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  onPress={async () => {
+                    setPushDismissed(true);
+                    await AsyncStorage.setItem('push_card_dismissed', 'true');
+                  }}
+                  hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                >
+                  <Feather name="x" size={16} color={COLORS.textTertiary} />
+                </TouchableOpacity>
+              </View>
+            </View>
+          )}
+
+          {/* Streak card */}
+          {user && (
+            <TouchableOpacity
+              style={s.streakCard}
+              onPress={() => navigation.navigate('Profil', { screen: 'Referral' })}
+              activeOpacity={0.8}
+            >
+              <LinearGradient
+                colors={
+                  (user.scanStreak || 0) >= 7 ? ['#EAB308', '#F59E0B'] :
+                  (user.scanStreak || 0) >= 3 ? ['#6B8F71', '#8CB092'] :
+                  ['#B8A88A', '#C4B89A']
+                }
+                start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}
+                style={s.streakGradient}
+              >
+                {(user.scanStreak || 0) >= 3 ? (
+                  <PulsingEmoji
+                    emoji={(user.scanStreak || 0) >= 7 ? '🔥' : '⚡'}
+                    style={s.streakEmoji}
+                  />
+                ) : (
+                  <Text style={s.streakEmoji}>🐾</Text>
+                )}
+                <View style={s.streakInfo}>
+                  <Text style={s.streakTitle}>
+                    {(user.scanStreak || 0) > 0
+                      ? `${user.scanStreak} jour${user.scanStreak > 1 ? 's' : ''} de suite !`
+                      : 'Scanne aujourd\'hui !'
+                    }
+                  </Text>
+                  <Text style={s.streakSub}>
+                    {(user.scanStreak || 0) > 0
+                      ? 'Continue pour debloquer des badges'
+                      : 'Commence ta serie de scans'
+                    }
+                  </Text>
+                </View>
+                <Feather name="chevron-right" size={18} color="rgba(255,255,255,0.7)" />
+              </LinearGradient>
+            </TouchableOpacity>
+          )}
+
+          {/* Invite CTA — enhanced viral */}
+          {user && (
+            <TouchableOpacity
+              style={s.inviteCard}
+              onPress={() => navigation.navigate('Profil', { screen: 'Referral' })}
+              activeOpacity={0.8}
+            >
+              <View style={s.inviteIconCircle}>
+                <Feather name="gift" size={20} color="#C4956A" />
+              </View>
+              <View style={s.inviteContent}>
+                <Text style={s.inviteTitle}>
+                  {(user.referralCount || 0) === 0
+                    ? 'Tes potes savent ce que mange leur animal ?'
+                    : (user.referralCount || 0) >= 3
+                      ? `${user.referralCount} amis parraines ! Continue`
+                      : `${user.referralCount} ami${user.referralCount > 1 ? 's' : ''} parraine${user.referralCount > 1 ? 's' : ''}`
+                  }
+                </Text>
+                <Text style={s.inviteSub}>
+                  {(user.referralCount || 0) === 0
+                    ? 'Partage ton code et gagne le badge Ambassadeur'
+                    : (user.referralCount || 0) < 5
+                      ? `Plus que ${5 - (user.referralCount || 0)} pour le badge Influenceur !`
+                      : (user.referralCount || 0) < 10
+                        ? `Plus que ${10 - (user.referralCount || 0)} pour le badge VIP !`
+                        : 'Tu es un vrai ambassadeur Pepete !'
+                  }
+                </Text>
+              </View>
+              <View style={s.inviteArrow}>
+                <Feather name="arrow-right" size={16} color="#C4956A" />
+              </View>
+            </TouchableOpacity>
+          )}
+
+          {/* Next badge motivation card */}
+          {user && (() => {
+            const earned = user.badges || [];
+            const totalScans = user.totalScans || 0;
+            const streak = user.scanStreak || 0;
+            const SCAN_TIERS = [
+              { key: 'first_scan', target: 1, icon: 'camera', label: 'Premier Scan', color: '#6B8F71' },
+              { key: 'scanner_10', target: 10, icon: 'zap', label: 'Explorateur', color: '#527A56' },
+              { key: 'scanner_50', target: 50, icon: 'award', label: 'Expert', color: '#C4956A' },
+              { key: 'scanner_100', target: 100, icon: 'star', label: 'Master Scanner', color: '#C25B4A' },
+            ];
+            const STREAK_TIERS = [
+              { key: 'streak_3', target: 3, icon: 'trending-up', label: 'Regulier', color: '#5B7FC2' },
+              { key: 'streak_7', target: 7, icon: 'target', label: 'Assidu', color: '#8B5CF6' },
+              { key: 'streak_30', target: 30, icon: 'shield', label: 'Inarretable', color: '#EAB308' },
+            ];
+            const nextScan = SCAN_TIERS.find(t => !earned.includes(t.key) && totalScans < t.target);
+            const nextStreak = STREAK_TIERS.find(t => !earned.includes(t.key) && streak < t.target);
+            // Pick closest by percentage
+            const candidates = [
+              nextScan && { ...nextScan, current: totalScans, type: 'scans' },
+              nextStreak && { ...nextStreak, current: streak, type: 'jours' },
+            ].filter(Boolean);
+            if (candidates.length === 0) return null;
+            candidates.sort((a, b) => (b.current / b.target) - (a.current / a.target));
+            const b = candidates[0];
+            const pct = Math.min(100, Math.round((b.current / b.target) * 100));
+            const remaining = b.target - b.current;
+            return (
+              <TouchableOpacity
+                style={s.nextBadgeCard}
+                onPress={() => navigation.navigate('Profil', { screen: 'Referral' })}
+                activeOpacity={0.85}
+              >
+                <View style={s.nextBadgeCardHeader}>
+                  <View style={[s.nextBadgeCardIcon, { backgroundColor: b.color + '1A' }]}>
+                    <Feather name={b.icon} size={20} color={b.color} />
+                  </View>
+                  <View style={{ flex: 1 }}>
+                    <Text style={s.nextBadgeCardLabel}>Prochain badge : {b.label}</Text>
+                    <Text style={s.nextBadgeCardSub}>
+                      Plus que {remaining} {b.type} !
+                    </Text>
+                  </View>
+                  <Text style={[s.nextBadgeCardPct, { color: b.color }]}>{pct}%</Text>
+                </View>
+                <View style={s.nextBadgeProgressBg}>
+                  <View style={[s.nextBadgeProgressFill, { width: `${pct}%`, backgroundColor: b.color }]} />
+                </View>
+              </TouchableOpacity>
+            );
+          })()}
+        </View>
+
+        {/* ── Concours du mois ── */}
+        {user && monthlyLeaderboard?.leaderboard?.length > 0 && (
+          <View style={[s.contestSection, { paddingHorizontal: hPadding }, centerWrap]}>
+            <TouchableOpacity
+              activeOpacity={0.9}
+              onPress={() => navigation.navigate('Profil', { screen: 'Leaderboard' })}
+            >
+              <LinearGradient
+                colors={['#F59E0B', '#EAB308', '#FBB928']}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+                style={s.contestCard}
+              >
+                <View style={s.contestHeader}>
+                  <View style={s.contestTitleBox}>
+                    <Text style={s.contestEmoji}>🏆</Text>
+                    <View>
+                      <Text style={s.contestEyebrow}>CONCOURS DU MOIS</Text>
+                      <Text style={s.contestTitle}>Top scanners</Text>
+                    </View>
+                  </View>
+                  {monthlyLeaderboard.daysRemaining > 0 && (
+                    <View style={s.contestDaysBadge}>
+                      <Feather name="clock" size={11} color="#7B4D00" />
+                      <Text style={s.contestDaysText}>
+                        {monthlyLeaderboard.daysRemaining}j
+                      </Text>
+                    </View>
+                  )}
+                </View>
+
+                {/* Top 3 mini podium */}
+                <View style={s.contestPodium}>
+                  {monthlyLeaderboard.leaderboard.slice(0, 3).map((entry, i) => (
+                    <View key={entry._id || i} style={s.contestPodiumItem}>
+                      <Text style={s.contestRankMedal}>
+                        {['🥇', '🥈', '🥉'][i]}
+                      </Text>
+                      <Text style={s.contestPodiumName} numberOfLines={1}>
+                        {entry.name?.split(' ')[0] || '?'}
+                      </Text>
+                      <Text style={s.contestPodiumScans}>{entry.scanCount} scans</Text>
+                    </View>
+                  ))}
+                </View>
+
+                {/* Your rank */}
+                <View style={s.contestRankRow}>
+                  {monthlyLeaderboard.myRank ? (
+                    <>
+                      <Feather name="user" size={13} color="#FFF" />
+                      <Text style={s.contestRankText}>
+                        Tu es <Text style={s.contestRankStrong}>#{monthlyLeaderboard.myRank}</Text>
+                        {' '}avec {monthlyLeaderboard.myScanCount} scans
+                      </Text>
+                    </>
+                  ) : (
+                    <>
+                      <Feather name="zap" size={13} color="#FFF" />
+                      <Text style={s.contestRankText}>
+                        Scanne pour entrer dans le classement !
+                      </Text>
+                    </>
+                  )}
+                </View>
+
+                <Text style={s.contestReward}>
+                  🎁 Récompenses exclusives pour le top 3
+                </Text>
+              </LinearGradient>
+            </TouchableOpacity>
+          </View>
+        )}
+
+        {/* ── Recap hebdomadaire ── */}
+        {user && recentScans.length > 0 && (
+          <View style={[s.weeklySection, { paddingHorizontal: hPadding }, centerWrap]}>
+            <WeeklySummaryCard
+              onPressHistory={() => navigation.navigate('Scanner', { screen: 'ScanHistory' })}
+            />
+          </View>
+        )}
 
         {/* ── Prochaine garde ── */}
         {bookings.length > 0 && (
@@ -524,6 +926,37 @@ const HomeScreen = ({ navigation }) => {
           </View>
         )}
 
+        {/* ── Defi du jour — Daily tip ── */}
+        <View style={[s.dailyTipSection, { paddingHorizontal: hPadding }, centerWrap]}>
+          <View style={s.dailyTipCard}>
+            <View style={s.dailyTipHeader}>
+              <View style={s.dailyTipBadge}>
+                <Feather name="sun" size={12} color="#EAB308" />
+                <Text style={s.dailyTipBadgeText}>Conseil du jour</Text>
+              </View>
+            </View>
+            <Text style={s.dailyTipText}>
+              {[
+                'Verifiez toujours le 1er ingredient sur l\'emballage : il doit etre une source de proteine animale.',
+                'Les chats sont des carnivores stricts. Evitez les croquettes riches en cereales pour eux.',
+                'Un chien adulte a besoin de 2 repas par jour. Evitez l\'exercice 1h apres manger.',
+                'Changez la gamelle d\'eau de votre animal tous les jours pour eviter les bacteries.',
+                'Les additifs E150 a E155 sont des colorants controverses. Scannez pour verifier !',
+                'Un score Pepete au-dessus de 70 est un bon indicateur de qualite nutritionnelle.',
+                'Alternez croquettes et patee pour les chats : ils boivent naturellement peu d\'eau.',
+              ][new Date().getDay()]}
+            </Text>
+            <TouchableOpacity
+              style={s.dailyTipCta}
+              onPress={() => navigation.navigate('Scanner')}
+              activeOpacity={0.8}
+            >
+              <Text style={s.dailyTipCtaText}>Verifier mes croquettes</Text>
+              <Feather name="arrow-right" size={14} color="#6B8F71" />
+            </TouchableOpacity>
+          </View>
+        </View>
+
         {/* ── Bannière CTA — Premium gradient ── */}
         <View style={[s.bannerSection, { paddingHorizontal: hPadding }, centerWrap]}>
           <TouchableOpacity activeOpacity={0.9} onPress={() => navigation.navigate('Scanner')}>
@@ -552,6 +985,28 @@ const HomeScreen = ({ navigation }) => {
         </>
         }
       </ScrollView>
+
+      {/* NPS satisfaction prompt (after 5+ scans) */}
+      <SatisfactionPrompt
+        totalScans={user?.totalScans || recentScans.length}
+        onSubmitFeedback={async ({ rating, feedback }) => {
+          try {
+            await api.post('/feedback', {
+              category: rating >= 4 ? 'other' : 'feature',
+              title: `NPS ${rating}/5`,
+              description: feedback,
+              platform: Platform.OS,
+            });
+          } catch (_) {}
+        }}
+      />
+
+      {/* Fondateur badge celebration */}
+      <BadgeUnlockModal
+        visible={fondateurModal}
+        badgeKey="fondateur"
+        onClose={() => setFondateurModal(false)}
+      />
     </View>
   );
 };
@@ -623,6 +1078,7 @@ const s = StyleSheet.create({
     borderWidth: 2, marginBottom: 8,
   },
   petMiniLetter: { fontSize: 16, fontWeight: '800' },
+  petMiniEmoji: { fontSize: 22 },
   petMiniName: { fontSize: FONT_SIZE.xs, fontWeight: '700', color: COLORS.text, textAlign: 'center' },
   petMiniAdd: { alignItems: 'center', width: 74, justifyContent: 'center' },
   petMiniAddCircle: {
@@ -801,6 +1257,251 @@ const s = StyleSheet.create({
     borderRadius: RADIUS.pill, paddingHorizontal: 18, paddingVertical: 10,
   },
   bannerBtnText: { color: '#FFF', fontWeight: '700', fontSize: FONT_SIZE.sm },
+
+  // Welcome card
+  welcomeSection: { marginTop: SPACING.base },
+  welcomeCard: {
+    borderRadius: RADIUS['2xl'], padding: SPACING.xl,
+    alignItems: 'center', overflow: 'hidden',
+  },
+  welcomeIconCircle: {
+    width: 64, height: 64, borderRadius: 32,
+    backgroundColor: 'rgba(255,255,255,0.2)', alignItems: 'center', justifyContent: 'center',
+    marginBottom: SPACING.base,
+  },
+  welcomeTitle: {
+    fontSize: FONT_SIZE.xl, fontWeight: '900', color: '#FFF',
+    marginBottom: SPACING.sm, letterSpacing: -0.3,
+  },
+  welcomeText: {
+    fontSize: FONT_SIZE.sm, fontWeight: '500', color: 'rgba(255,255,255,0.85)',
+    textAlign: 'center', lineHeight: 20, marginBottom: SPACING.lg,
+  },
+  welcomeBtn: {
+    flexDirection: 'row', alignItems: 'center', gap: SPACING.sm,
+    backgroundColor: '#FFF', paddingHorizontal: SPACING.xl, paddingVertical: SPACING.base,
+    borderRadius: RADIUS.full, ...SHADOWS.md,
+  },
+  welcomeBtnText: { fontSize: FONT_SIZE.sm, fontWeight: '800', color: '#527A56' },
+  welcomeProof: {
+    fontSize: FONT_SIZE.xs, fontWeight: '600', color: 'rgba(255,255,255,0.6)',
+    marginTop: SPACING.base,
+  },
+
+  // Growth section
+  growthSection: { marginTop: SPACING.sm, gap: SPACING.sm },
+
+  // Push opt-in card
+  pushCard: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
+    backgroundColor: '#EFF5F0', borderRadius: RADIUS.xl,
+    padding: SPACING.base, borderWidth: 1, borderColor: '#6B8F7120',
+  },
+  pushCardLeft: { flexDirection: 'row', alignItems: 'center', flex: 1 },
+  pushBellCircle: {
+    width: 40, height: 40, borderRadius: 20,
+    backgroundColor: '#FFF', alignItems: 'center', justifyContent: 'center',
+    marginRight: SPACING.md, ...SHADOWS.xs,
+  },
+  pushCardContent: { flex: 1 },
+  pushCardTitle: { fontSize: FONT_SIZE.sm, fontWeight: '700', color: COLORS.text },
+  pushCardSub: { fontSize: 11, fontWeight: '500', color: COLORS.textTertiary, marginTop: 1 },
+  pushCardActions: { flexDirection: 'row', alignItems: 'center', gap: SPACING.sm, marginLeft: SPACING.sm },
+  pushCardBtn: {
+    backgroundColor: '#527A56', paddingHorizontal: SPACING.base, paddingVertical: SPACING.sm,
+    borderRadius: RADIUS.full,
+  },
+  pushCardBtnText: { fontSize: FONT_SIZE.xs, fontWeight: '700', color: '#FFF' },
+
+  // Social proof
+  socialProofCard: {
+    flexDirection: 'row', alignItems: 'center',
+    backgroundColor: '#FFF', borderRadius: RADIUS.xl,
+    padding: SPACING.base, ...SHADOWS.sm,
+  },
+  socialProofIcon: {
+    width: 40, height: 40, borderRadius: 20,
+    backgroundColor: '#EFF5F0', alignItems: 'center', justifyContent: 'center',
+    marginRight: SPACING.md,
+  },
+  socialProofContent: { flex: 1 },
+  socialProofTitle: { fontSize: FONT_SIZE.sm, fontWeight: '700', color: COLORS.text },
+  socialProofCount: { fontSize: FONT_SIZE.base, fontWeight: '900', color: '#527A56' },
+  socialProofSub: { fontSize: FONT_SIZE.xs, fontWeight: '500', color: COLORS.textTertiary, marginTop: 1 },
+  socialProofLive: {
+    flexDirection: 'row', alignItems: 'center', gap: 4,
+    backgroundColor: '#FBE8E4', paddingHorizontal: 8, paddingVertical: 3,
+    borderRadius: RADIUS.full,
+  },
+  liveDot: { width: 6, height: 6, borderRadius: 3, backgroundColor: '#C25B4A' },
+  liveText: { fontSize: 10, fontWeight: '700', color: '#C25B4A' },
+
+  // Streak card
+  streakCard: { borderRadius: RADIUS.xl, overflow: 'hidden', ...SHADOWS.sm },
+  streakGradient: {
+    flexDirection: 'row', alignItems: 'center',
+    padding: SPACING.base, gap: SPACING.md,
+  },
+  streakEmoji: { fontSize: 28 },
+  streakInfo: { flex: 1 },
+  streakTitle: { fontSize: FONT_SIZE.sm, fontWeight: '800', color: '#FFF' },
+  streakSub: { fontSize: FONT_SIZE.xs, fontWeight: '500', color: 'rgba(255,255,255,0.8)', marginTop: 1 },
+
+  // Invite card
+  inviteCard: {
+    flexDirection: 'row', alignItems: 'center',
+    backgroundColor: '#FFF', borderRadius: RADIUS.xl,
+    padding: SPACING.base, ...SHADOWS.sm,
+    borderWidth: 1, borderColor: '#C4956A20',
+  },
+  inviteIconCircle: {
+    width: 44, height: 44, borderRadius: 22,
+    backgroundColor: '#FDF5ED', alignItems: 'center', justifyContent: 'center',
+    marginRight: SPACING.md,
+  },
+  inviteContent: { flex: 1 },
+  inviteTitle: { fontSize: FONT_SIZE.sm, fontWeight: '700', color: COLORS.text },
+  inviteSub: { fontSize: FONT_SIZE.xs, fontWeight: '500', color: COLORS.textTertiary, marginTop: 1 },
+  inviteArrow: {
+    width: 32, height: 32, borderRadius: 16,
+    backgroundColor: '#FDF5ED', alignItems: 'center', justifyContent: 'center',
+  },
+
+  // Next badge card
+  nextBadgeCard: {
+    backgroundColor: '#FFF', borderRadius: RADIUS.xl,
+    padding: SPACING.base, ...SHADOWS.sm,
+    borderWidth: 1, borderColor: 'rgba(107,143,113,0.15)',
+  },
+  nextBadgeCardHeader: {
+    flexDirection: 'row', alignItems: 'center',
+    gap: SPACING.md, marginBottom: SPACING.sm,
+  },
+  nextBadgeCardIcon: {
+    width: 40, height: 40, borderRadius: 20,
+    alignItems: 'center', justifyContent: 'center',
+  },
+  nextBadgeCardLabel: { fontSize: FONT_SIZE.sm, fontWeight: '800', color: COLORS.text },
+  nextBadgeCardSub: { fontSize: FONT_SIZE.xs, fontWeight: '500', color: COLORS.textSecondary, marginTop: 1 },
+  nextBadgeCardPct: { fontSize: FONT_SIZE.sm, fontWeight: '900' },
+  nextBadgeProgressBg: {
+    height: 6, backgroundColor: '#F0ECE4',
+    borderRadius: 3, overflow: 'hidden',
+  },
+  nextBadgeProgressFill: { height: '100%', borderRadius: 3 },
+
+  // Contest du mois
+  contestSection: { marginTop: SPACING.base },
+  contestCard: {
+    borderRadius: RADIUS['2xl'],
+    padding: SPACING.xl,
+    ...SHADOWS.md,
+  },
+  contestHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: SPACING.base,
+  },
+  contestTitleBox: { flexDirection: 'row', alignItems: 'center', gap: SPACING.sm },
+  contestEmoji: { fontSize: 28 },
+  contestEyebrow: {
+    fontSize: 9,
+    fontWeight: '900',
+    color: 'rgba(255,255,255,0.85)',
+    letterSpacing: 1,
+  },
+  contestTitle: {
+    fontSize: FONT_SIZE.lg,
+    fontWeight: '900',
+    color: '#FFF',
+    marginTop: 1,
+  },
+  contestDaysBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: '#FFFFFF',
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: RADIUS.full,
+  },
+  contestDaysText: {
+    fontSize: 11,
+    fontWeight: '900',
+    color: '#7B4D00',
+  },
+  contestPodium: {
+    flexDirection: 'row',
+    backgroundColor: 'rgba(255,255,255,0.18)',
+    borderRadius: RADIUS.xl,
+    padding: SPACING.md,
+    marginBottom: SPACING.sm,
+  },
+  contestPodiumItem: { flex: 1, alignItems: 'center' },
+  contestRankMedal: { fontSize: 22 },
+  contestPodiumName: {
+    fontSize: FONT_SIZE.xs,
+    fontWeight: '800',
+    color: '#FFF',
+    marginTop: 2,
+  },
+  contestPodiumScans: {
+    fontSize: 10,
+    fontWeight: '700',
+    color: 'rgba(255,255,255,0.85)',
+    marginTop: 1,
+  },
+  contestRankRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    marginTop: SPACING.xs,
+  },
+  contestRankText: {
+    fontSize: FONT_SIZE.xs,
+    fontWeight: '600',
+    color: 'rgba(255,255,255,0.92)',
+  },
+  contestRankStrong: {
+    fontSize: FONT_SIZE.sm,
+    fontWeight: '900',
+    color: '#FFF',
+  },
+  contestReward: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: 'rgba(255,255,255,0.92)',
+    marginTop: SPACING.sm,
+    textAlign: 'center',
+  },
+
+  // Weekly summary
+  weeklySection: { marginTop: SPACING.base },
+
+  // Daily tip
+  dailyTipSection: { marginTop: SPACING.sm },
+  dailyTipCard: {
+    backgroundColor: '#FFFDF5', borderRadius: RADIUS['2xl'],
+    padding: SPACING.xl, borderWidth: 1, borderColor: '#EAB30815',
+    ...SHADOWS.xs,
+  },
+  dailyTipHeader: { marginBottom: SPACING.md },
+  dailyTipBadge: {
+    flexDirection: 'row', alignItems: 'center', gap: 6,
+    backgroundColor: '#EAB30812', alignSelf: 'flex-start',
+    paddingHorizontal: SPACING.md, paddingVertical: SPACING.xs,
+    borderRadius: RADIUS.full,
+  },
+  dailyTipBadgeText: { fontSize: FONT_SIZE.xs, fontWeight: '700', color: '#92740A' },
+  dailyTipText: {
+    fontSize: FONT_SIZE.sm, fontWeight: '500', color: COLORS.text,
+    lineHeight: 20, marginBottom: SPACING.base,
+  },
+  dailyTipCta: {
+    flexDirection: 'row', alignItems: 'center', gap: 6, alignSelf: 'flex-start',
+  },
+  dailyTipCtaText: { fontSize: FONT_SIZE.sm, fontWeight: '700', color: '#6B8F71' },
 });
 
 export default HomeScreen;
