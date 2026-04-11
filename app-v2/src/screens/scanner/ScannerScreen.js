@@ -360,8 +360,8 @@ const ScannerScreen = ({ navigation }) => {
 
   const STEP_ICONS = [
     { icon: 'smartphone', label: 'Scannez', desc: 'le code-barres', bg: COLORS.primarySoft, color: COLORS.primary },
-    { icon: 'star', label: 'Decouvrez', desc: 'le score', bg: COLORS.secondarySoft, color: COLORS.secondary },
-    { icon: 'search', label: 'Verifiez', desc: 'les ingredients', bg: COLORS.accentSoft, color: COLORS.accent },
+    { icon: 'star', label: 'Découvrez', desc: 'le score', bg: COLORS.secondarySoft, color: COLORS.secondary },
+    { icon: 'search', label: 'Vérifiez', desc: 'les ingrédients', bg: COLORS.accentSoft, color: COLORS.accent },
   ];
 
   return (

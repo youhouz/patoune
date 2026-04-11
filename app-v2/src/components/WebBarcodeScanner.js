@@ -133,7 +133,7 @@ const WebBarcodeScanner = ({ onBarcodeScanned, active = true, style }) => {
         <Text style={styles.fallbackIcon}>{'🔒'}</Text>
         <Text style={styles.fallbackText}>
           {error === 'nocamera'
-            ? 'Aucune camera detectee.'
+            ? 'Aucune camera détectée.'
             : "Impossible d'acceder a la camera."}
         </Text>
         <Text style={styles.fallbackHint}>

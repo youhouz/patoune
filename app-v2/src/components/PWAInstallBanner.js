@@ -157,8 +157,8 @@ const PWAInstallBanner = () => {
             <Text style={styles.title}>Installer Pepete</Text>
             <Text style={styles.subtitle}>
               {isIOS
-                ? "Appuyez sur le bouton partager puis \"Sur l'ecran d'accueil\" pour installer."
-                : "Accedez a Pepete directement depuis votre ecran d'accueil, comme une vraie application."}
+                ? "Appuyez sur le bouton partager puis \"Sur l'écran d'accueil\" pour installer."
+                : "Accédez a Pepete directement depuis votre écran d'accueil, comme une vraie application."}
             </Text>
           </View>
         </View>
@@ -167,7 +167,7 @@ const PWAInstallBanner = () => {
         <Animated.View style={{ transform: [{ scale: pulseAnim }] }}>
           <TouchableOpacity style={styles.installBtn} onPress={handleInstall} activeOpacity={0.85}>
             <Text style={styles.installText}>
-              {isIOS ? 'Compris !' : "Ajouter a l'ecran d'accueil"}
+              {isIOS ? 'Compris !' : "Ajouter a l'écran d'accueil"}
             </Text>
           </TouchableOpacity>
         </Animated.View>

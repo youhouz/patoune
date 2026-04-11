@@ -357,7 +357,7 @@ const PetSittersListScreen = ({ navigation }) => {
         setCitySearchVisible(false);
         setCitySearchValue('');
       } else {
-        showAlert('Ville introuvable', "Verifiez l'orthographe et reessayez.");
+        showAlert('Ville introuvable', "Vérifiez l'orthographe et réessayez.");
       }
     } catch (_) {
       showAlert('Erreur', 'Impossible de localiser cette ville.');
@@ -522,7 +522,7 @@ const PetSittersListScreen = ({ navigation }) => {
                     : city
                       ? `${city}${approximate ? ' ~' : ''}`
                       : locationError
-                        ? 'Reessayer'
+                        ? 'Réessayer'
                         : 'Me localiser'}
               </Text>
               {manualLocation && (

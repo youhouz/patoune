@@ -94,58 +94,58 @@ const getPersonalizedAdvice = (product) => {
     targetAnimal === 'chat' ? 'votre chat' : 'votre animal';
 
   if (score >= 80) {
-    advice.push({ icon: 'award', title: 'Excellent choix !', text: `Ce produit est de tres bonne qualite pour ${animalName}. Vous pouvez le donner en toute confiance.`, type: 'success' });
+    advice.push({ icon: 'award', title: 'Excellent choix !', text: `Ce produit est de très bonne qualité pour ${animalName}. Vous pouvez le donner en toute confiance.`, type: 'success' });
   } else if (score >= 60) {
     advice.push({ icon: 'thumbs-up', title: 'Bon produit', text: `Ce produit est correct pour ${animalName}, mais il existe des alternatives encore meilleures.`, type: 'info' });
   } else if (score >= 40) {
-    advice.push({ icon: 'alert-circle', title: 'Qualite moyenne', text: `Ce produit contient des ingredients discutables. Privilegiez des produits avec un score superieur a 60.`, type: 'warning' });
+    advice.push({ icon: 'alert-circle', title: 'Qualité moyenne', text: `Ce produit contient des ingrédients discutables. Privilégiez des produits avec un score supérieur à 60.`, type: 'warning' });
   } else {
-    advice.push({ icon: 'alert-triangle', title: 'Produit deconseille', text: `Ce produit est de mauvaise qualite pour ${animalName}. Nous recommandons de chercher une meilleure alternative.`, type: 'error' });
+    advice.push({ icon: 'alert-triangle', title: 'Produit déconseillé', text: `Ce produit est de mauvaise qualité pour ${animalName}. Nous recommandons de chercher une meilleure alternative.`, type: 'error' });
   }
 
   if (dangerousIngs.length > 0) {
     const names = dangerousIngs.slice(0, 3).map(i => i.name).join(', ');
-    advice.push({ icon: 'x-circle', title: 'Ingredients a risque detectes', text: `Ce produit contient : ${names}. Ces ingredients peuvent etre nocifs a long terme. Verifiez aupres de votre veterinaire.`, type: 'error' });
+    advice.push({ icon: 'x-circle', title: 'Ingrédients à risque détectés', text: `Ce produit contient : ${names}. Ces ingrédients peuvent être nocifs à long terme. Demandez conseil à votre vétérinaire.`, type: 'error' });
   }
 
   if (dangerousAdds.length > 0) {
-    advice.push({ icon: 'slash', title: `${dangerousAdds.length} additif${dangerousAdds.length > 1 ? 's' : ''} dangereux`, text: `Les additifs comme ${dangerousAdds[0].name || dangerousAdds[0].code} sont controverses et potentiellement cancerigenes. Evitez les produits qui en contiennent.`, type: 'error' });
+    advice.push({ icon: 'slash', title: `${dangerousAdds.length} additif${dangerousAdds.length > 1 ? 's' : ''} dangereux`, text: `Les additifs comme ${dangerousAdds[0].name || dangerousAdds[0].code} sont controversés et potentiellement cancérigènes. Évitez les produits qui en contiennent.`, type: 'error' });
   }
 
   if (details.protein != null) {
     if (details.protein >= 5) {
-      advice.push({ icon: 'trending-up', title: 'Riche en proteines', text: targetAnimal === 'chat' ? 'Les chats sont des carnivores stricts et ont besoin d\'un apport eleve en proteines. Ce produit repond bien a ce besoin.' : 'Bon apport en proteines animales, essentiel pour la masse musculaire et l\'energie.', type: 'success' });
+      advice.push({ icon: 'trending-up', title: 'Riche en protéines', text: targetAnimal === 'chat' ? 'Les chats sont des carnivores stricts et ont besoin d\'un apport élevé en protéines. Ce produit répond bien à ce besoin.' : 'Bon apport en protéines animales, essentiel pour la masse musculaire et l\'énergie.', type: 'success' });
     } else if (details.protein <= 0 && score < 70) {
-      advice.push({ icon: 'trending-down', title: 'Faible en proteines', text: `${animalName.charAt(0).toUpperCase() + animalName.slice(1)} a besoin de proteines animales de qualite. Cherchez un produit avec de la vraie viande en premier ingredient.`, type: 'warning' });
+      advice.push({ icon: 'trending-down', title: 'Faible en protéines', text: `${animalName.charAt(0).toUpperCase() + animalName.slice(1)} a besoin de protéines animales de qualité. Cherchez un produit avec de la vraie viande en premier ingrédient.`, type: 'warning' });
     }
   }
 
   if (details.fat != null && details.fat < 0) {
-    advice.push({ icon: 'disc', title: 'Taux de gras eleve', text: `Un exces de matieres grasses peut entrainer de l'obesite et des problemes pancreatiques. A donner avec moderation.`, type: 'warning' });
+    advice.push({ icon: 'disc', title: 'Taux de gras élevé', text: `Un excès de matières grasses peut entraîner de l'obésité et des problèmes pancréatiques. À donner avec modération.`, type: 'warning' });
   }
 
   if (details.fiber != null && details.fiber >= 3) {
-    advice.push({ icon: 'layers', title: 'Bon apport en fibres', text: 'Les fibres favorisent une bonne digestion et un transit regulier. Excellent point pour ce produit.', type: 'success' });
+    advice.push({ icon: 'layers', title: 'Bon apport en fibres', text: 'Les fibres favorisent une bonne digestion et un transit régulier. Excellent point pour ce produit.', type: 'success' });
   }
 
   if (ingredients.length > 0) {
     const firstName = (ingredients[0].name || '').toLowerCase();
     const isMeat = ['viande', 'poulet', 'saumon', 'dinde', 'agneau', 'poisson', 'boeuf', 'canard', 'thon'].some(m => firstName.includes(m));
     if (isMeat) {
-      advice.push({ icon: 'check-circle', title: 'Viande en 1er ingredient', text: 'Le premier ingredient est une source de proteine animale, signe d\'un produit de qualite superieure.', type: 'success' });
+      advice.push({ icon: 'check-circle', title: 'Viande en 1er ingrédient', text: 'Le premier ingrédient est une source de protéine animale, signe d\'un produit de qualité supérieure.', type: 'success' });
     } else if (score < 70) {
-      const isCereal = ['mais', 'ble', 'cereale', 'riz', 'amidon', 'farine'].some(c => firstName.includes(c));
+      const isCereal = ['mais', 'ble', 'céréale', 'riz', 'amidon', 'farine'].some(c => firstName.includes(c));
       if (isCereal) {
-        advice.push({ icon: 'info', title: 'Cereales en 1er ingredient', text: 'Le premier ingredient est une cereale, pas une proteine animale. Les animaux carnivores digerent mal les cereales en grande quantite.', type: 'warning' });
+        advice.push({ icon: 'info', title: 'Céréales en 1er ingrédient', text: 'Le premier ingrédient est une céréale, pas une protéine animale. Les animaux carnivores digèrent mal les céréales en grande quantité.', type: 'warning' });
       }
     }
   }
 
   if (targetAnimal === 'chat' && score >= 50) {
-    advice.push({ icon: 'droplet', title: 'Hydratation du chat', text: 'Les chats boivent naturellement peu. Alternez croquettes et patee pour assurer une bonne hydratation.', type: 'info' });
+    advice.push({ icon: 'droplet', title: 'Hydratation du chat', text: 'Les chats boivent naturellement peu. Alternez croquettes et pâtée pour assurer une bonne hydratation.', type: 'info' });
   }
   if (targetAnimal === 'chien' && score >= 50) {
-    advice.push({ icon: 'clock', title: 'Conseil de distribution', text: 'Divisez la ration quotidienne en 2 repas. Evitez l\'exercice intense 1h apres le repas pour prevenir la torsion d\'estomac.', type: 'info' });
+    advice.push({ icon: 'clock', title: 'Conseil de distribution', text: 'Divisez la ration quotidienne en 2 repas. Évitez l\'exercice intense 1h après le repas pour prévenir la torsion d\'estomac.', type: 'info' });
   }
 
   return advice;
@@ -319,7 +319,7 @@ const ProductResultScreen = ({ route, navigation }) => {
     const brandText = product.brand ? ` de ${product.brand}` : '';
     const dangerousIngs = (product.ingredients || []).filter(i => i.risk === 'dangerous');
     const ingredientWarning = dangerousIngs.length > 0
-      ? `\n⚠️ ${dangerousIngs.length} ingredient${dangerousIngs.length > 1 ? 's' : ''} a risque detecte${dangerousIngs.length > 1 ? 's' : ''} !`
+      ? `\n⚠️ ${dangerousIngs.length} ingrédient${dangerousIngs.length > 1 ? 's' : ''} a risque détecté${dangerousIngs.length > 1 ? 's' : ''} !`
       : '';
 
     if (!hasScore) {
@@ -530,7 +530,7 @@ const ProductResultScreen = ({ route, navigation }) => {
 
               <View style={styles.breakdownList}>
                 {[
-                  { label: 'Ingredients', weight: '40%', value: ingredientScore ?? 0, maxValue: 40, color: COLORS.scoreExcellent },
+                  { label: 'Ingrédients', weight: '40%', value: ingredientScore ?? 0, maxValue: 40, color: COLORS.scoreExcellent },
                   { label: 'Additifs', weight: '30%', value: additivesScore ?? 0, maxValue: 30, color: COLORS.scoreMediocre },
                   { label: 'Nutrition', weight: '30%', value: nutritionScoreDetail ?? 0, maxValue: 30, color: COLORS.info },
                 ].map((item, index) => {
@@ -620,7 +620,7 @@ const ProductResultScreen = ({ route, navigation }) => {
                   </View>
                   <View style={styles.ingredientInfo}>
                     <Text style={styles.ingredientName}>
-                      {ingredient.name || 'Ingredient inconnu'}
+                      {ingredient.name || 'Ingrédient inconnu'}
                     </Text>
                     <Text style={[styles.ingredientRiskText, { color: getRiskColor(ingredient.risk) }]}>
                       {getRiskLabel(ingredient.risk)}
@@ -688,7 +688,7 @@ const ProductResultScreen = ({ route, navigation }) => {
               </View>
 
               {[
-                { label: 'Proteines', value: product.scoreDetails.protein, icon: 'trending-up' },
+                { label: 'Protéines', value: product.scoreDetails.protein, icon: 'trending-up' },
                 { label: 'Matieres grasses', value: product.scoreDetails.fat, icon: 'disc' },
                 { label: 'Fibres', value: product.scoreDetails.fiber, icon: 'layers' },
                 { label: 'Penalite additifs', value: product.scoreDetails.additivesPenalty != null ? -product.scoreDetails.additivesPenalty : null, icon: 'activity' },
@@ -750,7 +750,7 @@ const ProductResultScreen = ({ route, navigation }) => {
               </View>
               {[
                 product.brand && { label: 'Marque', value: product.brand, icon: 'tag' },
-                product.category && { label: 'Categorie', value: product.category.charAt(0).toUpperCase() + product.category.slice(1), icon: 'grid' },
+                product.category && { label: 'Catégorie', value: product.category.charAt(0).toUpperCase() + product.category.slice(1), icon: 'grid' },
                 targetAnimals.length > 0 && { label: 'Animal cible', value: targetAnimals.join(', '), icon: 'heart' },
                 product.barcode && { label: 'Code-barres', value: product.barcode, icon: 'hash' },
               ].filter(Boolean).map((item, idx, arr) => (
@@ -861,9 +861,9 @@ const ProductResultScreen = ({ route, navigation }) => {
                 </Text>
                 <Text style={styles.milestoneText}>
                   {gamification.totalScans >= 100
-                    ? 'Vous etes un vrai expert ! Rien ne vous echappe.'
+                    ? 'Vous êtes un vrai expert ! Rien ne vous échappe.'
                     : gamification.totalScans >= 50
-                      ? 'Impressionnant ! Vous protegez votre animal comme un pro.'
+                      ? 'Impressionnant ! Vous protégez votre animal comme un pro.'
                       : 'Bravo ! Continuez a proteger votre compagnon.'}
                 </Text>
               </LinearGradient>
@@ -1283,7 +1283,7 @@ const styles = StyleSheet.create({
     fontFamily: FONTS.heading,
   },
 
-  // Ingredients
+  // Ingrédients
   ingredientRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -1381,7 +1381,7 @@ const styles = StyleSheet.create({
     fontFamily: FONTS.heading,
   },
 
-  // Details
+  // Détails
   detailRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',

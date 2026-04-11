@@ -109,7 +109,7 @@ const SettingsScreen = ({ navigation }) => {
         showAlert('Ville introuvable', 'Impossible de localiser cette ville. Essayez le format "Paris", "Lyon 69"...');
       }
     } catch (_) {
-      showAlert('Erreur', 'Impossible de géocoder cette ville.');
+      showAlert('Ville introuvable', 'Vérifie l\'orthographe et réessaie.');
     } finally {
       setCityLoading(false);
     }
@@ -159,7 +159,7 @@ const SettingsScreen = ({ navigation }) => {
         setCityLoading(false);
       }
     } catch (_) {
-      showAlert('Erreur', 'Impossible de récupérer votre position.');
+      showAlert('Position indisponible', 'Saisis ta ville à la main.');
       setCityLoading(false);
     }
   }, []);
@@ -181,7 +181,7 @@ const SettingsScreen = ({ navigation }) => {
       if (result.canceled) return;
       const base64 = result.assets[0].base64;
       if (!base64) {
-        showAlert('Erreur', 'Impossible de lire l\'image selectionnee.');
+        showAlert('Photo illisible', 'Choisis une autre image.');
         return;
       }
       setUploadingAvatar(true);
@@ -190,10 +190,10 @@ const SettingsScreen = ({ navigation }) => {
       if (updatedUser) {
         await updateUser(updatedUser);
       }
-      showAlert('Photo mise a jour', 'Votre photo de profil a ete changee.');
+      showAlert('Photo changée !', 'Ta nouvelle photo de profil est en place.');
     } catch (err) {
       console.log('Erreur upload avatar:', err);
-      showAlert('Erreur', 'Impossible de mettre a jour la photo.');
+      showAlert('Oups...', 'On n\'a pas pu changer ta photo. Réessaie.');
     } finally {
       setUploadingAvatar(false);
     }
@@ -205,7 +205,7 @@ const SettingsScreen = ({ navigation }) => {
 
   const handleSave = useCallback(async () => {
     if (!name.trim()) {
-      showAlert('Champ requis', 'Le nom ne peut pas être vide');
+      showAlert('Nom manquant', 'Dis-nous comment t\'appeler.');
       return;
     }
 
@@ -245,9 +245,9 @@ const SettingsScreen = ({ navigation }) => {
       }
 
       setCityCoords(null);
-      showAlert('Succès', 'Votre profil a été mis à jour');
+      showAlert('Sauvegardé !', 'Tes infos sont à jour.');
     } catch (_) {
-      showAlert('Erreur', 'Impossible de mettre à jour le profil. Réessayez.');
+      showAlert('Oups...', 'Sauvegarde impossible. Vérifie ta connexion et réessaie.');
     } finally {
       setSaving(false);
     }
@@ -643,7 +643,7 @@ const SettingsScreen = ({ navigation }) => {
                 <View style={styles.installGuideInfo}>
                   <Text style={styles.installGuideTitle}>Installer l'application</Text>
                   <Text style={styles.installGuideSubtitle}>
-                    Comment ajouter Pepete sur votre ecran d'accueil
+                    Comment ajouter Pepete sur votre écran d'accueil
                   </Text>
                 </View>
                 <Feather name="chevron-right" size={18} color={colors.textTertiary} />

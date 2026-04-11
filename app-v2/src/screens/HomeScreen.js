@@ -663,7 +663,7 @@ const HomeScreen = ({ navigation }) => {
                   </Text>
                   <Text style={s.streakSub}>
                     {(user.scanStreak || 0) > 0
-                      ? 'Continue pour debloquer des badges'
+                      ? 'Continue pour débloquer des badges'
                       : 'Commence ta serie de scans'
                     }
                   </Text>
@@ -688,8 +688,8 @@ const HomeScreen = ({ navigation }) => {
                   {(user.referralCount || 0) === 0
                     ? 'Tes potes savent ce que mange leur animal ?'
                     : (user.referralCount || 0) >= 3
-                      ? `${user.referralCount} amis parraines ! Continue`
-                      : `${user.referralCount} ami${user.referralCount > 1 ? 's' : ''} parraine${user.referralCount > 1 ? 's' : ''}`
+                      ? `${user.referralCount} amis parrainés ! Continue`
+                      : `${user.referralCount} ami${user.referralCount > 1 ? 's' : ''} parrainé${user.referralCount > 1 ? 's' : ''}`
                   }
                 </Text>
                 <Text style={s.inviteSub}>
@@ -721,9 +721,9 @@ const HomeScreen = ({ navigation }) => {
               { key: 'scanner_100', target: 100, icon: 'star', label: 'Master Scanner', color: '#C25B4A' },
             ];
             const STREAK_TIERS = [
-              { key: 'streak_3', target: 3, icon: 'trending-up', label: 'Regulier', color: '#5B7FC2' },
+              { key: 'streak_3', target: 3, icon: 'trending-up', label: 'Régulier', color: '#5B7FC2' },
               { key: 'streak_7', target: 7, icon: 'target', label: 'Assidu', color: '#8B5CF6' },
-              { key: 'streak_30', target: 30, icon: 'shield', label: 'Inarretable', color: '#EAB308' },
+              { key: 'streak_30', target: 30, icon: 'shield', label: 'Inarrêtable', color: '#EAB308' },
             ];
             const nextScan = SCAN_TIERS.find(t => !earned.includes(t.key) && totalScans < t.target);
             const nextStreak = STREAK_TIERS.find(t => !earned.includes(t.key) && streak < t.target);
@@ -937,11 +937,11 @@ const HomeScreen = ({ navigation }) => {
             </View>
             <Text style={s.dailyTipText}>
               {[
-                'Verifiez toujours le 1er ingredient sur l\'emballage : il doit etre une source de proteine animale.',
-                'Les chats sont des carnivores stricts. Evitez les croquettes riches en cereales pour eux.',
+                'Vérifiez toujours le 1er ingrédient sur l\'emballage : il doit être une source de protéine animale.',
+                'Les chats sont des carnivores stricts. Evitez les croquettes riches en céréales pour eux.',
                 'Un chien adulte a besoin de 2 repas par jour. Evitez l\'exercice 1h apres manger.',
                 'Changez la gamelle d\'eau de votre animal tous les jours pour eviter les bacteries.',
-                'Les additifs E150 a E155 sont des colorants controverses. Scannez pour verifier !',
+                'Les additifs E150 a E155 sont des colorants controverses. Scannez pour vérifier !',
                 'Un score Pepete au-dessus de 70 est un bon indicateur de qualite nutritionnelle.',
                 'Alternez croquettes et patee pour les chats : ils boivent naturellement peu d\'eau.',
               ][new Date().getDay()]}

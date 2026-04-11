@@ -313,7 +313,7 @@ const PetSitterDetailScreen = ({ route, navigation }) => {
 
           {/* Bio */}
           {petsitter.bio ? (
-            <SectionCard title="A propos" iconName="edit-3">
+            <SectionCard title="À propos" iconName="edit-3">
               <Text style={styles.bioText}>{petsitter.bio}</Text>
             </SectionCard>
           ) : null}
@@ -563,7 +563,7 @@ const PetSitterDetailScreen = ({ route, navigation }) => {
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 0 }}
             >
-              <Text style={styles.bookBtnText}>Reserver</Text>
+              <Text style={styles.bookBtnText}>Réserver</Text>
               <Feather name="arrow-right" size={18} color={colors.white} />
             </LinearGradient>
           </TouchableOpacity>

@@ -207,7 +207,7 @@ const useLocation = () => {
         setCity(cityName);
         setApproximate(isApproximate);
       } else {
-        setError('Impossible de recuperer la localisation. Saisissez une ville manuellement.');
+        setError('Impossible de récupérer la localisation. Saisissez une ville manuellement.');
       }
     } catch (err) {
       try {
@@ -217,10 +217,10 @@ const useLocation = () => {
           setCity(ipResult.city);
           setApproximate(true);
         } else {
-          setError('Impossible de recuperer la localisation. Saisissez une ville manuellement.');
+          setError('Impossible de récupérer la localisation. Saisissez une ville manuellement.');
         }
       } catch (_) {
-        setError('Impossible de recuperer la localisation. Saisissez une ville manuellement.');
+        setError('Impossible de récupérer la localisation. Saisissez une ville manuellement.');
       }
     } finally {
       setLoading(false);

@@ -197,11 +197,11 @@ const BookingScreen = ({ route, navigation }) => {
 
   const handleBooking = async () => {
     if (!selectedPet) {
-      showAlert('Attention', 'Selectionnez un animal');
+      showAlert('Attention', 'Sélectionnez un animal');
       return;
     }
     if (!selectedService) {
-      showAlert('Attention', 'Selectionnez un service');
+      showAlert('Attention', 'Sélectionnez un service');
       return;
     }
     if (!startDate || !endDate) {
@@ -217,15 +217,15 @@ const BookingScreen = ({ route, navigation }) => {
     const start = new Date(startDate);
     const end = new Date(endDate);
     if (isNaN(start.getTime()) || isNaN(end.getTime())) {
-      showAlert('Attention', 'Date invalide. Verifiez le jour et le mois.');
+      showAlert('Attention', 'Date invalide. Vérifiez le jour et le mois.');
       return;
     }
     if (start < new Date(new Date().toDateString())) {
-      showAlert('Attention', 'La date de debut ne peut pas etre dans le passe');
+      showAlert('Date invalide', 'Choisis une date à partir d\'aujourd\'hui.');
       return;
     }
     if (end <= start) {
-      showAlert('Attention', 'La date de fin doit etre apres la date de debut');
+      showAlert('Date invalide', 'La date de fin doit être après la date de début.');
       return;
     }
 
@@ -242,12 +242,12 @@ const BookingScreen = ({ route, navigation }) => {
       });
 
       showAlert(
-        'Reservation envoyee !',
-        'Le pet-sitter va confirmer votre reservation sous peu.',
+        'Réservation envoyée !',
+        'Le pet-sitter va confirmer votre réservation sous peu.',
         [{ text: 'Super !', onPress: () => navigation.goBack() }]
       );
     } catch (error) {
-      showAlert('Erreur', 'Impossible de creer la reservation. Reessayez.');
+      showAlert('Erreur', 'Impossible de créer la réservation. Réessayez.');
     } finally {
       setLoading(false);
     }
@@ -552,7 +552,7 @@ const BookingScreen = ({ route, navigation }) => {
               </View>
 
               <View style={styles.summaryRow}>
-                <Text style={styles.summaryLabel}>Periode</Text>
+                <Text style={styles.summaryLabel}>Période</Text>
                 <Text style={styles.summaryValue}>
                   {startDate && endDate ? `${startDate} - ${endDate}` : '--'}
                 </Text>
@@ -595,7 +595,7 @@ const BookingScreen = ({ route, navigation }) => {
                 ) : (
                   <>
                     <Feather name="check" size={18} color={colors.white} />
-                    <Text style={styles.confirmBtnText}>Confirmer la reservation</Text>
+                    <Text style={styles.confirmBtnText}>Confirmer la réservation</Text>
                   </>
                 )}
               </LinearGradient>
