@@ -47,6 +47,7 @@ const productSchema = new mongoose.Schema({
     default: 50
   },
   scoreDetails: {
+    // Legacy macros
     protein: { type: Number, default: 0 },
     fat: { type: Number, default: 0 },
     fiber: { type: Number, default: 0 },
@@ -54,7 +55,22 @@ const productSchema = new mongoose.Schema({
     qualityBonus: { type: Number, default: 0 },
     ingredientsScore: { type: Number, default: 0 },
     additivesScore: { type: Number, default: 0 },
-    nutritionScore: { type: Number, default: 0 }
+    nutritionScore: { type: Number, default: 0 },
+    // Pro-grade analysis (v3)
+    kcalPer100g: { type: Number, default: 0 },
+    carbs: { type: Number, default: 0 },
+    ingredientTier: { type: Number, default: 0 }, // 1 fresh meat → 4 plant protein
+    allergens: [{ type: String }],
+    positiveMarkers: [{ type: String }],
+    lifeStageWarnings: [{ type: String }],
+    marketingTricks: [{ type: String }],
+    fediafMet: {
+      protein: { type: Boolean, default: true },
+      fat: { type: Boolean, default: true },
+    },
+    dangerousAdditivesCount: { type: Number, default: 0 },
+    moderateAdditivesCount: { type: Number, default: 0 },
+    benzoateRiskCat: { type: Boolean, default: false },
   },
   description: {
     type: String,

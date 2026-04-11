@@ -401,6 +401,260 @@ footer a {
 }
 footer a:hover { color: #FFFFFF; }
 
+/* ─── Hero illustration (inline SVG wrapper) ─────────────────────────────── */
+.hero-illustration {
+  margin: 8px 0 36px;
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  background: linear-gradient(135deg, var(--primary-soft) 0%, #F4EFE6 100%);
+  padding: 28px 22px;
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--border);
+}
+.hero-illustration svg {
+  display: block;
+  width: 100%;
+  max-width: 620px;
+  height: auto;
+  margin: 0 auto;
+}
+
+/* ─── Author / reviewer bio ──────────────────────────────────────────────── */
+.author-bio {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  background: var(--surface);
+  padding: 18px 22px;
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border);
+  margin: 0 0 30px;
+  box-shadow: var(--shadow-sm);
+}
+.author-bio .avatar {
+  flex-shrink: 0;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
+  color: #fff;
+  font-family: Georgia, serif;
+  font-size: 1.4rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.author-bio .info { flex: 1; min-width: 0; }
+.author-bio .name { font-weight: 700; color: var(--text); font-size: .98rem; margin-bottom: 2px; }
+.author-bio .title { font-size: .82rem; color: var(--text-soft); line-height: 1.5; }
+
+/* ─── Table of contents ─────────────────────────────────────────────────── */
+.toc {
+  background: var(--bg-soft);
+  border-radius: var(--radius-md);
+  padding: 20px 26px;
+  margin: 0 0 36px;
+  border-left: 4px solid var(--primary);
+}
+.toc-title {
+  font-size: .78rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .08em;
+  color: var(--primary);
+  margin-bottom: 10px;
+}
+.toc ol {
+  margin: 0 0 0 20px;
+  padding: 0;
+  counter-reset: toc;
+  list-style: none;
+}
+.toc ol li {
+  counter-increment: toc;
+  margin-bottom: 6px;
+  font-size: .92rem;
+}
+.toc ol li::before {
+  content: counter(toc) '. ';
+  color: var(--primary);
+  font-weight: 700;
+}
+.toc a { color: var(--text); font-weight: 500; }
+.toc a:hover { color: var(--primary); }
+
+/* ─── Fact grid (stat tiles) ─────────────────────────────────────────────── */
+.fact-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 14px;
+  margin: 28px 0;
+}
+.fact-card {
+  background: var(--surface);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border);
+  padding: 20px 16px;
+  text-align: center;
+  box-shadow: var(--shadow-sm);
+}
+.fact-card .big {
+  font-family: Georgia, serif;
+  font-size: 2.1rem;
+  font-weight: 700;
+  color: var(--primary);
+  line-height: 1.1;
+}
+.fact-card .label {
+  display: block;
+  margin-top: 6px;
+  font-size: .78rem;
+  color: var(--text-soft);
+  text-transform: uppercase;
+  letter-spacing: .05em;
+}
+
+/* ─── Review card (brand / product) ──────────────────────────────────────── */
+.review-card {
+  display: flex;
+  gap: 18px;
+  background: var(--surface);
+  border-radius: var(--radius-lg);
+  padding: 22px;
+  margin: 20px 0;
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow-sm);
+  align-items: flex-start;
+}
+.review-card .score-circle {
+  flex-shrink: 0;
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-family: Georgia, serif;
+}
+.review-card .score-circle .num { font-size: 1.5rem; font-weight: 700; line-height: 1; }
+.review-card .score-circle .max { font-size: .68rem; opacity: .85; margin-top: 2px; }
+.review-card .score-excellent { background: linear-gradient(135deg, #527A56, #6B8F71); }
+.review-card .score-good      { background: linear-gradient(135deg, #6B8F71, #8CB092); }
+.review-card .score-mediocre  { background: linear-gradient(135deg, #C4956A, #D4AD86); }
+.review-card .score-bad       { background: linear-gradient(135deg, #D4855A, #C4956A); }
+.review-card .score-verybad   { background: linear-gradient(135deg, #C25B4A, #D4855A); }
+.review-card .body { flex: 1; min-width: 0; }
+.review-card .body h3 { margin: 0 0 6px; font-size: 1.15rem; }
+.review-card .body h3 a { color: var(--text); }
+.review-card .body h3 a:hover { color: var(--primary); text-decoration: none; }
+.review-card .body .meta { font-size: .8rem; color: var(--text-muted); margin-bottom: 10px; }
+.review-card .body p { font-size: .94rem; color: var(--text-soft); margin-bottom: 0; line-height: 1.6; }
+
+/* ─── Pros / cons two column ─────────────────────────────────────────────── */
+.pros-cons {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin: 28px 0;
+}
+.pros-cons .col {
+  background: var(--surface);
+  border-radius: var(--radius-md);
+  padding: 20px 22px;
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow-sm);
+}
+.pros-cons .col.pros { border-top: 4px solid var(--primary); }
+.pros-cons .col.cons { border-top: 4px solid var(--danger); }
+.pros-cons .col h4 {
+  font-size: .78rem;
+  text-transform: uppercase;
+  letter-spacing: .08em;
+  font-weight: 700;
+  margin-bottom: 12px;
+}
+.pros-cons .col.pros h4 { color: var(--primary); }
+.pros-cons .col.cons h4 { color: var(--danger); }
+.pros-cons ul { margin: 0; padding: 0; list-style: none; }
+.pros-cons li {
+  font-size: .92rem;
+  padding: 6px 0 6px 22px;
+  position: relative;
+  margin-bottom: 4px;
+}
+.pros-cons .col.pros li::before {
+  content: '✓';
+  position: absolute;
+  left: 0;
+  color: var(--primary);
+  font-weight: 700;
+}
+.pros-cons .col.cons li::before {
+  content: '✗';
+  position: absolute;
+  left: 0;
+  color: var(--danger);
+  font-weight: 700;
+}
+
+/* ─── Source list ────────────────────────────────────────────────────────── */
+.sources {
+  background: var(--bg-soft);
+  border-radius: var(--radius-md);
+  padding: 22px 26px;
+  margin: 40px 0 0;
+  border: 1px solid var(--border);
+}
+.sources h3 {
+  font-size: .82rem;
+  text-transform: uppercase;
+  letter-spacing: .08em;
+  font-weight: 700;
+  color: var(--text-soft);
+  margin-bottom: 12px;
+}
+.sources ol {
+  margin: 0 0 0 20px;
+  font-size: .82rem;
+  color: var(--text-soft);
+  line-height: 1.7;
+}
+.sources ol li { margin-bottom: 4px; }
+.sources a { color: var(--text-soft); text-decoration: underline; }
+.sources a:hover { color: var(--primary); }
+
+/* ─── Share section ──────────────────────────────────────────────────────── */
+.share-section {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  padding: 22px 0 30px;
+  border-top: 1px solid var(--border);
+  margin-top: 30px;
+  font-size: .88rem;
+  color: var(--text-soft);
+}
+.share-btn {
+  display: inline-block;
+  padding: 8px 16px;
+  border-radius: 999px;
+  background: var(--primary-soft);
+  color: var(--primary);
+  font-weight: 600;
+  font-size: .85rem;
+  border: 1px solid transparent;
+  transition: all .2s ease;
+}
+.share-btn:hover {
+  background: var(--primary);
+  color: #fff;
+  text-decoration: none;
+}
+
 /* ─── Mobile ──────────────────────────────────────────────────────────────── */
 @media (max-width: 640px) {
   .container { padding: 0 18px; }
@@ -420,4 +674,10 @@ footer a:hover { color: #FFFFFF; }
   .related-grid { grid-template-columns: 1fr; }
   article table { font-size: .82rem; }
   article th, article td { padding: 8px 10px; }
+  .hero-illustration { padding: 20px 14px; }
+  .review-card { flex-direction: column; }
+  .review-card .score-circle { width: 64px; height: 64px; }
+  .pros-cons { grid-template-columns: 1fr; }
+  .fact-card .big { font-size: 1.7rem; }
+  .toc { padding: 16px 20px; }
 }

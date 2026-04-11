@@ -50,6 +50,10 @@ const ScannerScreen = ({ navigation }) => {
   const [scanned, setScanned] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
   const [torchOn, setTorchOn] = useState(false);
+  // Camera zoom — default 0 (no zoom). User can toggle a modest zoom for small codes.
+  // On some phones (e.g. iPhone with multi-lens back cameras) the native default
+  // picks a narrow-FOV lens which looks "too zoomed in", so we explicitly pin to 0.
+  const [zoom, setZoom] = useState(0);
 
   // Animations
   const cornerPulse = useRef(new Animated.Value(1)).current;
@@ -324,6 +328,18 @@ const ScannerScreen = ({ navigation }) => {
         <Feather name={torchOn ? 'zap' : 'zap-off'} size={18} color={COLORS.white} />
       </TouchableOpacity>
 
+      {/* Zoom toggle — cycles 0 → 0.2 → 0.4 → 0 */}
+      <TouchableOpacity
+        style={styles.zoomButton}
+        onPress={() => setZoom((prev) => (prev >= 0.4 ? 0 : +(prev + 0.2).toFixed(1)))}
+        activeOpacity={0.7}
+      >
+        <Feather name={zoom > 0 ? 'zoom-in' : 'maximize-2'} size={18} color={COLORS.white} />
+        {zoom > 0 && (
+          <Text style={styles.zoomLabel}>x{(1 + zoom * 2).toFixed(1)}</Text>
+        )}
+      </TouchableOpacity>
+
       {/* Scan flash overlay */}
       <Animated.View
         pointerEvents="none"
@@ -430,6 +446,7 @@ const ScannerScreen = ({ navigation }) => {
                 style={StyleSheet.absoluteFillObject}
                 facing="back"
                 autofocus="on"
+                zoom={zoom}
                 enableTorch={torchOn}
                 barcodeScannerSettings={{
                   barcodeTypes: ['ean13', 'ean8', 'upc_a', 'upc_e', 'code128', 'code39', 'qr', 'codabar'],
@@ -789,6 +806,27 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     zIndex: 10,
+  },
+  // Zoom button — sits below the torch button
+  zoomButton: {
+    position: 'absolute',
+    top: SPACING.md + 48,
+    right: SPACING.md,
+    minWidth: 40,
+    height: 40,
+    paddingHorizontal: 8,
+    borderRadius: 20,
+    backgroundColor: 'rgba(0,0,0,0.45)',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 4,
+    zIndex: 10,
+  },
+  zoomLabel: {
+    color: COLORS.white,
+    fontSize: FONT_SIZE.xs,
+    fontFamily: FONTS.bodySemiBold,
   },
 
   // Corner styles

@@ -367,6 +367,24 @@ const ProductResultScreen = ({ route, navigation }) => {
   const hasAdditives = additives.length > 0;
   const hasScoreDetails = product.scoreDetails != null;
 
+  // Pro-grade nutritionist analysis fields (v3 scoreCalculator)
+  const sd = product.scoreDetails || {};
+  const kcalPer100g = sd.kcalPer100g || 0;
+  const carbsPct = sd.carbs || 0;
+  const proteinPct = sd.protein || 0;
+  const fatPct = sd.fat || 0;
+  const fiberPct = sd.fiber || 0;
+  const allergensList = Array.isArray(sd.allergens) ? sd.allergens : [];
+  const positiveMarkers = Array.isArray(sd.positiveMarkers) ? sd.positiveMarkers : [];
+  const lifeStageWarnings = Array.isArray(sd.lifeStageWarnings) ? sd.lifeStageWarnings : [];
+  const marketingTricks = Array.isArray(sd.marketingTricks) ? sd.marketingTricks : [];
+  const fediafMet = sd.fediafMet || { protein: true, fat: true };
+  const hasNutritionFacts = kcalPer100g > 0 || proteinPct > 0 || fatPct > 0;
+  const hasAllergens = allergensList.length > 0;
+  const hasPositiveMarkers = positiveMarkers.length > 0;
+  const hasLifeStageWarnings = lifeStageWarnings.length > 0;
+  const hasMarketingTricks = marketingTricks.length > 0;
+
   // Count risk types
   const dangerousCount = ingredients.filter(i => i.risk === 'dangerous').length;
   const moderateCount = ingredients.filter(i => i.risk === 'moderate').length;
@@ -559,6 +577,146 @@ const ProductResultScreen = ({ route, navigation }) => {
                   );
                 })}
               </View>
+            </View>
+          )}
+
+          {/* Life-stage warnings — CRITICAL card shown first when present */}
+          {hasLifeStageWarnings && (
+            <View style={[styles.card, styles.criticalCard]}>
+              <View style={styles.cardHeader}>
+                <Feather name="alert-octagon" size={20} color={COLORS.scoreVeryBad} style={{ marginRight: SPACING.sm }} />
+                <Text style={[styles.cardTitle, { color: COLORS.scoreVeryBad }]}>Alertes nutritionniste</Text>
+              </View>
+              <Text style={styles.criticalIntro}>
+                Notre analyse a identifié des points critiques pour la santé de votre animal :
+              </Text>
+              {lifeStageWarnings.map((warning, idx) => (
+                <View key={idx} style={styles.criticalItem}>
+                  <View style={styles.criticalBullet}>
+                    <Feather name="alert-triangle" size={14} color={COLORS.scoreVeryBad} />
+                  </View>
+                  <Text style={styles.criticalText}>{warning}</Text>
+                </View>
+              ))}
+            </View>
+          )}
+
+          {/* Nutrition facts card (kcal + macros) */}
+          {hasNutritionFacts && (
+            <View style={styles.card}>
+              <View style={styles.cardHeader}>
+                <Feather name="pie-chart" size={20} color={COLORS.primary} style={{ marginRight: SPACING.sm }} />
+                <Text style={styles.cardTitle}>Analyse nutritionnelle</Text>
+              </View>
+
+              {kcalPer100g > 0 && (
+                <View style={styles.kcalHero}>
+                  <Text style={styles.kcalValue}>{kcalPer100g}</Text>
+                  <View>
+                    <Text style={styles.kcalUnit}>kcal / 100 g</Text>
+                    <Text style={styles.kcalSubtext}>Energie metabolisable (Atwater modifie)</Text>
+                  </View>
+                </View>
+              )}
+
+              <View style={styles.macroGrid}>
+                <View style={styles.macroItem}>
+                  <Text style={styles.macroLabel}>Proteines</Text>
+                  <Text style={[styles.macroValue, !fediafMet.protein && { color: COLORS.scoreVeryBad }]}>
+                    {proteinPct.toFixed(1)}%
+                  </Text>
+                  {!fediafMet.protein && (
+                    <Text style={styles.macroFlag}>sous FEDIAF</Text>
+                  )}
+                </View>
+                <View style={styles.macroItem}>
+                  <Text style={styles.macroLabel}>Lipides</Text>
+                  <Text style={[styles.macroValue, !fediafMet.fat && { color: COLORS.scoreVeryBad }]}>
+                    {fatPct.toFixed(1)}%
+                  </Text>
+                  {!fediafMet.fat && (
+                    <Text style={styles.macroFlag}>sous FEDIAF</Text>
+                  )}
+                </View>
+                <View style={styles.macroItem}>
+                  <Text style={styles.macroLabel}>Fibres</Text>
+                  <Text style={styles.macroValue}>{fiberPct.toFixed(1)}%</Text>
+                </View>
+                {carbsPct > 0 && (
+                  <View style={styles.macroItem}>
+                    <Text style={styles.macroLabel}>Glucides</Text>
+                    <Text style={[
+                      styles.macroValue,
+                      carbsPct > 45 && { color: COLORS.scoreMediocre },
+                      carbsPct > 55 && { color: COLORS.scoreVeryBad },
+                    ]}>{carbsPct.toFixed(0)}%</Text>
+                    {carbsPct > 45 && (
+                      <Text style={styles.macroFlag}>{carbsPct > 55 ? 'excessif' : 'eleve'}</Text>
+                    )}
+                  </View>
+                )}
+              </View>
+            </View>
+          )}
+
+          {/* Allergen chips */}
+          {hasAllergens && (
+            <View style={styles.card}>
+              <View style={styles.cardHeader}>
+                <Feather name="alert-circle" size={20} color={COLORS.warning} style={{ marginRight: SPACING.sm }} />
+                <Text style={styles.cardTitle}>Allergenes detectes</Text>
+                <View style={[styles.countBadge, { backgroundColor: COLORS.warningSoft }]}>
+                  <Text style={[styles.countText, { color: COLORS.warning }]}>{allergensList.length}</Text>
+                </View>
+              </View>
+              <Text style={styles.allergenIntro}>
+                Ingredients a surveiller si votre animal est sensible :
+              </Text>
+              <View style={styles.chipRow}>
+                {allergensList.map((allergen, idx) => (
+                  <View key={idx} style={styles.allergenChip}>
+                    <Feather name="alert-triangle" size={11} color={COLORS.warning} />
+                    <Text style={styles.allergenChipText}>{allergen}</Text>
+                  </View>
+                ))}
+              </View>
+            </View>
+          )}
+
+          {/* Positive markers */}
+          {hasPositiveMarkers && (
+            <View style={styles.card}>
+              <View style={styles.cardHeader}>
+                <Feather name="check-circle" size={20} color={COLORS.scoreExcellent} style={{ marginRight: SPACING.sm }} />
+                <Text style={styles.cardTitle}>Points positifs</Text>
+              </View>
+              {positiveMarkers.map((marker, idx) => (
+                <View key={idx} style={[styles.positiveRow, idx === positiveMarkers.length - 1 && styles.lastRow]}>
+                  <View style={styles.positiveDot}>
+                    <Feather name="check" size={14} color={COLORS.scoreExcellent} />
+                  </View>
+                  <Text style={styles.positiveText}>{marker}</Text>
+                </View>
+              ))}
+            </View>
+          )}
+
+          {/* Marketing tricks warnings */}
+          {hasMarketingTricks && (
+            <View style={styles.card}>
+              <View style={styles.cardHeader}>
+                <Feather name="eye" size={20} color={COLORS.scoreMediocre} style={{ marginRight: SPACING.sm }} />
+                <Text style={styles.cardTitle}>Attention marketing</Text>
+              </View>
+              <Text style={styles.trickIntro}>
+                Arguments commerciaux a ne pas prendre pour argent comptant :
+              </Text>
+              {marketingTricks.map((trick, idx) => (
+                <View key={idx} style={[styles.trickRow, idx === marketingTricks.length - 1 && styles.lastRow]}>
+                  <Feather name="eye-off" size={14} color={COLORS.scoreMediocre} style={{ marginTop: 2 }} />
+                  <Text style={styles.trickText}>{trick}</Text>
+                </View>
+              ))}
             </View>
           )}
 
@@ -1723,6 +1881,177 @@ const styles = StyleSheet.create({
     fontSize: FONT_SIZE.sm,
     fontFamily: FONTS.heading,
     color: '#FFF',
+  },
+
+  // Nutritionist pro-grade analysis cards
+  criticalCard: {
+    borderWidth: 1.5,
+    borderColor: COLORS.scoreVeryBad + '40',
+    backgroundColor: COLORS.scoreVeryBadBg,
+  },
+  criticalIntro: {
+    fontSize: FONT_SIZE.sm,
+    fontFamily: FONTS.body,
+    color: COLORS.charcoal,
+    marginBottom: SPACING.md,
+    lineHeight: 20,
+  },
+  criticalItem: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: SPACING.sm,
+    marginBottom: SPACING.sm,
+  },
+  criticalBullet: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    backgroundColor: COLORS.white,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 2,
+  },
+  criticalText: {
+    flex: 1,
+    fontSize: FONT_SIZE.sm,
+    fontFamily: FONTS.bodyMedium,
+    color: COLORS.charcoal,
+    lineHeight: 20,
+  },
+  kcalHero: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: SPACING.md,
+    paddingVertical: SPACING.md,
+    paddingHorizontal: SPACING.base,
+    backgroundColor: COLORS.linen,
+    borderRadius: RADIUS.lg,
+    marginBottom: SPACING.md,
+  },
+  kcalValue: {
+    fontSize: 34,
+    fontFamily: FONTS.heading,
+    color: COLORS.primary,
+    lineHeight: 38,
+  },
+  kcalUnit: {
+    fontSize: FONT_SIZE.sm,
+    fontFamily: FONTS.bodySemiBold,
+    color: COLORS.charcoal,
+  },
+  kcalSubtext: {
+    fontSize: FONT_SIZE.xs,
+    fontFamily: FONTS.body,
+    color: COLORS.stone,
+    marginTop: 2,
+  },
+  macroGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: SPACING.sm,
+  },
+  macroItem: {
+    flex: 1,
+    minWidth: '22%',
+    backgroundColor: COLORS.linen,
+    borderRadius: RADIUS.md,
+    paddingVertical: SPACING.sm,
+    paddingHorizontal: SPACING.sm,
+    alignItems: 'center',
+  },
+  macroLabel: {
+    fontSize: FONT_SIZE.xs,
+    fontFamily: FONTS.bodyMedium,
+    color: COLORS.stone,
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+  },
+  macroValue: {
+    fontSize: FONT_SIZE.lg,
+    fontFamily: FONTS.heading,
+    color: COLORS.charcoal,
+    marginTop: 4,
+  },
+  macroFlag: {
+    fontSize: 10,
+    fontFamily: FONTS.bodyMedium,
+    color: COLORS.scoreVeryBad,
+    marginTop: 2,
+    textTransform: 'uppercase',
+  },
+  allergenIntro: {
+    fontSize: FONT_SIZE.sm,
+    fontFamily: FONTS.body,
+    color: COLORS.stone,
+    marginBottom: SPACING.md,
+    lineHeight: 20,
+  },
+  chipRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: SPACING.sm,
+  },
+  allergenChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: COLORS.warningSoft,
+    paddingHorizontal: SPACING.sm + 2,
+    paddingVertical: 6,
+    borderRadius: RADIUS.full,
+    borderWidth: 1,
+    borderColor: COLORS.warning + '30',
+  },
+  allergenChipText: {
+    fontSize: FONT_SIZE.xs,
+    fontFamily: FONTS.bodyMedium,
+    color: COLORS.warning,
+    textTransform: 'capitalize',
+  },
+  positiveRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: SPACING.sm,
+    paddingVertical: SPACING.sm,
+    borderBottomWidth: 1,
+    borderBottomColor: COLORS.linen,
+  },
+  positiveDot: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: COLORS.scoreExcellentBg,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  positiveText: {
+    flex: 1,
+    fontSize: FONT_SIZE.sm,
+    fontFamily: FONTS.bodyMedium,
+    color: COLORS.charcoal,
+    textTransform: 'capitalize',
+  },
+  trickIntro: {
+    fontSize: FONT_SIZE.sm,
+    fontFamily: FONTS.body,
+    color: COLORS.stone,
+    marginBottom: SPACING.md,
+    lineHeight: 20,
+  },
+  trickRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: SPACING.sm,
+    paddingVertical: SPACING.sm,
+    borderBottomWidth: 1,
+    borderBottomColor: COLORS.linen,
+  },
+  trickText: {
+    flex: 1,
+    fontSize: FONT_SIZE.sm,
+    fontFamily: FONTS.body,
+    color: COLORS.charcoal,
+    lineHeight: 20,
   },
 
   // Barcode footer

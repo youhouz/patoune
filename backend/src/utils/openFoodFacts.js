@@ -198,15 +198,23 @@ function formatProduct(offProduct, barcode, source) {
   if (allText.includes('oiseau') || allText.includes('bird')) targetAnimal.push('oiseau');
   if (targetAnimal.length === 0) targetAnimal.push('tous');
 
-  // Donnees nutritionnelles
+  // Données nutritionnelles (macros en g/100g)
   const nutriments = offProduct.nutriments || {};
   const scoreDetails = {
-    protein: nutriments.proteins_100g || 0,
-    fat: nutriments.fat_100g || 0,
-    fiber: nutriments['fiber_100g'] || 0,
+    protein: nutriments.proteins_100g || nutriments.proteins || 0,
+    fat: nutriments.fat_100g || nutriments.fat || 0,
+    fiber: nutriments['fiber_100g'] || nutriments.fiber || 0,
+    ash: nutriments.ash_100g || nutriments.ash || 0,
+    moisture: nutriments.moisture_100g || nutriments.moisture || 0,
     additivesPenalty: 0,
     qualityBonus: 0,
   };
+
+  // Déterminer l'âge cible depuis le nom / texte du produit (reuse allText)
+  let targetAge = 'adulte';
+  if (allText.includes('chiot') || allText.includes('puppy') || allText.includes('junior')) targetAge = 'chiot';
+  else if (allText.includes('chaton') || allText.includes('kitten')) targetAge = 'chaton';
+  else if (allText.includes('senior') || allText.includes('mature')) targetAge = 'senior';
 
   const productData = {
     barcode,
@@ -214,6 +222,7 @@ function formatProduct(offProduct, barcode, source) {
     brand: offProduct.brands || '',
     category,
     targetAnimal,
+    targetAge,
     ingredients,
     additives,
     scoreDetails,
@@ -221,7 +230,7 @@ function formatProduct(offProduct, barcode, source) {
     _source: source,
   };
 
-  // Calculer le score Pépète
+  // Calculer le score Pépète (analyse pro grade)
   const scoreResult = calculateScore(productData);
   productData.nutritionScore = scoreResult.score;
   productData.scoreDetails = scoreResult.details;
