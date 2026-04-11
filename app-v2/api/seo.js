@@ -306,6 +306,83 @@ ${Object.keys(ANIMAL_LABELS).filter(a => a !== animal).map(a => `<li style="marg
   return layout(title, desc, url, content, jsonLd, breadcrumbs);
 }
 
+async function comparatifPage(slug) {
+  // slug format: "barcode1-vs-barcode2"
+  const match = String(slug || '').match(/^(\d+)-vs-(\d+)$/);
+  if (!match) return null;
+  const [, b1, b2] = match;
+
+  const [d1, d2] = await Promise.all([
+    api(`/products/public/${b1}`),
+    api(`/products/public/${b2}`),
+  ]);
+  if (!d1?.product || !d2?.product) return null;
+
+  const p1 = d1.product;
+  const p2 = d2.product;
+  const s1 = p1.nutritionScore ?? 0;
+  const s2 = p2.nutritionScore ?? 0;
+  const i1 = getScoreInfo(s1);
+  const i2 = getScoreInfo(s2);
+  const winner = s1 === s2 ? null : (s1 > s2 ? p1 : p2);
+  const winnerScore = s1 === s2 ? s1 : Math.max(s1, s2);
+
+  const title = `${p1.name} vs ${p2.name} — Comparatif Pepete`;
+  const desc = `Comparatif detaille entre ${p1.name} (${s1}/100) et ${p2.name} (${s2}/100). ${winner ? `${winner.name} l'emporte avec ${winnerScore}/100.` : 'Match nul.'} Analyse IA des ingredients.`;
+  const url = `${SITE}/comparatif/${slug}`;
+
+  const breadcrumbs = [
+    { name: 'Accueil', url: SITE },
+    { name: 'Comparatifs', url: `${SITE}/blog/comparatif-croquettes-chien-premium.html` },
+    { name: `${p1.name} vs ${p2.name}` },
+  ];
+
+  const jsonLd = [{
+    '@context': 'https://schema.org', '@type': 'Article',
+    headline: title, description: desc,
+    author: { '@type': 'Organization', name: 'Pepete' },
+    publisher: { '@type': 'Organization', name: 'Pepete', url: SITE },
+    datePublished: new Date().toISOString().split('T')[0],
+    dateModified: new Date().toISOString().split('T')[0],
+  }];
+
+  const renderCol = (p, s, info) => {
+    const dangerous = (p.dangerousIngredients || []).length;
+    return `<div class="card" style="text-align:center">
+<h2 style="font-size:1.1rem;margin-bottom:8px"><a href="/produit/${esc(p.barcode)}">${esc(p.name)}</a></h2>
+<p style="color:#888;font-size:.9rem;margin-bottom:12px">${esc(p.brand || '')}</p>
+<div class="score-big" style="background:${info.color}">${s}</div>
+<div><span class="badge" style="background:${info.color}15;color:${info.color}">${info.label}</span></div>
+<p style="margin-top:12px;font-size:.85rem;color:#666">${(p.ingredients || []).length} ingredients · ${dangerous} a risque</p>
+</div>`;
+  };
+
+  const content = `
+<div class="hero">
+<h1>⚔️ ${esc(p1.name)} vs ${esc(p2.name)}</h1>
+<p>Comparatif Pepete — Lequel choisir ?</p>
+</div>
+
+<div class="grid" style="grid-template-columns:1fr 1fr;gap:20px">
+${renderCol(p1, s1, i1)}
+${renderCol(p2, s2, i2)}
+</div>
+
+<div class="card" style="text-align:center;margin-top:24px;border-left:4px solid ${winner ? getScoreInfo(winnerScore).color : '#888'}">
+<h2 style="margin-bottom:8px">${winner ? `🏆 ${esc(winner.name)} gagne` : '🤝 Match nul'}</h2>
+<p style="color:#666">${winner ? `Avec un score de ${winnerScore}/100, ${esc(winner.name)} obtient une meilleure note Pepete.` : `Les deux produits obtiennent le meme score de ${s1}/100.`}</p>
+</div>
+
+<div class="card">
+<h2>Comment Pepete compare les croquettes ?</h2>
+<p style="margin-top:12px">Notre IA analyse chaque ingredient sur des criteres scientifiques : qualite des proteines, presence d'additifs dangereux, taux de cereales, sources animales identifiees, et conformite aux besoins nutritionnels de l'animal cible.</p>
+<p style="margin-top:8px"><a href="/">Scannez vos propres croquettes</a> pour obtenir un score instantane.</p>
+</div>
+`;
+
+  return layout(title, desc, url, content, jsonLd, breadcrumbs);
+}
+
 async function dangerousPage() {
   const data = await api('/products/dangerous-ingredients');
   if (!data) return null;
@@ -364,6 +441,20 @@ async function sitemapIndex() {
 async function sitemapPages() {
   const today = new Date().toISOString().split('T')[0];
   const animals = ['chien', 'chat', 'rongeur', 'oiseau', 'reptile', 'poisson'];
+  const blogArticles = [
+    'scanner-croquettes-chien-chat',
+    'trouver-pet-sitter-confiance',
+    'assistant-ia-veterinaire',
+    'ingredients-dangereux-croquettes',
+    'meilleures-croquettes-chien-2026',
+    'meilleures-croquettes-chat-2026',
+    'royal-canin-avis-test',
+    'purina-pro-plan-avis',
+    'croquettes-sans-cereales-chien',
+    'comparatif-croquettes-chien-premium',
+    'alimentation-chiot-guide',
+    'additifs-dangereux-croquettes',
+  ];
   const pages = [
     { loc: '/', priority: '1.0', freq: 'daily' },
     { loc: '/scanner', priority: '0.9', freq: 'weekly' },
@@ -373,6 +464,7 @@ async function sitemapPages() {
     { loc: '/ingredients-dangereux', priority: '0.7', freq: 'weekly' },
     ...animals.map(a => ({ loc: `/croquettes-${a}`, priority: '0.8', freq: 'weekly' })),
     ...animals.map(a => ({ loc: `/classement/${a}`, priority: '0.7', freq: 'weekly' })),
+    ...blogArticles.map(a => ({ loc: `/blog/${a}.html`, priority: '0.7', freq: 'monthly' })),
   ];
 
   let xml = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n`;
@@ -440,6 +532,10 @@ module.exports = async (req, res) => {
       }
       case 'dangerous': {
         html = await dangerousPage();
+        break;
+      }
+      case 'comparatif': {
+        html = await comparatifPage(req.query.slug);
         break;
       }
       case 'sitemap-index': {
