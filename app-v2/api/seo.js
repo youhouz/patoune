@@ -30,39 +30,56 @@ function getScoreInfo(score) {
 const ANIMAL_LABELS = { chien: 'Chien', chat: 'Chat', rongeur: 'Rongeur', oiseau: 'Oiseau', reptile: 'Reptile', poisson: 'Poisson' };
 const ANIMAL_EMOJI = { chien: '🐶', chat: '🐱', rongeur: '🐹', oiseau: '🐦', reptile: '🦎', poisson: '🐟' };
 
-// ─── Shared CSS ──────────────────────────────────────────────────────────────
+// ─── Shared CSS — matches blog/blog.css design (cream + sage) ───────────────
 const CSS = `
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#FAFAF5;color:#2C2825;line-height:1.7;-webkit-font-smoothing:antialiased}
-a{color:#527A56;text-decoration:none}a:hover{text-decoration:underline}
-.container{max-width:760px;margin:0 auto;padding:0 20px}
-header{background:linear-gradient(135deg,#1C2B1E,#2C3E2F,#3D5E41);color:#fff;padding:20px 0;border-bottom:3px solid #527A56}
-header .container{display:flex;justify-content:space-between;align-items:center}
-.logo{font-size:1.4rem;font-weight:700;color:#fff}.logo span{color:#8CB092}
-.nav-links{display:flex;gap:16px}.nav-links a{color:rgba(255,255,255,.8);font-size:.9rem}
-.hero{text-align:center;padding:48px 20px 32px}
-.hero h1{font-size:2rem;font-weight:800;letter-spacing:-.5px;margin-bottom:8px}
-.hero p{font-size:1.1rem;color:#6B6B6B;max-width:600px;margin:0 auto}
-.card{background:#fff;border-radius:16px;padding:24px;margin-bottom:20px;box-shadow:0 1px 3px rgba(0,0,0,.06)}
-.score-big{display:inline-flex;align-items:center;justify-content:center;width:100px;height:100px;border-radius:50%;font-size:2.4rem;font-weight:900;color:#fff;margin:16px auto;display:flex}
-.badge{display:inline-block;padding:4px 12px;border-radius:20px;font-size:.8rem;font-weight:600}
-.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:16px}
-.product-card{background:#fff;border-radius:12px;padding:16px;box-shadow:0 1px 3px rgba(0,0,0,.06);transition:transform .15s}
-.product-card:hover{transform:translateY(-2px);box-shadow:0 4px 12px rgba(0,0,0,.1)}
-.product-card h3{font-size:.95rem;font-weight:600;margin-bottom:4px}
-.product-card .brand{font-size:.8rem;color:#888}
-.product-card .score{font-size:1.3rem;font-weight:800;margin-top:8px}
-.ingredient-list{list-style:none;padding:0}.ingredient-list li{padding:6px 0;border-bottom:1px solid #f0f0f0;display:flex;align-items:center;gap:8px}
-.risk-dot{width:8px;height:8px;border-radius:4px;flex-shrink:0}
-.cta-section{text-align:center;padding:40px 20px;background:linear-gradient(135deg,#527A56,#6B8F71);border-radius:16px;margin:32px 0;color:#fff}
-.cta-section h2{font-size:1.6rem;margin-bottom:8px}
-.cta-btn{display:inline-block;background:#fff;color:#527A56;padding:14px 32px;border-radius:12px;font-weight:700;font-size:1rem;margin-top:16px;text-decoration:none}
-footer{background:#1C2B1E;color:rgba(255,255,255,.7);padding:32px 0;margin-top:48px}
-footer .container{display:flex;flex-wrap:wrap;gap:24px;justify-content:center}
-footer a{color:rgba(255,255,255,.6);font-size:.85rem}footer a:hover{color:#fff}
-.breadcrumb{font-size:.85rem;color:#888;margin-bottom:16px}
-.breadcrumb a{color:#527A56}
-@media(max-width:600px){.hero h1{font-size:1.5rem}.grid{grid-template-columns:1fr}}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#FAF7F2;color:#2C3E2F;line-height:1.75;-webkit-font-smoothing:antialiased}
+a{color:#527A56;text-decoration:none;font-weight:500}a:hover{text-decoration:underline;color:#6B8F71}
+.container{max-width:760px;margin:0 auto;padding:0 24px}
+header{background:linear-gradient(155deg,#7B8B6F 0%,#96A88A 50%,#A3B296 100%);color:#fff;padding:18px 0;box-shadow:0 1px 3px rgba(44,62,47,.06);border-bottom:1px solid rgba(255,255,255,.15)}
+header .container{display:flex;justify-content:space-between;align-items:center;gap:16px}
+.logo{font-family:Georgia,'Playfair Display',serif;font-size:1.6rem;font-weight:700;color:#fff;letter-spacing:1px;text-transform:lowercase;display:inline-flex;align-items:center;gap:4px}
+.logo .dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:#fff;margin-left:2px}
+.nav-links{display:flex;gap:4px;align-items:center}.nav-links a{color:rgba(255,255,255,.9);font-size:.9rem;font-weight:500;padding:8px 14px;border-radius:999px;transition:background .2s}
+.nav-links a:hover{background:rgba(255,255,255,.18);color:#fff;text-decoration:none}
+.hero{text-align:center;padding:56px 24px 36px}
+.hero h1{font-family:Georgia,'Playfair Display',serif;font-size:2.4rem;font-weight:700;letter-spacing:-.6px;line-height:1.2;margin-bottom:14px;color:#2C3E2F}
+.hero p{font-size:1.1rem;color:#6B7E6E;max-width:600px;margin:0 auto}
+.card{background:#FFFFFF;border-radius:20px;padding:28px;margin-bottom:22px;box-shadow:0 1px 3px rgba(44,62,47,.06),0 1px 2px rgba(44,62,47,.04);border:1px solid #E8E2D8}
+.card h2{font-family:Georgia,serif;font-size:1.4rem;letter-spacing:-.2px}
+.score-big{display:flex;align-items:center;justify-content:center;width:108px;height:108px;border-radius:50%;font-size:2.6rem;font-weight:900;color:#fff;margin:16px auto;box-shadow:0 8px 24px rgba(44,62,47,.18)}
+.badge{display:inline-block;padding:5px 14px;border-radius:999px;font-size:.8rem;font-weight:700;letter-spacing:.02em}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:18px}
+.product-card{background:#FFFFFF;border-radius:16px;padding:20px;box-shadow:0 1px 3px rgba(44,62,47,.06);border:1px solid #E8E2D8;transition:transform .2s ease,box-shadow .2s ease,border-color .2s ease;display:block}
+.product-card:hover{transform:translateY(-3px);box-shadow:0 12px 28px rgba(44,62,47,.1);border-color:#8CB092;text-decoration:none}
+.product-card h3{font-size:.98rem;font-weight:600;margin-bottom:6px;color:#2C3E2F;line-height:1.4}
+.product-card .brand{font-size:.8rem;color:#6B7E6E;display:block;margin-bottom:8px}
+.product-card .score{font-size:1.4rem;font-weight:800;margin-top:8px;display:block}
+.ingredient-list{list-style:none;padding:0}
+.ingredient-list li{padding:10px 0;border-bottom:1px solid #F4EFE6;display:flex;align-items:center;gap:10px}
+.ingredient-list li:last-child{border-bottom:none}
+.risk-dot{width:10px;height:10px;border-radius:5px;flex-shrink:0}
+.cta-section{text-align:center;padding:44px 28px;background:linear-gradient(155deg,#7B8B6F 0%,#96A88A 50%,#A3B296 100%);border-radius:24px;margin:36px 0;color:#fff;box-shadow:0 12px 40px rgba(44,62,47,.12)}
+.cta-section h2{font-family:Georgia,serif;font-size:1.6rem;margin-bottom:10px;letter-spacing:-.3px;color:#fff}
+.cta-section p{color:rgba(255,255,255,.92);margin-bottom:20px}
+.cta-btn{display:inline-block;background:#FFFFFF;color:#527A56;padding:14px 32px;border-radius:999px;font-weight:700;font-size:1rem;margin-top:8px;text-decoration:none;box-shadow:0 4px 14px rgba(0,0,0,.12);transition:transform .2s,box-shadow .2s}
+.cta-btn:hover{transform:translateY(-2px) scale(1.02);box-shadow:0 6px 18px rgba(0,0,0,.16);text-decoration:none;color:#527A56}
+footer{background:#2C3E2F;color:rgba(255,255,255,.75);padding:36px 0 32px;margin-top:48px}
+footer .container{display:flex;flex-wrap:wrap;gap:18px;justify-content:center;text-align:center}
+footer a{color:rgba(255,255,255,.85);font-size:.88rem;font-weight:500}
+footer a:hover{color:#fff}
+.breadcrumb{font-size:.85rem;color:#6B7E6E;margin-bottom:18px;padding-top:24px}
+.breadcrumb a{color:#6B7E6E;font-weight:500}
+.breadcrumb a:hover{color:#527A56}
+@media(max-width:600px){
+  .hero h1{font-size:1.7rem}
+  .hero{padding:36px 20px 24px}
+  .grid{grid-template-columns:1fr}
+  .card{padding:22px;border-radius:16px}
+  .score-big{width:96px;height:96px;font-size:2.2rem}
+  header .container{flex-wrap:wrap}
+  .nav-links a{padding:6px 10px;font-size:.85rem}
+}
 `;
 
 function layout(title, description, url, content, jsonLd = [], breadcrumbs = []) {
@@ -104,7 +121,7 @@ ${allJsonLd.map(j => `<script type="application/ld+json">${typeof j === 'string'
 </head>
 <body>
 <header><div class="container">
-<a href="/" class="logo">pepete<span>.</span></a>
+<a href="/" class="logo">pépète<span class="dot"></span></a>
 <nav class="nav-links">
 <a href="/croquettes-chien">Chien</a>
 <a href="/croquettes-chat">Chat</a>
