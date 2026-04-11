@@ -535,3 +535,144 @@ exports.searchProducts = async (req, res, next) => {
     next(error);
   }
 };
+
+// ═══════════════════════════════════════════════════════════════
+// SEO Endpoints — Public data for programmatic SEO pages
+// ═══════════════════════════════════════════════════════════════
+
+// @desc    Produits par marque (SEO)
+// @route   GET /api/products/brand/:brand
+exports.getProductsByBrand = async (req, res, next) => {
+  try {
+    const brand = decodeURIComponent(req.params.brand).replace(/-/g, ' ');
+    const escaped = brand.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const products = await Product.find({ brand: { $regex: `^${escaped}$`, $options: 'i' } })
+      .select('name brand barcode nutritionScore category targetAnimal image')
+      .sort({ nutritionScore: -1 })
+      .limit(100)
+      .lean();
+
+    if (products.length === 0) {
+      return res.status(404).json({ success: false, error: 'Marque non trouvee' });
+    }
+
+    const scores = products.map(p => p.nutritionScore || 0);
+    const avgScore = Math.round(scores.reduce((a, b) => a + b, 0) / scores.length);
+
+    res.json({
+      success: true,
+      brand: products[0].brand,
+      count: products.length,
+      avgScore,
+      products,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// @desc    Top produits par animal (SEO)
+// @route   GET /api/products/animal/:animal
+exports.getProductsByAnimal = async (req, res, next) => {
+  try {
+    const animal = req.params.animal.toLowerCase();
+    const validAnimals = ['chien', 'chat', 'rongeur', 'oiseau', 'reptile', 'poisson'];
+    if (!validAnimals.includes(animal)) {
+      return res.status(400).json({ success: false, error: 'Animal non valide' });
+    }
+
+    const [topProducts, worstProducts, totalCount] = await Promise.all([
+      Product.find({ targetAnimal: animal })
+        .select('name brand barcode nutritionScore category image')
+        .sort({ nutritionScore: -1 })
+        .limit(30)
+        .lean(),
+      Product.find({ targetAnimal: animal })
+        .select('name brand barcode nutritionScore category image')
+        .sort({ nutritionScore: 1 })
+        .limit(10)
+        .lean(),
+      Product.countDocuments({ targetAnimal: animal }),
+    ]);
+
+    res.json({
+      success: true,
+      animal,
+      totalCount,
+      topProducts,
+      worstProducts,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// @desc    Toutes les marques distinctes (SEO sitemap)
+// @route   GET /api/products/brands
+exports.getAllBrands = async (req, res, next) => {
+  try {
+    const brands = await Product.aggregate([
+      { $match: { brand: { $ne: '', $exists: true } } },
+      { $group: { _id: '$brand', count: { $sum: 1 }, avgScore: { $avg: '$nutritionScore' } } },
+      { $sort: { count: -1 } },
+      { $limit: 1000 },
+      { $project: { _id: 0, brand: '$_id', count: 1, avgScore: { $round: ['$avgScore', 0] } } },
+    ]);
+
+    res.json({ success: true, count: brands.length, brands });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// @desc    Tous les barcodes pour sitemap (SEO)
+// @route   GET /api/products/sitemap-data
+exports.getSitemapData = async (req, res, next) => {
+  try {
+    const page = Math.max(1, parseInt(req.query.page) || 1);
+    const limit = 5000;
+    const skip = (page - 1) * limit;
+
+    const [products, total] = await Promise.all([
+      Product.find({})
+        .select('barcode updatedAt')
+        .sort({ _id: 1 })
+        .skip(skip)
+        .limit(limit)
+        .lean(),
+      Product.countDocuments(),
+    ]);
+
+    res.json({
+      success: true,
+      page,
+      totalPages: Math.ceil(total / limit),
+      total,
+      products: products.map(p => ({
+        barcode: p.barcode,
+        lastmod: (p.updatedAt || new Date()).toISOString().split('T')[0],
+      })),
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// @desc    Ingredients dangereux les plus frequents (SEO)
+// @route   GET /api/products/dangerous-ingredients
+exports.getDangerousIngredients = async (req, res, next) => {
+  try {
+    const result = await Product.aggregate([
+      { $unwind: '$ingredients' },
+      { $match: { 'ingredients.risk': 'dangerous' } },
+      { $group: { _id: '$ingredients.name', count: { $sum: 1 } } },
+      { $sort: { count: -1 } },
+      { $limit: 50 },
+      { $project: { _id: 0, name: '$_id', count: 1 } },
+    ]);
+
+    res.json({ success: true, count: result.length, ingredients: result });
+  } catch (error) {
+    next(error);
+  }
+};
