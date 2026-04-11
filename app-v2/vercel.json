@@ -89,6 +89,12 @@
       "headers": [
         { "key": "Cache-Control", "value": "public, s-maxage=3600, stale-while-revalidate=86400" }
       ]
+    },
+    {
+      "source": "/comparatif/:path*",
+      "headers": [
+        { "key": "Cache-Control", "value": "public, s-maxage=3600, stale-while-revalidate=86400" }
+      ]
     }
   ],
   "rewrites": [
@@ -104,6 +110,7 @@
     { "source": "/croquettes-:animal", "destination": "/api/seo?type=animal&animal=:animal" },
     { "source": "/classement/:animal", "destination": "/api/seo?type=ranking&animal=:animal" },
     { "source": "/ingredients-dangereux", "destination": "/api/seo?type=dangerous" },
+    { "source": "/comparatif/:slug", "destination": "/api/seo?type=comparatif&slug=:slug" },
     { "source": "/sitemap.xml", "destination": "/api/seo?type=sitemap-index" },
     { "source": "/sitemap-products-:page.xml", "destination": "/api/seo?type=sitemap-products&page=:page" },
     { "source": "/sitemap-brands.xml", "destination": "/api/seo?type=sitemap-brands" },
