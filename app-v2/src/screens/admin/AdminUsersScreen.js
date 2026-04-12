@@ -128,7 +128,7 @@ const AdminUsersScreen = ({ navigation }) => {
       {Platform.OS === 'web' ? (
         <View style={styles.webScroll}>
           {users.length === 0 && !loading ? (
-            <Text style={styles.emptyText}>Aucun utilisateur trouve</Text>
+            <Text style={styles.emptyText}>Aucun utilisateur trouvé</Text>
           ) : (
             users.map((item) => <View key={item._id}>{renderUser({ item })}</View>)
           )}
@@ -144,7 +144,7 @@ const AdminUsersScreen = ({ navigation }) => {
           onEndReachedThreshold={0.3}
           ListEmptyComponent={
             !loading ? (
-              <Text style={styles.emptyText}>Aucun utilisateur trouve</Text>
+              <Text style={styles.emptyText}>Aucun utilisateur trouvé</Text>
             ) : null
           }
           ListFooterComponent={

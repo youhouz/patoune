@@ -18,10 +18,10 @@ import { FONTS } from '../../utils/typography';
 import colors, { SHADOWS, RADIUS, SPACING, FONT_SIZE } from '../../utils/colors';
 
 const SERVICES = [
-  { key: 'garde_domicile', label: 'Garde a domicile', icon: 'home', desc: 'Chez le proprietaire' },
+  { key: 'garde_domicile', label: 'Garde à domicile', icon: 'home', desc: 'Chez le propriétaire' },
   { key: 'garde_chez_sitter', label: 'Garde chez moi', icon: 'lock', desc: 'Chez vous' },
   { key: 'promenade', label: 'Promenade', icon: 'map-pin', desc: 'Balades quotidiennes' },
-  { key: 'visite', label: 'Visite a domicile', icon: 'eye', desc: 'Passage chez le proprietaire' },
+  { key: 'visite', label: 'Visite à domicile', icon: 'eye', desc: 'Passage chez le propriétaire' },
   { key: 'toilettage', label: 'Toilettage', icon: 'scissors', desc: 'Soins et toilettage' },
 ];
 
@@ -102,11 +102,11 @@ const PetSitterProfileScreen = ({ navigation }) => {
       return;
     }
     if (selectedServices.length === 0) {
-      showAlert('Services requis', 'Selectionne au moins un service.');
+      showAlert('Services requis', 'Sélectionne au moins un service.');
       return;
     }
     if (selectedAnimals.length === 0) {
-      showAlert('Animaux requis', 'Selectionne au moins un type d\'animal.');
+      showAlert('Animaux requis', 'Sélectionne au moins un type d\'animal.');
       return;
     }
 
@@ -124,7 +124,7 @@ const PetSitterProfileScreen = ({ navigation }) => {
 
       if (isEdit) {
         await updatePetSitterAPI(data);
-        showAlert('Profil mis à jour', 'Ton annonce a ete mise à jour avec succes !');
+        showAlert('Profil mis à jour', 'Ton annonce a été mise à jour avec succès !');
       } else {
         await becomePetSitterAPI(data);
         setIsEdit(true);
@@ -183,12 +183,12 @@ const PetSitterProfileScreen = ({ navigation }) => {
         {/* Bio */}
         <Text style={s.sectionTitle}>Description</Text>
         <View style={s.card}>
-          <Text style={s.label}>Parle de toi et de ton experience</Text>
+          <Text style={s.label}>Parle de toi et de ton expérience</Text>
           <TextInput
             style={[s.input, s.textArea]}
             value={bio}
             onChangeText={setBio}
-            placeholder="Je suis passionnee par les animaux depuis toujours..."
+            placeholder="Je suis passionné(e) par les animaux depuis toujours..."
             placeholderTextColor={colors.placeholder}
             multiline
             maxLength={500}
@@ -198,7 +198,7 @@ const PetSitterProfileScreen = ({ navigation }) => {
 
         {/* Experience */}
         <View style={s.card}>
-          <Text style={s.label}>Annees d'experience</Text>
+          <Text style={s.label}>Années d'expérience</Text>
           <TextInput
             style={s.input}
             value={experience}
@@ -287,7 +287,7 @@ const PetSitterProfileScreen = ({ navigation }) => {
         </View>
 
         {/* Disponibilités */}
-        <Text style={s.sectionTitle}>Disponibilites</Text>
+        <Text style={s.sectionTitle}>Disponibilités</Text>
         <View style={s.card}>
           <View style={s.daysRow}>
             {DAYS.map(d => {

@@ -174,7 +174,7 @@ const ScannerScreen = ({ navigation }) => {
         });
       } else {
         hapticError();
-        showError('Reponse inattendue du serveur');
+        showError('Réponse inattendue du serveur');
       }
     } catch (error) {
       hapticError();
@@ -244,7 +244,7 @@ const ScannerScreen = ({ navigation }) => {
       <View style={styles.permIconCircle}>
         <Feather name="camera" size={36} color={COLORS.primary} />
       </View>
-      <Text style={styles.permTitle}>Acces camera requis</Text>
+      <Text style={styles.permTitle}>Accès caméra requis</Text>
       <Text style={styles.permDescription}>
         Pour scanner les codes-barres des produits, Pépète a besoin d'accéder à votre caméra.
       </Text>

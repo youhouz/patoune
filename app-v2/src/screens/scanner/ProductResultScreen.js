@@ -168,7 +168,7 @@ const ProductResultScreen = ({ route, navigation }) => {
   const hasScore = score !== null && score !== undefined;
   const displayScore = hasScore ? score : '--';
   const scoreColor = hasScore ? getScoreColor(score) : COLORS.pebble;
-  const scoreLabel = hasScore ? getScoreLabel(score) : 'Non evalue';
+  const scoreLabel = hasScore ? getScoreLabel(score) : 'Non évalué';
   const scoreGradient = hasScore ? getScoreGradient(score) : [COLORS.pebble, COLORS.sand];
 
   // Animations
@@ -332,11 +332,11 @@ const ProductResultScreen = ({ route, navigation }) => {
       : score >= 60
         ? '👍 Pas mal, mais il y a mieux'
         : score >= 40
-          ? '⚠️ Qualite moyenne... a changer ?'
-          : '🚫 Deconseille ! Je cherche une alternative';
+          ? '⚠️ Qualité moyenne... à changer ?'
+          : '🚫 Déconseillé ! Je cherche une alternative';
 
     const productLink = product.barcode ? `pepete.fr/scan/${product.barcode}` : 'pepete.fr';
-    return `${emoji} ${product.name}${brandText} → ${score}/100 sur Pepete !\n\n${verdict}${ingredientWarning}\n\n🐾 Et toi, tu sais ce que mange ton animal ?\nVoir le resultat ➡️ ${productLink}`;
+    return `${emoji} ${product.name}${brandText} → ${score}/100 sur Pepete !\n\n${verdict}${ingredientWarning}\n\n🐾 Et toi, tu sais ce que mange ton animal ?\nVoir le résultat ➡️ ${productLink}`;
   };
 
   const handleShare = async () => {
@@ -614,14 +614,14 @@ const ProductResultScreen = ({ route, navigation }) => {
                   <Text style={styles.kcalValue}>{kcalPer100g}</Text>
                   <View>
                     <Text style={styles.kcalUnit}>kcal / 100 g</Text>
-                    <Text style={styles.kcalSubtext}>Energie metabolisable (Atwater modifie)</Text>
+                    <Text style={styles.kcalSubtext}>Énergie métabolisable (Atwater modifié)</Text>
                   </View>
                 </View>
               )}
 
               <View style={styles.macroGrid}>
                 <View style={styles.macroItem}>
-                  <Text style={styles.macroLabel}>Proteines</Text>
+                  <Text style={styles.macroLabel}>Protéines</Text>
                   <Text style={[styles.macroValue, !fediafMet.protein && { color: COLORS.scoreVeryBad }]}>
                     {proteinPct.toFixed(1)}%
                   </Text>
@@ -651,7 +651,7 @@ const ProductResultScreen = ({ route, navigation }) => {
                       carbsPct > 55 && { color: COLORS.scoreVeryBad },
                     ]}>{carbsPct.toFixed(0)}%</Text>
                     {carbsPct > 45 && (
-                      <Text style={styles.macroFlag}>{carbsPct > 55 ? 'excessif' : 'eleve'}</Text>
+                      <Text style={styles.macroFlag}>{carbsPct > 55 ? 'excessif' : 'élevé'}</Text>
                     )}
                   </View>
                 )}
@@ -664,7 +664,7 @@ const ProductResultScreen = ({ route, navigation }) => {
             <View style={styles.card}>
               <View style={styles.cardHeader}>
                 <Feather name="alert-circle" size={20} color={COLORS.warning} style={{ marginRight: SPACING.sm }} />
-                <Text style={styles.cardTitle}>Allergenes detectes</Text>
+                <Text style={styles.cardTitle}>Allergènes détectés</Text>
                 <View style={[styles.countBadge, { backgroundColor: COLORS.warningSoft }]}>
                   <Text style={[styles.countText, { color: COLORS.warning }]}>{allergensList.length}</Text>
                 </View>
@@ -847,10 +847,10 @@ const ProductResultScreen = ({ route, navigation }) => {
 
               {[
                 { label: 'Protéines', value: product.scoreDetails.protein, icon: 'trending-up' },
-                { label: 'Matieres grasses', value: product.scoreDetails.fat, icon: 'disc' },
+                { label: 'Matières grasses', value: product.scoreDetails.fat, icon: 'disc' },
                 { label: 'Fibres', value: product.scoreDetails.fiber, icon: 'layers' },
-                { label: 'Penalite additifs', value: product.scoreDetails.additivesPenalty != null ? -product.scoreDetails.additivesPenalty : null, icon: 'activity' },
-                { label: 'Bonus qualite', value: product.scoreDetails.qualityBonus, icon: 'star' },
+                { label: 'Pénalité additifs', value: product.scoreDetails.additivesPenalty != null ? -product.scoreDetails.additivesPenalty : null, icon: 'activity' },
+                { label: 'Bonus qualité', value: product.scoreDetails.qualityBonus, icon: 'star' },
               ].filter(d => d.value != null).map((detail, idx, arr) => (
                 <View
                   key={idx}
@@ -975,7 +975,7 @@ const ProductResultScreen = ({ route, navigation }) => {
                 <Text style={styles.cardTitle}>Meilleures alternatives</Text>
               </View>
               <Text style={styles.altIntro}>
-                Produits mieux notes dans la meme categorie :
+                Produits mieux notés dans la même catégorie :
               </Text>
               {alternatives.map((alt, idx) => {
                 const altColor = getScoreColor(alt.nutritionScore || 0);
@@ -1047,7 +1047,7 @@ const ProductResultScreen = ({ route, navigation }) => {
                       : `${gamification.badProductsAvoided} produits dangereux évités`}
                   </Text>
                   <Text style={styles.avoidedText}>
-                    Grace a Pepete, tu sais ce qu'il faut eviter pour ton animal 🐾
+                    Grâce à Pepete, tu sais ce qu'il faut éviter pour ton animal 🐾
                   </Text>
                 </View>
               </LinearGradient>
@@ -1072,7 +1072,7 @@ const ProductResultScreen = ({ route, navigation }) => {
                     {product.name || 'Produit inconnu'}
                   </Text>
                   <Text style={styles.shareCardVerdict}>
-                    {hasScore ? scoreLabel : 'Non evalue'}
+                    {hasScore ? scoreLabel : 'Non évalué'}
                   </Text>
                 </View>
               </View>
@@ -1088,7 +1088,7 @@ const ProductResultScreen = ({ route, navigation }) => {
               >
                 <Feather name="share-2" size={18} color={hasScore ? getScoreColor(score) : COLORS.pebble} />
                 <Text style={[styles.shareCardButtonText, { color: hasScore ? getScoreColor(score) : COLORS.pebble }]}>
-                  Partager le resultat
+                  Partager le résultat
                 </Text>
               </TouchableOpacity>
 

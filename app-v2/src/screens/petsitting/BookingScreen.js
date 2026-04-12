@@ -283,7 +283,7 @@ const BookingScreen = ({ route, navigation }) => {
             <Feather name="arrow-left" size={22} color={colors.white} />
           </TouchableOpacity>
 
-          <Text style={styles.headerTitle}>Nouvelle reservation</Text>
+          <Text style={styles.headerTitle}>Nouvelle réservation</Text>
           <View style={styles.headerSitterRow}>
             <View style={styles.headerSitterAvatar}>
               <Text style={styles.headerSitterInitial}>
@@ -503,7 +503,7 @@ const BookingScreen = ({ route, navigation }) => {
               style={styles.notesInput}
               value={notes}
               onChangeText={setNotes}
-              placeholder="Instructions speciales, allergies, habitudes, regime alimentaire..."
+              placeholder="Instructions spéciales, allergies, habitudes, régime alimentaire..."
               placeholderTextColor={colors.placeholder}
               multiline
               numberOfLines={4}
@@ -570,7 +570,7 @@ const BookingScreen = ({ route, navigation }) => {
               <View style={styles.summaryDivider} />
 
               <View style={styles.summaryTotalRow}>
-                <Text style={styles.summaryTotalLabel}>Total estime</Text>
+                <Text style={styles.summaryTotalLabel}>Total estimé</Text>
                 <Text style={styles.summaryTotalValue}>{calculatePrice()} \u20AC</Text>
               </View>
             </LinearGradient>

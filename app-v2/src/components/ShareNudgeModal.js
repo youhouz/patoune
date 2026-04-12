@@ -35,7 +35,7 @@ const ShareNudgeModal = ({ visible, onClose, product }) => {
     const link = product.barcode ? `pepete.fr/scan/${product.barcode}` : 'pepete.fr';
     try {
       await Share.share({
-        message: `${emoji} Je viens de scanner ${product.name}${brandText} → ${score}/100 !\n\n🐾 Et toi, tu sais ce que mange ton animal ?\nVoir le resultat ➡️ ${link}`,
+        message: `${emoji} Je viens de scanner ${product.name}${brandText} → ${score}/100 !\n\n🐾 Et toi, tu sais ce que mange ton animal ?\nVoir le résultat ➡️ ${link}`,
       });
     } catch (_) {}
     onClose();
@@ -48,7 +48,7 @@ const ShareNudgeModal = ({ visible, onClose, product }) => {
           <Text style={s.emoji}>🎉</Text>
           <Text style={s.title}>Ton premier scan !</Text>
           <Text style={s.subtitle}>
-            Partage le resultat avec tes potes qui ont un animal — ils vont halluciner sur ce qu'il y a dans les croquettes
+            Partage le résultat avec tes potes qui ont un animal — ils vont halluciner sur ce qu'il y a dans les croquettes
           </Text>
 
           <TouchableOpacity style={s.shareBtn} onPress={handleShare} activeOpacity={0.85}>

@@ -72,7 +72,7 @@ const SatisfactionPrompt = ({ totalScans, onSubmitFeedback }) => {
   const handleShare = async () => {
     try {
       await Share.share({
-        message: 'Je recommande Pepete pour analyser les croquettes de ton animal ! Scanne et decouvre la qualite ➡️ pepete.fr',
+        message: 'Je recommande Pepete pour analyser les croquettes de ton animal ! Scanne et découvre la qualité ➡️ pepete.fr',
       });
     } catch (_) {}
     setStep('done');
