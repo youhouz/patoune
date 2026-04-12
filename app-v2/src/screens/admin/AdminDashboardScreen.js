@@ -164,7 +164,7 @@ function renderOverview(t, g, charts) {
         <KPICard icon="heart" label="Animaux" value={t.pets} color="#C4956A" />
         <KPICard icon="shield" label="Pet-sitters" value={t.petSitters} color="#6B8F71" />
         <KPICard icon="camera" label="Scans" value={t.scans} sub={`+${g.scansToday || 0} aujourd'hui`} color="#8CB092" />
-        <KPICard icon="calendar" label="Reservations" value={t.bookings} sub={`+${g.bookingsThisMonth || 0} ce mois`} color="#C4956A" />
+        <KPICard icon="calendar" label="Réservations" value={t.bookings} sub={`+${g.bookingsThisMonth || 0} ce mois`} color="#C4956A" />
         <KPICard icon="message-circle" label="Messages" value={t.messages} color="#527A56" />
         <KPICard icon="package" label="Produits" value={t.products} color="#6B8F71" />
         <KPICard icon="mail" label="Abonnes pre-launch" value={t.subscribers} color="#8CB092" />

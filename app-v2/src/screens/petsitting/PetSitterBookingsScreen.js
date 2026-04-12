@@ -58,7 +58,7 @@ const PetSitterBookingsScreen = ({ navigation }) => {
       }) : [];
       setBookings(myBookings);
     } catch (err) {
-      console.log('Erreur chargement reservations:', err);
+      console.log('Erreur chargement réservations:', err);
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -74,7 +74,7 @@ const PetSitterBookingsScreen = ({ navigation }) => {
     const labels = { confirmed: 'accepter', cancelled: 'refuser' };
     showAlert(
       `${labels[newStatus] === 'accepter' ? 'Accepter' : 'Refuser'} cette demande ?`,
-      `Reservation de ${booking.owner?.name || 'un proprietaire'} pour ${booking.pet?.name || 'un animal'}.`,
+      `Réservation de ${booking.owner?.name || 'un proprietaire'} pour ${booking.pet?.name || 'un animal'}.`,
       [
         { text: 'Annuler', style: 'cancel' },
         {
@@ -92,7 +92,7 @@ const PetSitterBookingsScreen = ({ navigation }) => {
       await updateBookingStatusAPI(id, status);
       setBookings(prev => prev.map(b => b._id === id ? { ...b, status } : b));
     } catch (err) {
-      showAlert('Erreur', 'Impossible de mettre a jour la reservation.');
+      showAlert('Erreur', 'Impossible de mettre à jour la réservation.');
     } finally {
       setUpdatingId(null);
     }

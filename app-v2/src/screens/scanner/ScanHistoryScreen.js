@@ -262,7 +262,7 @@ const ScanHistoryScreen = ({ navigation }) => {
           </View>
           <Text style={styles.emptyTitle}>Erreur de chargement</Text>
           <Text style={styles.emptySubtitle}>
-            Impossible de recuperer l'historique. Verifiez votre connexion et reessayez.
+            Impossible de recuperer l'historique. Vérifiez votre connexion et réessayez.
           </Text>
           <TouchableOpacity
             style={styles.retryButton}
@@ -279,7 +279,7 @@ const ScanHistoryScreen = ({ navigation }) => {
               style={styles.retryButtonGradient}
             >
               <Feather name="refresh-cw" size={16} color={COLORS.white} style={{ marginRight: 8 }} />
-              <Text style={styles.retryButtonText}>Reessayer</Text>
+              <Text style={styles.retryButtonText}>Réessayer</Text>
             </LinearGradient>
           </TouchableOpacity>
         </View>

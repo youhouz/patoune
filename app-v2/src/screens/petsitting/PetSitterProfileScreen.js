@@ -124,7 +124,7 @@ const PetSitterProfileScreen = ({ navigation }) => {
 
       if (isEdit) {
         await updatePetSitterAPI(data);
-        showAlert('Profil mis a jour', 'Ton annonce a ete mise a jour avec succes !');
+        showAlert('Profil mis à jour', 'Ton annonce a ete mise à jour avec succes !');
       } else {
         await becomePetSitterAPI(data);
         setIsEdit(true);
@@ -132,7 +132,7 @@ const PetSitterProfileScreen = ({ navigation }) => {
         if (user) {
           await updateUser({ ...user, isPetSitter: true });
         }
-        showAlert('Annonce creee', 'Ton profil pet-sitter est maintenant en ligne !');
+        showAlert('Annonce créée', 'Ton profil pet-sitter est maintenant en ligne !');
       }
       // Navigate back to profile after successful save
       navigation.goBack();
@@ -170,7 +170,7 @@ const PetSitterProfileScreen = ({ navigation }) => {
           <TouchableOpacity style={s.backBtn} onPress={() => navigation.goBack()} activeOpacity={0.7}>
             <Feather name="chevron-left" size={22} color="rgba(255,255,255,0.9)" />
           </TouchableOpacity>
-          <Text style={s.headerTitle}>{isEdit ? 'Mon annonce' : 'Creer mon annonce'}</Text>
+          <Text style={s.headerTitle}>{isEdit ? 'Mon annonce' : 'Créer mon annonce'}</Text>
         </View>
       </LinearGradient>
 

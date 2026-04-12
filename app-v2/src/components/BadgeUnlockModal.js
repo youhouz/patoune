@@ -15,15 +15,15 @@ import { COLORS, SPACING, RADIUS, FONT_SIZE, SHADOWS } from '../utils/colors';
 const BADGE_DEFS = {
   fondateur:   { icon: 'flag', label: 'Fondateur', desc: 'Vous faites partie des 1000 premiers membres de Pepete !', color: '#EAB308' },
   first_scan:  { icon: 'camera', label: 'Premier Scan', desc: 'Vous avez scanne votre premier produit !', color: '#6B8F71' },
-  scanner_10:  { icon: 'zap', label: 'Explorateur', desc: '10 produits scannes ! Vous etes sur la bonne voie.', color: '#527A56' },
-  scanner_50:  { icon: 'award', label: 'Expert', desc: '50 produits analyses ! Vous etes un expert.', color: '#C4956A' },
-  scanner_100: { icon: 'star', label: 'Master Scanner', desc: '100 scans ! Rien ne vous echappe.', color: '#C25B4A' },
-  streak_3:    { icon: 'trending-up', label: 'Regulier', desc: '3 jours de suite ! La regularite paie.', color: '#5B7FC2' },
+  scanner_10:  { icon: 'zap', label: 'Explorateur', desc: '10 produits scannes ! Vous êtes sur la bonne voie.', color: '#527A56' },
+  scanner_50:  { icon: 'award', label: 'Expert', desc: '50 produits analyses ! Vous êtes un expert.', color: '#C4956A' },
+  scanner_100: { icon: 'star', label: 'Master Scanner', desc: '100 scans ! Rien ne vous échappe.', color: '#C25B4A' },
+  streak_3:    { icon: 'trending-up', label: 'Régulier', desc: '3 jours de suite ! La regularite paie.', color: '#5B7FC2' },
   streak_7:    { icon: 'target', label: 'Assidu', desc: '7 jours de suite ! Votre animal est entre de bonnes mains.', color: '#8B5CF6' },
-  streak_30:   { icon: 'shield', label: 'Inarretable', desc: '30 jours ! Vous etes un protecteur hors pair.', color: '#EAB308' },
+  streak_30:   { icon: 'shield', label: 'Inarrêtable', desc: '30 jours ! Vous êtes un protecteur hors pair.', color: '#EAB308' },
   referral_1:  { icon: 'users', label: 'Ambassadeur', desc: 'Votre premier filleul ! Merci de partager Pepete.', color: '#6B8F71' },
-  referral_5:  { icon: 'gift', label: 'Influenceur', desc: '5 amis parraines ! Vous faites la difference.', color: '#C4956A' },
-  referral_10: { icon: 'heart', label: 'Parrain VIP', desc: '10 filleuls ! Vous etes un vrai ambassadeur.', color: '#C25B4A' },
+  referral_5:  { icon: 'gift', label: 'Influenceur', desc: '5 amis parrainés ! Vous faites la différence.', color: '#C4956A' },
+  referral_10: { icon: 'heart', label: 'Parrain VIP', desc: '10 filleuls ! Vous êtes un vrai ambassadeur.', color: '#C25B4A' },
 };
 
 const BadgeUnlockModal = ({ visible, badgeKey, onClose }) => {
@@ -52,7 +52,7 @@ const BadgeUnlockModal = ({ visible, badgeKey, onClose }) => {
   const handleShare = async () => {
     try {
       await Share.share({
-        message: `J'ai debloque le badge "${badge.label}" sur Pepete ! ${badge.desc}\n\nProtege ton animal toi aussi ➡️ pepete.fr`,
+        message: `J'ai débloqué le badge "${badge.label}" sur Pepete ! ${badge.desc}\n\nProtege ton animal toi aussi ➡️ pepete.fr`,
       });
     } catch (_) {}
   };

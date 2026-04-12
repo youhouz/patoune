@@ -61,7 +61,7 @@ const MyPetsScreen = ({ navigation }) => {
   const handleDelete = (pet) => {
     showAlert(
       `Supprimer ${pet.name} ?`,
-      'Cette action est irreversible.',
+      'Cette action est irréversible.',
       [
         { text: 'Annuler', style: 'cancel' },
         {
@@ -154,7 +154,7 @@ const MyPetsScreen = ({ navigation }) => {
                   color={item.vaccinated ? colors.success : colors.warning}
                 />
                 <Text style={[styles.chipText, { color: item.vaccinated ? colors.success : colors.warning }]}>
-                  {item.vaccinated ? 'Vaccine' : 'Non vaccine'}
+                  {item.vaccinated ? 'Vacciné' : 'Non vacciné'}
                 </Text>
               </View>
               {item.sterilized && (

@@ -134,7 +134,7 @@ const ProfileScreen = ({ navigation }) => {
       if (result.canceled) return;
       const base64 = result.assets[0].base64;
       if (!base64) {
-        showAlert('Erreur', 'Impossible de lire l\'image selectionnee.');
+        showAlert('Erreur', 'Impossible de lire l\'image sélectionnée.');
         return;
       }
       setUploadingAvatar(true);
@@ -145,7 +145,7 @@ const ProfileScreen = ({ navigation }) => {
       }
     } catch (err) {
       console.log('Erreur upload avatar:', err);
-      showAlert('Erreur', 'Impossible de mettre a jour la photo de profil.');
+      showAlert('Erreur', 'Impossible de mettre à jour la photo de profil.');
     } finally {
       setUploadingAvatar(false);
     }
@@ -234,14 +234,14 @@ const ProfileScreen = ({ navigation }) => {
         {
           icon: 'edit-3',
           label: 'Mon annonce',
-          subtitle: 'Creer ou modifier mon profil pet-sitter',
+          subtitle: 'Créer ou modifier mon profil pet-sitter',
           screen: 'PetSitterProfile',
           accentColor: '#527A56',
           bgColor: colors.primarySoft,
         },
         {
           icon: 'inbox',
-          label: 'Mes reservations',
+          label: 'Mes réservations',
           subtitle: 'Voir les demandes des proprietaires',
           screen: 'PetSitterBookings',
           accentColor: '#C4956A',
@@ -296,7 +296,7 @@ const ProfileScreen = ({ navigation }) => {
         {
           icon: 'settings',
           label: 'Reglages',
-          subtitle: 'Compte, preferences, a propos',
+          subtitle: 'Compte, preferences, à propos',
           screen: 'Settings',
           accentColor: '#C4956A',
           bgColor: colors.accentSoft,

@@ -133,7 +133,7 @@ const MessagesScreen = ({ route, navigation }) => {
     } catch (error) {
       console.log('Erreur envoi message:', error);
       setNewMessage(messageText);
-      showAlert('Erreur', "Le message n'a pas pu etre envoye. Reessayez.");
+      showAlert('Oups...', "Ton message n'est pas parti. Vérifie ta connexion et réessaie.");
     } finally {
       setSending(false);
     }

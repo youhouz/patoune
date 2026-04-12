@@ -45,14 +45,13 @@ const RegisterScreen = ({ navigation }) => {
   const [email,    setEmail]    = useState('');
   const [phone,    setPhone]    = useState('');
   const [password, setPassword] = useState('');
-  const [confirm,  setConfirm]  = useState('');
   const [referral, setReferral]  = useState('');
   const [roles,    setRoles]    = useState({ user: true, guardian: false });
   const [showPwd,  setShowPwd]  = useState(false);
-  const [showConfirm, setShowConfirm] = useState(false);
   const [loading,  setLoading]  = useState(false);
   const [focused,  setFocused]  = useState(null);
   const [errors,   setErrors]   = useState({});
+  const [showAdvanced, setShowAdvanced] = useState(false);
 
   const [totalUsers, setTotalUsers] = useState(0);
 
@@ -63,7 +62,6 @@ const RegisterScreen = ({ navigation }) => {
   const emailRef   = useRef(null);
   const phoneRef   = useRef(null);
   const pwdRef     = useRef(null);
-  const confirmRef = useRef(null);
   const scrollRef  = useRef(null);
 
   const maxW = isTablet ? Math.min(contentWidth, 520) : '100%';
@@ -103,13 +101,11 @@ const RegisterScreen = ({ navigation }) => {
 
   const validate = () => {
     const errs = {};
-    if (!name.trim())     errs.name     = 'Entre ton prénom et nom';
+    if (!name.trim())     errs.name     = 'Comment t\'appelles-tu ?';
     if (!email.trim())    errs.email    = "Entre ton adresse email";
     else if (!/\S+@\S+\.\S+/.test(email.trim())) errs.email = 'Format email invalide (ex: nom@email.com)';
-    if (!password)        errs.password = 'Entre un mot de passe';
+    if (!password)        errs.password = 'Choisis un mot de passe';
     else if (password.length < 6) errs.password = `Trop court (${password.length}/6 caractères minimum)`;
-    if (!confirm)         errs.confirm  = 'Confirme ton mot de passe';
-    else if (password !== confirm) errs.confirm = 'Les mots de passe ne correspondent pas';
     setErrors(errs);
     return Object.keys(errs).length === 0;
   };
@@ -253,27 +249,39 @@ const RegisterScreen = ({ navigation }) => {
                 </View>
               ) : null}
 
-              {/* ── Identité ── */}
-              <Text style={s.sectionLabel}>Identité</Text>
-
+              {/* ── 3 champs essentiels ── */}
               {renderField({
-                label: 'Nom complet', icon: 'user', fieldKey: 'name',
+                label: 'Ton prénom', icon: 'user', fieldKey: 'name',
                 value: name, onChangeText: (v) => { setName(v); setErrors(e => ({ ...e, name: null })); },
-                placeholder: 'Votre prénom et nom', autoCapitalize: 'words',
+                placeholder: 'Comment on t\'appelle ?', autoCapitalize: 'words',
                 onSubmitEditing: () => emailRef.current?.focus(), error: errors.name,
               })}
               {renderField({
-                label: 'Adresse email', icon: 'mail', fieldKey: 'email',
+                label: 'Email', icon: 'mail', fieldKey: 'email',
                 value: email, onChangeText: (v) => { setEmail(v); setErrors(e => ({ ...e, email: null })); },
-                placeholder: 'votre@email.com', keyboardType: 'email-address', inputRef: emailRef,
-                onSubmitEditing: () => phoneRef.current?.focus(), error: errors.email,
+                placeholder: 'toi@email.com', keyboardType: 'email-address', inputRef: emailRef,
+                onSubmitEditing: () => pwdRef.current?.focus(), error: errors.email,
               })}
               {renderField({
-                label: 'Téléphone (optionnel)', icon: 'phone', fieldKey: 'phone',
-                value: phone, onChangeText: setPhone,
-                placeholder: '06 12 34 56 78', keyboardType: 'phone-pad', inputRef: phoneRef,
-                onSubmitEditing: () => pwdRef.current?.focus(),
+                label: 'Mot de passe', icon: 'lock', fieldKey: 'password',
+                value: password, onChangeText: (v) => { setPassword(v); setErrors(e => ({ ...e, password: null })); },
+                placeholder: 'Au moins 6 caractères', secureTextEntry: !showPwd, inputRef: pwdRef,
+                returnKeyType: 'done', onSubmitEditing: handleRegister, error: errors.password,
+                right: (
+                  <TouchableOpacity onPress={() => setShowPwd(!showPwd)} hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}>
+                    <Feather name={showPwd ? 'eye-off' : 'eye'} size={18} color={colors.textLight} />
+                  </TouchableOpacity>
+                ),
               })}
+
+              {strength && (
+                <View style={s.strengthRow}>
+                  <View style={s.strengthTrack}>
+                    <View style={[s.strengthFill, { width: strength.width, backgroundColor: strength.color }]} />
+                  </View>
+                  <Text style={[s.strengthLabel, { color: strength.color }]}>{strength.label}</Text>
+                </View>
+              )}
 
               <View style={s.sectionDivider} />
 
@@ -313,60 +321,32 @@ const RegisterScreen = ({ navigation }) => {
                 </TouchableOpacity>
               </View>
 
-              <View style={s.sectionDivider} />
+              {/* ── Options avancées (téléphone + parrainage) ── */}
+              <TouchableOpacity
+                style={s.advancedToggle}
+                onPress={() => setShowAdvanced(v => !v)}
+                activeOpacity={0.7}
+              >
+                <Feather name={showAdvanced ? 'chevron-up' : 'chevron-down'} size={16} color={colors.textSecondary} />
+                <Text style={s.advancedToggleText}>
+                  {showAdvanced ? 'Masquer les options' : 'Téléphone, code parrainage...'}
+                </Text>
+              </TouchableOpacity>
 
-              {/* ── Sécurité ── */}
-              <Text style={s.sectionLabel}>Sécurité</Text>
-
-              {renderField({
-                label: 'Mot de passe', icon: 'lock', fieldKey: 'password',
-                value: password, onChangeText: (v) => { setPassword(v); setErrors(e => ({ ...e, password: null })); },
-                placeholder: 'Minimum 6 caractères', secureTextEntry: !showPwd, inputRef: pwdRef,
-                onSubmitEditing: () => confirmRef.current?.focus(), error: errors.password,
-                right: (
-                  <TouchableOpacity onPress={() => setShowPwd(!showPwd)} hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}>
-                    <Feather name={showPwd ? 'eye-off' : 'eye'} size={18} color={colors.textLight} />
-                  </TouchableOpacity>
-                ),
-              })}
-
-              {strength && (
-                <View style={s.strengthRow}>
-                  <View style={s.strengthTrack}>
-                    <View style={[s.strengthFill, { width: strength.width, backgroundColor: strength.color }]} />
-                  </View>
-                  <Text style={[s.strengthLabel, { color: strength.color }]}>{strength.label}</Text>
+              {showAdvanced && (
+                <View style={{ marginTop: SPACING.sm }}>
+                  {renderField({
+                    label: 'Téléphone (optionnel)', icon: 'phone', fieldKey: 'phone',
+                    value: phone, onChangeText: setPhone,
+                    placeholder: '06 12 34 56 78', keyboardType: 'phone-pad', inputRef: phoneRef,
+                  })}
+                  {renderField({
+                    label: 'Code parrainage (optionnel)', icon: 'gift', fieldKey: 'referral',
+                    value: referral, onChangeText: setReferral,
+                    placeholder: 'Ex: PEP1234', autoCapitalize: 'characters',
+                  })}
                 </View>
               )}
-
-              {renderField({
-                label: 'Confirmer le mot de passe', icon: 'shield', fieldKey: 'confirm',
-                value: confirm, onChangeText: (v) => { setConfirm(v); setErrors(e => ({ ...e, confirm: null })); },
-                placeholder: 'Retape ton mot de passe', secureTextEntry: !showConfirm, inputRef: confirmRef,
-                returnKeyType: 'done', onSubmitEditing: handleRegister, error: errors.confirm,
-                right: (
-                  <TouchableOpacity onPress={() => setShowConfirm(!showConfirm)} hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}>
-                    <Feather name={showConfirm ? 'eye-off' : 'eye'} size={18} color={colors.textLight} />
-                  </TouchableOpacity>
-                ),
-              })}
-
-              {confirm.length > 0 && password.length > 0 && (
-                <View style={[s.matchRow, password === confirm ? s.matchOk : s.matchFail]}>
-                  <Feather name={password === confirm ? 'check-circle' : 'x-circle'} size={14} color={password === confirm ? colors.success : colors.error} />
-                  <Text style={[s.matchText, { color: password === confirm ? colors.success : colors.error }]}>
-                    {password === confirm ? 'Les mots de passe correspondent' : 'Les mots de passe ne correspondent pas'}
-                  </Text>
-                </View>
-              )}
-
-              {/* Referral code (optional) */}
-              {renderField({
-                label: 'Code parrainage (optionnel)', icon: 'gift', fieldKey: 'referral',
-                value: referral, onChangeText: setReferral,
-                placeholder: 'Ex: PEP1234', autoCapitalize: 'characters',
-                returnKeyType: 'done', onSubmitEditing: handleRegister,
-              })}
 
               {/* CTA */}
               <TouchableOpacity
@@ -618,6 +598,21 @@ const s = StyleSheet.create({
   dividerLine: { flex: 1, height: 1, backgroundColor: colors.border },
   dividerLabel: {
     fontFamily: FONTS.bodyMedium, fontSize: FONT_SIZE.sm, color: colors.textLight,
+  },
+
+  // Advanced toggle
+  advancedToggle: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: SPACING.sm,
+    paddingVertical: SPACING.md,
+    marginBottom: SPACING.sm,
+  },
+  advancedToggleText: {
+    fontFamily: FONTS.bodyMedium,
+    fontSize: FONT_SIZE.sm,
+    color: colors.textSecondary,
   },
 
   // Link

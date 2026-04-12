@@ -45,7 +45,7 @@ const PublicScoreScreen = ({ route, navigation }) => {
     const brandText = product.brand ? ` de ${product.brand}` : '';
     const dangerous = product.dangerousIngredients || [];
     const warn = dangerous.length > 0
-      ? `\n⚠️ ${dangerous.length} ingredient${dangerous.length > 1 ? 's' : ''} a risque !`
+      ? `\n⚠️ ${dangerous.length} ingrédient${dangerous.length > 1 ? 's' : ''} a risque !`
       : '';
     const msg = `${emoji} ${product.name}${brandText} → ${score}/100 sur Pepete !${warn}\n\n🐾 Scanne les croquettes de ton animal ➡️ pepete.fr/scan/${barcode}`;
     try {

@@ -26,12 +26,12 @@ const BADGE_DEFS = {
   scanner_10:  { icon: 'zap', label: 'Explorateur', desc: '10 produits scannes', color: '#527A56' },
   scanner_50:  { icon: 'award', label: 'Expert', desc: '50 produits scannes', color: '#C4956A' },
   scanner_100: { icon: 'star', label: 'Master Scanner', desc: '100 produits scannes', color: '#C25B4A' },
-  streak_3:    { icon: 'trending-up', label: 'Regulier', desc: '3 jours de suite', color: '#5B7FC2' },
+  streak_3:    { icon: 'trending-up', label: 'Régulier', desc: '3 jours de suite', color: '#5B7FC2' },
   streak_7:    { icon: 'target', label: 'Assidu', desc: '7 jours de suite', color: '#8B5CF6' },
-  streak_30:   { icon: 'shield', label: 'Inarretable', desc: '30 jours de suite', color: '#EAB308' },
-  referral_1:  { icon: 'users', label: 'Ambassadeur', desc: '1 ami parraine', color: '#6B8F71' },
-  referral_5:  { icon: 'gift', label: 'Influenceur', desc: '5 amis parraines', color: '#C4956A' },
-  referral_10: { icon: 'heart', label: 'Parrain VIP', desc: '10 amis parraines', color: '#C25B4A' },
+  streak_30:   { icon: 'shield', label: 'Inarrêtable', desc: '30 jours de suite', color: '#EAB308' },
+  referral_1:  { icon: 'users', label: 'Ambassadeur', desc: '1 ami parrainé', color: '#6B8F71' },
+  referral_5:  { icon: 'gift', label: 'Influenceur', desc: '5 amis parrainés', color: '#C4956A' },
+  referral_10: { icon: 'heart', label: 'Parrain VIP', desc: '10 amis parrainés', color: '#C25B4A' },
 };
 
 const ALL_BADGES = Object.keys(BADGE_DEFS);
@@ -60,7 +60,7 @@ const ReferralScreen = ({ navigation }) => {
   const handleShare = async () => {
     try {
       await Share.share({
-        message: `Je protege la sante de mon animal avec Pepete ! Rejoins-moi et scanne les croquettes de ton compagnon.\n\nUtilise mon code : ${referralCode}\n\n${referralLink}`,
+        message: `Je protège la santé de mon animal avec Pepete ! Rejoins-moi et scanne les croquettes de ton compagnon.\n\nUtilise mon code : ${referralCode}\n\n${referralLink}`,
       });
     } catch (_) {}
   };

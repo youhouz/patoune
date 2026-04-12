@@ -123,7 +123,7 @@ const LeaderboardScreen = ({ navigation }) => {
 
           {myRank > 0 && (
             <View style={styles.myRankBadge}>
-              <Text style={styles.myRankText}>Vous etes #{myRank}</Text>
+              <Text style={styles.myRankText}>Vous êtes #{myRank}</Text>
             </View>
           )}
         </LinearGradient>

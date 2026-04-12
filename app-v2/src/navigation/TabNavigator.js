@@ -88,11 +88,15 @@ const AuthNavigatorStack = () => (
   </AuthStack.Navigator>
 );
 
-// ─── 3 tabs ──────────────────────────────────────────────
+// ─── 5 tabs — all core features visible (P0 UX fix) ──────────
+// Icons chosen for clarity: even a 5-year-old recognises home / camera /
+// heart / chat-bubble / person.
 const VISIBLE_TABS = {
-  Accueil: { icon: 'home', label: 'Accueil' },
-  Scanner: { icon: 'maximize', label: 'Scanner' },
-  Profil: { icon: 'user', label: 'Profil' },
+  Accueil:   { icon: 'home',           label: 'Accueil' },
+  Scanner:   { icon: 'camera',         label: 'Scanner' },
+  Garde:     { icon: 'heart',          label: 'Garde' },
+  Assistant: { icon: 'message-circle', label: 'Aide' },
+  Profil:    { icon: 'user',           label: 'Profil' },
 };
 
 const TabIcon = ({ routeName, focused }) => {
@@ -100,14 +104,13 @@ const TabIcon = ({ routeName, focused }) => {
   if (!config) return null;
   return (
     <View style={[styles.tabItem, focused && styles.tabItemActive]}>
-      <Feather name={config.icon} size={22} color={focused ? COLORS.primary : '#B8C4BC'} />
+      <Feather name={config.icon} size={focused ? 26 : 24} color={focused ? COLORS.primary : '#9AA89B'} />
       <Text style={[styles.tabLabel, focused && styles.tabLabelActive]}>{config.label}</Text>
-      {focused && <View style={styles.activeDot} />}
     </View>
   );
 };
 
-const ThreeTabs = () => (
+const FiveTabs = () => (
   <Tab.Navigator
     screenListeners={{
       tabPress: () => {
@@ -118,28 +121,32 @@ const ThreeTabs = () => (
       headerShown: false,
       tabBarIcon: ({ focused }) => <TabIcon routeName={route.name} focused={focused} />,
       tabBarLabel: () => null,
+      // Min 56px touch target on Android (Material), 88px tab bar on iOS for safe area
       tabBarStyle: {
-        height: Platform.OS === 'ios' ? 88 : 64,
+        height: Platform.OS === 'ios' ? 92 : 70,
         paddingBottom: Platform.OS === 'ios' ? 28 : 8,
-        paddingTop: Platform.OS === 'ios' ? 10 : 6,
+        paddingTop: Platform.OS === 'ios' ? 10 : 8,
         backgroundColor: '#FFFFFF',
         borderTopWidth: 1,
-        borderTopColor: 'rgba(0,0,0,0.06)',
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: -2 },
-        shadowOpacity: 0.04,
-        shadowRadius: 8,
-        elevation: 6,
+        borderTopColor: 'rgba(44, 62, 47, 0.08)',
+        shadowColor: '#2C3E2F',
+        shadowOffset: { width: 0, height: -3 },
+        shadowOpacity: 0.06,
+        shadowRadius: 12,
+        elevation: 8,
       },
       tabBarItemStyle: {
         flex: 1,
         alignItems: 'center',
         justifyContent: 'center',
+        minHeight: 56,
       },
     })}
   >
     <Tab.Screen name="Accueil" component={HomeScreen} />
     <Tab.Screen name="Scanner" component={ScannerNavigator} />
+    <Tab.Screen name="Garde" component={PetSittingNavigator} />
+    <Tab.Screen name="Assistant" component={AIAssistantScreen} />
     <Tab.Screen
       name="Profil"
       component={ProfileNavigator}
@@ -154,9 +161,7 @@ const ThreeTabs = () => (
 
 const TabNavigator = () => (
   <RootStack.Navigator screenOptions={{ headerShown: false, presentation: 'card' }}>
-    <RootStack.Screen name="Tabs" component={ThreeTabs} />
-    <RootStack.Screen name="Garde" component={PetSittingNavigator} />
-    <RootStack.Screen name="Assistant" component={AIAssistantScreen} />
+    <RootStack.Screen name="Tabs" component={FiveTabs} />
     <RootStack.Screen name="AuthStack" component={AuthNavigatorStack} />
     <RootStack.Screen name="AdminDashboard" component={AdminDashboardScreen} />
     <RootStack.Screen name="AdminUsers" component={AdminUsersScreen} />

@@ -28,19 +28,19 @@ const STEPS_IOS = [
     number: '2',
     icon: 'share',
     title: 'Appuyer sur le bouton Partager',
-    description: 'En bas de l\'ecran (iPhone) ou en haut (iPad), appuyez sur le bouton partager (le carre avec la fleche vers le haut).',
+    description: 'En bas de l\'écran (iPhone) ou en haut (iPad), appuyez sur le bouton partager (le carré avec la flèche vers le haut).',
   },
   {
     number: '3',
     icon: 'plus-square',
-    title: '"Sur l\'ecran d\'accueil"',
-    description: 'Faites defiler la liste et appuyez sur "Sur l\'ecran d\'accueil". Si vous ne le voyez pas, faites defiler vers le bas.',
+    title: '"Sur l\'écran d\'accueil"',
+    description: 'Faites défiler la liste et appuyez sur "Sur l\'écran d\'accueil". Si vous ne le voyez pas, faites défiler vers le bas.',
   },
   {
     number: '4',
     icon: 'check-circle',
     title: 'Confirmer "Ajouter"',
-    description: 'Appuyez sur "Ajouter" en haut a droite. L\'icone Pepete apparait sur votre ecran d\'accueil !',
+    description: 'Appuyez sur "Ajouter" en haut a droite. L\'icone Pepete apparait sur votre écran d\'accueil !',
   },
 ];
 
@@ -60,14 +60,14 @@ const STEPS_ANDROID = [
   {
     number: '3',
     icon: 'smartphone',
-    title: '"Ajouter a l\'ecran d\'accueil"',
-    description: 'Dans le menu, cherchez et appuyez sur "Ajouter a l\'ecran d\'accueil" ou "Installer l\'application".',
+    title: '"Ajouter a l\'écran d\'accueil"',
+    description: 'Dans le menu, cherchez et appuyez sur "Ajouter a l\'écran d\'accueil" ou "Installer l\'application".',
   },
   {
     number: '4',
     icon: 'check-circle',
     title: 'Confirmer "Ajouter"',
-    description: 'Appuyez sur "Ajouter" dans la fenetre qui s\'affiche. L\'icone Pepete apparait sur votre ecran d\'accueil !',
+    description: 'Appuyez sur "Ajouter" dans la fenetre qui s\'affiche. L\'icone Pepete apparait sur votre écran d\'accueil !',
   },
 ];
 
@@ -145,7 +145,7 @@ const InstallGuideScreen = ({ navigation }) => {
             <Text style={styles.heroTitle}>Installez Pepete</Text>
             <Text style={styles.heroSubtitle}>
               Pepete fonctionne comme une vraie application !{'\n'}
-              Ajoutez-la sur votre ecran d'accueil en quelques secondes.
+              Ajoutez-la sur votre écran d'accueil en quelques secondes.
             </Text>
             <View style={styles.heroBadges}>
               <View style={styles.heroBadge}>
@@ -223,7 +223,7 @@ const InstallGuideScreen = ({ navigation }) => {
                 <Feather name="refresh-cw" size={18} color="#6B8F71" />
               </View>
               <Text style={styles.tipText}>
-                L'application se met a jour automatiquement. Vous aurez toujours la derniere version sans rien faire.
+                L'application se met a jour automatiquement. Vous aurez toujours la dernière version sans rien faire.
               </Text>
             </View>
             <View style={styles.tipCard}>

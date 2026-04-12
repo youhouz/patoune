@@ -76,13 +76,13 @@ const AdminPetSittersScreen = ({ navigation }) => {
     };
 
     if (Platform.OS === 'web') {
-      if (confirm(`Supprimer ${name} ? Cette action est irreversible.`)) {
+      if (confirm(`Supprimer ${name} ? Cette action est irréversible.`)) {
         doDelete();
       }
     } else {
       Alert.alert(
         'Supprimer',
-        `Supprimer ${name} ? Cette action est irreversible.`,
+        `Supprimer ${name} ? Cette action est irréversible.`,
         [
           { text: 'Annuler', style: 'cancel' },
           { text: 'Supprimer', style: 'destructive', onPress: doDelete },
@@ -114,7 +114,7 @@ const AdminPetSittersScreen = ({ navigation }) => {
         )
       );
       setEditModal(null);
-      showAlert('Sauvegarde', 'Profil mis a jour.');
+      showAlert('Sauvegarde', 'Profil mis à jour.');
     } catch (err) {
       showAlert('Erreur', err.message);
     } finally {

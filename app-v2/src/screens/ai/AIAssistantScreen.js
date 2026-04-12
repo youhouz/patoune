@@ -429,7 +429,7 @@ const AIAssistantScreen = () => {
       const answer =
         res.data?.answer ||
         res.data?.message ||
-        "Desole, je n'ai pas pu generer une reponse. Reessayez.";
+        "Désolé, je n'ai pas pu générer une reponse. Réessayez.";
       const aiMessage = {
         id: (Date.now() + 1).toString(),
         role: 'assistant',
@@ -440,8 +440,8 @@ const AIAssistantScreen = () => {
       const isNetwork =
         err?.message?.includes('Network') || err?.message?.includes('timeout');
       const errorText = isNetwork
-        ? 'Impossible de contacter le serveur. Verifiez votre connexion et reessayez.'
-        : 'Oups, une erreur est survenue. Reessayez dans quelques instants.';
+        ? 'Impossible de contacter le serveur. Vérifiez votre connexion et réessayez.'
+        : 'Oups, une erreur est survenue. Réessayez dans quelques instants.';
       const errorMessage = {
         id: (Date.now() + 1).toString(),
         role: 'assistant',
