@@ -62,7 +62,7 @@ const AddPetScreen = ({ navigation, route }) => {
     try {
       const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
       if (status !== 'granted') {
-        showAlert('Permission requise', 'Autorisez l\'acces a la galerie pour choisir une photo.');
+        showAlert('Permission requise', 'Autorisez l\'accès à la galerie pour choisir une photo.');
         return;
       }
       const result = await ImagePicker.launchImageLibraryAsync({
@@ -401,7 +401,7 @@ const AddPetScreen = ({ navigation, route }) => {
               style={[styles.input, styles.textArea]}
               value={specialNeeds}
               onChangeText={setSpecialNeeds}
-              placeholder="Allergies, regime alimentaire, traitement medical, comportement..."
+              placeholder="Allergies, régime alimentaire, traitement médical, comportement..."
               placeholderTextColor={colors.textLight}
               multiline
               numberOfLines={3}

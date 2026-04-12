@@ -53,9 +53,9 @@ const ContactScreen = ({ navigation }) => {
           <View style={styles.successIcon}>
             <Feather name="check" size={32} color={colors.white} />
           </View>
-          <Text style={styles.successTitle}>Message envoye !</Text>
+          <Text style={styles.successTitle}>Message envoyé !</Text>
           <Text style={styles.successText}>
-            Merci pour votre message. Nous vous repondrons dans les plus brefs delais.
+            Merci pour votre message. Nous vous répondrons dans les plus brefs délais.
           </Text>
           <TouchableOpacity
             style={styles.backButton}

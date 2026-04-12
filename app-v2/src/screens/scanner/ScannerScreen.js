@@ -41,7 +41,9 @@ const ScannerScreen = ({ navigation }) => {
   const insets = useSafeAreaInsets();
   const { width, isTablet, contentWidth, hPadding } = useResponsive();
   const SCAN_FRAME_SIZE = Math.min(width * 0.62, isTablet ? 380 : width * 0.62);
-  const CAMERA_HEIGHT = Math.min(width * 0.78, isTablet ? 460 : width * 0.78);
+  // Use a 3:4 portrait aspect ratio (the camera's native output), otherwise
+  // expo-camera "cover" mode crops the preview and produces a zoomed-in look.
+  const CAMERA_HEIGHT = Math.min(width * (4 / 3), isTablet ? 600 : width * (4 / 3));
   const DEMO_CARD_WIDTH = (contentWidth - hPadding * 2 - SPACING.md * 2) / 3;
   const [permission, requestPermission] = useCameraPermissions();
   const [barcode, setBarcode] = useState('');
@@ -172,7 +174,7 @@ const ScannerScreen = ({ navigation }) => {
         });
       } else {
         hapticError();
-        showError('Reponse inattendue du serveur');
+        showError('Réponse inattendue du serveur');
       }
     } catch (error) {
       hapticError();
@@ -242,7 +244,7 @@ const ScannerScreen = ({ navigation }) => {
       <View style={styles.permIconCircle}>
         <Feather name="camera" size={36} color={COLORS.primary} />
       </View>
-      <Text style={styles.permTitle}>Acces camera requis</Text>
+      <Text style={styles.permTitle}>Accès caméra requis</Text>
       <Text style={styles.permDescription}>
         Pour scanner les codes-barres des produits, Pépète a besoin d'accéder à votre caméra.
       </Text>

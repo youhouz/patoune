@@ -158,7 +158,7 @@ const ReferralScreen = ({ navigation }) => {
                 <Feather name={copied ? 'check' : 'copy'} size={18} color={copied ? '#6B8F71' : colors.textSecondary} />
               </TouchableOpacity>
             </View>
-            {copied && <Text style={styles.copiedText}>Code copie !</Text>}
+            {copied && <Text style={styles.copiedText}>Code copié !</Text>}
           </View>
 
           {/* Share CTA */}

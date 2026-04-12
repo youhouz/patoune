@@ -121,7 +121,7 @@ const ProfileScreen = ({ navigation }) => {
     try {
       const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
       if (status !== 'granted') {
-        showAlert('Permission requise', 'Autorisez l\'acces a vos photos pour changer votre avatar.');
+        showAlert('Permission requise', 'Autorisez l\'accès à vos photos pour changer votre avatar.');
         return;
       }
       const result = await ImagePicker.launchImageLibraryAsync({
@@ -187,7 +187,7 @@ const ProfileScreen = ({ navigation }) => {
         {
           icon: 'heart',
           label: 'Mes animaux',
-          subtitle: `${petsCount} compagnon${petsCount !== 1 ? 's' : ''} enregistre${petsCount !== 1 ? 's' : ''}`,
+          subtitle: `${petsCount} compagnon${petsCount !== 1 ? 's' : ''} enregistré${petsCount !== 1 ? 's' : ''}`,
           screen: 'MyPets',
           accentColor: '#6B8F71',
           bgColor: colors.primarySoft,
@@ -242,7 +242,7 @@ const ProfileScreen = ({ navigation }) => {
         {
           icon: 'inbox',
           label: 'Mes réservations',
-          subtitle: 'Voir les demandes des proprietaires',
+          subtitle: 'Voir les demandes des propriétaires',
           screen: 'PetSitterBookings',
           accentColor: '#C4956A',
           bgColor: colors.accentSoft,
@@ -270,7 +270,7 @@ const ProfileScreen = ({ navigation }) => {
       ],
     }] : []),
     {
-      title: 'Communaute',
+      title: 'Communauté',
       items: [
         {
           icon: 'gift',
@@ -304,7 +304,7 @@ const ProfileScreen = ({ navigation }) => {
         {
           icon: 'download',
           label: 'Installer l\'application',
-          subtitle: 'Tuto pour ajouter Pepete sur votre telephone',
+          subtitle: 'Tuto pour ajouter Pepete sur votre téléphone',
           screen: 'InstallGuide',
           accentColor: '#527A56',
           bgColor: colors.primarySoft,
@@ -408,7 +408,7 @@ const ProfileScreen = ({ navigation }) => {
                   activeOpacity={0.7}
                 >
                   <Feather name="heart" size={14} color={activeMode === 'owner' ? '#527A56' : 'rgba(255,255,255,0.7)'} />
-                  <Text style={[styles.modeBtnText, activeMode === 'owner' && styles.modeBtnTextActive]}>Proprietaire</Text>
+                  <Text style={[styles.modeBtnText, activeMode === 'owner' && styles.modeBtnTextActive]}>Propriétaire</Text>
                 </TouchableOpacity>
                 <TouchableOpacity
                   style={[styles.modeBtn, activeMode === 'petsitter' && styles.modeBtnActive]}

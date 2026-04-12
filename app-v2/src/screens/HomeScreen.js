@@ -488,7 +488,7 @@ const HomeScreen = ({ navigation }) => {
                 </View>
                 <Text style={s.welcomeTitle}>Bienvenue {user.name?.split(' ')[0]} !</Text>
                 <Text style={s.welcomeText}>
-                  Scanne ton premier produit pour decouvrir ce que mange vraiment ton animal.
+                  Scanne ton premier produit pour découvrir ce que mange vraiment ton animal.
                 </Text>
                 <View style={s.welcomeBtn}>
                   <Text style={s.welcomeBtnText}>Mon premier scan</Text>
@@ -496,7 +496,7 @@ const HomeScreen = ({ navigation }) => {
                 </View>
                 {communityStats && (
                   <Text style={s.welcomeProof}>
-                    {communityStats.totalUsers} membres font deja confiance a Pepete
+                    {communityStats.totalUsers} membres font déjà confiance à Pepete
                   </Text>
                 )}
               </LinearGradient>
@@ -938,12 +938,12 @@ const HomeScreen = ({ navigation }) => {
             <Text style={s.dailyTipText}>
               {[
                 'Vérifiez toujours le 1er ingrédient sur l\'emballage : il doit être une source de protéine animale.',
-                'Les chats sont des carnivores stricts. Evitez les croquettes riches en céréales pour eux.',
-                'Un chien adulte a besoin de 2 repas par jour. Evitez l\'exercice 1h apres manger.',
-                'Changez la gamelle d\'eau de votre animal tous les jours pour eviter les bacteries.',
-                'Les additifs E150 a E155 sont des colorants controverses. Scannez pour vérifier !',
-                'Un score Pepete au-dessus de 70 est un bon indicateur de qualite nutritionnelle.',
-                'Alternez croquettes et patee pour les chats : ils boivent naturellement peu d\'eau.',
+                'Les chats sont des carnivores stricts. Évitez les croquettes riches en céréales pour eux.',
+                'Un chien adulte a besoin de 2 repas par jour. Évitez l\'exercice 1h après manger.',
+                'Changez la gamelle d\'eau de votre animal tous les jours pour éviter les bactéries.',
+                'Les additifs E150 à E155 sont des colorants controversés. Scannez pour vérifier !',
+                'Un score Pepete au-dessus de 70 est un bon indicateur de qualité nutritionnelle.',
+                'Alternez croquettes et pâtée pour les chats : ils boivent naturellement peu d\'eau.',
               ][new Date().getDay()]}
             </Text>
             <TouchableOpacity

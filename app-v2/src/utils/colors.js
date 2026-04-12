@@ -225,7 +225,7 @@ const getScoreLabel = function(score) {
   if (score >= 60) return 'Bon';
   if (score >= 40) return 'Moyen';
   if (score >= 20) return 'Mauvais';
-  return 'A eviter';
+  return 'À éviter';
 };
 
 module.exports = COLORS;

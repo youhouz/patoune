@@ -168,7 +168,7 @@ const SettingsScreen = ({ navigation }) => {
     try {
       const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
       if (status !== 'granted') {
-        showAlert('Permission requise', 'Autorisez l\'acces a vos photos pour changer votre avatar.');
+        showAlert('Permission requise', 'Autorisez l\'accès à vos photos pour changer votre avatar.');
         return;
       }
       const result = await ImagePicker.launchImageLibraryAsync({
@@ -447,7 +447,7 @@ const SettingsScreen = ({ navigation }) => {
 
                 {/* Phone */}
                 <View style={styles.fieldLast}>
-                  <Text style={styles.label}>Telephone</Text>
+                  <Text style={styles.label}>Téléphone</Text>
                   <TextInput
                     style={styles.input}
                     value={phone}

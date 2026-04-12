@@ -22,11 +22,11 @@ const ANIMAL_ICON_MAP = {
 };
 
 const SERVICE_ICONS = {
-  garde_domicile: { icon: 'home', label: 'Garde a domicile', desc: 'Votre animal reste chez vous' },
-  garde_chez_sitter: { icon: 'home', label: 'Garde chez le pet-sitter', desc: 'Votre animal sejourne chez le pet-sitter' },
+  garde_domicile: { icon: 'home', label: 'Garde à domicile', desc: 'Votre animal reste chez vous' },
+  garde_chez_sitter: { icon: 'home', label: 'Garde chez le pet-sitter', desc: 'Votre animal séjourne chez le pet-sitter' },
   promenade: { icon: 'map-pin', label: 'Promenade', desc: 'Balade quotidienne' },
-  visite: { icon: 'eye', label: 'Visite a domicile', desc: 'Passage pour nourrir et cajoler' },
-  toilettage: { icon: 'scissors', label: 'Toilettage', desc: 'Soin et beaute' },
+  visite: { icon: 'eye', label: 'Visite à domicile', desc: 'Passage pour nourrir et cajoler' },
+  toilettage: { icon: 'scissors', label: 'Toilettage', desc: 'Soin et beauté' },
 };
 
 const AVAILABILITY_DAYS = [
@@ -242,7 +242,7 @@ const PetSitterDetailScreen = ({ route, navigation }) => {
             {petsitter.verified && (
               <View style={styles.heroVerifiedBadge}>
                 <Feather name="check-circle" size={12} color="#6B8F71" />
-                <Text style={styles.heroVerifiedBadgeText}>Profil verifie</Text>
+                <Text style={styles.heroVerifiedBadgeText}>Profil vérifié</Text>
               </View>
             )}
 
@@ -404,7 +404,7 @@ const PetSitterDetailScreen = ({ route, navigation }) => {
           )}
 
           {/* Availability */}
-          <SectionCard title="Disponibilite" iconName="calendar">
+          <SectionCard title="Disponibilité" iconName="calendar">
             <View style={styles.availabilityRow}>
               {AVAILABILITY_DAYS.map((day, idx) => {
                 const available = petsitter.availability?.includes(day.key) ?? (idx < 5);
@@ -422,7 +422,7 @@ const PetSitterDetailScreen = ({ route, navigation }) => {
               })}
             </View>
             <Text style={styles.availabilityHint}>
-              Contactez le pet-sitter pour confirmer sa disponibilite
+              Contactez le pet-sitter pour confirmer sa disponibilité
             </Text>
           </SectionCard>
 
