@@ -520,6 +520,173 @@
       border: 1px solid rgba(194,91,74,0.2);
     }
 
+    /* ═══ PRICING ═══ */
+    .pricing {
+      padding: 6rem 1.5rem;
+      max-width: 1100px;
+      margin: 0 auto;
+    }
+
+    .pricing-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 1.5rem;
+      margin-top: 3rem;
+    }
+
+    .pricing-card {
+      position: relative;
+      background: var(--white);
+      border-radius: 24px;
+      padding: 2.5rem 2rem;
+      border: 2px solid var(--linen);
+      transition: all 0.35s;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .pricing-card.featured {
+      border-color: var(--primary);
+      background: linear-gradient(180deg, var(--primary-soft) 0%, var(--white) 40%);
+      transform: scale(1.03);
+      box-shadow: 0 20px 60px rgba(82,122,86,0.18);
+    }
+
+    .pricing-card.featured:hover {
+      transform: scale(1.05) translateY(-4px);
+    }
+
+    .pricing-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 16px 48px rgba(44,62,47,0.08);
+    }
+
+    .pricing-tag {
+      position: absolute;
+      top: -14px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: var(--accent);
+      color: white;
+      font-size: 0.7rem;
+      font-weight: 700;
+      letter-spacing: 1.5px;
+      padding: 6px 16px;
+      border-radius: 999px;
+      white-space: nowrap;
+    }
+
+    .pricing-name {
+      font-family: var(--font-heading);
+      font-size: 1.4rem;
+      color: var(--charcoal);
+      margin-bottom: 0.25rem;
+    }
+
+    .pricing-sub {
+      font-size: 0.85rem;
+      color: var(--stone);
+      margin-bottom: 1.5rem;
+    }
+
+    .pricing-amount {
+      display: flex;
+      align-items: baseline;
+      gap: 6px;
+      margin-bottom: 0.5rem;
+    }
+
+    .pricing-price {
+      font-family: var(--font-heading);
+      font-size: 2.8rem;
+      color: var(--primary-dark);
+      font-weight: 700;
+      line-height: 1;
+    }
+
+    .pricing-period {
+      font-size: 0.95rem;
+      color: var(--stone);
+    }
+
+    .pricing-hint {
+      font-size: 0.8rem;
+      color: var(--pebble);
+      margin-bottom: 1.5rem;
+      min-height: 1.2em;
+    }
+
+    .pricing-features {
+      list-style: none;
+      margin: 1rem 0 2rem;
+      flex: 1;
+    }
+
+    .pricing-features li {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      font-size: 0.92rem;
+      color: var(--charcoal);
+      margin-bottom: 10px;
+      line-height: 1.5;
+    }
+
+    .pricing-check {
+      flex-shrink: 0;
+      width: 18px; height: 18px;
+      border-radius: 50%;
+      background: var(--primary);
+      color: white;
+      font-size: 11px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-top: 2px;
+    }
+
+    .pricing-x {
+      background: var(--linen);
+      color: var(--pebble);
+    }
+
+    .pricing-cta {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 14px 24px;
+      border-radius: 999px;
+      font-size: 0.95rem;
+      font-weight: 700;
+      text-decoration: none;
+      transition: all 0.3s;
+      cursor: pointer;
+      border: none;
+      font-family: var(--font-body);
+    }
+
+    .pricing-cta.primary {
+      background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+      color: white;
+      box-shadow: 0 8px 24px rgba(107,143,113,0.3);
+    }
+
+    .pricing-cta.primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 12px 36px rgba(107,143,113,0.4);
+    }
+
+    .pricing-cta.secondary {
+      background: var(--linen);
+      color: var(--charcoal);
+    }
+
+    .pricing-cta.secondary:hover {
+      background: var(--primary-soft);
+      color: var(--primary-dark);
+    }
+
     /* ═══ TRUST SECTION ═══ */
     .trust {
       background: linear-gradient(160deg, var(--forest) 0%, #2C3E2F 100%);
@@ -682,6 +849,9 @@
         Rejoindre l'aventure
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12l7 7 7-7"/></svg>
       </a>
+      <p style="margin-top:1rem; font-size:0.85rem; color:rgba(245,240,232,0.45);">
+        Gratuit pour demarrer &middot; <a href="#tarifs" style="color:var(--primary-light); text-decoration:underline; text-underline-offset:3px;">Voir les tarifs</a>
+      </p>
 
       <div class="hero-stats">
         <div>
@@ -693,8 +863,8 @@
           <div class="hero-stat-label">Services</div>
         </div>
         <div>
-          <div class="hero-stat-num">100%</div>
-          <div class="hero-stat-label">Gratuit</div>
+          <div class="hero-stat-num">2,99&#8239;EUR</div>
+          <div class="hero-stat-label">Plus / mois</div>
         </div>
       </div>
     </div>
@@ -844,6 +1014,84 @@
     </div>
   </section>
 
+  <!-- ═══ PRICING ═══ -->
+  <section class="pricing reveal" id="tarifs">
+    <div class="section-label" style="text-align:center; display:block;">Tarifs</div>
+    <h2 class="section-title" style="text-align:center;">Simple, clair, sans surprise</h2>
+    <p class="section-sub" style="margin: 0 auto 0; text-align:center;">
+      Commencez gratuitement. Passez a Pepete Plus quand vous etes pret a avoir
+      toute la puissance de l'app sans limite.
+    </p>
+
+    <div class="pricing-grid">
+      <!-- Free -->
+      <div class="pricing-card">
+        <div class="pricing-name">Gratuit</div>
+        <p class="pricing-sub">Pour decouvrir Pepete</p>
+        <div class="pricing-amount">
+          <span class="pricing-price">0&nbsp;EUR</span>
+          <span class="pricing-period">/ pour toujours</span>
+        </div>
+        <div class="pricing-hint">Aucune carte requise</div>
+        <ul class="pricing-features">
+          <li><span class="pricing-check">&#10003;</span> 10 scans produits / jour</li>
+          <li><span class="pricing-check">&#10003;</span> 5 questions IA / jour</li>
+          <li><span class="pricing-check">&#10003;</span> Pet-sitting &amp; messagerie</li>
+          <li><span class="pricing-check">&#10003;</span> Historique 30 jours</li>
+          <li><span class="pricing-check pricing-x">&#215;</span> Alertes rappels produits</li>
+          <li><span class="pricing-check pricing-x">&#215;</span> Export veterinaire PDF</li>
+        </ul>
+        <a href="#inscription" class="pricing-cta secondary">Commencer gratuitement</a>
+      </div>
+
+      <!-- Monthly -->
+      <div class="pricing-card featured">
+        <div class="pricing-tag">LE PLUS POPULAIRE</div>
+        <div class="pricing-name">Pepete Plus — Mensuel</div>
+        <p class="pricing-sub">Flexibilite totale</p>
+        <div class="pricing-amount">
+          <span class="pricing-price">2,99&nbsp;EUR</span>
+          <span class="pricing-period">/ mois</span>
+        </div>
+        <div class="pricing-hint">Annulable a tout moment</div>
+        <ul class="pricing-features">
+          <li><span class="pricing-check">&#10003;</span> <strong>Scans illimites</strong></li>
+          <li><span class="pricing-check">&#10003;</span> <strong>IA veterinaire illimitee</strong></li>
+          <li><span class="pricing-check">&#10003;</span> Alertes rappels produits en temps reel</li>
+          <li><span class="pricing-check">&#10003;</span> Analyse detaillee ingredients</li>
+          <li><span class="pricing-check">&#10003;</span> Export PDF veterinaire</li>
+          <li><span class="pricing-check">&#10003;</span> Zero publicite, jamais</li>
+        </ul>
+        <a href="#inscription" class="pricing-cta primary">&#9889; Essayer Pepete Plus</a>
+      </div>
+
+      <!-- Yearly -->
+      <div class="pricing-card">
+        <div class="pricing-tag" style="background: var(--primary-dark);">ECONOMISEZ 44%</div>
+        <div class="pricing-name">Pepete Plus — Annuel</div>
+        <p class="pricing-sub">Le meilleur rapport qualite-prix</p>
+        <div class="pricing-amount">
+          <span class="pricing-price">19,99&nbsp;EUR</span>
+          <span class="pricing-period">/ an</span>
+        </div>
+        <div class="pricing-hint">Soit 1,67 EUR / mois</div>
+        <ul class="pricing-features">
+          <li><span class="pricing-check">&#10003;</span> <strong>Tout Pepete Plus inclus</strong></li>
+          <li><span class="pricing-check">&#10003;</span> Scans &amp; IA illimites</li>
+          <li><span class="pricing-check">&#10003;</span> Alertes rappels + export PDF</li>
+          <li><span class="pricing-check">&#10003;</span> Acces prioritaire aux nouveautes</li>
+          <li><span class="pricing-check">&#10003;</span> Support prioritaire par email</li>
+          <li><span class="pricing-check">&#10003;</span> 2 mois offerts vs mensuel</li>
+        </ul>
+        <a href="#inscription" class="pricing-cta primary">Prendre l'annuel</a>
+      </div>
+    </div>
+
+    <p style="text-align:center; margin-top:2.5rem; font-size:0.85rem; color: var(--pebble);">
+      Paiement securise par Stripe &middot; Apple Pay, Google Pay, CB &middot; Annulation en un clic
+    </p>
+  </section>
+
   <!-- ═══ TRUST ═══ -->
   <section class="trust reveal">
     <div class="trust-inner">
@@ -857,7 +1105,7 @@
           <span>&#128274; Donnees securisees</span>
         </div>
         <div class="trust-badge">
-          <span>&#128154; 100% Gratuit au lancement</span>
+          <span>&#128154; Essai gratuit sans carte</span>
         </div>
         <div class="trust-badge">
           <span>&#127467;&#127479; Fait en France</span>

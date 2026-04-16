@@ -8,6 +8,7 @@ const {
   getProductsByBrand, getProductsByAnimal, getAllBrands, getSitemapData, getDangerousIngredients,
 } = require('../controllers/productController');
 const { protect, optionalAuth } = require('../middleware/auth');
+const { enforceQuota } = require('../middleware/quota');
 
 // Scan & search are accessible without login (guest mode)
 router.get('/popular', getPopularProducts);
@@ -25,7 +26,7 @@ router.get('/favorites', protect, getFavorites);
 router.get('/weekly-summary', protect, getWeeklySummary);
 router.post('/:id/favorite', protect, toggleFavorite);
 router.get('/:id/alternatives', getAlternatives);
-router.get('/scan/:barcode', optionalAuth, scanProduct);
+router.get('/scan/:barcode', optionalAuth, enforceQuota('scan'), scanProduct);
 router.get('/search', optionalAuth, searchProducts);
 // History & adding products require authentication
 router.post('/', protect, addProduct);

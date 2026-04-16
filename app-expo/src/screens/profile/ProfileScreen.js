@@ -234,6 +234,21 @@ const ProfileScreen = ({ navigation }) => {
   const menuSections = [
     ...(activeMode === 'petsitter' ? sitterSections : ownerSections),
     {
+      title: 'Abonnement',
+      items: [
+        {
+          icon: user?.isPremium ? 'star' : 'zap',
+          label: user?.isPremium ? 'Pepete Plus actif' : 'Passer a Pepete Plus',
+          subtitle: user?.isPremium
+            ? 'Gerer votre abonnement, factures, annulation'
+            : 'IA + scans illimites, alertes rappels, export veto',
+          accentColor: '#527A56',
+          bgColor: colors.primarySoft,
+          onPress: () => navigation.navigate('Paywall'),
+        },
+      ],
+    },
+    {
       title: 'Parametres',
       items: [
         {
@@ -396,7 +411,10 @@ const ProfileScreen = ({ navigation }) => {
               <TouchableOpacity
                 key={itemIndex}
                 style={styles.menuCard}
-                onPress={() => navigation.navigate(item.screen)}
+                onPress={() => {
+                  if (item.onPress) item.onPress();
+                  else if (item.screen) navigation.navigate(item.screen);
+                }}
                 activeOpacity={0.6}
               >
                 <View style={[styles.menuIconContainer, { backgroundColor: item.bgColor }]}>

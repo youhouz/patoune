@@ -324,6 +324,15 @@ const AIAssistantScreen = () => {
       };
       setMessages((prev) => [...prev, aiMessage]);
     } catch (err) {
+      // 402 = quota depasse -> paywall
+      if (err.response?.status === 402 && err.response?.data?.code === 'QUOTA_EXCEEDED') {
+        setMessages((prev) => prev.filter((m) => m.id !== userMessage.id));
+        setInputText(question);
+        navigation.navigate('Paywall', {
+          reason: err.response.data.error || 'Limite gratuite atteinte',
+        });
+        return;
+      }
       const errorMessage = {
         id: (Date.now() + 1).toString(),
         role: 'assistant',
@@ -333,7 +342,7 @@ const AIAssistantScreen = () => {
     } finally {
       setIsLoading(false);
     }
-  }, [inputText, isLoading, selectedPet]);
+  }, [inputText, isLoading, selectedPet, navigation]);
 
   const handleSelectPet = useCallback((pet) => {
     setSelectedPet((prev) => (prev?._id === pet._id ? null : pet));

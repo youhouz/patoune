@@ -13,6 +13,7 @@ import MessagesScreen from '../screens/petsitting/MessagesScreen';
 import PetSitterProfileScreen from '../screens/petsitting/PetSitterProfileScreen';
 import PetSitterBookingsScreen from '../screens/petsitting/PetSitterBookingsScreen';
 import AIAssistantScreen from '../screens/ai/AIAssistantScreen';
+import PaywallScreen from '../screens/paywall/PaywallScreen';
 import GuestGateScreen from '../screens/auth/GuestGateScreen';
 import LoginScreen from '../screens/auth/LoginScreen';
 import RegisterScreen from '../screens/auth/RegisterScreen';
@@ -155,6 +156,7 @@ const TabNavigator = () => (
     <RootStack.Screen name="Tabs"      component={ThreeTabs} />
     <RootStack.Screen name="Garde"     component={PetSittingNavigator} />
     <RootStack.Screen name="Assistant" component={AIAssistantScreen} />
+    <RootStack.Screen name="Paywall"   component={PaywallScreen} options={{ presentation: 'modal' }} />
     <RootStack.Screen name="AuthStack" component={AuthNavigatorStack} />
   </RootStack.Navigator>
 );

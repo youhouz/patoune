@@ -96,6 +96,10 @@ exports.register = async (req, res, next) => {
         badProductsAvoided: 0,
         badges: [],
         favoriteProducts: [],
+        isPremium: false,
+        subscriptionStatus: 'free',
+        subscriptionPlan: null,
+        premiumUntil: null,
       }
     });
   } catch (error) {
@@ -152,6 +156,10 @@ exports.login = async (req, res, next) => {
         badProductsAvoided: user.badProductsAvoided || 0,
         badges: user.badges || [],
         favoriteProducts: user.favoriteProducts || [],
+        isPremium: user.isPremium(),
+        subscriptionStatus: user.subscriptionStatus || 'free',
+        subscriptionPlan: user.subscriptionPlan || null,
+        premiumUntil: user.premiumUntil || null,
       }
     });
   } catch (error) {
@@ -184,6 +192,10 @@ exports.getMe = async (req, res, next) => {
         badProductsAvoided: user.badProductsAvoided || 0,
         badges: user.badges || [],
         favoriteProducts: user.favoriteProducts || [],
+        isPremium: user.isPremium(),
+        subscriptionStatus: user.subscriptionStatus || 'free',
+        subscriptionPlan: user.subscriptionPlan || null,
+        premiumUntil: user.premiumUntil || null,
       }
     });
   } catch (error) {

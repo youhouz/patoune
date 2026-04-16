@@ -124,6 +124,23 @@ export const AuthProvider = ({ children }) => {
     await AsyncStorage.setItem('user', JSON.stringify(userData));
   };
 
+  // Re-fetch the current user from the API (used after returning from Stripe Checkout,
+  // or any time the subscription/premium state may have changed server-side).
+  const refreshUser = async () => {
+    try {
+      const res = await getMeAPI();
+      const me = res.data?.user;
+      if (me) {
+        setUser(me);
+        await AsyncStorage.setItem('user', JSON.stringify(me));
+        return me;
+      }
+    } catch (err) {
+      console.log('refreshUser error:', err.message);
+    }
+    return null;
+  };
+
   const switchMode = async (mode) => {
     setActiveMode(mode);
     await AsyncStorage.setItem('activeMode', mode);
@@ -139,7 +156,8 @@ export const AuthProvider = ({ children }) => {
       login,
       register,
       logout,
-      updateUser
+      updateUser,
+      refreshUser,
     }}>
       {children}
     </AuthContext.Provider>

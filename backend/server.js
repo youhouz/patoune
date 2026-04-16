@@ -61,6 +61,16 @@ const io = new Server(server, {
 // Middleware
 app.use(helmet());
 app.use(cors(corsOptions));
+
+// Stripe webhook — DOIT etre monte avant express.json() avec le body brut
+// (sinon la verification de signature echoue).
+const { webhook: stripeWebhook } = require('./src/controllers/paymentsController');
+app.post(
+  '/api/payments/webhook',
+  express.raw({ type: 'application/json' }),
+  stripeWebhook
+);
+
 app.use(express.json({ limit: '5mb' }));
 
 // Forest Admin
@@ -84,6 +94,7 @@ app.use('/api/notifications', require('./src/routes/notifications'));
 app.use('/api/search', require('./src/routes/search'));
 app.use('/api/prelaunch', require('./src/routes/prelaunch'));
 app.use('/api/contact', require('./src/routes/contact'));
+app.use('/api/payments', require('./src/routes/payments'));
 
 // Landing page pre-launch
 app.get('/landing', (req, res) => {

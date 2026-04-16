@@ -101,6 +101,23 @@ const userSchema = new mongoose.Schema({
   utmSource: { type: String, default: null },
   utmMedium: { type: String, default: null },
   utmCampaign: { type: String, default: null },
+
+  // ─── Pépète Plus (Stripe subscription) ───────────────────
+  stripeCustomerId: { type: String, default: null, index: true },
+  stripeSubscriptionId: { type: String, default: null, index: true },
+  // 'free' | 'active' | 'trialing' | 'past_due' | 'canceled' | 'incomplete'
+  subscriptionStatus: { type: String, default: 'free' },
+  // 'monthly' | 'yearly' | null
+  subscriptionPlan: { type: String, default: null },
+  // End of the current paid period; premium access is granted until this date
+  premiumUntil: { type: Date, default: null },
+  // True once the user has ever started a subscription (used to skip trials on reactivation)
+  hasEverSubscribed: { type: Boolean, default: false },
+
+  // Daily usage quotas for the free tier
+  aiQueriesToday: { type: Number, default: 0 },
+  scansToday: { type: Number, default: 0 },
+  quotaResetAt: { type: Date, default: null },
 }, {
   timestamps: true
 });
@@ -124,6 +141,18 @@ userSchema.pre('save', async function (next) {
 // Vérifier password
 userSchema.methods.matchPassword = async function (enteredPassword) {
   return await bcrypt.compare(enteredPassword, this.password);
+};
+
+// Vrai si l'utilisateur a un abonnement actif (ou encore dans sa periode payee)
+userSchema.methods.isPremium = function () {
+  if (this.subscriptionStatus === 'active' || this.subscriptionStatus === 'trialing') {
+    return true;
+  }
+  // Grace period: si canceled mais periode encore en cours
+  if (this.premiumUntil && this.premiumUntil.getTime() > Date.now()) {
+    return true;
+  }
+  return false;
 };
 
 // Générer JWT

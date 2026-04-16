@@ -209,7 +209,11 @@ const ScannerScreen = ({ navigation }) => {
         showError('Réponse inattendue du serveur');
       }
     } catch (error) {
-      if (error.response?.status === 404) {
+      if (error.response?.status === 402 && error.response?.data?.code === 'QUOTA_EXCEEDED') {
+        navigation.navigate('Paywall', {
+          reason: error.response.data.error || 'Limite gratuite de scans atteinte',
+        });
+      } else if (error.response?.status === 404) {
         Alert.alert(
           'Produit non trouvé',
           "Ce produit n'est pas encore dans notre base de données.",
