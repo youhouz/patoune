@@ -95,6 +95,9 @@ app.use('/api/search', require('./src/routes/search'));
 app.use('/api/prelaunch', require('./src/routes/prelaunch'));
 app.use('/api/contact', require('./src/routes/contact'));
 app.use('/api/payments', require('./src/routes/payments'));
+app.use('/api/lost-pets', require('./src/routes/lostPets'));
+app.use('/api/professionals', require('./src/routes/professionals'));
+app.use('/api/insurance', require('./src/routes/insurance'));
 
 // Landing page pre-launch
 app.get('/landing', (req, res) => {

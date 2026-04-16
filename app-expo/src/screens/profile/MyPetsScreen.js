@@ -172,8 +172,16 @@ const MyPetsScreen = ({ navigation }) => {
             ) : null}
           </View>
 
-          {/* Actions edit / delete */}
+          {/* Actions carnet / edit / delete */}
           <View style={styles.actions}>
+            <TouchableOpacity
+              style={[styles.editBtn, { backgroundColor: colors.accentSoft }]}
+              onPress={() => navigation.navigate('HealthRecord', { petId: item._id })}
+              activeOpacity={0.7}
+              hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+            >
+              <Feather name="shield" size={14} color={colors.accent} />
+            </TouchableOpacity>
             <TouchableOpacity
               style={styles.editBtn}
               onPress={() => navigation.navigate('AddPet', { pet: item })}

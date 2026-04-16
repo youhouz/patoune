@@ -14,6 +14,13 @@ import PetSitterProfileScreen from '../screens/petsitting/PetSitterProfileScreen
 import PetSitterBookingsScreen from '../screens/petsitting/PetSitterBookingsScreen';
 import AIAssistantScreen from '../screens/ai/AIAssistantScreen';
 import PaywallScreen from '../screens/paywall/PaywallScreen';
+import LostPetsScreen from '../screens/lost-pets/LostPetsScreen';
+import CreateLostPetScreen from '../screens/lost-pets/CreateLostPetScreen';
+import LostPetDetailScreen from '../screens/lost-pets/LostPetDetailScreen';
+import HealthRecordScreen from '../screens/health/HealthRecordScreen';
+import ProsScreen from '../screens/pros/ProsScreen';
+import ProDetailScreen from '../screens/pros/ProDetailScreen';
+import InsuranceScreen from '../screens/insurance/InsuranceScreen';
 import GuestGateScreen from '../screens/auth/GuestGateScreen';
 import LoginScreen from '../screens/auth/LoginScreen';
 import RegisterScreen from '../screens/auth/RegisterScreen';
@@ -153,11 +160,18 @@ const ThreeTabs = () => (
 // Root Stack — overlay les écrans hors tab bar
 const TabNavigator = () => (
   <RootStack.Navigator screenOptions={{ headerShown: false, presentation: 'card' }}>
-    <RootStack.Screen name="Tabs"      component={ThreeTabs} />
-    <RootStack.Screen name="Garde"     component={PetSittingNavigator} />
-    <RootStack.Screen name="Assistant" component={AIAssistantScreen} />
-    <RootStack.Screen name="Paywall"   component={PaywallScreen} options={{ presentation: 'modal' }} />
-    <RootStack.Screen name="AuthStack" component={AuthNavigatorStack} />
+    <RootStack.Screen name="Tabs"           component={ThreeTabs} />
+    <RootStack.Screen name="Garde"          component={PetSittingNavigator} />
+    <RootStack.Screen name="Assistant"      component={AIAssistantScreen} />
+    <RootStack.Screen name="Paywall"        component={PaywallScreen} options={{ presentation: 'modal' }} />
+    <RootStack.Screen name="LostPets"       component={LostPetsScreen} />
+    <RootStack.Screen name="CreateLostPet"  component={CreateLostPetScreen} />
+    <RootStack.Screen name="LostPetDetail"  component={LostPetDetailScreen} />
+    <RootStack.Screen name="HealthRecord"   component={HealthRecordScreen} />
+    <RootStack.Screen name="Pros"           component={ProsScreen} />
+    <RootStack.Screen name="ProDetail"      component={ProDetailScreen} />
+    <RootStack.Screen name="Insurance"      component={InsuranceScreen} />
+    <RootStack.Screen name="AuthStack"      component={AuthNavigatorStack} />
   </RootStack.Navigator>
 );
 
