@@ -146,7 +146,7 @@ const DisclaimerBanner = ({ compact = false }) => (
         Assistant virtuel
       </Text>
       <Text style={[styles.disclaimerText, compact && styles.disclaimerTextCompact]}>
-        Je ne remplace pas un veterinaire. Pour toute urgence, consultez un professionnel.
+        Je ne remplace pas un vétérinaire. Pour toute urgence, consultez un professionnel.
       </Text>
     </View>
   </View>
@@ -429,7 +429,7 @@ const AIAssistantScreen = () => {
       const answer =
         res.data?.answer ||
         res.data?.message ||
-        "Désolé, je n'ai pas pu générer une reponse. Réessayez.";
+        "Désolé, je n'ai pas pu générer une réponse. Réessayez.";
       const aiMessage = {
         id: (Date.now() + 1).toString(),
         role: 'assistant',

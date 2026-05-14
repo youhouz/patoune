@@ -19,17 +19,17 @@ import colors, { SHADOWS, RADIUS, SPACING, FONT_SIZE } from '../../utils/colors'
 
 const STATUS_CONFIG = {
   pending:   { label: 'En attente', color: '#F59E0B', bg: '#FEF3C7', icon: 'clock' },
-  confirmed: { label: 'Confirmee',  color: '#10B981', bg: '#D1FAE5', icon: 'check-circle' },
+  confirmed: { label: 'Confirmée',  color: '#10B981', bg: '#D1FAE5', icon: 'check-circle' },
   ongoing:   { label: 'En cours',   color: '#3B82F6', bg: '#DBEAFE', icon: 'play-circle' },
-  completed: { label: 'Terminee',   color: '#6B7280', bg: '#F3F4F6', icon: 'check' },
-  cancelled: { label: 'Annulee',    color: '#EF4444', bg: '#FEE2E2', icon: 'x-circle' },
+  completed: { label: 'Terminée',   color: '#6B7280', bg: '#F3F4F6', icon: 'check' },
+  cancelled: { label: 'Annulée',    color: '#EF4444', bg: '#FEE2E2', icon: 'x-circle' },
 };
 
 const SERVICE_LABELS = {
-  garde_domicile: 'Garde a domicile',
+  garde_domicile: 'Garde à domicile',
   garde_chez_sitter: 'Garde chez sitter',
   promenade: 'Promenade',
-  visite: 'Visite a domicile',
+  visite: 'Visite à domicile',
   toilettage: 'Toilettage',
 };
 
@@ -74,7 +74,7 @@ const PetSitterBookingsScreen = ({ navigation }) => {
     const labels = { confirmed: 'accepter', cancelled: 'refuser' };
     showAlert(
       `${labels[newStatus] === 'accepter' ? 'Accepter' : 'Refuser'} cette demande ?`,
-      `Réservation de ${booking.owner?.name || 'un proprietaire'} pour ${booking.pet?.name || 'un animal'}.`,
+      `Réservation de ${booking.owner?.name || 'un propriétaire'} pour ${booking.pet?.name || 'un animal'}.`,
       [
         { text: 'Annuler', style: 'cancel' },
         {
@@ -125,13 +125,13 @@ const PetSitterBookingsScreen = ({ navigation }) => {
         <View style={s.infoSection}>
           <View style={s.infoRow}>
             <Feather name="user" size={15} color={colors.primary} />
-            <Text style={s.infoLabel}>Proprietaire :</Text>
+            <Text style={s.infoLabel}>Propriétaire :</Text>
             <Text style={s.infoValue}>{item.owner?.name || 'Inconnu'}</Text>
           </View>
           <View style={s.infoRow}>
             <Feather name="heart" size={15} color={colors.primary} />
             <Text style={s.infoLabel}>Animal :</Text>
-            <Text style={s.infoValue}>{item.pet?.name || 'Non precise'}</Text>
+            <Text style={s.infoValue}>{item.pet?.name || 'Non précisé'}</Text>
           </View>
           <View style={s.infoRow}>
             <Feather name="briefcase" size={15} color={colors.primary} />
@@ -201,7 +201,7 @@ const PetSitterBookingsScreen = ({ navigation }) => {
       </View>
       <Text style={s.emptyTitle}>Aucune demande</Text>
       <Text style={s.emptySub}>
-        Les demandes de reservation de proprietaires{'\n'}apparaitront ici.
+        Les demandes de réservation de propriétaires{'\n'}apparaîtront ici.
       </Text>
     </View>
   );
@@ -231,7 +231,7 @@ const PetSitterBookingsScreen = ({ navigation }) => {
             <Feather name="chevron-left" size={22} color="rgba(255,255,255,0.9)" />
           </TouchableOpacity>
           <View style={s.headerCenter}>
-            <Text style={s.headerTitle}>Mes reservations</Text>
+            <Text style={s.headerTitle}>Mes réservations</Text>
             {pendingCount > 0 && (
               <View style={s.pendingBadge}>
                 <Text style={s.pendingBadgeText}>{pendingCount}</Text>

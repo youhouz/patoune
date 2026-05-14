@@ -194,7 +194,7 @@ const PetSitterCard = ({ petsitter, onPress, index }) => {
               {petsitter.verified && (
                 <View style={styles.verifiedBadge}>
                   <Feather name="check-circle" size={9} color="#527A56" />
-                  <Text style={styles.verifiedBadgeText}>Verifie</Text>
+                  <Text style={styles.verifiedBadgeText}>Vérifié</Text>
                 </View>
               )}
               {petsitter.rating >= 4.8 && petsitter.reviewCount >= 5 && (
@@ -854,11 +854,11 @@ const PetSittersListScreen = ({ navigation }) => {
 
               {/* Verified Only */}
               <View style={styles.modalDivider} />
-              <Text style={styles.modalSectionTitle}>Profil verifie</Text>
+              <Text style={styles.modalSectionTitle}>Profil vérifié</Text>
               <View style={styles.toggleRow}>
                 <View style={styles.toggleInfo}>
                   <Feather name="check-circle" size={18} color="#527A56" />
-                  <Text style={styles.toggleLabel}>Uniquement les profils verifies</Text>
+                  <Text style={styles.toggleLabel}>Uniquement les profils vérifiés</Text>
                 </View>
                 <Switch
                   value={verifiedOnly}
@@ -870,11 +870,11 @@ const PetSittersListScreen = ({ navigation }) => {
 
               {/* Response Time */}
               <View style={styles.modalDivider} />
-              <Text style={styles.modalSectionTitle}>Temps de reponse</Text>
+              <Text style={styles.modalSectionTitle}>Temps de réponse</Text>
               <View style={styles.toggleRow}>
                 <View style={styles.toggleInfo}>
                   <Feather name="zap" size={18} color="#527A56" />
-                  <Text style={styles.toggleLabel}>Repond tres rapidement</Text>
+                  <Text style={styles.toggleLabel}>Répond très rapidement</Text>
                 </View>
                 <Switch
                   value={fastResponseOnly}
@@ -886,7 +886,7 @@ const PetSittersListScreen = ({ navigation }) => {
 
               {/* Experience */}
               <View style={styles.modalDivider} />
-              <Text style={styles.modalSectionTitle}>Experience minimum</Text>
+              <Text style={styles.modalSectionTitle}>Expérience minimum</Text>
               <View style={styles.expChips}>
                 {[0, 1, 2, 3, 5].map((y) => (
                   <TouchableOpacity

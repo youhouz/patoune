@@ -329,7 +329,7 @@ function renderUsers(charts, g, navigation) {
   return (
     <>
       {/* By role */}
-      <Text style={styles.sectionTitle}>Par role</Text>
+      <Text style={styles.sectionTitle}>Par rôle</Text>
       <View style={styles.kpiGrid}>
         {charts.usersByRole?.map((r) => (
           <KPICard
@@ -361,7 +361,7 @@ function renderUsers(charts, g, navigation) {
       {/* Bookings by status */}
       {charts.bookingsByStatus?.length > 0 && (
         <>
-          <Text style={styles.sectionTitle}>Reservations par statut</Text>
+          <Text style={styles.sectionTitle}>Réservations par statut</Text>
           <View style={styles.card}>
             {charts.bookingsByStatus.map((b, i) => (
               <View key={i} style={[styles.statusRow, i < charts.bookingsByStatus.length - 1 && styles.rowBorder]}>
@@ -400,7 +400,7 @@ function renderUsers(charts, g, navigation) {
           style={styles.viewAllGradient}
         >
           <Feather name="users" size={18} color="#FFF" />
-          <Text style={styles.viewAllText}>Gerer les pet-sitters</Text>
+          <Text style={styles.viewAllText}>Gérer les pet-sitters</Text>
         </LinearGradient>
       </TouchableOpacity>
     </>

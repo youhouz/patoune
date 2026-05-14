@@ -156,7 +156,7 @@ const PublicScoreScreen = ({ route, navigation }) => {
             {/* Share button */}
             <TouchableOpacity style={s.shareBtn} onPress={handleShare} activeOpacity={0.85}>
               <Feather name="share-2" size={18} color="#FFF" />
-              <Text style={s.shareBtnText}>Partager ce resultat</Text>
+              <Text style={s.shareBtnText}>Partager ce résultat</Text>
             </TouchableOpacity>
 
             {/* CTA */}

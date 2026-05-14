@@ -299,13 +299,13 @@ const ScanHistoryScreen = ({ navigation }) => {
         </View>
         <Text style={styles.emptyTitle}>
           {isFiltered
-            ? 'Aucun resultat'
+            ? 'Aucun résultat'
             : 'Aucun scan pour le moment'}
         </Text>
         <Text style={styles.emptySubtitle}>
           {isFiltered
             ? 'Essayez de modifier votre recherche ou vos filtres'
-            : 'Scannez votre premier produit pour commencer a construire votre historique'}
+            : 'Scannez votre premier produit pour commencer à construire votre historique'}
         </Text>
         {!searchQuery && activeFilter === 'all' && (
           <TouchableOpacity

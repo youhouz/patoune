@@ -69,7 +69,7 @@ const AdminPetSittersScreen = ({ navigation }) => {
         await deleteAdminPetSitterAPI(sitter._id);
         setPetsitters((prev) => prev.filter((s) => s._id !== sitter._id));
         setTotal((t) => t - 1);
-        showAlert('Supprime', `${name} a ete supprime.`);
+        showAlert('Supprimé', `${name} a été supprimé.`);
       } catch (err) {
         showAlert('Erreur', err.message);
       }
@@ -114,7 +114,7 @@ const AdminPetSittersScreen = ({ navigation }) => {
         )
       );
       setEditModal(null);
-      showAlert('Sauvegarde', 'Profil mis à jour.');
+      showAlert('Sauvegardé', 'Profil mis à jour.');
     } catch (err) {
       showAlert('Erreur', err.message);
     } finally {
@@ -136,7 +136,7 @@ const AdminPetSittersScreen = ({ navigation }) => {
             {item.verified && (
               <View style={styles.verifiedChip}>
                 <Feather name="check-circle" size={10} color="#527A56" />
-                <Text style={styles.verifiedText}>Verifie</Text>
+                <Text style={styles.verifiedText}>Vérifié</Text>
               </View>
             )}
           </View>
@@ -304,7 +304,7 @@ const AdminPetSittersScreen = ({ navigation }) => {
               <View style={[styles.checkbox, editVerified && styles.checkboxActive]}>
                 {editVerified && <Feather name="check" size={14} color="#FFF" />}
               </View>
-              <Text style={styles.verifiedToggleText}>Profil verifie</Text>
+              <Text style={styles.verifiedToggleText}>Profil vérifié</Text>
             </TouchableOpacity>
 
             <View style={styles.modalActions}>
